@@ -209,6 +209,21 @@ $(document).ready(function () {
         },
     });
 
+    const overrideFocusStyles = function() {
+            $(this).css({
+                'outline': 'none',
+                'box-shadow': 'none',
+                'border-color': 'gray'
+            });
+        };
+        const restoreBlurStyles = function() {
+            $(this).css('border-color', '');
+        };
+        const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
+        elementsToFix.on('focus keyup', overrideFocusStyles);
+        elementsToFix.on('blur', restoreBlurStyles);
+        elementsToFix.filter(':focus').each(overrideFocusStyles);
+
     // Modal Handling
     const addModal = $('#addCategoryActivityModal');
     const editModal = $('#editCategoryActivityModal');

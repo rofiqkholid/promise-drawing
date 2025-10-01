@@ -21,23 +21,23 @@
     {{-- Main Content: Table Card --}}
     <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
         <div class="p-4 md:p-6">
-            
-                <table id="departmentsTable" class="min-w-full w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 w-16">No</th>
-                            <th scope="col" class="px-6 py-3 sorting" data-column="name">
-                                Department Name
-                            </th>
-                            <th scope="col" class="px-6 py-3 sorting" data-column="code">
-                                Department Code
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            
+
+            <table id="departmentsTable" class="min-w-full w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 w-16">No</th>
+                        <th scope="col" class="px-6 py-3 sorting" data-column="name">
+                            Department Name
+                        </th>
+                        <th scope="col" class="px-6 py-3 sorting" data-column="code">
+                            Department Code
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
         </div>
     </div>
 </div>
@@ -138,66 +138,83 @@
 
 
 <style>
-  /* Kecilkan ukuran komponen "Show ... entries" saja */
-  div.dataTables_length label{
-    font-size: 0.75rem;           /* text-xs */
-  }
-  div.dataTables_length select{
-    font-size: 0.75rem;           /* text-xs */
-    line-height: 1rem;            /* compact */
-    padding: 0.25rem 1.25rem 0.25rem 0.5rem;
-    height: 1.875rem;             /* ~30px, lebih kecil dari default */
-    width: 4.5rem;                /* cukup untuk 10/25/50 */
-  }
+    /* Kecilkan ukuran komponen "Show ... entries" saja */
+    div.dataTables_length label {
+        font-size: 0.75rem;
+        /* text-xs */
+    }
 
-  div.dataTables_filter label{
-    font-size: 0.75rem; /* text-xs */
-  }
+    div.dataTables_length select {
+        font-size: 0.75rem;
+        /* text-xs */
+        line-height: 1rem;
+        /* compact */
+        padding: 0.25rem 1.25rem 0.25rem 0.5rem;
+        height: 1.875rem;
+        /* ~30px, lebih kecil dari default */
+        width: 4.5rem;
+        /* cukup untuk 10/25/50 */
+    }
 
-  /* Kecilkan input Search DataTables */
-  div.dataTables_filter input[type="search"],
-  input[type="search"][aria-controls="departmentsTable"]{
-    font-size: 0.75rem;              /* text-xs */
-    line-height: 1rem;
-    padding: 0.25rem 0.5rem;         /* lebih rapat */
-    height: 1.875rem;                /* ~30px */
-    width: 12rem;                    /* ~192px, lebih kecil dari default */
-  }
+    div.dataTables_filter label {
+        font-size: 0.75rem;
+        /* text-xs */
+    }
+
+    /* Kecilkan input Search DataTables */
+    div.dataTables_filter input[type="search"],
+    input[type="search"][aria-controls="departmentsTable"] {
+        font-size: 0.75rem;
+        /* text-xs */
+        line-height: 1rem;
+        padding: 0.25rem 0.5rem;
+        /* lebih rapat */
+        height: 1.875rem;
+        /* ~30px */
+        width: 12rem;
+        /* ~192px, lebih kecil dari default */
+    }
 </style>
 
 
 @push('scripts')
 <script>
-$(document).ready(function () {
-    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+    $(document).ready(function() {
+        const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-    // Initialize DataTable
-    const table = $('#departmentsTable').DataTable({
-        processing: true,
-        serverSide: true,
-        scrollX: true,
-        ajax: {
-            url: '{{ route("departments.data") }}',
-            type: 'GET',
-            data: function (d) {
-                d.search = d.search.value;
-            }
-        },
-        columns: [
-            {
-                data: null,
-                render: function (data, type, row, meta) {
-                    return meta.row + meta.settings._iDisplayStart + 1;
+        // Initialize DataTable
+        const table = $('#departmentsTable').DataTable({
+            processing: true,
+            serverSide: true,
+            info: false,
+            scrollX: true,
+            ajax: {
+                url: '{{ route("departments.data") }}',
+                type: 'GET',
+                data: function(d) {
+                    d.search = d.search.value;
                 }
             },
-            { data: 'name', name: 'name' },
-            { data: 'code', name: 'code' },
-            {
-                data: null,
-                orderable: false,
-                searchable: false,
-                render: function (data, type, row) {
-                    return `
+            columns: [{
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    }
+                },
+                {
+                    data: 'name',
+                    name: 'name'
+                },
+                {
+                    data: 'code',
+                    name: 'code'
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    render: function(data, type, row) {
+                        return `
                         <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
                             <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
                         </button>
@@ -205,163 +222,184 @@ $(document).ready(function () {
                             <i class="fa-solid fa-trash-can fa-lg m-2"></i>
                         </button>
                     `;
+                    }
                 }
-            }
-        ],
-        pageLength: 10,
-        order: [[1, 'asc']],
-        language: {
-            emptyTable: '<div class="text-gray-500 dark:text-gray-400">No departments found.</div>'
-        },
-
-        // [RESPONSIVE ADD]
-        responsive: true,
-        autoWidth: false,
-        // [END RESPONSIVE ADD]
-    });
-
-    // Modal Handling
-    const addModal = $('#addDepartmentModal');
-    const editModal = $('#editDepartmentModal');
-    const deleteModal = $('#deleteDepartmentModal');
-    const addButton = $('#add-button');
-    const closeButtons = $('.close-modal-button');
-    let departmentIdToDelete = null;
-
-    function showModal(modal) {
-        modal.removeClass('hidden').addClass('flex');
-    }
-
-    function hideModal(modal) {
-        modal.addClass('hidden').removeClass('flex');
-    }
-
-    addButton.on('click', () => showModal(addModal));
-    closeButtons.on('click', () => {
-        hideModal(addModal);
-        hideModal(editModal);
-        hideModal(deleteModal);
-    });
-
-    // Add Department
-    $('#addDepartmentForm').on('submit', function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const nameError = $('#add-name-error');
-        const codeError = $('#add-code-error');
-        nameError.addClass('hidden');
-        codeError.addClass('hidden');
-
-        $.ajax({
-            url: $(this).attr('action'),
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (data) {
-                if (data.success) {
-                    table.ajax.reload();
-                    hideModal(addModal);
-                    $('#addDepartmentForm')[0].reset();
-                }
+            ],
+            pageLength: 10,
+            order: [
+                [1, 'asc']
+            ],
+            language: {
+                emptyTable: '<div class="text-gray-500 dark:text-gray-400">No departments found.</div>'
             },
-            error: function (xhr) {
-                const errors = xhr.responseJSON?.errors;
-                if (errors) {
-                    if (errors.name) {
-                        nameError.text(errors.name[0]).removeClass('hidden');
-                    }
-                    if (errors.code) {
-                        codeError.text(errors.code[0]).removeClass('hidden');
-                    }
-                }
-            }
+
+            // [RESPONSIVE ADD]
+            responsive: true,
+            autoWidth: false,
+            // [END RESPONSIVE ADD]
         });
-    });
 
-    // Edit Department
-    $(document).on('click', '.edit-button', function () {
-        const id = $(this).data('id');
-        const nameError = $('#edit-name-error');
-        const codeError = $('#edit-code-error');
-        nameError.addClass('hidden');
-        codeError.addClass('hidden');
+        // Modal Handling
+        const addModal = $('#addDepartmentModal');
+        const editModal = $('#editDepartmentModal');
+        const deleteModal = $('#deleteDepartmentModal');
+        const addButton = $('#add-button');
+        const closeButtons = $('.close-modal-button');
+        let departmentIdToDelete = null;
 
-        $.ajax({
-            url: `/master/departments/${id}`,
-            method: 'GET',
-            success: function (data) {
-                $('#edit_name').val(data.name);
-                $('#edit_code').val(data.code);
-                $('#editDepartmentForm').attr('action', `/master/departments/${id}`);
-                showModal(editModal);
-            }
+        function showModal(modal) {
+            modal.removeClass('hidden').addClass('flex');
+        }
+
+        function hideModal(modal) {
+            modal.addClass('hidden').removeClass('flex');
+        }
+
+        addButton.on('click', () => showModal(addModal));
+        closeButtons.on('click', () => {
+            hideModal(addModal);
+            hideModal(editModal);
+            hideModal(deleteModal);
         });
-    });
 
-    $('#editDepartmentForm').on('submit', function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const nameError = $('#edit-name-error');
-        const codeError = $('#edit-code-error');
-        nameError.addClass('hidden');
-        codeError.addClass('hidden');
+        // Add Department
+        $('#addDepartmentForm').on('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const nameError = $('#add-name-error');
+            const codeError = $('#add-code-error');
+            nameError.addClass('hidden');
+            codeError.addClass('hidden');
 
-        $.ajax({
-            url: $(this).attr('action'),
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (data) {
-                if (data.success) {
-                    table.ajax.reload();
-                    hideModal(editModal);
-                }
-            },
-            error: function (xhr) {
-                const errors = xhr.responseJSON?.errors;
-                if (errors) {
-                    if (errors.name) {
-                        nameError.text(errors.name[0]).removeClass('hidden');
-                    }
-                    if (errors.code) {
-                        codeError.text(errors.code[0]).removeClass('hidden');
-                    }
-                }
-            }
-        });
-    });
-
-    // Delete Department
-    $(document).on('click', '.delete-button', function () {
-        departmentIdToDelete = $(this).data('id');
-        showModal(deleteModal);
-    });
-
-    $('#confirmDeleteButton').on('click', function () {
-        if (departmentIdToDelete) {
             $.ajax({
-                url: `/master/departments/${departmentIdToDelete}`,
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
-                success: function (data) {
+                url: $(this).attr('action'),
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
                     if (data.success) {
                         table.ajax.reload();
-                        hideModal(deleteModal);
-                        departmentIdToDelete = null;
-                    } else {
-                        alert('Error deleting department.');
+                        hideModal(addModal);
+                        $('#addDepartmentForm')[0].reset();
                     }
                 },
-                error: function () {
-                    alert('Error deleting department.');
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors) {
+                        if (errors.name) {
+                            nameError.text(errors.name[0]).removeClass('hidden');
+                        }
+                        if (errors.code) {
+                            codeError.text(errors.code[0]).removeClass('hidden');
+                        }
+                    }
                 }
             });
-        }
+        });
+
+        const overrideFocusStyles = function() {
+            $(this).css({
+                'outline': 'none',
+                'box-shadow': 'none',
+                'border-color': 'gray'
+            });
+        };
+        const restoreBlurStyles = function() {
+            $(this).css('border-color', '');
+        };
+        const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
+        elementsToFix.on('focus keyup', overrideFocusStyles);
+        elementsToFix.on('blur', restoreBlurStyles);
+        elementsToFix.filter(':focus').each(overrideFocusStyles);
+
+        $(document).on('click', '.edit-button', function() {
+            const id = $(this).data('id');
+            const nameError = $('#edit-name-error');
+            const codeError = $('#edit-code-error');
+            nameError.addClass('hidden');
+            codeError.addClass('hidden');
+
+            $.ajax({
+                url: `/master/departments/${id}`,
+                method: 'GET',
+                success: function(data) {
+                    $('#edit_name').val(data.name);
+                    $('#edit_code').val(data.code);
+                    $('#editDepartmentForm').attr('action', `/master/departments/${id}`);
+                    showModal(editModal);
+                }
+            });
+        });
+
+        $('#editDepartmentForm').on('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const nameError = $('#edit-name-error');
+            const codeError = $('#edit-code-error');
+            nameError.addClass('hidden');
+            codeError.addClass('hidden');
+
+            $.ajax({
+                url: $(this).attr('action'),
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
+                    if (data.success) {
+                        table.ajax.reload();
+                        hideModal(editModal);
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors) {
+                        if (errors.name) {
+                            nameError.text(errors.name[0]).removeClass('hidden');
+                        }
+                        if (errors.code) {
+                            codeError.text(errors.code[0]).removeClass('hidden');
+                        }
+                    }
+                }
+            });
+        });
+
+        $(document).on('click', '.delete-button', function() {
+            departmentIdToDelete = $(this).data('id');
+            showModal(deleteModal);
+        });
+
+        $('#confirmDeleteButton').on('click', function() {
+            if (departmentIdToDelete) {
+                $.ajax({
+                    url: `/master/departments/${departmentIdToDelete}`,
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    success: function(data) {
+                        if (data.success) {
+                            table.ajax.reload();
+                            hideModal(deleteModal);
+                            departmentIdToDelete = null;
+                        } else {
+                            alert('Error deleting department.');
+                        }
+                    },
+                    error: function() {
+                        alert('Error deleting department.');
+                    }
+                });
+            }
+        });
     });
-});
 </script>
 @endpush

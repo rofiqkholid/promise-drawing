@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\FileExtensionsController;
 use App\Http\Controllers\Api\CategoryActivitiesController;
 use App\Http\Controllers\Api\ProjectStatusController;
 use App\Http\Controllers\Api\PartGroupsController;
+use App\Http\Controllers\Api\StampFormatController;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -71,7 +72,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/customers', function () {
         return view('master.customer');
     })->name('customers');
-    
+
     Route::get('/models', function () {
         return view('master.model');
     })->name('models');
@@ -104,8 +105,12 @@ Route::middleware(['auth'])->group(function () {
         return view('master.partGroup');
     })->name('partGroups');
 
+    Route::get('/stampFormat', function () {
+        return view('master.stampFormat');
+    })->name('stampFormat');
 
 
+    Route::resource('master/stampFormat', StampFormatController::class)->names('stampFormat')->except(['create', 'edit']);
     Route::resource('master/departments', DepartmentsController::class)->names('departments')->except(['create', 'edit']);
     Route::get('/departments/data', [DepartmentsController::class, 'data'])->name('departments.data');
     Route::resource('master/suppliers', SuppliersController::class)->names('suppliers')->except(['create', 'edit']);
@@ -127,11 +132,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('master/projectStatus', ProjectStatusController::class)->names('projectStatus')->except(['create', 'edit']);
     Route::get('/projectStatus/data', [ProjectStatusController::class, 'data'])->name('projectStatus.data');
     Route::resource('master/partGroups', PartGroupsController::class)->names('partGroups')->except(['create', 'edit']);
-    
+
     Route::get('/partGroups/data', [PartGroupsController::class, 'data'])->name('partGroups.data');
     Route::get('/partGroups/getModelsByCustomer', [PartGroupsController::class, 'getModelsByCustomer'])->name('partGroups.getModelsByCustomer');
-
-    Route::get('/stampFormat', function () {
-        return view('master.stampFormat');
-    })->name('stampFormat');
 });
