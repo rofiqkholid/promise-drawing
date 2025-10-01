@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\CategoryActivitiesController;
 use App\Http\Controllers\Api\ProjectStatusController;
 use App\Http\Controllers\Api\PartGroupsController;
 use App\Http\Controllers\Api\StampFormatController;
+use App\Http\Controllers\Api\DashboardController;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -135,4 +136,15 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/partGroups/data', [PartGroupsController::class, 'data'])->name('partGroups.data');
     Route::get('/partGroups/getModelsByCustomer', [PartGroupsController::class, 'getModelsByCustomer'])->name('partGroups.getModelsByCustomer');
+
+
+
+
+
+
+
+
+
+
+    Route::post('/dashboard/getDocumentGroups', [DashboardController::class, 'getDocumentGroups'])->name('dashboard.getDocumentGroups');
 });

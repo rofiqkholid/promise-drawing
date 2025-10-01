@@ -3,21 +3,16 @@
 @section('header-title', 'Dashboard')
 @section('content')
 
-{{-- Menambahkan x-data untuk mengelola state grafik --}}
 <div x-data="dashboardCharts()" x-init="initCharts()">
 
-    {{-- Kartu Statistik --}}
     <div class="sm:flex sm:items-center sm:gap-x-24">
-        {{-- Bagian Judul --}}
         <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Dashboard</h2>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Analys File Management</p>
         </div>
 
-        {{-- Kartu Statistik (dengan gap) --}}
         <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:mt-0">
 
-            {{-- Total Document --}}
             <div
                 class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
                 <div class="flex items-center">
@@ -32,7 +27,6 @@
                 <div class="mt-2 h-8 w-full"><canvas id="totalDocsChart"></canvas></div>
             </div>
 
-            {{-- Upload --}}
             <div
                 class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
                 <div class="flex items-center">
@@ -47,7 +41,6 @@
                 <div class="mt-2 h-8 w-full"><canvas id="uploadsChart"></canvas></div>
             </div>
 
-            {{-- Download --}}
             <div
                 class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
                 <div class="flex items-center">
@@ -62,29 +55,27 @@
                 <div class="mt-2 h-8 w-full"><canvas id="downloadsChart"></canvas></div>
             </div>
 
-            {{-- Document Types (Diperbarui dengan chart) --}}
             <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
                 <div class="flex items-center">
-                    <div class="bg-purple-100 dark:bg-purple-900/50 text-purple-500 dark:text-purple-400 rounded-lg p-2 mr-3 flex items-center justify-center h-9 w-9">
-                        <i class="fa-solid fa-tags fa-lg"></i>
+                    <div class="bg-red-100 dark:bg-red-900/50 text-red-500 dark:text-red-400 rounded-lg p-2 mr-3 flex items-center justify-center h-9 w-9">
+                        <i class="fa-solid fa-users fa-lg"></i>
                     </div>
                     <div>
-                        <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">Document Types</h3>
-                        <p class="text-xl font-bold text-gray-800 dark:text-gray-100">6</p>
+                        <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">User Active</h3>
+                        <p class="text-xl font-bold text-gray-800 dark:text-gray-100">15</p>
                     </div>
                 </div>
-                <div class="mt-2 h-8 w-full"><canvas id="docTypesChart"></canvas></div>
+                <div class="mt-2 h-8 w-full"><canvas id="activeUsersChart"></canvas></div>
             </div>
         </div>
     </div>
 
-    {{-- Filter --}}
-    <div class="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div x-data="{ showExtraFilters: false }" class="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
             <i class="fa-solid fa-filter mr-2 text-gray-500"></i>
             Filter Data
         </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-6 items-end">
+        <div class="grid grid-cols-1 xl:grid-cols-6 gap-x-12 gap-y-6 items-end">
             <div class="xl:col-span-2">
                 <label for="key_word" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Key Word</label>
                 <div class="relative mt-1">
@@ -97,8 +88,8 @@
             <div>
                 <label for="doc_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Document Group</label>
                 <div class="relative mt-1">
-                    <select id="doc_group" name="doc_group" class="appearance-none block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-0 sm:text-sm">
-                        <option>ALL</option>
+                    <select @change="showExtraFilters = ($event.target.value !== 'ALL' && $event.target.value !== '')" id="doc_group" name="doc_group" class="appearance-none block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-0 sm:text-sm">
+                        <option value="ALL">ALL</option>
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-400"><i class="fa-solid fa-chevron-down text-xs"></i></div>
                 </div>
@@ -113,15 +104,6 @@
                 </div>
             </div>
             <div>
-                <label for="customer_model" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer - Model</label>
-                <div class="relative mt-1">
-                    <select id="customer_model" name="customer_model" class="appearance-none block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-0 sm:text-sm">
-                        <option>ALL</option>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-400"><i class="fa-solid fa-chevron-down text-xs"></i></div>
-                </div>
-            </div>
-            <div>
                 <label for="from_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">From</label>
                 <input type="date" name="from_date" id="from_date" value="{{ date('Y-m-01') }}" class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:ring-0 focus:outline-none sm:text-sm py-2 px-3">
             </div>
@@ -129,19 +111,62 @@
                 <label for="to_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">To</label>
                 <input type="date" name="to_date" id="to_date" value="{{ date('Y-m-d') }}" class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:ring-0 focus:outline-none sm:text-sm py-2 px-3">
             </div>
-            <div>
-                <label for="revision_history" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Revision History</label>
-                <div class="relative mt-1">
-                    <select id="revision_history" name="revision_history" class="appearance-none block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-0 sm:text-sm">
-                        <option>All</option>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-400"><i class="fa-solid fa-chevron-down text-xs"></i></div>
+
+            <div class="xl:col-span-6"
+                x-show="showExtraFilters"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 transform -translate-y-4"
+                x-transition:enter-end="opacity-100 transform translate-y-0"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 transform translate-y-0"
+                x-transition:leave-end="opacity-0 transform -translate-y-4"
+                style="display: none;">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-end border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <div>
+                        <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                        <div class="relative mt-1">
+                            <select id="status" name="status" class="appearance-none block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-0 sm:text-sm">
+                                <option>ALL</option>
+                                <option>Active</option>
+                                <option>Obsolete</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-400"><i class="fa-solid fa-chevron-down text-xs"></i></div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="part_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
+                        <div class="relative mt-1">
+                            <select id="part_group" name="part_group" class="appearance-none block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-0 sm:text-sm">
+                                <option>ALL</option>
+                                <option>Crankshaft</option>
+                                <option>Piston</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-400"><i class="fa-solid fa-chevron-down text-xs"></i></div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="customer" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
+                        <div class="relative mt-1">
+                            <select id="customer" name="customer" class="appearance-none block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-0 sm:text-sm">
+                                <option>ALL</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-400"><i class="fa-solid fa-chevron-down text-xs"></i></div>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="model" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
+                        <div class="relative mt-1">
+                            <select id="model" name="model" class="appearance-none block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-0 sm:text-sm">
+                                <option>ALL</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-400"><i class="fa-solid fa-chevron-down text-xs"></i></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Grafik --}}
     <div class="mt-8 grid grid-cols-1 lg:grid-cols-6 gap-8">
         <div class="lg:col-span-4 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
             <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-chart-column mr-2 text-blue-500"></i>Plan vs Actual (Quantity) & Progress %</h3>
@@ -153,7 +178,6 @@
         </div>
     </div>
 
-    {{-- Newsfeed --}}
     <div class="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-newspaper mr-2 text-gray-500"></i>Newsfeed / Activity Log</h3>
         <div class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -201,7 +225,7 @@
     </div>
 </div>
 
-{{-- Load Chart.js dari CDN --}}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script>
@@ -212,7 +236,6 @@
             totalDocsChart: null,
             uploadsChart: null,
             downloadsChart: null,
-            docTypesChart: null, // State untuk chart baru
             activeUsersChart: null,
 
             initCharts() {
@@ -220,16 +243,15 @@
                     console.error('Chart.js is not loaded!');
                     return;
                 }
-                setTimeout(() => {
+                this.$nextTick(() => {
                     this.drawCharts();
-                }, 100);
+                });
             },
 
             drawCharts() {
                 const textColor = document.documentElement.classList.contains('dark') ? '#d1d5db' : '#6b7280';
                 const gridColor = document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
 
-                // --- Sparkline Charts ---
                 const sparklineOptions = {
                     maintainAspectRatio: false,
                     responsive: true,
@@ -260,10 +282,8 @@
                     }
                 };
 
-                // Total Documents Chart
-                const ctxDocs = document.getElementById('totalDocsChart');
-                if (ctxDocs) {
-                    this.totalDocsChart = new Chart(ctxDocs, {
+                if (document.getElementById('totalDocsChart')) {
+                    this.totalDocsChart = new Chart(document.getElementById('totalDocsChart'), {
                         type: 'line',
                         data: {
                             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -278,11 +298,8 @@
                         options: sparklineOptions
                     });
                 }
-
-                // Uploads Chart
-                const ctxUploads = document.getElementById('uploadsChart');
-                if (ctxUploads) {
-                    this.uploadsChart = new Chart(ctxUploads, {
+                if (document.getElementById('uploadsChart')) {
+                    this.uploadsChart = new Chart(document.getElementById('uploadsChart'), {
                         type: 'line',
                         data: {
                             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -297,11 +314,8 @@
                         options: sparklineOptions
                     });
                 }
-
-                // Downloads Chart
-                const ctxDownloads = document.getElementById('downloadsChart');
-                if (ctxDownloads) {
-                    this.downloadsChart = new Chart(ctxDownloads, {
+                if (document.getElementById('downloadsChart')) {
+                    this.downloadsChart = new Chart(document.getElementById('downloadsChart'), {
                         type: 'line',
                         data: {
                             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -316,19 +330,16 @@
                         options: sparklineOptions
                     });
                 }
-
-                // Document Types Chart
-                const ctxDocTypes = document.getElementById('docTypesChart');
-                if (ctxDocTypes) {
-                    this.docTypesChart = new Chart(ctxDocTypes, {
+                if (document.getElementById('activeUsersChart')) {
+                    this.activeUsersChart = new Chart(document.getElementById('activeUsersChart'), {
                         type: 'line',
                         data: {
                             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                             datasets: [{
-                                label: 'Document Types',
-                                data: [4, 4, 5, 5, 6, 6, 6],
-                                borderColor: 'rgba(168, 85, 247, 1)',
-                                backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                                label: 'Active Users',
+                                data: [10, 12, 11, 14, 15, 13, 15],
+                                borderColor: 'rgba(239, 68, 68, 1)',
+                                backgroundColor: 'rgba(239, 68, 68, 0.1)',
                                 fill: true
                             }]
                         },
@@ -336,7 +347,6 @@
                     });
                 }
 
-                // --- Chart 1: Plan vs Actual ---
                 const ctx1 = document.getElementById('planVsActualChart');
                 if (ctx1) {
                     this.planVsActualChart = new Chart(ctx1, {
@@ -347,7 +357,6 @@
                                 label: 'Actual (docs)',
                                 data: [60, 88, 90, 115, 120, 148, 150],
                                 backgroundColor: 'rgba(22, 163, 74, 0.8)',
-                                borderColor: 'rgba(22, 163, 74, 1)',
                                 yAxisID: 'y',
                                 order: 2
                             }, {
@@ -355,15 +364,14 @@
                                 label: 'Plan (docs)',
                                 data: [80, 110, 140, 135, 170, 205, 205],
                                 backgroundColor: 'rgba(37, 99, 235, 0.8)',
-                                borderColor: 'rgba(37, 99, 235, 1)',
                                 yAxisID: 'y',
                                 order: 2
                             }, {
                                 type: 'line',
                                 label: 'Progress %',
                                 data: [75, 80, 64, 85, 71, 72, 73],
-                                backgroundColor: 'rgba(249, 115, 22, 0.2)',
                                 borderColor: 'rgba(249, 115, 22, 1)',
+                                backgroundColor: 'rgba(249, 115, 22, 0.2)',
                                 yAxisID: 'y1',
                                 tension: 0.1,
                                 borderWidth: 2,
@@ -448,8 +456,6 @@
                         }
                     });
                 }
-
-                // --- Chart 2: Upload vs Download ---
                 const ctx2 = document.getElementById('uploadDownloadChart');
                 if (ctx2) {
                     this.uploadDownloadChart = new Chart(ctx2, {
@@ -462,30 +468,22 @@
                                 borderColor: 'rgba(22, 163, 74, 1)',
                                 backgroundColor: 'rgba(22, 163, 74, 0.1)',
                                 tension: 0.3,
-                                borderWidth: 2,
                                 fill: true,
                                 pointBackgroundColor: 'rgba(22, 163, 74, 1)',
                                 pointBorderColor: '#fff',
                                 pointBorderWidth: 2,
-                                pointRadius: 5,
-                                pointHoverRadius: 7,
-                                pointHoverBackgroundColor: '#fff',
-                                pointHoverBorderColor: 'rgba(22, 163, 74, 1)'
+                                pointRadius: 5
                             }, {
                                 label: 'Upload',
                                 data: [120, 145, 165, 158],
                                 borderColor: 'rgba(37, 99, 235, 1)',
                                 backgroundColor: 'rgba(37, 99, 235, 0.1)',
                                 tension: 0.3,
-                                borderWidth: 2,
                                 fill: true,
                                 pointBackgroundColor: 'rgba(37, 99, 235, 1)',
                                 pointBorderColor: '#fff',
                                 pointBorderWidth: 2,
-                                pointRadius: 5,
-                                pointHoverRadius: 7,
-                                pointHoverBackgroundColor: '#fff',
-                                pointHoverBorderColor: 'rgba(37, 99, 235, 1)'
+                                pointRadius: 5
                             }]
                         },
                         options: {
@@ -528,14 +526,6 @@
                                         usePointStyle: true,
                                         padding: 15
                                     }
-                                },
-                                tooltip: {
-                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                    padding: 12,
-                                    titleColor: '#fff',
-                                    bodyColor: '#fff',
-                                    borderColor: 'rgba(255, 255, 255, 0.1)',
-                                    borderWidth: 1
                                 }
                             }
                         }
@@ -544,5 +534,46 @@
             }
         }
     }
+
+    $(function() {
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+
+        const docGroupSelect = $('#doc_group');
+        docGroupSelect.attr('data-loaded', 'false');
+        docGroupSelect.on('mousedown', function() {
+            if ($(this).attr('data-loaded') === 'false') {
+                $(this).prop('disabled', true);
+                $(this).find('option:not(:first)').remove();
+                $(this).append($('<option>').text('Memuat...'));
+
+                $.ajax({
+                    url: "{{ route('dashboard.getDocumentGroups') }}",
+                    method: 'POST',
+                    success: function(data) {
+                        docGroupSelect.find('option:not(:first)').remove();
+                        $.each(data, function(index, group) {
+                            docGroupSelect.append($('<option>', {
+                                value: group.id,
+                                text: group.name
+                            }));
+                        });
+                        docGroupSelect.attr('data-loaded', 'true');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error fetching document groups:", error);
+                        docGroupSelect.find('option:not(:first)').remove();
+                        docGroupSelect.append($('<option>').text('Gagal memuat data'));
+                    },
+                    complete: function() {
+                        docGroupSelect.prop('disabled', false);
+                    }
+                });
+            }
+        });
+    });
 </script>
 @endsection
