@@ -137,17 +137,13 @@
                         </div>
                     </div>
                     <div>
-                        <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                        <label for="project_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
                         <div class="relative mt-1">
-                            <select id="status" name="status" class="appearance-none block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-0 sm:text-sm">
-                                <option>ALL</option>
-                                <option>Active</option>
-                                <option>Obsolete</option>
+                            <select id="project_status" name="project_status" class="w-full">
+                                <option value="ALL">ALL</option>
                             </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-400"><i class="fa-solid fa-chevron-down text-xs"></i></div>
                         </div>
                     </div>
-
                     <div>
                         <label for="part_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
                         <div class="relative mt-1">
@@ -258,6 +254,7 @@
                         component.initSubTypeSelect2();
                         component.initCustomerSelect2();
                         component.initPartGroupSelect2();
+                        component.initStatusSelect2();
                         component.initModelSelect2();
                         component.chartsInitialized = true;
                     });
@@ -380,6 +377,42 @@
                     width: '100%',
                     ajax: {
                         url: "{{ route('dashboard.getPartGroup') }}",
+                        method: 'POST',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                _token: "{{ csrf_token() }}",
+                                q: params.term,
+                                page: params.page || 1
+                            };
+                        },
+                        processResults: function(data, params) {
+                            params.page = params.page || 1;
+                            return {
+                                results: data.results,
+                                pagination: {
+                                    more: (params.page * 10) < data.total_count
+                                }
+                            };
+                        },
+                        cache: true
+                    },
+                    placeholder: 'Cari atau pilih Document Group',
+                    minimumInputLength: 0
+                }).on('change', function(e) {
+                    let selectedValue = $(this).val();
+                    component.showExtraFilters = (selectedValue !== 'ALL' && selectedValue !== '' && selectedValue !== null);
+                });
+            },
+            initStatusSelect2() {
+                let component = this;
+
+                $('#project_status').select2({
+                    dropdownParent: $('#project_status').parent(),
+                    width: '100%',
+                    ajax: {
+                        url: "{{ route('dashboard.getStatus') }}",
                         method: 'POST',
                         dataType: 'json',
                         delay: 250,

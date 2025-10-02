@@ -172,4 +172,36 @@ class DashboardController extends Controller
             'total_count' => $totalCount 
         ]);
     }
+    public function getStatus(Request $request): JsonResponse
+    {
+        $searchTerm = $request->q; 
+        $page = $request->page ?: 1; 
+        $resultsPerPage = 10; 
+        $offset = ($page - 1) * $resultsPerPage;
+
+        $query = DB::table('project_status')
+            ->select('id', 'name');
+
+        if ($searchTerm) {
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+        }
+
+        $totalCount = $query->count();
+        $groups = $query->orderBy('name', 'asc')
+            ->offset($offset)
+            ->limit($resultsPerPage)
+            ->get();
+
+        $formattedGroups = $groups->map(function ($group) {
+            return [
+                'id'   => $group->id,
+                'text' => $group->name 
+            ];
+        });
+
+        return response()->json([
+            'results'     => $formattedGroups,
+            'total_count' => $totalCount 
+        ]);
+    }
 }
