@@ -96,10 +96,9 @@
             <div>
                 <label for="sub_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sub Type</label>
                 <div class="relative mt-1">
-                    <select id="sub_type" name="sub_type" class="appearance-none block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-0 sm:text-sm">
-                        <option>ALL</option>
+                    <select id="sub_type" name="sub_type" class="w-full">
+                        <option value="ALL">ALL</option>
                     </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-400"><i class="fa-solid fa-chevron-down text-xs"></i></div>
                 </div>
             </div>
             <div>
@@ -124,19 +123,17 @@
                     <div>
                         <label for="customer" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
                         <div class="relative mt-1">
-                            <select id="customer" name="customer" class="appearance-none block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-0 sm:text-sm">
-                                <option>ALL</option>
+                            <select id="customer" name="customer" class="w-full">
+                                <option value="ALL">ALL</option>
                             </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-400"><i class="fa-solid fa-chevron-down text-xs"></i></div>
                         </div>
                     </div>
                     <div>
                         <label for="model" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
                         <div class="relative mt-1">
-                            <select id="model" name="model" class="appearance-none block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-0 sm:text-sm">
-                                <option>ALL</option>
+                            <select id="model" name="model" class="w-full">
+                                <option value="ALL">ALL</option>
                             </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-400"><i class="fa-solid fa-chevron-down text-xs"></i></div>
                         </div>
                     </div>
                     <div>
@@ -150,18 +147,16 @@
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-400"><i class="fa-solid fa-chevron-down text-xs"></i></div>
                         </div>
                     </div>
+
                     <div>
                         <label for="part_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
                         <div class="relative mt-1">
-                            <select id="part_group" name="part_group" class="appearance-none block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-0 sm:text-sm">
-                                <option>ALL</option>
-                                <option>Crankshaft</option>
-                                <option>Piston</option>
+                            <select id="part_group" name="part_group" class="w-full">
+                                <option value="ALL">ALL</option>
                             </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-400"><i class="fa-solid fa-chevron-down text-xs"></i></div>
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
         </div>
@@ -255,7 +250,7 @@
 
             initializeDashboard() {
                 const component = this;
-                
+
                 setTimeout(() => {
                     component.$nextTick(() => {
                         component.initCharts();
@@ -460,15 +455,15 @@
                     console.warn(`Canvas element with id '${canvasId}' not found`);
                     return null;
                 }
-                
+
                 const canvas = document.getElementById(canvasId);
                 const context = canvas.getContext('2d');
-                
+
                 if (!context) {
                     console.error(`Unable to get 2D context for canvas '${canvasId}'`);
                     return null;
                 }
-                
+
                 return context;
             },
 
@@ -502,37 +497,37 @@
 
                 const textColor = document.documentElement.classList.contains('dark') ? '#d1d5db' : '#6b7280';
                 const gridColor = document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-                
+
                 const sparklineOptions = {
                     maintainAspectRatio: false,
                     responsive: true,
-                    scales: { 
-                        x: { 
-                            display: false 
-                        }, 
-                        y: { 
-                            display: false 
-                        } 
+                    scales: {
+                        x: {
+                            display: false
+                        },
+                        y: {
+                            display: false
+                        }
                     },
-                    plugins: { 
-                        legend: { 
-                            display: false 
-                        }, 
-                        tooltip: { 
-                            enabled: false 
-                        } 
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        }
                     },
-                    elements: { 
-                        point: { 
-                            radius: 0 
-                        }, 
-                        line: { 
-                            borderWidth: 2, 
-                            tension: 0.4 
-                        } 
+                    elements: {
+                        point: {
+                            radius: 0
+                        },
+                        line: {
+                            borderWidth: 2,
+                            tension: 0.4
+                        }
                     }
                 };
-                
+
                 // Inisialisasi Chart "Total Documents"
                 if (this.canvasExists('totalDocsChart')) {
                     try {
@@ -554,7 +549,7 @@
                         console.error('Error creating totalDocsChart:', error);
                     }
                 }
-                
+
                 // Inisialisasi Chart "Uploads"
                 if (this.canvasExists('uploadsChart')) {
                     try {
@@ -576,7 +571,7 @@
                         console.error('Error creating uploadsChart:', error);
                     }
                 }
-                
+
                 // Inisialisasi Chart "Downloads"
                 if (this.canvasExists('downloadsChart')) {
                     try {
@@ -664,8 +659,12 @@
                                 },
                                 scales: {
                                     x: {
-                                        ticks: { color: textColor },
-                                        grid: { display: false }
+                                        ticks: {
+                                            color: textColor
+                                        },
+                                        grid: {
+                                            display: false
+                                        }
                                     },
                                     y: {
                                         type: 'linear',
@@ -677,8 +676,12 @@
                                             color: textColor
                                         },
                                         suggestedMax: 220,
-                                        ticks: { color: textColor },
-                                        grid: { color: gridColor }
+                                        ticks: {
+                                            color: textColor
+                                        },
+                                        grid: {
+                                            color: gridColor
+                                        }
                                     },
                                     y1: {
                                         type: 'linear',
@@ -689,7 +692,9 @@
                                             text: 'Progress %',
                                             color: textColor
                                         },
-                                        grid: { drawOnChartArea: false },
+                                        grid: {
+                                            drawOnChartArea: false
+                                        },
                                         ticks: {
                                             callback: (value) => value + '%',
                                             color: textColor
@@ -704,7 +709,10 @@
                                         position: 'top',
                                         align: 'end',
                                         color: textColor,
-                                        font: { weight: 'normal', size: 12 }
+                                        font: {
+                                            weight: 'normal',
+                                            size: 12
+                                        }
                                     },
                                     legend: {
                                         position: 'bottom',
@@ -721,7 +729,7 @@
                         console.error('Error creating planVsActualChart:', error);
                     }
                 }
-                
+
                 // Inisialisasi Chart "Upload vs Download Trend"
                 if (this.canvasExists('uploadDownloadChart')) {
                     try {
@@ -762,14 +770,22 @@
                                 },
                                 scales: {
                                     x: {
-                                        ticks: { color: textColor },
-                                        grid: { color: gridColor }
+                                        ticks: {
+                                            color: textColor
+                                        },
+                                        grid: {
+                                            color: gridColor
+                                        }
                                     },
                                     y: {
                                         beginAtZero: true,
                                         suggestedMax: 180,
-                                        ticks: { color: textColor },
-                                        grid: { color: gridColor },
+                                        ticks: {
+                                            color: textColor
+                                        },
+                                        grid: {
+                                            color: gridColor
+                                        },
                                         title: {
                                             display: true,
                                             text: 'Documents',

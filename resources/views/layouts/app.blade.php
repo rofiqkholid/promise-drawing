@@ -32,11 +32,43 @@
 
     {{-- DataTables CSS --}}
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.tailwindcss.min.css">
-    
+
+    <style>
+        #main-content {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .loader-spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3b82f6;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+        
+        
+        .dark .loader-spinner {
+            border-color: #4a5568; 
+            border-top-color: #60a5fa; 
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 
 <body class="font-sans antialiased bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
-    <div class="relative min-h-screen flex">
+    
+    <div id="loader" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+        <div class="loader-spinner"></div>
+    </div>
+    
+    <div id="main-content" class="relative min-h-screen flex">
 
         @include('layouts.sidebar')
 
@@ -54,6 +86,19 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.tailwindcss.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <script>
+        window.onload = function() {
+            const loader = document.getElementById('loader');
+            const content = document.getElementById('main-content');
+            
+            loader.style.display = 'none';
+            
+            content.style.visibility = 'visible';
+            content.style.opacity = '1';
+        };
+    </script>
+    
     @stack('scripts')
 </body>
 
