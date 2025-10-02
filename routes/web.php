@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\DocTypeSubCategoriesController;
 use App\Http\Controllers\Api\FileExtensionsController;
 use App\Http\Controllers\Api\CategoryActivitiesController;
 use App\Http\Controllers\Api\ProjectStatusController;
+use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\Api\PartGroupsController;
 use App\Http\Controllers\Api\StampFormatController;
 use App\Http\Controllers\Api\DashboardController;
@@ -115,6 +116,10 @@ Route::middleware(['auth'])->group(function () {
         return view('master.stampFormat');
     })->name('stampFormat');
 
+    Route::get('/menu-management', function () {
+        return view('master.menu_management');
+    })->name('menu-management');
+
     Route::get('stampFormat/data', [StampFormatController::class, 'data'])->name('stampFormat.data');
     Route::resource('master/stampFormat', StampFormatController::class)->names('stampFormat')->except(['create', 'edit']);
     Route::resource('master/departments', DepartmentsController::class)->names('departments')->except(['create', 'edit']);
@@ -140,9 +145,11 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('master/partGroups', PartGroupsController::class)->names('partGroups')->except(['create', 'edit']);
     Route::get('/partGroups/data', [PartGroupsController::class, 'data'])->name('partGroups.data');
     Route::get('/partGroups/getModelsByCustomer', [PartGroupsController::class, 'getModelsByCustomer'])->name('partGroups.getModelsByCustomer');
-
+    Route::resource('master/userMaintenance', UserMaintenanceController::class)->only(['store', 'show', 'update', 'destroy'])->parameters(['userMaintenance' => 'user'])->names('userMaintenance');
     Route::get('userMaintenance/data', [UserMaintenanceController::class, 'data'])->name('userMaintenance.data');
-    Route::resource('master/userMaintenance', UserMaintenanceController::class)->only(['store', 'update', 'destroy'])->names('userMaintenance')->parameters(['userMaintenance' => 'user']);
+    Route::resource('master/menus', MenuController::class)->names('menus')->except(['create', 'edit', 'index']);
+    Route::get('/menus/data', [MenuController::class, 'data'])->name('menus.data');
+    Route::get('/menus/get-parents', [MenuController::class, 'getParents'])->name('menus.getParents');
 
 
     Route::post('/dashboard/getDocumentGroups', [DashboardController::class, 'getDocumentGroups'])->name('dashboard.getDocumentGroups');

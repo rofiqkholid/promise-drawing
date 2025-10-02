@@ -71,11 +71,11 @@
                 </div>
 
                 <div class="flex items-center space-x-4 mt-6">
-                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full">
-                        Add User
-                    </button>
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
                         Cancel
+                    </button>
+                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full">
+                        Save
                     </button>
                 </div>
             </form>
@@ -116,11 +116,11 @@
                 </div>
 
                 <div class="flex items-center space-x-4 mt-6">
-                    <button type="submit" class="text-white bg-yellow-500 hover:bg-yellow-600 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full">
-                        Update User
-                    </button>
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
                         Cancel
+                    </button>
+                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full">
+                        Save Changes
                     </button>
                 </div>
             </form>
@@ -155,70 +155,104 @@
 
 <style>
     /* Ikuti style Department: kecilkan kontrol DataTables */
-    div.dataTables_length label { font-size: 0.75rem; }
-    div.dataTables_length select {
-        font-size: 0.75rem; line-height: 1rem;
-        padding: 0.25rem 1.25rem 0.25rem 0.5rem; height: 1.875rem; width: 4.5rem;
+    div.dataTables_length label {
+        font-size: 0.75rem;
     }
-    div.dataTables_filter label { font-size: 0.75rem; }
+
+    div.dataTables_length select {
+        font-size: 0.75rem;
+        line-height: 1rem;
+        padding: 0.25rem 1.25rem 0.25rem 0.5rem;
+        height: 1.875rem;
+        width: 4.5rem;
+    }
+
+    div.dataTables_filter label {
+        font-size: 0.75rem;
+    }
+
     div.dataTables_filter input[type="search"],
     input[type="search"][aria-controls="usersTable"] {
-        font-size: 0.75rem; line-height: 1rem; padding: 0.25rem 0.5rem; height: 1.875rem; width: 12rem;
+        font-size: 0.75rem;
+        line-height: 1rem;
+        padding: 0.25rem 0.5rem;
+        height: 1.875rem;
+        width: 12rem;
     }
 </style>
 
 @push('scripts')
 <script>
-$(document).ready(function() {
-    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+    $(document).ready(function() {
+        const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-    /* ===== Helpers modal ===== */
-    const addModal    = $('#addUserModal');
-    const editModal   = $('#editUserModal');
-    const deleteModal = $('#deleteUserModal');
-    const addButton   = $('#add-button');
-    const closeButtons= $('.close-modal-button');
-    let userIdToDelete = null;
+        /* ===== Helpers modal ===== */
+        const addModal = $('#addUserModal');
+        const editModal = $('#editUserModal');
+        const deleteModal = $('#deleteUserModal');
+        const addButton = $('#add-button');
+        const closeButtons = $('.close-modal-button');
+        let userIdToDelete = null;
 
-    function showModal(modal){ modal.removeClass('hidden').addClass('flex'); }
-    function hideModal(modal){ modal.addClass('hidden').removeClass('flex'); }
+        function showModal(modal) {
+            modal.removeClass('hidden').addClass('flex');
+        }
 
-    addButton.on('click', () => showModal(addModal));
-    closeButtons.on('click', () => { hideModal(addModal); hideModal(editModal); hideModal(deleteModal); });
+        function hideModal(modal) {
+            modal.addClass('hidden').removeClass('flex');
+        }
 
-    /* ===== DataTable ===== */
-    const table = $('#usersTable').DataTable({
-        processing: true,
-        serverSide: true,
-        info: false,
-        scrollX: true,
-        ajax: {
-            url: '{{ route("userMaintenance.data") }}',
-            type: 'GET',
-            data: function(d){ d.search = d.search.value; }
-        },
-        columns: [
-            { // No
-                data: null,
-                render: function(data, type, row, meta){ return meta.row + meta.settings._iDisplayStart + 1; }
-            },
-            { data: 'name',  name: 'name'  },
-            { data: 'email', name: 'email' },
-            { data: 'nik',   name: 'nik'   },
-            { // Status (Verified / Unverified dari email_verification_at)
-                data: 'email_verification_at',
-                render: function(val){
-                    return val
-                        ? `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Verified</span>`
-                        : `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Unverified</span>`;
+        addButton.on('click', () => showModal(addModal));
+        closeButtons.on('click', () => {
+            hideModal(addModal);
+            hideModal(editModal);
+            hideModal(deleteModal);
+        });
+
+        /* ===== DataTable ===== */
+        const table = $('#usersTable').DataTable({
+            processing: true,
+            serverSide: true,
+            scrollX: true,
+            ajax: {
+                url: '{{ route("userMaintenance.data") }}',
+                type: 'GET',
+                data: function(d) {
+                    d.search = d.search.value;
                 }
             },
-            { // Action
-                data: null,
-                orderable: false,
-                searchable: false,
-                render: function(data, type, row){
-                    return `
+            columns: [{ // No
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    }
+                },
+                {
+                    data: 'name',
+                    name: 'name'
+                },
+                {
+                    data: 'email',
+                    name: 'email'
+                },
+                {
+                    data: 'nik',
+                    name: 'nik'
+                },
+                { // Status (Verified / Unverified dari email_verification_at)
+                    data: 'email_verification_at',
+                    render: function(val) {
+                        return val ?
+                            `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Verified</span>` :
+                            `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Unverified</span>`;
+                    }
+                },
+                { // Action
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    render: function(data, type, row) {
+                        return `
                         <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
                             <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
                         </button>
@@ -226,125 +260,154 @@ $(document).ready(function() {
                             <i class="fa-solid fa-trash-can fa-lg m-2"></i>
                         </button>
                     `;
+                    }
                 }
-            }
-        ],
-        pageLength: 10,
-        order: [[1,'asc']],
-        language: { emptyTable: '<div class="text-gray-500 dark:text-gray-400">No users found.</div>' },
-        responsive: true,
-        autoWidth: false,
-    });
-
-    /* ===== Create ===== */
-    $('#addUserForm').on('submit', function(e){
-        e.preventDefault();
-        const formData = new FormData(this);
-        const nameErr = $('#add-name-error'), emailErr = $('#add-email-error'), nikErr = $('#add-nik-error'), passErr = $('#add-password-error');
-        nameErr.addClass('hidden'); emailErr.addClass('hidden'); nikErr.addClass('hidden'); passErr.addClass('hidden');
-
-        $.ajax({
-            url: $(this).attr('action'),
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false, contentType: false,
-            success: function(res){
-                if (res.success){
-                    table.ajax.reload(null, false);
-                    hideModal(addModal);
-                    $('#addUserForm')[0].reset();
-                }
+            ],
+            pageLength: 10,
+            order: [
+                [1, 'asc']
+            ],
+            language: {
+                emptyTable: '<div class="text-gray-500 dark:text-gray-400">No users found.</div>'
             },
-            error: function(xhr){
-                const errors = xhr.responseJSON?.errors;
-                if (!errors) return;
-                if (errors.name)     nameErr.text(errors.name[0]).removeClass('hidden');
-                if (errors.email)    emailErr.text(errors.email[0]).removeClass('hidden');
-                if (errors.nik)      nikErr.text(errors.nik[0]).removeClass('hidden');
-                if (errors.password) passErr.text(errors.password[0]).removeClass('hidden');
-            }
+            responsive: true,
+            autoWidth: false,
         });
-    });
 
-    /* ===== Read (prefill edit) ===== */
-    $(document).on('click', '.edit-button', function(){
-        const id = $(this).data('id');
-        $('#edit-name-error, #edit-email-error, #edit-nik-error').addClass('hidden');
+        /* ===== Create ===== */
+        $('#addUserForm').on('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const nameErr = $('#add-name-error'),
+                emailErr = $('#add-email-error'),
+                nikErr = $('#add-nik-error'),
+                passErr = $('#add-password-error');
+            nameErr.addClass('hidden');
+            emailErr.addClass('hidden');
+            nikErr.addClass('hidden');
+            passErr.addClass('hidden');
 
-        $.ajax({
-            url: `/master/userMaintenance/${id}`,
-            method: 'GET',
-            success: function(data){
+            $.ajax({
+                url: $(this).attr('action'),
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(res) {
+                    if (res.success) {
+                        table.ajax.reload(null, false);
+                        hideModal(addModal);
+                        $('#addUserForm')[0].reset();
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (!errors) return;
+                    if (errors.name) nameErr.text(errors.name[0]).removeClass('hidden');
+                    if (errors.email) emailErr.text(errors.email[0]).removeClass('hidden');
+                    if (errors.nik) nikErr.text(errors.nik[0]).removeClass('hidden');
+                    if (errors.password) passErr.text(errors.password[0]).removeClass('hidden');
+                }
+            });
+        });
+
+        /* ===== Read (prefill edit) ===== */
+        $(document).on('click', '.edit-button', function() {
+            const id = $(this).data('id');
+
+            const showUrl = "{{ route('userMaintenance.show', ':id') }}".replace(':id', id);
+            const updateUrl = "{{ route('userMaintenance.update', ':id') }}".replace(':id', id);
+
+            // reset error
+            $('#edit-name-error, #edit-email-error, #edit-nik-error').addClass('hidden');
+
+            $.get(showUrl, function(data) {
                 $('#edit_name').val(data.name);
                 $('#edit_email').val(data.email);
                 $('#edit_nik').val(data.nik);
-                $('#editUserForm').attr('action', `/master/userMaintenance/${id}`);
-                showModal(editModal);
-            }
+                $('#editUserForm').attr('action', updateUrl);
+                $('#editUserModal').removeClass('hidden').addClass('flex');
+            });
         });
-    });
 
-    /* ===== Update ===== */
-    $('#editUserForm').on('submit', function(e){
-        e.preventDefault();
-        const formData = new FormData(this);
-        $('#edit-name-error, #edit-email-error, #edit-nik-error').addClass('hidden');
+        /* ===== Update ===== */
+        $('#editUserForm').on('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            $('#edit-name-error, #edit-email-error, #edit-nik-error').addClass('hidden');
 
-        $.ajax({
-            url: $(this).attr('action'),
-            method: 'POST', // pakai @method('PUT')
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false, contentType: false,
-            success: function(res){
-                if (res.success){
-                    table.ajax.reload(null, false);
-                    hideModal(editModal);
+            $.ajax({
+                url: $(this).attr('action'),
+                method: 'POST', // pakai @method('PUT')
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(res) {
+                    if (res.success) {
+                        table.ajax.reload(null, false);
+                        hideModal(editModal);
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (!errors) return;
+                    if (errors.name) $('#edit-name-error').text(errors.name[0]).removeClass('hidden');
+                    if (errors.email) $('#edit-email-error').text(errors.email[0]).removeClass('hidden');
+                    if (errors.nik) $('#edit-nik-error').text(errors.nik[0]).removeClass('hidden');
                 }
-            },
-            error: function(xhr){
-                const errors = xhr.responseJSON?.errors;
-                if (!errors) return;
-                if (errors.name)  $('#edit-name-error').text(errors.name[0]).removeClass('hidden');
-                if (errors.email) $('#edit-email-error').text(errors.email[0]).removeClass('hidden');
-                if (errors.nik)   $('#edit-nik-error').text(errors.nik[0]).removeClass('hidden');
-            }
+            });
         });
-    });
 
-    /* ===== Delete ===== */
-    $(document).on('click', '.delete-button', function(){
-        userIdToDelete = $(this).data('id');
-        showModal(deleteModal);
-    });
+        /* ===== Delete ===== */
+        $(document).on('click', '.delete-button', function() {
+            userIdToDelete = $(this).data('id');
+            showModal(deleteModal);
+        });
 
-    $('#confirmDeleteButton').on('click', function(){
-        if (!userIdToDelete) return;
-        $.ajax({
-            url: `/master/userMaintenance/${userIdToDelete}`,
-            method: 'DELETE',
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            success: function(res){
-                if (res.success){
-                    table.ajax.reload(null, false);
-                    hideModal(deleteModal);
-                    userIdToDelete = null;
-                } else {
+        $('#confirmDeleteButton').on('click', function() {
+            if (!userIdToDelete) return;
+            $.ajax({
+                url: `/master/userMaintenance/${userIdToDelete}`,
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                success: function(res) {
+                    if (res.success) {
+                        table.ajax.reload(null, false);
+                        hideModal(deleteModal);
+                        userIdToDelete = null;
+                    } else {
+                        alert('Error deleting user.');
+                    }
+                },
+                error: function() {
                     alert('Error deleting user.');
                 }
-            },
-            error: function(){ alert('Error deleting user.'); }
+            });
         });
-    });
 
-    /* ===== Focus tweak untuk kontrol length/search (opsional) ===== */
-    const overrideFocus = function(){ $(this).css({'outline':'none','box-shadow':'none','border-color':'gray'}); };
-    const restoreBlur   = function(){ $(this).css('border-color',''); };
-    const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
-    elementsToFix.on('focus keyup', overrideFocus);
-    elementsToFix.on('blur', restoreBlur);
-    elementsToFix.filter(':focus').each(overrideFocus);
-});
+        /* ===== Focus tweak untuk kontrol length/search (opsional) ===== */
+        const overrideFocus = function() {
+            $(this).css({
+                'outline': 'none',
+                'box-shadow': 'none',
+                'border-color': 'gray'
+            });
+        };
+        const restoreBlur = function() {
+            $(this).css('border-color', '');
+        };
+        const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
+        elementsToFix.on('focus keyup', overrideFocus);
+        elementsToFix.on('blur', restoreBlur);
+        elementsToFix.filter(':focus').each(overrideFocus);
+    });
 </script>
 @endpush

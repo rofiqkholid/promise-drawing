@@ -28,7 +28,7 @@
                         <th scope="col" class="px-6 py-3 sorting" data-column="name">
                             Project Status Name
                         </th>
-                        <th scope="col" class="px-6 py-3 text-center">Action</th>
+                        <th scope="col" class="px-6 py-3 text-start">Action</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -54,11 +54,11 @@
                     <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
-                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full">
-                        Add Project Status
-                    </button>
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
                         Cancel
+                    </button>
+                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full">
+                        Save
                     </button>
                 </div>
             </form>
@@ -84,11 +84,11 @@
                     <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
-                    <button type="submit" class="text-white bg-yellow-500 hover:bg-yellow-600 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full">
-                        Update Project Status
-                    </button>
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
                         Cancel
+                    </button>
+                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full">
+                        Save Changes
                     </button>
                 </div>
             </form>
@@ -121,62 +121,83 @@
 </div>
 @endsection
 <style>
-  /* Kecilkan ukuran komponen "Show ... entries" saja */
-  div.dataTables_length label{
-    font-size: 0.75rem;           /* text-xs */
-  }
-  div.dataTables_length select{
-    font-size: 0.75rem;           /* text-xs */
-    line-height: 1rem;            /* compact */
-    padding: 0.25rem 1.25rem 0.25rem 0.5rem;
-    height: 1.875rem;             /* ~30px, lebih kecil dari default */
-    width: 4.5rem;                /* cukup untuk 10/25/50 */
-  }
+    /* Kecilkan ukuran komponen "Show ... entries" saja */
+    div.dataTables_length label {
+        font-size: 0.75rem;
+        /* text-xs */
+    }
 
-  div.dataTables_filter label{
-    font-size: 0.75rem; /* text-xs */
-  }
+    div.dataTables_length select {
+        font-size: 0.75rem;
+        /* text-xs */
+        line-height: 1rem;
+        /* compact */
+        padding: 0.25rem 1.25rem 0.25rem 0.5rem;
+        height: 1.875rem;
+        /* ~30px, lebih kecil dari default */
+        width: 4.5rem;
+        /* cukup untuk 10/25/50 */
+    }
 
-  /* Kecilkan input Search DataTables */
-  div.dataTables_filter input[type="search"],
-  input[type="search"][aria-controls="departmentsTable"]{
-    font-size: 0.75rem;              /* text-xs */
-    line-height: 1rem;
-    padding: 0.25rem 0.5rem;         /* lebih rapat */
-    height: 1.875rem;                /* ~30px */
-    width: 12rem;                    /* ~192px, lebih kecil dari default */
-  }
+    div.dataTables_filter label {
+        font-size: 0.75rem;
+        /* text-xs */
+    }
+
+    /* Kecilkan input Search DataTables */
+    div.dataTables_filter input[type="search"],
+    input[type="search"][aria-controls="departmentsTable"] {
+        font-size: 0.75rem;
+        /* text-xs */
+        line-height: 1rem;
+        padding: 0.25rem 0.5rem;
+        /* lebih rapat */
+        height: 1.875rem;
+        /* ~30px */
+        width: 12rem;
+        /* ~192px, lebih kecil dari default */
+    }
+
+    div.dataTables_info {
+        font-size: 0.75rem;
+        /* Ukuran teks kecil (text-xs) */
+        padding-top: 0.8em;
+        /* Sesuaikan padding agar sejajar dengan pagination */
+    }
 </style>
 @push('scripts')
 <script>
-$(document).ready(function () {
-    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+    $(document).ready(function() {
+        const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-    // Initialize DataTable
-    const table = $('#projectStatusTable').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: '{{ route("projectStatus.data") }}',
-            type: 'GET',
-            data: function (d) {
-                d.search = d.search.value;
-            }
-        },
-        columns: [
-            {
-                data: null,
-                render: function (data, type, row, meta) {
-                    return meta.row + meta.settings._iDisplayStart + 1;
+        // Initialize DataTable
+        const table = $('#projectStatusTable').DataTable({
+            processing: true,
+            serverSide: true,
+            scrollX: true,
+            ajax: {
+                url: '{{ route("projectStatus.data") }}',
+                type: 'GET',
+                data: function(d) {
+                    d.search = d.search.value;
                 }
             },
-            { data: 'name', name: 'name' },
-            {
-                data: null,
-                orderable: false,
-                searchable: false,
-                render: function (data, type, row) {
-                    return `
+            columns: [{
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    }
+                },
+                {
+                    data: 'name',
+                    name: 'name'
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    render: function(data, type, row) {
+                        return `
                         <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
                             <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
                         </button>
@@ -184,76 +205,80 @@ $(document).ready(function () {
                             <i class="fa-solid fa-trash-can fa-lg m-2"></i>
                         </button>
                     `;
+                    }
                 }
-            }
-        ],
-        pageLength: 10,
-        lengthMenu: [10, 25, 50],
-        order: [[1, 'asc']],
-        language: {
-            emptyTable: '<div class="text-gray-500 dark:text-gray-400">No project statuses found.</div>'
-        },
-    });
-
-    // Modal Handling
-    const addModal = $('#addProjectStatusModal');
-    const editModal = $('#editProjectStatusModal');
-    const deleteModal = $('#deleteProjectStatusModal');
-    const addButton = $('#add-button');
-    const closeButtons = $('.close-modal-button');
-    let projectStatusIdToDelete = null;
-
-    function showModal(modal) {
-        modal.removeClass('hidden').addClass('flex');
-    }
-
-    function hideModal(modal) {
-        modal.addClass('hidden').removeClass('flex');
-    }
-
-    addButton.on('click', () => {
-        $('#addProjectStatusForm')[0].reset();
-        showModal(addModal);
-    });
-
-    closeButtons.on('click', () => {
-        hideModal(addModal);
-        hideModal(editModal);
-        hideModal(deleteModal);
-    });
-
-    // Add Project Status
-    $('#addProjectStatusForm').on('submit', function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const nameError = $('#add-name-error');
-        nameError.addClass('hidden');
-
-        $.ajax({
-            url: $(this).attr('action'),
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (data) {
-                if (data.success) {
-                    table.ajax.reload();
-                    hideModal(addModal);
-                    $('#addProjectStatusForm')[0].reset();
-                }
+            ],
+            pageLength: 10,
+            lengthMenu: [10, 25, 50],
+            order: [
+                [1, 'asc']
+            ],
+            language: {
+                emptyTable: '<div class="text-gray-500 dark:text-gray-400">No project statuses found.</div>'
             },
-            error: function (xhr) {
-                const errors = xhr.responseJSON?.errors;
-                if (errors && errors.name) {
-                    nameError.text(errors.name[0]).removeClass('hidden');
-                }
-            }
         });
-    });
+
+        // Modal Handling
+        const addModal = $('#addProjectStatusModal');
+        const editModal = $('#editProjectStatusModal');
+        const deleteModal = $('#deleteProjectStatusModal');
+        const addButton = $('#add-button');
+        const closeButtons = $('.close-modal-button');
+        let projectStatusIdToDelete = null;
+
+        function showModal(modal) {
+            modal.removeClass('hidden').addClass('flex');
+        }
+
+        function hideModal(modal) {
+            modal.addClass('hidden').removeClass('flex');
+        }
+
+        addButton.on('click', () => {
+            $('#addProjectStatusForm')[0].reset();
+            showModal(addModal);
+        });
+
+        closeButtons.on('click', () => {
+            hideModal(addModal);
+            hideModal(editModal);
+            hideModal(deleteModal);
+        });
+
+        // Add Project Status
+        $('#addProjectStatusForm').on('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const nameError = $('#add-name-error');
+            nameError.addClass('hidden');
+
+            $.ajax({
+                url: $(this).attr('action'),
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
+                    if (data.success) {
+                        table.ajax.reload();
+                        hideModal(addModal);
+                        $('#addProjectStatusForm')[0].reset();
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors && errors.name) {
+                        nameError.text(errors.name[0]).removeClass('hidden');
+                    }
+                }
+            });
+        });
 
 
-    const overrideFocusStyles = function() {
+        const overrideFocusStyles = function() {
             $(this).css({
                 'outline': 'none',
                 'box-shadow': 'none',
@@ -268,78 +293,82 @@ $(document).ready(function () {
         elementsToFix.on('blur', restoreBlurStyles);
         elementsToFix.filter(':focus').each(overrideFocusStyles);
 
-    // Edit Project Status
-    $(document).on('click', '.edit-button', function () {
-        const id = $(this).data('id');
-        const nameError = $('#edit-name-error');
-        nameError.addClass('hidden');
+        // Edit Project Status
+        $(document).on('click', '.edit-button', function() {
+            const id = $(this).data('id');
+            const nameError = $('#edit-name-error');
+            nameError.addClass('hidden');
 
-        $.ajax({
-            url: `/master/projectStatus/${id}`,
-            method: 'GET',
-            success: function (data) {
-                $('#edit_name').val(data.name);
-                $('#editProjectStatusForm').attr('action', `/master/projectStatus/${id}`);
-                showModal(editModal);
-            }
-        });
-    });
-
-    $('#editProjectStatusForm').on('submit', function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const nameError = $('#edit-name-error');
-        nameError.addClass('hidden');
-
-        $.ajax({
-            url: $(this).attr('action'),
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (data) {
-                if (data.success) {
-                    table.ajax.reload();
-                    hideModal(editModal);
-                }
-            },
-            error: function (xhr) {
-                const errors = xhr.responseJSON?.errors;
-                if (errors && errors.name) {
-                    nameError.text(errors.name[0]).removeClass('hidden');
-                }
-            }
-        });
-    });
-
-    // Delete Project Status
-    $(document).on('click', '.delete-button', function () {
-        projectStatusIdToDelete = $(this).data('id');
-        showModal(deleteModal);
-    });
-
-    $('#confirmDeleteButton').on('click', function () {
-        if (projectStatusIdToDelete) {
             $.ajax({
-                url: `/master/projectStatus/${projectStatusIdToDelete}`,
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
-                success: function (data) {
-                    if (data.success) {
-                        table.ajax.reload();
-                        hideModal(deleteModal);
-                        projectStatusIdToDelete = null;
-                    } else {
-                        alert('Error deleting project status.');
-                    }
-                },
-                error: function () {
-                    alert('Error deleting project status.');
+                url: `/master/projectStatus/${id}`,
+                method: 'GET',
+                success: function(data) {
+                    $('#edit_name').val(data.name);
+                    $('#editProjectStatusForm').attr('action', `/master/projectStatus/${id}`);
+                    showModal(editModal);
                 }
             });
-        }
+        });
+
+        $('#editProjectStatusForm').on('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const nameError = $('#edit-name-error');
+            nameError.addClass('hidden');
+
+            $.ajax({
+                url: $(this).attr('action'),
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
+                    if (data.success) {
+                        table.ajax.reload();
+                        hideModal(editModal);
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors && errors.name) {
+                        nameError.text(errors.name[0]).removeClass('hidden');
+                    }
+                }
+            });
+        });
+
+        // Delete Project Status
+        $(document).on('click', '.delete-button', function() {
+            projectStatusIdToDelete = $(this).data('id');
+            showModal(deleteModal);
+        });
+
+        $('#confirmDeleteButton').on('click', function() {
+            if (projectStatusIdToDelete) {
+                $.ajax({
+                    url: `/master/projectStatus/${projectStatusIdToDelete}`,
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    success: function(data) {
+                        if (data.success) {
+                            table.ajax.reload();
+                            hideModal(deleteModal);
+                            projectStatusIdToDelete = null;
+                        } else {
+                            alert('Error deleting project status.');
+                        }
+                    },
+                    error: function() {
+                        alert('Error deleting project status.');
+                    }
+                });
+            }
+        });
     });
-});
 </script>
 @endpush

@@ -62,7 +62,7 @@
                     </div>
                     <div>
                         <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">User Active</h3>
-                        <p class="text-xl font-bold text-gray-800 dark:text-gray-100">15</p>
+                        <p id="activeUserCount" class="text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
                     </div>
                 </div>
                 <div class="mt-2 h-8 w-full"><canvas id="activeUsersChart"></canvas></div>
@@ -221,6 +221,34 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        fetchActiveUsers();
+
+    });
+
+    function fetchActiveUsers() {
+        const apiUrl = '/api/active-users-count';
+        const userCountElement = document.getElementById('activeUserCount');
+        userCountElement.textContent = '...';
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.status === 'success') {
+                    userCountElement.textContent = data.count;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching active users:', error);
+                userCountElement.textContent = 'Error';
+            });
+    }
+
     function dashboardController() {
         return {
             showExtraFilters: false,
@@ -854,7 +882,6 @@
                     if (dashboardElement && dashboardElement.__x) {
                         const component = dashboardElement.__x.$data;
                         if (component && typeof component.initCharts === 'function') {
-                            // Tunggu sebentar sebelum re-inisialisasi chart
                             setTimeout(() => {
                                 component.initCharts();
                             }, 300);

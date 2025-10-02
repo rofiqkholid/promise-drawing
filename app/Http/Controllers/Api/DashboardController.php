@@ -9,12 +9,32 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-   
+
+    public function getActiveUsersCount(): JsonResponse
+    {
+        try {
+            $activeUsersCount = DB::table('users')
+                ->where('is_active', '1')
+                ->count();
+
+            return response()->json([
+                'status' => 'success',
+                'count' => $activeUsersCount
+            ]);
+        } catch (\Exception $e) {
+           
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Could not fetch active users count.'
+            ], 500); 
+        }
+    }
+
     public function getDocumentGroups(Request $request): JsonResponse
     {
-        $searchTerm = $request->q; 
-        $page = $request->page ?: 1; 
-        $resultsPerPage = 10; 
+        $searchTerm = $request->q;
+        $page = $request->page ?: 1;
+        $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
         $query = DB::table('doctype_groups')
@@ -33,20 +53,20 @@ class DashboardController extends Controller
         $formattedGroups = $groups->map(function ($group) {
             return [
                 'id'   => $group->id,
-                'text' => $group->name 
+                'text' => $group->name
             ];
         });
 
         return response()->json([
             'results'     => $formattedGroups,
-            'total_count' => $totalCount 
+            'total_count' => $totalCount
         ]);
     }
     public function getSubType(Request $request): JsonResponse
     {
-        $searchTerm = $request->q; 
-        $page = $request->page ?: 1; 
-        $resultsPerPage = 10; 
+        $searchTerm = $request->q;
+        $page = $request->page ?: 1;
+        $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
         $query = DB::table('doctype_subcategories')
@@ -65,21 +85,21 @@ class DashboardController extends Controller
         $formattedGroups = $groups->map(function ($group) {
             return [
                 'id'   => $group->id,
-                'text' => $group->name 
+                'text' => $group->name
             ];
         });
 
         return response()->json([
             'results'     => $formattedGroups,
-            'total_count' => $totalCount 
+            'total_count' => $totalCount
         ]);
     }
 
     public function getCustomer(Request $request): JsonResponse
     {
-        $searchTerm = $request->q; 
-        $page = $request->page ?: 1; 
-        $resultsPerPage = 10; 
+        $searchTerm = $request->q;
+        $page = $request->page ?: 1;
+        $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
         $query = DB::table('customers')
@@ -98,21 +118,21 @@ class DashboardController extends Controller
         $formattedGroups = $groups->map(function ($group) {
             return [
                 'id'   => $group->id,
-                'text' => $group->code 
+                'text' => $group->code
             ];
         });
 
         return response()->json([
             'results'     => $formattedGroups,
-            'total_count' => $totalCount 
+            'total_count' => $totalCount
         ]);
     }
 
     public function getModel(Request $request): JsonResponse
     {
-        $searchTerm = $request->q; 
-        $page = $request->page ?: 1; 
-        $resultsPerPage = 10; 
+        $searchTerm = $request->q;
+        $page = $request->page ?: 1;
+        $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
         $query = DB::table('models')
@@ -131,20 +151,20 @@ class DashboardController extends Controller
         $formattedGroups = $groups->map(function ($group) {
             return [
                 'id'   => $group->id,
-                'text' => $group->code 
+                'text' => $group->code
             ];
         });
 
         return response()->json([
             'results'     => $formattedGroups,
-            'total_count' => $totalCount 
+            'total_count' => $totalCount
         ]);
     }
     public function getPartGroup(Request $request): JsonResponse
     {
-        $searchTerm = $request->q; 
-        $page = $request->page ?: 1; 
-        $resultsPerPage = 10; 
+        $searchTerm = $request->q;
+        $page = $request->page ?: 1;
+        $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
         $query = DB::table('part_groups')
@@ -163,20 +183,20 @@ class DashboardController extends Controller
         $formattedGroups = $groups->map(function ($group) {
             return [
                 'id'   => $group->id,
-                'text' => $group->code_part_group 
+                'text' => $group->code_part_group
             ];
         });
 
         return response()->json([
             'results'     => $formattedGroups,
-            'total_count' => $totalCount 
+            'total_count' => $totalCount
         ]);
     }
     public function getStatus(Request $request): JsonResponse
     {
-        $searchTerm = $request->q; 
-        $page = $request->page ?: 1; 
-        $resultsPerPage = 10; 
+        $searchTerm = $request->q;
+        $page = $request->page ?: 1;
+        $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
         $query = DB::table('project_status')
@@ -195,13 +215,13 @@ class DashboardController extends Controller
         $formattedGroups = $groups->map(function ($group) {
             return [
                 'id'   => $group->id,
-                'text' => $group->name 
+                'text' => $group->name
             ];
         });
 
         return response()->json([
             'results'     => $formattedGroups,
-            'total_count' => $totalCount 
+            'total_count' => $totalCount
         ]);
     }
 }

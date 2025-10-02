@@ -34,7 +34,7 @@
                         <th scope="col" class="px-6 py-3 sorting" data-column="is_active">
                             Is Active
                         </th>
-                        <th scope="col" class="px-6 py-3 text-center">Action</th>
+                        <th scope="col" class="px-6 py-3 text-start">Action</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -71,11 +71,11 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
-                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full">
-                        Add Stamp Format
-                    </button>
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
                         Cancel
+                    </button>
+                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full">
+                        Save
                     </button>
                 </div>
             </form>
@@ -112,11 +112,11 @@
                     </div>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
-                    <button type="submit" class="text-white bg-yellow-500 hover:bg-yellow-600 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full">
-                        Update Stamp Format
-                    </button>
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
                         Cancel
+                    </button>
+                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full">
+                        Save Changes
                     </button>
                 </div>
             </form>
@@ -149,77 +149,101 @@
 </div>
 @endsection
 <style>
-/* Kecilkan ukuran komponen "Show ... entries" saja */
-div.dataTables_length label{
-    font-size: 0.75rem;          /* text-xs */
-}
-div.dataTables_length select{
-    font-size: 0.75rem;          /* text-xs */
-    line-height: 1rem;           /* compact */
-    padding: 0.25rem 1.25rem 0.25rem 0.5rem;
-    height: 1.875rem;             /* ~30px, lebih kecil dari default */
-    width: 4.5rem;                /* cukup untuk 10/25/50 */
-}
+    /* Kecilkan ukuran komponen "Show ... entries" saja */
+    div.dataTables_length label {
+        font-size: 0.75rem;
+        /* text-xs */
+    }
 
-div.dataTables_filter label{
-    font-size: 0.75rem; /* text-xs */
-}
+    div.dataTables_length select {
+        font-size: 0.75rem;
+        /* text-xs */
+        line-height: 1rem;
+        /* compact */
+        padding: 0.25rem 1.25rem 0.25rem 0.5rem;
+        height: 1.875rem;
+        /* ~30px, lebih kecil dari default */
+        width: 4.5rem;
+        /* cukup untuk 10/25/50 */
+    }
 
-/* Kecilkan input Search DataTables */
-div.dataTables_filter input[type="search"],
-input[type="search"][aria-controls="departmentsTable"]{
-    font-size: 0.75rem;          /* text-xs */
-    line-height: 1rem;
-    padding: 0.25rem 0.5rem;     /* lebih rapat */
-    height: 1.875rem;             /* ~30px */
-    width: 12rem;                 /* ~192px, lebih kecil dari default */
-}
+    div.dataTables_filter label {
+        font-size: 0.75rem;
+        /* text-xs */
+    }
+
+    /* Kecilkan input Search DataTables */
+    div.dataTables_filter input[type="search"],
+    input[type="search"][aria-controls="departmentsTable"] {
+        font-size: 0.75rem;
+        /* text-xs */
+        line-height: 1rem;
+        padding: 0.25rem 0.5rem;
+        /* lebih rapat */
+        height: 1.875rem;
+        /* ~30px */
+        width: 12rem;
+        /* ~192px, lebih kecil dari default */
+    }
+
+    div.dataTables_info {
+        font-size: 0.75rem;
+        /* Ukuran teks kecil (text-xs) */
+        padding-top: 0.8em;
+        /* Sesuaikan padding agar sejajar dengan pagination */
+    }
 </style>
 @push('scripts')
 <script>
-$(document).ready(function () {
-    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+    $(document).ready(function() {
+        const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-    // Initialize DataTable
-    const table = $('#stampFormatsTable').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: '{{ route("stampFormat.data") }}', // Updated route
-            type: 'GET',
-            data: function (d) {
-                d.search = d.search.value;
-            }
-        },
-        columns: [
-            {
-                data: null,
-                render: function (data, type, row, meta) {
-                    return meta.row + meta.settings._iDisplayStart + 1;
+        // Initialize DataTable
+        const table = $('#stampFormatsTable').DataTable({
+            processing: true,
+            serverSide: true,
+            scrollX: true,
+            ajax: {
+                url: '{{ route("stampFormat.data") }}', // Updated route
+                type: 'GET',
+                data: function(d) {
+                    d.search = d.search.value;
                 }
             },
-            { data: 'prefix', name: 'prefix' }, // Updated column
-            { data: 'suffix', name: 'suffix' }, // Updated column
-            {
-                data: 'is_active',
-                name: 'is_active',
-                orderable: true,
-                searchable: false,
-                className: 'px-6 py-4 whitespace-nowrap text-center',
-                render: function(data, type, row) {
-                    const isActive = data == 1;
-                    const badgeClass = isActive ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-                    const text = isActive ? 'Active' : 'Inactive';
-                    return `<span class="px-2 py-0.5 font-medium rounded-full text-xs inline-flex items-center justify-center ${badgeClass}">${text}</span>`;
-                }
-            },
-            {
-                data: null,
-                orderable: false,
-                searchable: false,
-                className: 'px-6 py-4 whitespace-nowrap text-center',
-                render: function (data, type, row) {
-                    return `
+            columns: [{
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    }
+                },
+                {
+                    data: 'prefix',
+                    name: 'prefix'
+                }, // Updated column
+                {
+                    data: 'suffix',
+                    name: 'suffix'
+                }, // Updated column
+                {
+                    data: 'is_active',
+                    name: 'is_active',
+                    orderable: true,
+                    searchable: false,
+                    className: 'px-6 py-4 whitespace-nowrap text-center',
+                    render: function(data, type, row) {
+                        const isActive = data == 1;
+                        const badgeClass = isActive ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+                        const text = isActive ? 'Active' : 'Inactive';
+                        return `<span class="px-2 py-0.5 font-medium rounded-full text-xs inline-flex items-center justify-center ${badgeClass}">${text}</span>`;
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    className: 'px-6 py-4 whitespace-nowrap text-center',
+                    render: function(data, type, row) {
+                        return `
                         <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
                             <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
                         </button>
@@ -227,206 +251,214 @@ $(document).ready(function () {
                             <i class="fa-solid fa-trash-can fa-lg m-2"></i>
                         </button>
                     `;
+                    }
                 }
-            }
-        ],
-        pageLength: 10,
-        lengthMenu: [10, 25, 50],
-        order: [[1, 'asc']],
-        language: {
-            emptyTable: '<div class="text-gray-500 dark:text-gray-400">No stamp formats found.</div>'
-        },
-    });
-
-    // Modal Handling
-    const addModal = $('#addStampFormatModal');
-    const editModal = $('#editStampFormatModal');
-    const deleteModal = $('#deleteStampFormatModal');
-    const addButton = $('#add-button');
-    const closeButtons = $('.close-modal-button');
-    let stampFormatIdToDelete = null;
-
-    function showModal(modal) {
-        modal.removeClass('hidden').addClass('flex');
-    }
-
-    function hideModal(modal) {
-        modal.addClass('hidden').removeClass('flex');
-    }
-
-    addButton.on('click', () => {
-        $('#addStampFormatForm')[0].reset();
-        $('#is_active').prop('checked', true); // Ensure 'Is Active' is checked by default for add
-        showModal(addModal);
-    });
-
-    closeButtons.on('click', () => {
-        hideModal(addModal);
-        hideModal(editModal);
-        hideModal(deleteModal);
-    });
-
-    // Fix DataTables search/length focus styles (retained from original request)
-    const overrideFocusStyles = function() {
-        $(this).css({
-            'outline': 'none',
-            'box-shadow': 'none',
-            'border-color': 'gray'
+            ],
+            pageLength: 10,
+            lengthMenu: [10, 25, 50],
+            order: [
+                [1, 'asc']
+            ],
+            language: {
+                emptyTable: '<div class="text-gray-500 dark:text-gray-400">No stamp formats found.</div>'
+            },
         });
-    };
-    const restoreBlurStyles = function() {
-        $(this).css('border-color', '');
-    };
-    const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
-    elementsToFix.on('focus keyup', overrideFocusStyles);
-    elementsToFix.on('blur', restoreBlurStyles);
-    elementsToFix.filter(':focus').each(overrideFocusStyles);
 
-    // Add Stamp Format
-    $('#addStampFormatForm').on('submit', function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const prefixError = $('#add-prefix-error');
-        const suffixError = $('#add-suffix-error');
-        prefixError.addClass('hidden');
-        suffixError.addClass('hidden');
+        // Modal Handling
+        const addModal = $('#addStampFormatModal');
+        const editModal = $('#editStampFormatModal');
+        const deleteModal = $('#deleteStampFormatModal');
+        const addButton = $('#add-button');
+        const closeButtons = $('.close-modal-button');
+        let stampFormatIdToDelete = null;
 
-        // Manually add unchecked 'is_active' if not present
-        if (!$('#is_active').is(':checked')) {
-            formData.set('is_active', '0');
+        function showModal(modal) {
+            modal.removeClass('hidden').addClass('flex');
         }
 
-        $.ajax({
-            url: $(this).attr('action'),
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (data) {
-                if (data.success) {
-                    table.ajax.reload();
-                    hideModal(addModal);
-                    $('#addStampFormatForm')[0].reset();
-                }
-            },
-            error: function (xhr) {
-                const errors = xhr.responseJSON?.errors;
-                if (errors) {
-                    if (errors.prefix) {
-                        prefixError.text(errors.prefix[0]).removeClass('hidden');
-                    }
-                    if (errors.suffix) {
-                        suffixError.text(errors.suffix[0]).removeClass('hidden');
-                    }
-                }
-            }
-        });
-    });
-
-    // Edit Stamp Format - Fetch Data
-    $(document).on('click', '.edit-button', function () {
-        const id = $(this).data('id');
-        const prefixError = $('#edit-prefix-error');
-        const suffixError = $('#edit-suffix-error');
-        prefixError.addClass('hidden');
-        suffixError.addClass('hidden');
-
-        $.ajax({
-            url: `/master/stampFormat/${id}`, // Updated URL
-            method: 'GET',
-            success: function (data) {
-                $('#edit_prefix').val(data.prefix);
-                $('#edit_suffix').val(data.suffix);
-                // Set checkbox state based on is_active (1 or 0)
-                $('#edit_is_active').prop('checked', data.is_active == 1); 
-                $('#editStampFormatForm').attr('action', `/master/stampFormat/${id}`); // Updated URL
-                showModal(editModal);
-            }
-        });
-    });
-
-    // Edit Stamp Format - Submit Update
-    $('#editStampFormatForm').on('submit', function (e) {
-        e.preventDefault();
-        const form = $(this);
-        const formData = new FormData(this);
-        const prefixError = $('#edit-prefix-error');
-        const suffixError = $('#edit-suffix-error');
-        prefixError.addClass('hidden');
-        suffixError.addClass('hidden');
-
-        // Manually handle PUT/PATCH request method
-        formData.append('_method', 'PUT');
-
-        // Manually add unchecked 'is_active' if not present
-        if (!$('#edit_is_active').is(':checked')) {
-            formData.set('is_active', '0');
-        } else {
-            // Ensure checked sends '1'
-             formData.set('is_active', '1');
+        function hideModal(modal) {
+            modal.addClass('hidden').removeClass('flex');
         }
-        
-        // Remove the existing PUT method field to prevent double submission
-        formData.delete('_method');
 
-        $.ajax({
-            url: form.attr('action'),
-            method: 'POST', // Use POST method to send PUT data via FormData
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (data) {
-                if (data.success) {
-                    table.ajax.reload();
-                    hideModal(editModal);
-                }
-            },
-            error: function (xhr) {
-                const errors = xhr.responseJSON?.errors;
-                if (errors) {
-                    if (errors.prefix) {
-                        prefixError.text(errors.prefix[0]).removeClass('hidden');
-                    }
-                    if (errors.suffix) {
-                        suffixError.text(errors.suffix[0]).removeClass('hidden');
-                    }
-                }
-            }
+        addButton.on('click', () => {
+            $('#addStampFormatForm')[0].reset();
+            $('#is_active').prop('checked', true); // Ensure 'Is Active' is checked by default for add
+            showModal(addModal);
         });
-    });
 
-    // Delete Stamp Format - Confirmation
-    $(document).on('click', '.delete-button', function () {
-        stampFormatIdToDelete = $(this).data('id');
-        showModal(deleteModal);
-    });
+        closeButtons.on('click', () => {
+            hideModal(addModal);
+            hideModal(editModal);
+            hideModal(deleteModal);
+        });
 
-    // Delete Stamp Format - Execute
-    $('#confirmDeleteButton').on('click', function () {
-        if (stampFormatIdToDelete) {
+        // Fix DataTables search/length focus styles (retained from original request)
+        const overrideFocusStyles = function() {
+            $(this).css({
+                'outline': 'none',
+                'box-shadow': 'none',
+                'border-color': 'gray'
+            });
+        };
+        const restoreBlurStyles = function() {
+            $(this).css('border-color', '');
+        };
+        const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
+        elementsToFix.on('focus keyup', overrideFocusStyles);
+        elementsToFix.on('blur', restoreBlurStyles);
+        elementsToFix.filter(':focus').each(overrideFocusStyles);
+
+        // Add Stamp Format
+        $('#addStampFormatForm').on('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const prefixError = $('#add-prefix-error');
+            const suffixError = $('#add-suffix-error');
+            prefixError.addClass('hidden');
+            suffixError.addClass('hidden');
+
+            // Manually add unchecked 'is_active' if not present
+            if (!$('#is_active').is(':checked')) {
+                formData.set('is_active', '0');
+            }
+
             $.ajax({
-                url: `/master/stampFormat/${stampFormatIdToDelete}`, // Updated URL
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
-                success: function (data) {
+                url: $(this).attr('action'),
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
                     if (data.success) {
                         table.ajax.reload();
-                        hideModal(deleteModal);
-                        stampFormatIdToDelete = null;
-                    } else {
-                        // Using custom modal/message box instead of alert()
-                        console.error('Error deleting stamp format.'); 
+                        hideModal(addModal);
+                        $('#addStampFormatForm')[0].reset();
                     }
                 },
-                error: function () {
-                    // Using custom modal/message box instead of alert()
-                    console.error('Error deleting stamp format.'); 
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors) {
+                        if (errors.prefix) {
+                            prefixError.text(errors.prefix[0]).removeClass('hidden');
+                        }
+                        if (errors.suffix) {
+                            suffixError.text(errors.suffix[0]).removeClass('hidden');
+                        }
+                    }
                 }
             });
-        }
+        });
+
+        // Edit Stamp Format - Fetch Data
+        $(document).on('click', '.edit-button', function() {
+            const id = $(this).data('id');
+            const prefixError = $('#edit-prefix-error');
+            const suffixError = $('#edit-suffix-error');
+            prefixError.addClass('hidden');
+            suffixError.addClass('hidden');
+
+            $.ajax({
+                url: `/master/stampFormat/${id}`, // Updated URL
+                method: 'GET',
+                success: function(data) {
+                    $('#edit_prefix').val(data.prefix);
+                    $('#edit_suffix').val(data.suffix);
+                    // Set checkbox state based on is_active (1 or 0)
+                    $('#edit_is_active').prop('checked', data.is_active == 1);
+                    $('#editStampFormatForm').attr('action', `/master/stampFormat/${id}`); // Updated URL
+                    showModal(editModal);
+                }
+            });
+        });
+
+        // Edit Stamp Format - Submit Update
+        $('#editStampFormatForm').on('submit', function(e) {
+            e.preventDefault();
+            const form = $(this);
+            const formData = new FormData(this);
+            const prefixError = $('#edit-prefix-error');
+            const suffixError = $('#edit-suffix-error');
+            prefixError.addClass('hidden');
+            suffixError.addClass('hidden');
+
+            // Manually handle PUT/PATCH request method
+            formData.append('_method', 'PUT');
+
+            // Manually add unchecked 'is_active' if not present
+            if (!$('#edit_is_active').is(':checked')) {
+                formData.set('is_active', '0');
+            } else {
+                // Ensure checked sends '1'
+                formData.set('is_active', '1');
+            }
+
+            // Remove the existing PUT method field to prevent double submission
+            formData.delete('_method');
+
+            $.ajax({
+                url: form.attr('action'),
+                method: 'POST', // Use POST method to send PUT data via FormData
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
+                    if (data.success) {
+                        table.ajax.reload();
+                        hideModal(editModal);
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors) {
+                        if (errors.prefix) {
+                            prefixError.text(errors.prefix[0]).removeClass('hidden');
+                        }
+                        if (errors.suffix) {
+                            suffixError.text(errors.suffix[0]).removeClass('hidden');
+                        }
+                    }
+                }
+            });
+        });
+
+        // Delete Stamp Format - Confirmation
+        $(document).on('click', '.delete-button', function() {
+            stampFormatIdToDelete = $(this).data('id');
+            showModal(deleteModal);
+        });
+
+        // Delete Stamp Format - Execute
+        $('#confirmDeleteButton').on('click', function() {
+            if (stampFormatIdToDelete) {
+                $.ajax({
+                    url: `/master/stampFormat/${stampFormatIdToDelete}`, // Updated URL
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    success: function(data) {
+                        if (data.success) {
+                            table.ajax.reload();
+                            hideModal(deleteModal);
+                            stampFormatIdToDelete = null;
+                        } else {
+                            // Using custom modal/message box instead of alert()
+                            console.error('Error deleting stamp format.');
+                        }
+                    },
+                    error: function() {
+                        // Using custom modal/message box instead of alert()
+                        console.error('Error deleting stamp format.');
+                    }
+                });
+            }
+        });
     });
-});
 </script>
 @endpush
