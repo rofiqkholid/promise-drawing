@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\ProjectStatusController;
 use App\Http\Controllers\Api\PartGroupsController;
 use App\Http\Controllers\Api\StampFormatController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\UserMaintenanceController;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -50,13 +51,17 @@ Route::middleware(['auth'])->group(function () {
         return view('approvals.approval');
     })->name('approval');
 
-    Route::get('/user-maintenance', function () {
-        return view('user_maintenance.user_maintenance');
-    })->name('user-maintenance');
-
     Route::get('/settings', function () {
         return view('master.setting');
     })->name('settings');
+
+    Route::get('/stampFormat', function () {
+        return view('master.stampFormat');
+    })->name('stampFormat');
+
+    Route::get('/user-maintenance', function () {
+        return view('user_maintenance.user_maintenance');
+    })->name('user-maintenance');
 
 
     // Data Master Routes
@@ -133,18 +138,11 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('master/projectStatus', ProjectStatusController::class)->names('projectStatus')->except(['create', 'edit']);
     Route::get('/projectStatus/data', [ProjectStatusController::class, 'data'])->name('projectStatus.data');
     Route::resource('master/partGroups', PartGroupsController::class)->names('partGroups')->except(['create', 'edit']);
-
     Route::get('/partGroups/data', [PartGroupsController::class, 'data'])->name('partGroups.data');
     Route::get('/partGroups/getModelsByCustomer', [PartGroupsController::class, 'getModelsByCustomer'])->name('partGroups.getModelsByCustomer');
 
-
-
-Route::get('/stampFormat', function () {
-        return view('master.stampFormat');
-    })->name('stampFormat');
-
-
-
+    Route::get('userMaintenance/data', [UserMaintenanceController::class, 'data'])->name('userMaintenance.data');
+    Route::resource('master/userMaintenance', UserMaintenanceController::class)->only(['store', 'update', 'destroy'])->names('userMaintenance')->parameters(['userMaintenance' => 'user']);
 
 
     Route::post('/dashboard/getDocumentGroups', [DashboardController::class, 'getDocumentGroups'])->name('dashboard.getDocumentGroups');

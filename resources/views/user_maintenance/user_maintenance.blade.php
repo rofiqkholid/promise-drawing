@@ -1,242 +1,350 @@
 @extends('layouts.app')
-@section('title', 'User Maintenance - PROMISE')
+@section('title', 'Master Data Management')
 @section('header-title', 'User Maintenance')
 
 @section('content')
-
-{{-- Wrapper utama --}}
-<div class="p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100" x-data="{ modalOpen: false, selectedUser: {} }">
-
-    <div class="sm:flex sm:items-center sm:justify-between">
+<div class="p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
+    {{-- Header Section --}}
+    <div class="sm:flex sm:items-center sm:justify-between mb-6">
         <div>
-            <div class="flex items-center gap-3">
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">User Management</h2>
-            </div>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Add, view, and manage application users.</p>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">User Maintenance</h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage application users.</p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <button type="button" id="add-button" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                <i class="fa-solid fa-plus"></i>
+                Add New
+            </button>
         </div>
     </div>
 
-    {{-- Form Tambah User --}}
-    <div class="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <div class="flex items-center gap-3 mb-6">
-            <i class="fa-solid fa-user-plus text-xl text-blue-500"></i>
-            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">Add New User</h3>
-        </div>
-        <form action="#" method="POST">
-            @csrf
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {{-- Input Fields with Icons --}}
-                <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
-                    <div class="relative mt-1">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-user text-gray-400"></i>
-                        </div>
-                        <input type="text" name="name" id="name" placeholder="e.g., John Doe" class="block w-full pl-10 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500">
-                    </div>
-                </div>
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
-                    <div class="relative mt-1">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-envelope text-gray-400"></i>
-                        </div>
-                        <input type="email" name="email" id="email" placeholder="e.g., user@example.com" class="block w-full pl-10 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500">
-                    </div>
-                </div>
-                <div>
-                    <label for="nik" class="block text-sm font-medium text-gray-700 dark:text-gray-300">NIK</label>
-                    <div class="relative mt-1">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-id-card text-gray-400"></i>
-                        </div>
-                        <input type="text" name="nik" id="nik" placeholder="e.g., 123456789" class="block w-full pl-10 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500">
-                    </div>
-                </div>
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-                    <div class="relative mt-1">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fa-solid fa-lock text-gray-400"></i>
-                        </div>
-                        <input type="password" name="password" id="password" placeholder="Enter password" class="block w-full pl-10 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500">
-                    </div>
-                </div>
-                <div>
-                    <label for="role_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Role Group</label>
-                    <select id="role_group" name="role_group" class="mt-1 block w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300">
-                        <option>Select Group</option>
-                        <option>Engineering</option>
-                        <option>Production</option>
-                        <option>Administrator</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="role" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
-                    <select id="role" name="role" class="mt-1 block w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300">
-                        <option>Select Role</option>
-                        <option>Designer</option>
-                        <option>Checker</option>
-                        <option>Approver</option>
-                    </select>
-                </div>
-            </div>
-            <div class="mt-6 flex justify-end">
-                <button type="submit" class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
-                    <i class="fa-solid fa-floppy-disk"></i>
-                    Save User
-                </button>
-            </div>
-        </form>
-    </div>
-
-    {{-- Tabel User --}}
-    <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="p-6">
-            <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">Registered Users</h3>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700/50">
+    {{-- Main Content: Table Card --}}
+    <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
+        <div class="p-4 md:p-6">
+            <table id="usersTable" class="min-w-full w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">NIK</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role Group</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                        <th scope="col" class="px-6 py-3 w-16">No</th>
+                        <th scope="col" class="px-6 py-3 sorting" data-column="name">Name</th>
+                        <th scope="col" class="px-6 py-3 sorting" data-column="email">Email</th>
+                        <th scope="col" class="px-6 py-3 sorting" data-column="nik">NIK</th>
+                        <th scope="col" class="px-6 py-3">Status</th>
+                        <th scope="col" class="px-6 py-3 text-start">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    {{-- Table Row 1 --}}
-                    <tr class="bg-white dark:bg-gray-800">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">Budi Santoso</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">budi.s@example.com</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">1234567890</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Engineering</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Designer</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/70 dark:text-green-300">
-                                <i class="fa-solid fa-circle-check"></i> Active
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                            <div class="flex items-center justify-center gap-4">
-                                <button @click="modalOpen = true; selectedUser = { id: 1, name: 'Budi Santoso', email: 'budi.s@example.com', nik: '1234567890', role_group: 'Engineering', role: 'Designer' }" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300" title="Edit">
-                                    <i class="fa-solid fa-pen-to-square fa-lg"></i>
-                                </button>
-                                <button class="text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete">
-                                    <i class="fa-solid fa-trash-can fa-lg"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    {{-- Table Row 2 --}}
-                    <tr class="bg-gray-50 dark:bg-gray-900/50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">Citra Lestari</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">citra.l@example.com</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">0987654321</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Production</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">Approver</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                                <i class="fa-solid fa-circle-xmark"></i> Inactive
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                            <div class="flex items-center justify-center gap-4">
-                                <button @click="modalOpen = true; selectedUser = { id: 2, name: 'Citra Lestari', email: 'citra.l@example.com', nik: '0987654321', role_group: 'Production', role: 'Approver' }" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300" title="Edit">
-                                    <i class="fa-solid fa-pen-to-square fa-lg"></i>
-                                </button>
-                                <button class="text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete">
-                                    <i class="fa-solid fa-trash-can fa-lg"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
+                <tbody></tbody>
             </table>
-        </div>
-    </div>
-
-    {{-- Modal Edit User --}}
-    <div x-show="modalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-10 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="display: none;">
-        <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div @click="modalOpen = false" class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity" aria-hidden="true"></div>
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-            <div x-show="modalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
-                <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                    <div class="flex items-center gap-3">
-                        <i class="fa-solid fa-user-pen text-xl text-blue-500"></i>
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100" id="modal-title">
-                            Edit User
-                        </h3>
-                    </div>
-                    <div class="mt-6 flex flex-col sm:flex-row items-center gap-8">
-                        <div class="flex-shrink-0 w-full sm:w-auto flex justify-center">
-                            <div class="flex items-center justify-center h-28 w-28 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500">
-                                <i class="fa-solid fa-circle-user fa-5x"></i>
-                            </div>
-                        </div>
-                        <div class="flex-grow w-full">
-                            {{-- Form di dalam modal mengikuti pola input dengan ikon --}}
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="edit_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
-                                    <div class="relative mt-1">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-solid fa-user text-gray-400"></i></div>
-                                        <input type="text" id="edit_name" x-model="selectedUser.name" class="block w-full pl-10 border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label for="edit_email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
-                                    <div class="relative mt-1">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-solid fa-envelope text-gray-400"></i></div>
-                                        <input type="email" id="edit_email" x-model="selectedUser.email" class="block w-full pl-10 border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label for="edit_nik" class="block text-sm font-medium text-gray-700 dark:text-gray-300">NIK</label>
-                                    <div class="relative mt-1">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-solid fa-id-card text-gray-400"></i></div>
-                                        <input type="text" id="edit_nik" x-model="selectedUser.nik" class="block w-full pl-10 border border-gray-300 dark:border-gray-600 rounded-md py-2 px-3 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300">
-                                    </div>
-                                </div>
-                                <div>
-                                    <label for="edit_role_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Role Group</label>
-                                    <select id="edit_role_group" x-model="selectedUser.role_group" class="mt-1 block w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-md sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300">
-                                        <option>Engineering</option>
-                                        <option>Production</option>
-                                        <option>Administrator</option>
-                                    </select>
-                                </div>
-                                <div class="sm:col-span-2">
-                                    <label for="edit_role" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
-                                    <select id="edit_role" x-model="selectedUser.role" class="mt-1 block w-full pl-3 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-md sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300">
-                                        <option>Designer</option>
-                                        <option>Checker</option>
-                                        <option>Approver</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-gray-50 dark:bg-gray-800/80 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-3 border-t border-gray-200 dark:border-gray-700">
-                    <button type="button" @click="modalOpen = false" class="w-full inline-flex items-center gap-2 justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 sm:w-auto sm:text-sm">
-                        <i class="fa-solid fa-floppy-disk"></i>
-                        Save Changes
-                    </button>
-                    <button type="button" @click="modalOpen = false" class="w-full inline-flex items-center gap-2 justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800 sm:w-auto sm:text-sm">
-                        <i class="fa-solid fa-xmark"></i>
-                        Cancel
-                    </button>
-                </div>
-            </div>
         </div>
     </div>
 </div>
 
+{{-- Add User Modal --}}
+<div id="addUserModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
+    <div class="relative p-4 w-full max-w-md h-full md:h-auto">
+        <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+            <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark w-5 h-5"></i>
+                <span class="sr-only">Close modal</span>
+            </button>
+            <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Add New User</h3>
+            <form id="addUserForm" action="{{ route('userMaintenance.store') }}" method="POST">
+                @csrf
+                <div>
+                    <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Full Name</label>
+                    <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. John Doe" required>
+                    <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div>
+                    <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Email</label>
+                    <input type="email" name="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="user@example.com" required>
+                    <p id="add-email-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div>
+                    <label for="nik" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">NIK</label>
+                    <input type="text" name="nik" id="nik" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. 2025-001" required>
+                    <p id="add-nik-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div>
+                    <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Password</label>
+                    <input type="password" name="password" id="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="••••••••" required>
+                    <p id="add-password-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+
+                <div class="flex items-center space-x-4 mt-6">
+                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full">
+                        Add User
+                    </button>
+                    <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Edit User Modal --}}
+<div id="editUserModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
+    <div class="relative p-4 w-full max-w-md h-full md:h-auto">
+        <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+            <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark w-5 h-5"></i>
+                <span class="sr-only">Close modal</span>
+            </button>
+            <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Edit User</h3>
+            <form id="editUserForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Full Name</label>
+                    <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                    <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div>
+                    <label for="edit_email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Email</label>
+                    <input type="email" name="email" id="edit_email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                    <p id="edit-email-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div>
+                    <label for="edit_nik" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">NIK</label>
+                    <input type="text" name="nik" id="edit_nik" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                    <p id="edit-nik-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div>
+                    <label for="edit_password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">New Password (optional)</label>
+                    <input type="password" name="password" id="edit_password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Leave blank to keep current">
+                </div>
+
+                <div class="flex items-center space-x-4 mt-6">
+                    <button type="submit" class="text-white bg-yellow-500 hover:bg-yellow-600 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full">
+                        Update User
+                    </button>
+                    <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Delete Confirmation Modal --}}
+<div id="deleteUserModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
+    <div class="relative p-4 w-full max-w-md h-full md:h-auto">
+        <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+            <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark w-5 h-5"></i>
+                <span class="sr-only">Close modal</span>
+            </button>
+            <div class="flex items-center justify-center w-16 h-16 mx-auto mb-3.5">
+                <i class="fa-solid fa-trash-can text-gray-400 dark:text-gray-500 text-4xl"></i>
+            </div>
+            <p class="mb-4 text-gray-500 dark:text-gray-300">Are you sure you want to delete this user?</p>
+            <div class="flex justify-center items-center space-x-4">
+                <button type="button" class="close-modal-button py-2 px-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">
+                    No, cancel
+                </button>
+                <button type="button" id="confirmDeleteButton" class="py-2 px-3 text-sm font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900">
+                    Yes, I'm sure
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
+
+<style>
+    /* Ikuti style Department: kecilkan kontrol DataTables */
+    div.dataTables_length label { font-size: 0.75rem; }
+    div.dataTables_length select {
+        font-size: 0.75rem; line-height: 1rem;
+        padding: 0.25rem 1.25rem 0.25rem 0.5rem; height: 1.875rem; width: 4.5rem;
+    }
+    div.dataTables_filter label { font-size: 0.75rem; }
+    div.dataTables_filter input[type="search"],
+    input[type="search"][aria-controls="usersTable"] {
+        font-size: 0.75rem; line-height: 1rem; padding: 0.25rem 0.5rem; height: 1.875rem; width: 12rem;
+    }
+</style>
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+    /* ===== Helpers modal ===== */
+    const addModal    = $('#addUserModal');
+    const editModal   = $('#editUserModal');
+    const deleteModal = $('#deleteUserModal');
+    const addButton   = $('#add-button');
+    const closeButtons= $('.close-modal-button');
+    let userIdToDelete = null;
+
+    function showModal(modal){ modal.removeClass('hidden').addClass('flex'); }
+    function hideModal(modal){ modal.addClass('hidden').removeClass('flex'); }
+
+    addButton.on('click', () => showModal(addModal));
+    closeButtons.on('click', () => { hideModal(addModal); hideModal(editModal); hideModal(deleteModal); });
+
+    /* ===== DataTable ===== */
+    const table = $('#usersTable').DataTable({
+        processing: true,
+        serverSide: true,
+        info: false,
+        scrollX: true,
+        ajax: {
+            url: '{{ route("userMaintenance.data") }}',
+            type: 'GET',
+            data: function(d){ d.search = d.search.value; }
+        },
+        columns: [
+            { // No
+                data: null,
+                render: function(data, type, row, meta){ return meta.row + meta.settings._iDisplayStart + 1; }
+            },
+            { data: 'name',  name: 'name'  },
+            { data: 'email', name: 'email' },
+            { data: 'nik',   name: 'nik'   },
+            { // Status (Verified / Unverified dari email_verification_at)
+                data: 'email_verification_at',
+                render: function(val){
+                    return val
+                        ? `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Verified</span>`
+                        : `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Unverified</span>`;
+                }
+            },
+            { // Action
+                data: null,
+                orderable: false,
+                searchable: false,
+                render: function(data, type, row){
+                    return `
+                        <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
+                            <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
+                        </button>
+                        <button class="delete-button text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete" data-id="${row.id}">
+                            <i class="fa-solid fa-trash-can fa-lg m-2"></i>
+                        </button>
+                    `;
+                }
+            }
+        ],
+        pageLength: 10,
+        order: [[1,'asc']],
+        language: { emptyTable: '<div class="text-gray-500 dark:text-gray-400">No users found.</div>' },
+        responsive: true,
+        autoWidth: false,
+    });
+
+    /* ===== Create ===== */
+    $('#addUserForm').on('submit', function(e){
+        e.preventDefault();
+        const formData = new FormData(this);
+        const nameErr = $('#add-name-error'), emailErr = $('#add-email-error'), nikErr = $('#add-nik-error'), passErr = $('#add-password-error');
+        nameErr.addClass('hidden'); emailErr.addClass('hidden'); nikErr.addClass('hidden'); passErr.addClass('hidden');
+
+        $.ajax({
+            url: $(this).attr('action'),
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': csrfToken },
+            data: formData,
+            processData: false, contentType: false,
+            success: function(res){
+                if (res.success){
+                    table.ajax.reload(null, false);
+                    hideModal(addModal);
+                    $('#addUserForm')[0].reset();
+                }
+            },
+            error: function(xhr){
+                const errors = xhr.responseJSON?.errors;
+                if (!errors) return;
+                if (errors.name)     nameErr.text(errors.name[0]).removeClass('hidden');
+                if (errors.email)    emailErr.text(errors.email[0]).removeClass('hidden');
+                if (errors.nik)      nikErr.text(errors.nik[0]).removeClass('hidden');
+                if (errors.password) passErr.text(errors.password[0]).removeClass('hidden');
+            }
+        });
+    });
+
+    /* ===== Read (prefill edit) ===== */
+    $(document).on('click', '.edit-button', function(){
+        const id = $(this).data('id');
+        $('#edit-name-error, #edit-email-error, #edit-nik-error').addClass('hidden');
+
+        $.ajax({
+            url: `/master/userMaintenance/${id}`,
+            method: 'GET',
+            success: function(data){
+                $('#edit_name').val(data.name);
+                $('#edit_email').val(data.email);
+                $('#edit_nik').val(data.nik);
+                $('#editUserForm').attr('action', `/master/userMaintenance/${id}`);
+                showModal(editModal);
+            }
+        });
+    });
+
+    /* ===== Update ===== */
+    $('#editUserForm').on('submit', function(e){
+        e.preventDefault();
+        const formData = new FormData(this);
+        $('#edit-name-error, #edit-email-error, #edit-nik-error').addClass('hidden');
+
+        $.ajax({
+            url: $(this).attr('action'),
+            method: 'POST', // pakai @method('PUT')
+            headers: { 'X-CSRF-TOKEN': csrfToken },
+            data: formData,
+            processData: false, contentType: false,
+            success: function(res){
+                if (res.success){
+                    table.ajax.reload(null, false);
+                    hideModal(editModal);
+                }
+            },
+            error: function(xhr){
+                const errors = xhr.responseJSON?.errors;
+                if (!errors) return;
+                if (errors.name)  $('#edit-name-error').text(errors.name[0]).removeClass('hidden');
+                if (errors.email) $('#edit-email-error').text(errors.email[0]).removeClass('hidden');
+                if (errors.nik)   $('#edit-nik-error').text(errors.nik[0]).removeClass('hidden');
+            }
+        });
+    });
+
+    /* ===== Delete ===== */
+    $(document).on('click', '.delete-button', function(){
+        userIdToDelete = $(this).data('id');
+        showModal(deleteModal);
+    });
+
+    $('#confirmDeleteButton').on('click', function(){
+        if (!userIdToDelete) return;
+        $.ajax({
+            url: `/master/userMaintenance/${userIdToDelete}`,
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': csrfToken },
+            success: function(res){
+                if (res.success){
+                    table.ajax.reload(null, false);
+                    hideModal(deleteModal);
+                    userIdToDelete = null;
+                } else {
+                    alert('Error deleting user.');
+                }
+            },
+            error: function(){ alert('Error deleting user.'); }
+        });
+    });
+
+    /* ===== Focus tweak untuk kontrol length/search (opsional) ===== */
+    const overrideFocus = function(){ $(this).css({'outline':'none','box-shadow':'none','border-color':'gray'}); };
+    const restoreBlur   = function(){ $(this).css('border-color',''); };
+    const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
+    elementsToFix.on('focus keyup', overrideFocus);
+    elementsToFix.on('blur', restoreBlur);
+    elementsToFix.filter(':focus').each(overrideFocus);
+});
+</script>
+@endpush
