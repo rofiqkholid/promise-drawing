@@ -110,7 +110,7 @@ Route::middleware(['auth'])->group(function () {
         return view('master.stampFormat');
     })->name('stampFormat');
 
-
+    Route::get('stampFormat/data', [StampFormatController::class, 'data'])->name('stampFormat.data');
     Route::resource('master/stampFormat', StampFormatController::class)->names('stampFormat')->except(['create', 'edit']);
     Route::resource('master/departments', DepartmentsController::class)->names('departments')->except(['create', 'edit']);
     Route::get('/departments/data', [DepartmentsController::class, 'data'])->name('departments.data');
@@ -139,6 +139,10 @@ Route::middleware(['auth'])->group(function () {
 
 
 
+Route::get('/stampFormat', function () {
+        return view('master.stampFormat');
+    })->name('stampFormat');
+
 
 
 
@@ -147,4 +151,8 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::post('/dashboard/getDocumentGroups', [DashboardController::class, 'getDocumentGroups'])->name('dashboard.getDocumentGroups');
+    Route::post('/dashboard/getSubType', [DashboardController::class, 'getSubType'])->name('dashboard.getSubType');
+    Route::post('/dashboard/getCustomer', [DashboardController::class, 'getCustomer'])->name('dashboard.getCustomer');
+    Route::post('/dashboard/getModel', [DashboardController::class, 'getModel'])->name('dashboard.getModel');
+    Route::post('/dashboard/getPartGroup', [DashboardController::class, 'getPartGroup'])->name('dashboard.getPartGroup');
 });

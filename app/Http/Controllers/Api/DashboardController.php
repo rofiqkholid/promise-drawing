@@ -9,17 +9,167 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    /**
-     * Mengambil data Document Group untuk filter AJAX.
-     * Jika terjadi error, Laravel akan menanganinya secara default.
-     */
+   
     public function getDocumentGroups(Request $request): JsonResponse
     {
-        $documentGroups = DB::table('doctype_groups')
-            ->select('id', 'name')
-            ->orderBy('name', 'asc')
+        $searchTerm = $request->q; 
+        $page = $request->page ?: 1; 
+        $resultsPerPage = 10; 
+        $offset = ($page - 1) * $resultsPerPage;
+
+        $query = DB::table('doctype_groups')
+            ->select('id', 'name');
+
+        if ($searchTerm) {
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+        }
+
+        $totalCount = $query->count();
+        $groups = $query->orderBy('name', 'asc')
+            ->offset($offset)
+            ->limit($resultsPerPage)
             ->get();
 
-        return response()->json($documentGroups);
+        $formattedGroups = $groups->map(function ($group) {
+            return [
+                'id'   => $group->id,
+                'text' => $group->name 
+            ];
+        });
+
+        return response()->json([
+            'results'     => $formattedGroups,
+            'total_count' => $totalCount 
+        ]);
+    }
+    public function getSubType(Request $request): JsonResponse
+    {
+        $searchTerm = $request->q; 
+        $page = $request->page ?: 1; 
+        $resultsPerPage = 10; 
+        $offset = ($page - 1) * $resultsPerPage;
+
+        $query = DB::table('doctype_subcategories')
+            ->select('id', 'name');
+
+        if ($searchTerm) {
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+        }
+
+        $totalCount = $query->count();
+        $groups = $query->orderBy('name', 'asc')
+            ->offset($offset)
+            ->limit($resultsPerPage)
+            ->get();
+
+        $formattedGroups = $groups->map(function ($group) {
+            return [
+                'id'   => $group->id,
+                'text' => $group->name 
+            ];
+        });
+
+        return response()->json([
+            'results'     => $formattedGroups,
+            'total_count' => $totalCount 
+        ]);
+    }
+
+    public function getCustomer(Request $request): JsonResponse
+    {
+        $searchTerm = $request->q; 
+        $page = $request->page ?: 1; 
+        $resultsPerPage = 10; 
+        $offset = ($page - 1) * $resultsPerPage;
+
+        $query = DB::table('customers')
+            ->select('id', 'code');
+
+        if ($searchTerm) {
+            $query->where('code', 'LIKE', '%' . $searchTerm . '%');
+        }
+
+        $totalCount = $query->count();
+        $groups = $query->orderBy('code', 'asc')
+            ->offset($offset)
+            ->limit($resultsPerPage)
+            ->get();
+
+        $formattedGroups = $groups->map(function ($group) {
+            return [
+                'id'   => $group->id,
+                'text' => $group->code 
+            ];
+        });
+
+        return response()->json([
+            'results'     => $formattedGroups,
+            'total_count' => $totalCount 
+        ]);
+    }
+
+    public function getModel(Request $request): JsonResponse
+    {
+        $searchTerm = $request->q; 
+        $page = $request->page ?: 1; 
+        $resultsPerPage = 10; 
+        $offset = ($page - 1) * $resultsPerPage;
+
+        $query = DB::table('models')
+            ->select('id', 'code');
+
+        if ($searchTerm) {
+            $query->where('code', 'LIKE', '%' . $searchTerm . '%');
+        }
+
+        $totalCount = $query->count();
+        $groups = $query->orderBy('code', 'asc')
+            ->offset($offset)
+            ->limit($resultsPerPage)
+            ->get();
+
+        $formattedGroups = $groups->map(function ($group) {
+            return [
+                'id'   => $group->id,
+                'text' => $group->code 
+            ];
+        });
+
+        return response()->json([
+            'results'     => $formattedGroups,
+            'total_count' => $totalCount 
+        ]);
+    }
+    public function getPartGroup(Request $request): JsonResponse
+    {
+        $searchTerm = $request->q; 
+        $page = $request->page ?: 1; 
+        $resultsPerPage = 10; 
+        $offset = ($page - 1) * $resultsPerPage;
+
+        $query = DB::table('part_groups')
+            ->select('id', 'code_part_group');
+
+        if ($searchTerm) {
+            $query->where('code_part_group', 'LIKE', '%' . $searchTerm . '%');
+        }
+
+        $totalCount = $query->count();
+        $groups = $query->orderBy('code_part_group', 'asc')
+            ->offset($offset)
+            ->limit($resultsPerPage)
+            ->get();
+
+        $formattedGroups = $groups->map(function ($group) {
+            return [
+                'id'   => $group->id,
+                'text' => $group->code_part_group 
+            ];
+        });
+
+        return response()->json([
+            'results'     => $formattedGroups,
+            'total_count' => $totalCount 
+        ]);
     }
 }

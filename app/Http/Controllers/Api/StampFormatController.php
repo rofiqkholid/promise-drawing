@@ -1,96 +1,120 @@
 <?php
 
-// app/Http/Controllers/Api/StampFormatController.php
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\StampFormat;
+use App\Models\StampFormat; // Pastikan model StampFormat sudah ada
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class StampFormatController extends Controller
 {
-    public function index(Request $r)
+    /**
+     * Display a listing of the resource for DataTables.
+     */
+    public function data(Request $request)
     {
-        $wantsJson = $r->wantsJson()
-            || str_contains((string)$r->header('Accept'), 'application/json')
-            || $r->query('format') === 'json';
+        // Menggunakan StampFormat model
+        $query = StampFormat::query();
 
-        if ($wantsJson) {
-            $q = StampFormat::query();
-
-            // search: prefix / suffix
-            if ($s = trim((string)$r->get('search'))) {
-                $q->where(fn($w) => $w->where('prefix', 'like', "%{$s}%")
-                                      ->orWhere('suffix', 'like', "%{$s}%"));
-            }
-
-            // sort
-            $allowed = ['prefix','suffix','is_active','created_at'];
-            $sortBy  = in_array($r->get('sort_by'), $allowed, true) ? $r->get('sort_by') : 'prefix';
-            $sortDir = $r->get('sort_dir') === 'desc' ? 'desc' : 'asc';
-            $q->orderBy($sortBy, $sortDir);
-
-            return response()->json([
-                'data' => $q->get(['id','prefix','suffix','is_active','created_at']),
-            ]);
+        // Handle Search (mencari berdasarkan prefix atau suffix)
+        if ($request->has('search') && !empty($request->search['value'])) {
+             $searchValue = $request->search['value'];
+             $query->where(function($q) use ($searchValue) {
+                 $q->where('prefix', 'like', '%' . $searchValue . '%')
+                   ->orWhere('suffix', 'like', '%' . $searchValue . '%');
+             });
         }
 
-        // sesuaikan dengan nama blade milik Tuan
-        return view('master.stampFormat');
+
+        // Handle Sorting
+        $sortBy = $request->get('order')[0]['column'] ?? 1;
+        $sortDir = $request->get('order')[0]['dir'] ?? 'asc';
+        $sortColumn = $request->get('columns')[$sortBy]['data'] ?? 'prefix'; // Default sort by prefix
+
+        // Pastikan kolom yang disortir valid
+        if (in_array($sortColumn, ['prefix', 'suffix', 'is_active', 'id'])) {
+            $query->orderBy($sortColumn, $sortDir);
+        } else {
+             $query->orderBy('prefix', $sortDir);
+        }
+
+        // Handle Pagination
+        $perPage = $request->get('length', 10);
+        $start = $request->get('start', 0);
+        $draw = $request->get('draw', 1);
+
+        $totalRecords = StampFormat::count();
+        $filteredRecords = $query->count();
+        $stampFormats = $query->skip($start)->take($perPage)->get();
+
+        return response()->json([
+            'draw' => (int)$draw,
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $stampFormats
+        ]);
     }
 
-    public function show($id)
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
     {
-        return response()->json(
-            StampFormat::findOrFail($id, ['id','prefix','suffix','is_active'])
-        );
-    }
-
-    public function store(Request $r)
-    {
-        $val = $r->validate([
-            'prefix'    => ['nullable','string','max:50'],
-            'suffix'    => ['nullable','string','max:50'],
-            'is_active' => ['nullable','boolean'],
+        $validated = $request->validate([
+            'prefix' => 'required|string|max:50',
+            // Asumsi suffix harus unik, seperti 'code' pada contoh sebelumnya
+            'suffix' => 'required|string|max:50|unique:stamp_formats,suffix',
+            'is_active' => 'sometimes|boolean', // Diterima sebagai 0 atau 1
         ]);
 
-        // pastikan checkbox unchecked menjadi 0
-        $val['is_active'] = $r->boolean('is_active');
+        // Jika is_active tidak ada dalam request (karena checkbox tidak dicentang), atur ke 0
+        $validated['is_active'] = $request->boolean('is_active', false);
 
-        StampFormat::create($val);
+        StampFormat::create($validated);
 
-        if ($r->wantsJson() || str_contains((string)$r->header('Accept'), 'application/json')) {
-            return response()->json(['success' => true]);
-        }
-        return redirect()->route('stampFormat.index')->with('success','Saved');
+        return response()->json(['success' => true, 'message' => 'Stamp Format created successfully.']);
     }
 
-    public function update(Request $r, $id)
+    /**
+     * Display the specified resource for editing.
+     */
+    public function show(StampFormat $stampFormat)
     {
-        $row = StampFormat::findOrFail($id);
+        return response()->json($stampFormat);
+    }
 
-        $val = $r->validate([
-            'prefix'    => ['nullable','string','max:50'],
-            'suffix'    => ['nullable','string','max:50'],
-            'is_active' => ['nullable','boolean'],
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, StampFormat $stampFormat)
+    {
+        $validated = $request->validate([
+            'prefix' => 'required|string|max:50',
+            'suffix' => [
+                'required',
+                'string',
+                'max:50',
+                // Pastikan suffix unik, kecuali untuk data ini sendiri
+                Rule::unique('stamp_formats')->ignore($stampFormat->id),
+            ],
+            'is_active' => 'sometimes|boolean', // Diterima sebagai 0 atau 1
         ]);
-        $val['is_active'] = $r->boolean('is_active');
 
-        $row->update($val);
+        // Jika is_active tidak ada dalam request (karena checkbox tidak dicentang), atur ke 0
+        $validated['is_active'] = $request->boolean('is_active', false);
 
-        if ($r->wantsJson() || str_contains((string)$r->header('Accept'), 'application/json')) {
-            return response()->json(['success' => true]);
-        }
-        return redirect()->route('stampFormat.index')->with('success','Updated');
+        $stampFormat->update($validated);
+
+        return response()->json(['success' => true, 'message' => 'Stamp Format updated successfully.']);
     }
 
-    public function destroy(Request $r, $id)
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(StampFormat $stampFormat)
     {
-        StampFormat::whereKey($id)->delete();
-
-        if ($r->wantsJson() || str_contains((string)$r->header('Accept'), 'application/json')) {
-            return response()->json(['success' => true]);
-        }
-        return redirect()->route('stampFormat.index')->with('success','Deleted');
+        $stampFormat->delete();
+        return response()->json(['success' => true, 'message' => 'Stamp Format deleted successfully.']);
     }
 }
