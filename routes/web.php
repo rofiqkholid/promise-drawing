@@ -158,4 +158,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/dashboard/getModel', [DashboardController::class, 'getModel'])->name('dashboard.getModel');
     Route::post('/dashboard/getPartGroup', [DashboardController::class, 'getPartGroup'])->name('dashboard.getPartGroup');
     Route::post('/dashboard/getStatus', [DashboardController::class, 'getStatus'])->name('dashboard.getStatus');
+
+
+
+    Route::post('upload.getDataCustomer', [DashboardController::class, 'getCustomer'])->name('upload.getDataCustomer');
 });

@@ -148,57 +148,45 @@
     </div>
 </div>
 @endsection
+@push('style')
 <style>
-    /* Kecilkan ukuran komponen "Show ... entries" saja */
     div.dataTables_length label {
         font-size: 0.75rem;
-        /* text-xs */
     }
 
     div.dataTables_length select {
         font-size: 0.75rem;
-        /* text-xs */
         line-height: 1rem;
-        /* compact */
         padding: 0.25rem 1.25rem 0.25rem 0.5rem;
         height: 1.875rem;
-        /* ~30px, lebih kecil dari default */
         width: 4.5rem;
-        /* cukup untuk 10/25/50 */
     }
 
     div.dataTables_filter label {
         font-size: 0.75rem;
-        /* text-xs */
     }
 
-    /* Kecilkan input Search DataTables */
     div.dataTables_filter input[type="search"],
     input[type="search"][aria-controls="departmentsTable"] {
         font-size: 0.75rem;
-        /* text-xs */
         line-height: 1rem;
         padding: 0.25rem 0.5rem;
-        /* lebih rapat */
         height: 1.875rem;
-        /* ~30px */
         width: 12rem;
-        /* ~192px, lebih kecil dari default */
     }
 
     div.dataTables_info {
         font-size: 0.75rem;
-        /* Ukuran teks kecil (text-xs) */
         padding-top: 0.8em;
-        /* Sesuaikan padding agar sejajar dengan pagination */
     }
 </style>
+@endpush
+
 @push('scripts')
 <script>
     $(document).ready(function() {
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-        // Initialize DataTable
         const table = $('#customersTable').DataTable({
             processing: true,
             serverSide: true,
@@ -257,7 +245,6 @@
             },
         });
 
-        // Modal Handling
         const addModal = $('#addCustomerModal');
         const editModal = $('#editCustomerModal');
         const deleteModal = $('#deleteCustomerModal');
@@ -275,7 +262,7 @@
 
         addButton.on('click', () => {
             $('#addCustomerForm')[0].reset();
-            $('#is_active').prop('checked', true); // Set default to checked (Active)
+            $('#is_active').prop('checked', true); 
             showModal(addModal);
         });
 
@@ -285,11 +272,9 @@
             hideModal(deleteModal);
         });
 
-        // Add Customer
         $('#addCustomerForm').on('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
-            // Ensure is_active is sent as 1 or 0
             formData.set('is_active', $('#is_active').is(':checked') ? '1' : '0');
             const nameError = $('#add-name-error');
             const codeError = $('#add-code-error');

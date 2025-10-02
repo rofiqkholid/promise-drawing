@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('assets/css/select2.css') }}">
     <script>
         tailwind.config = {
@@ -30,7 +30,6 @@
         }
     </script>
 
-    {{-- DataTables CSS --}}
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.tailwindcss.min.css">
 
     <style>
@@ -48,26 +47,32 @@
             height: 60px;
             animation: spin 1s linear infinite;
         }
-        
-        
+
         .dark .loader-spinner {
-            border-color: #4a5568; 
-            border-top-color: #60a5fa; 
+            border-color: #4a5568;
+            border-top-color: #60a5fa;
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
+
+    @stack('style')
 </head>
 
 <body class="font-sans antialiased bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
-    
+
     <div id="loader" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 dark:bg-gray-900">
         <div class="loader-spinner"></div>
     </div>
-    
+
     <div id="main-content" class="relative min-h-screen flex">
 
         @include('layouts.sidebar')
@@ -86,19 +91,19 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.tailwindcss.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    
+
     <script>
         window.onload = function() {
             const loader = document.getElementById('loader');
             const content = document.getElementById('main-content');
-            
+
             loader.style.display = 'none';
-            
+
             content.style.visibility = 'visible';
             content.style.opacity = '1';
         };
     </script>
-    
+
     @stack('scripts')
 </body>
 

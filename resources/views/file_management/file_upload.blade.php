@@ -63,7 +63,8 @@
     {{-- Table Section --}}
     <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-2">
-            <button @click="isModalOpen = true; customer = ''; model = ''; partNo = ''; docType = ''; category = ''; revision = ''; files = []"
+
+            <button id="openUploadModalBtn" @click="isModalOpen = true; customer = ''; model = ''; partNo = ''; docType = ''; category = ''; revision = ''; files = []"
                 class="w-full sm:w-auto inline-flex items-center gap-2 justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
                 <i class="fa-solid fa-upload"></i>
                 Upload File
@@ -112,7 +113,8 @@
     {{-- Modal Section --}}
     <div x-show="isModalOpen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
         class="fixed inset-0 bg-black bg-opacity-60 dark:bg-opacity-80 flex items-center justify-center z-50 p-4" @click.self="isModalOpen = false" style="display: none;">
-        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-xl p-6 sm:p-8 w-full max-w-5xl" @click.away="isModalOpen = false">
+
+        <div id="uploadModal" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-xl p-6 sm:p-8 w-full max-w-5xl" @click.away="isModalOpen = false">
             <div class="flex items-center gap-3 mb-6">
                 <i class="fa-solid fa-file-arrow-up text-xl text-blue-500"></i>
                 <h3 class="text-xl font-bold text-gray-800 dark:text-gray-200">Upload New File</h3>
@@ -146,23 +148,78 @@
                     </div>
                 </div>
 
-                {{-- Kolom Form Input --}}
                 <div class="md:col-span-3 bg-gray-50 dark:bg-gray-900/50 p-6 rounded-lg border dark:border-gray-700">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        @foreach(['Customer', 'Model', 'Part No', 'Document Type', 'Category', 'Revision'] as $item)
-                        @php $modelName = lcfirst(str_replace(' ', '', $item)); @endphp
+
                         <div>
-                            <label for="{{ $modelName }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ $item }}</label>
+                            <label for="customer" class="block text-sm text-gray-700 dark:text-gray-300">Customer</label>
                             <div class="relative mt-1">
-                                <select id="{{ $modelName }}" x-model="{{ $modelName }}" class="appearance-none block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 pl-3 pr-10 py-2 sm:text-sm">
-                                    <option value="">Select {{ $item }}</option>
+                                <select id="customer" name="customer" class="appearance-none block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md shadow-sm py-2 sm:text-sm">
+                                    <option value="">Select Customer</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="model" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
+                            <div class="relative mt-1">
+                                <select id="model" x-model="model" class="appearance-none block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md shadow-sm py-2 sm:text-sm">
+                                    <option value="">Select Model</option>
                                 </select>
                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700 dark:text-gray-400">
                                     <i class="fa-solid fa-chevron-down fa-xs"></i>
                                 </div>
                             </div>
                         </div>
-                        @endforeach
+
+                        <div>
+                            <label for="partNo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part No</label>
+                            <div class="relative mt-1">
+                                <select id="partNo" x-model="partNo" class="appearance-none block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md shadow-sm py-2 sm:text-sm">
+                                    <option value="">Select Part No</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700 dark:text-gray-400">
+                                    <i class="fa-solid fa-chevron-down fa-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="docType" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Document Type</label>
+                            <div class="relative mt-1">
+                                <select id="docType" x-model="docType" class="appearance-none block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md shadow-sm py-2 sm:text-sm">
+                                    <option value="">Select Document Type</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700 dark:text-gray-400">
+                                    <i class="fa-solid fa-chevron-down fa-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+                            <div class="relative mt-1">
+                                <select id="category" x-model="category" class="appearance-none block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md shadow-sm py-2 sm:text-sm">
+                                    <option value="">Select Category</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700 dark:text-gray-400">
+                                    <i class="fa-solid fa-chevron-down fa-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="revision" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Revision</label>
+                            <div class="relative mt-1">
+                                <select id="revision" x-model="revision" class="appearance-none block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md shadow-sm py-2 sm:text-sm">
+                                    <option value="">Select Revision</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700 dark:text-gray-400">
+                                    <i class="fa-solid fa-chevron-down fa-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -178,4 +235,55 @@
         </div>
     </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const openModalButton = document.getElementById('openUploadModalBtn');
+
+        openModalButton.addEventListener('click', function() {
+            setTimeout(function() {
+                if ($('#customer').hasClass('select2-hidden-accessible')) {
+                    $('#customer').select2('destroy');
+                }
+
+                $('#customer').select2({
+                    dropdownParent: $('#uploadModal'), 
+                    width: '100%',
+                    ajax: {
+                        url: "{{ route('upload.getDataCustomer') }}",
+                        method: 'POST',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                _token: "{{ csrf_token() }}",
+                                q: params.term,
+                                page: params.page || 1
+                            };
+                        },
+                        processResults: function(data, params) {
+                            params.page = params.page || 1;
+                            return {
+                                results: data.results,
+                                pagination: {
+                                    more: (params.page * 10) < data.total_count
+                                }
+                            };
+                        },
+                        cache: true
+                    },
+                    placeholder: 'Select Customer',
+                    minimumInputLength: 0
+                }).on('change', function() {
+                    this.dispatchEvent(new Event('change'));
+                });
+
+            }, 100);
+        });
+    });
+</script>
+
 @endsection
