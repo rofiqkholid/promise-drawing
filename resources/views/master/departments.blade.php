@@ -53,12 +53,12 @@
             <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Add New Department</h3>
             <form id="addDepartmentForm" action="{{ route('departments.store') }}" method="POST">
                 @csrf
-                <div>
+                <div class="mb-4">
                     <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Department Name</label>
                     <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. Engineering" required>
                     <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Department Code</label>
                     <input type="text" name="code" id="code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. ENG" required>
                     <p id="add-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
@@ -88,12 +88,12 @@
             <form id="editDepartmentForm" method="POST">
                 @csrf
                 @method('PUT')
-                <div>
+                <div class="mb-4">
                     <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Department Name</label>
                     <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="edit_code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Department Code</label>
                     <input type="text" name="code" id="edit_code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
@@ -137,44 +137,48 @@
 @endsection
 
 
+@push('styles')
 <style>
-    /* Kecilkan ukuran komponen "Show ... entries" saja */
-    div.dataTables_length label {
+    div.dataTables_length label{
         font-size: 0.75rem;
-        /* text-xs */
     }
-
-    div.dataTables_length select {
+    div.dataTables_length select{
         font-size: 0.75rem;
-        /* text-xs */
         line-height: 1rem;
-        /* compact */
         padding: 0.25rem 1.25rem 0.25rem 0.5rem;
         height: 1.875rem;
-        /* ~30px, lebih kecil dari default */
         width: 4.5rem;
-        /* cukup untuk 10/25/50 */
     }
-
-    div.dataTables_filter label {
+    div.dataTables_filter label{
         font-size: 0.75rem;
-        /* text-xs */
     }
-
-    /* Kecilkan input Search DataTables */
     div.dataTables_filter input[type="search"],
-    input[type="search"][aria-controls="departmentsTable"] {
+    input[type="search"][aria-controls="departmentsTable"]{
         font-size: 0.75rem;
-        /* text-xs */
         line-height: 1rem;
         padding: 0.25rem 0.5rem;
-        /* lebih rapat */
         height: 1.875rem;
-        /* ~30px */
         width: 12rem;
-        /* ~192px, lebih kecil dari default */
+    }
+    div.dataTables_info {
+        font-size: 0.75rem;
+        padding-top: 0.8em;
+    }
+    div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+    div.dataTables_wrapper div.dataTables_scrollBody {
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+    }
+
+    input::placeholder {
+        text-align: left;
     }
 </style>
+@endpush
 
 
 @push('scripts')

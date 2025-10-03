@@ -54,17 +54,17 @@
             <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Add New Customer</h3>
             <form id="addCustomerForm" action="{{ route('customers.store') }}" method="POST">
                 @csrf
-                <div>
+                <div class="mb-4">
                     <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Customer Name</label>
                     <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. XYZ Corp" required>
                     <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Customer Code</label>
                     <input type="text" name="code" id="code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. XYZ" required>
                     <p id="add-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="is_active" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Status</label>
                     <input type="checkbox" name="is_active" id="is_active" value="1" class="bg-gray-50 border border-gray-300 text-primary-600 rounded focus:ring-primary-600 focus:border-primary-600 h-4 w-4 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600" checked>
                     <label for="is_active" class="ml-2 text-sm text-gray-900 dark:text-white">Active</label>
@@ -95,17 +95,17 @@
             <form id="editCustomerForm" method="POST">
                 @csrf
                 @method('PUT')
-                <div>
+                <div class="mb-4">
                     <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Customer Name</label>
                     <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="edit_code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Customer Code</label>
                     <input type="text" name="code" id="edit_code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="edit_is_active" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Status</label>
                     <input type="checkbox" name="is_active" id="edit_is_active" value="1" class="bg-gray-50 border border-gray-300 text-primary-600 rounded focus:ring-primary-600 focus:border-primary-600 h-4 w-4 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600">
                     <label for="edit_is_active" class="ml-2 text-sm text-gray-900 dark:text-white">Active</label>
@@ -148,36 +148,46 @@
     </div>
 </div>
 @endsection
-@push('style')
+
+@push('styles')
 <style>
-    div.dataTables_length label {
+    div.dataTables_length label{
         font-size: 0.75rem;
     }
-
-    div.dataTables_length select {
+    div.dataTables_length select{
         font-size: 0.75rem;
         line-height: 1rem;
         padding: 0.25rem 1.25rem 0.25rem 0.5rem;
         height: 1.875rem;
         width: 4.5rem;
     }
-
-    div.dataTables_filter label {
+    div.dataTables_filter label{
         font-size: 0.75rem;
     }
-
     div.dataTables_filter input[type="search"],
-    input[type="search"][aria-controls="departmentsTable"] {
+    input[type="search"][aria-controls="departmentsTable"]{
         font-size: 0.75rem;
         line-height: 1rem;
         padding: 0.25rem 0.5rem;
         height: 1.875rem;
         width: 12rem;
     }
-
     div.dataTables_info {
         font-size: 0.75rem;
         padding-top: 0.8em;
+    }
+    div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+    div.dataTables_wrapper div.dataTables_scrollBody {
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+    }
+
+    input::placeholder {
+        text-align: left;
     }
 </style>
 @endpush
@@ -187,6 +197,7 @@
     $(document).ready(function() {
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
+        // Initialize DataTable
         const table = $('#customersTable').DataTable({
             processing: true,
             serverSide: true,
@@ -216,7 +227,11 @@
                     data: 'is_active',
                     name: 'is_active',
                     render: function(data, type, row) {
-                        return data ? 'Active' : 'Inactive';
+                        if (data) {
+                            return '<span class="inline-block px-3 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Active</span>';
+                        } else {
+                            return '<span class="inline-block px-3 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full">Inactive</span>';
+                        }
                     }
                 },
                 {
@@ -245,6 +260,7 @@
             },
         });
 
+        // Modal Handling
         const addModal = $('#addCustomerModal');
         const editModal = $('#editCustomerModal');
         const deleteModal = $('#deleteCustomerModal');
@@ -262,7 +278,7 @@
 
         addButton.on('click', () => {
             $('#addCustomerForm')[0].reset();
-            $('#is_active').prop('checked', true); 
+            $('#is_active').prop('checked', true); // Set default to checked (Active)
             showModal(addModal);
         });
 
@@ -272,9 +288,11 @@
             hideModal(deleteModal);
         });
 
+        // Add Customer
         $('#addCustomerForm').on('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
+            // Ensure is_active is sent as 1 or 0
             formData.set('is_active', $('#is_active').is(':checked') ? '1' : '0');
             const nameError = $('#add-name-error');
             const codeError = $('#add-code-error');

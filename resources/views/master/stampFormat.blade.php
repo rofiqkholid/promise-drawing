@@ -55,17 +55,17 @@
             <form id="addStampFormatForm" action="{{ route('stampFormat.store') }}" method="POST">
                 @csrf
                 <div class="space-y-4">
-                    <div>
+                    <div class="mb-4">
                         <label for="prefix" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Prefix</label>
                         <input type="text" name="prefix" id="prefix" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. 4L45W" required>
                         <p id="add-prefix-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                     </div>
-                    <div>
+                    <div class="mb-4">
                         <label for="suffix" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Suffix</label>
                         <input type="text" name="suffix" id="suffix" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. 4L45W" required>
                         <p id="add-suffix-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                     </div>
-                    <div class="flex items-center justify-start mt-4">
+                    <div class="flex items-center justify-start mb-4">
                         <input id="is_active" type="checkbox" name="is_active" value="1" checked class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         <label for="is_active" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Is Active</label>
                     </div>
@@ -96,17 +96,17 @@
                 @csrf
                 @method('PUT')
                 <div class="space-y-4">
-                    <div>
+                    <div class="mb-4">
                         <label for="edit_prefix" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Prefix</label>
                         <input type="text" name="prefix" id="edit_prefix" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                         <p id="edit-prefix-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                     </div>
-                    <div>
+                    <div class="mb-4">
                         <label for="edit_suffix" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Suffix</label>
                         <input type="text" name="suffix" id="edit_suffix" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                         <p id="edit-suffix-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                     </div>
-                    <div class="flex items-center justify-start mt-4">
+                    <div class="flex items-center justify-start mb-4">
                         <input id="edit_is_active" type="checkbox" name="is_active" value="1" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                         <label for="edit_is_active" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Is Active</label>
                     </div>
@@ -148,51 +148,50 @@
     </div>
 </div>
 @endsection
-<style>
-    /* Kecilkan ukuran komponen "Show ... entries" saja */
-    div.dataTables_length label {
-        font-size: 0.75rem;
-        /* text-xs */
-    }
 
-    div.dataTables_length select {
+@push('styles')
+<style>
+    div.dataTables_length label{
         font-size: 0.75rem;
-        /* text-xs */
+    }
+    div.dataTables_length select{
+        font-size: 0.75rem;
         line-height: 1rem;
-        /* compact */
         padding: 0.25rem 1.25rem 0.25rem 0.5rem;
         height: 1.875rem;
-        /* ~30px, lebih kecil dari default */
         width: 4.5rem;
-        /* cukup untuk 10/25/50 */
     }
-
-    div.dataTables_filter label {
+    div.dataTables_filter label{
         font-size: 0.75rem;
-        /* text-xs */
     }
-
-    /* Kecilkan input Search DataTables */
     div.dataTables_filter input[type="search"],
-    input[type="search"][aria-controls="departmentsTable"] {
+    input[type="search"][aria-controls="departmentsTable"]{
         font-size: 0.75rem;
-        /* text-xs */
         line-height: 1rem;
         padding: 0.25rem 0.5rem;
-        /* lebih rapat */
         height: 1.875rem;
-        /* ~30px */
         width: 12rem;
-        /* ~192px, lebih kecil dari default */
     }
-
     div.dataTables_info {
         font-size: 0.75rem;
-        /* Ukuran teks kecil (text-xs) */
         padding-top: 0.8em;
-        /* Sesuaikan padding agar sejajar dengan pagination */
+    }
+    div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+    div.dataTables_wrapper div.dataTables_scrollBody {
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+    }
+
+    input::placeholder {
+        text-align: left;
     }
 </style>
+@endpush
+
 @push('scripts')
 <script>
     $(document).ready(function() {

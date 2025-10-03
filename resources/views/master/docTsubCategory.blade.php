@@ -51,14 +51,14 @@
             <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Add New Document Type Subcategory</h3>
             <form id="addDocTypeSubCategoryForm" action="{{ route('docTypeSubCategories.store') }}" method="POST">
                 @csrf
-                <div>
+                <div class="mb-4">
                     <label for="doctype_group_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Document Type Group</label>
                     <select name="doctype_group_id" id="doctype_group_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
                         <option value="">Select a group</option>
                     </select>
                     <p id="add-doctype_group_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Subcategory Name</label>
                     <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. Agreements" required>
                     <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
@@ -88,14 +88,14 @@
             <form id="editDocTypeSubCategoryForm" method="POST">
                 @csrf
                 @method('PUT')
-                <div>
+                <div class="mb-4">
                     <label for="edit_doctype_group_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Document Type Group</label>
                     <select name="doctype_group_id" id="edit_doctype_group_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
                         <option value="">Select a group</option>
                     </select>
                     <p id="edit-doctype_group_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Subcategory Name</label>
                     <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
@@ -137,48 +137,82 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
 <style>
-  /* Kecilkan ukuran komponen "Show ... entries" saja */
-  div.dataTables_length label{
-    font-size: 0.75rem;           /* text-xs */
-  }
-  div.dataTables_length select{
-    font-size: 0.75rem;           /* text-xs */
-    line-height: 1rem;            /* compact */
-    padding: 0.25rem 1.25rem 0.25rem 0.5rem;
-    height: 1.875rem;             /* ~30px, lebih kecil dari default */
-    width: 4.5rem;                /* cukup untuk 10/25/50 */
-  }
+    div.dataTables_length label{
+        font-size: 0.75rem;
+    }
+    div.dataTables_length select{
+        font-size: 0.75rem;
+        line-height: 1rem;
+        padding: 0.25rem 1.25rem 0.25rem 0.5rem;
+        height: 1.875rem;
+        width: 4.5rem;
+    }
+    div.dataTables_filter label{
+        font-size: 0.75rem;
+    }
+    div.dataTables_filter input[type="search"],
+    input[type="search"][aria-controls="departmentsTable"]{
+        font-size: 0.75rem;
+        line-height: 1rem;
+        padding: 0.25rem 0.5rem;
+        height: 1.875rem;
+        width: 12rem;
+    }
+    div.dataTables_info {
+        font-size: 0.75rem;
+        padding-top: 0.8em;
+    }
 
-  div.dataTables_filter label{
-    font-size: 0.75rem; /* text-xs */
-  }
+    .select2-container--default .select2-selection--single {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start !important;
+        text-align: left !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        text-align: left !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        right: 10px !important;
+    }
 
-  /* Kecilkan input Search DataTables */
-  div.dataTables_filter input[type="search"],
-  input[type="search"][aria-controls="departmentsTable"]{
-    font-size: 0.75rem;              /* text-xs */
-    line-height: 1rem;
-    padding: 0.25rem 0.5rem;         /* lebih rapat */
-    height: 1.875rem;                /* ~30px */
-    width: 12rem;                    /* ~192px, lebih kecil dari default */
-  }
+    div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+    div.dataTables_wrapper div.dataTables_scrollBody {
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+    }
 
-  div.dataTables_info {
-    font-size: 0.75rem; /* Ukuran teks kecil (text-xs) */
-    padding-top: 0.8em; /* Sesuaikan padding agar sejajar dengan pagination */
-}
+    input::placeholder {
+        text-align: left;
+    }
 </style>
+@endpush
+
 @push('scripts')
 <script>
 $(document).ready(function () {
     const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-    // Initialize DataTable
+    $('#doctype_group_id').select2({
+        dropdownParent: $('#addDocTypeSubCategoryModal'),
+        width: '100%'
+    });
+    $('#edit_doctype_group_id').select2({
+        dropdownParent: $('#editDocTypeSubCategoryModal'),
+        width: '100%'
+    });
+
     const table = $('#docTypeSubCategoriesTable').DataTable({
         processing: true,
         serverSide: true,
-scrollX: true,
+        scrollX: true,
         ajax: {
             url: '{{ route("docTypeSubCategories.data") }}',
             type: 'GET',
@@ -226,21 +260,20 @@ scrollX: true,
     });
 
     const overrideFocusStyles = function() {
-            $(this).css({
-                'outline': 'none',
-                'box-shadow': 'none',
-                'border-color': 'gray'
-            });
-        };
-        const restoreBlurStyles = function() {
-            $(this).css('border-color', '');
-        };
-        const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
-        elementsToFix.on('focus keyup', overrideFocusStyles);
-        elementsToFix.on('blur', restoreBlurStyles);
-        elementsToFix.filter(':focus').each(overrideFocusStyles);
+        $(this).css({
+            'outline': 'none',
+            'box-shadow': 'none',
+            'border-color': 'gray'
+        });
+    };
+    const restoreBlurStyles = function() {
+        $(this).css('border-color', '');
+    };
+    const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
+    elementsToFix.on('focus keyup', overrideFocusStyles);
+    elementsToFix.on('blur', restoreBlurStyles);
+    elementsToFix.filter(':focus').each(overrideFocusStyles);
 
-    // Modal Handling
     const addModal = $('#addDocTypeSubCategoryModal');
     const editModal = $('#editDocTypeSubCategoryModal');
     const deleteModal = $('#deleteDocTypeSubCategoryModal');
@@ -256,7 +289,6 @@ scrollX: true,
         modal.addClass('hidden').removeClass('flex');
     }
 
-    // Populate Document Type Group Dropdown
     function populateDocTypeGroupDropdown(selectElement, selectedId = null) {
         $.ajax({
             url: '{{ route("docTypeSubCategories.getDocTypeGroups") }}',
@@ -267,6 +299,7 @@ scrollX: true,
                     const selected = group.id == selectedId ? 'selected' : '';
                     selectElement.append(`<option value="${group.id}" ${selected}>${group.name}</option>`);
                 });
+                selectElement.trigger('change');
             },
             error: function () {
                 alert('Error loading document type groups.');
@@ -274,10 +307,10 @@ scrollX: true,
         });
     }
 
-    // Initialize Dropdowns on Modal Open
     addButton.on('click', () => {
         $('#addDocTypeSubCategoryForm')[0].reset();
         populateDocTypeGroupDropdown($('#doctype_group_id'));
+        $('#doctype_group_id').val(null).trigger('change');
         showModal(addModal);
     });
 
@@ -287,7 +320,6 @@ scrollX: true,
         hideModal(deleteModal);
     });
 
-    // Add Document Type Subcategory
     $('#addDocTypeSubCategoryForm').on('submit', function (e) {
         e.preventDefault();
         const formData = new FormData(this);
@@ -308,7 +340,7 @@ scrollX: true,
                     table.ajax.reload();
                     hideModal(addModal);
                     $('#addDocTypeSubCategoryForm')[0].reset();
-                    $('#doctype_group_id').val('');
+                    $('#doctype_group_id').val('').trigger('change');
                 }
             },
             error: function (xhr) {
@@ -325,7 +357,6 @@ scrollX: true,
         });
     });
 
-    // Edit Document Type Subcategory
     $(document).on('click', '.edit-button', function () {
         const id = $(this).data('id');
         const doctypeGroupIdError = $('#edit-doctype_group_id-error');
@@ -380,7 +411,6 @@ scrollX: true,
         });
     });
 
-    // Delete Document Type Subcategory
     $(document).on('click', '.delete-button', function () {
         docTypeSubCategoryIdToDelete = $(this).data('id');
         showModal(deleteModal);

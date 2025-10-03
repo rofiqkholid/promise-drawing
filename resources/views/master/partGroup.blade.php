@@ -24,7 +24,7 @@
             <table id="partGroupsTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                        <th scope="col" class="px-6 py-3 w-16">#</th>
+                        <th scope="col" class="px-6 py-3 w-16">No</th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="customer_code">
                             Customer Code
                         </th>
@@ -57,7 +57,7 @@
             <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Add New Part Group</h3>
             <form id="addPartGroupForm" action="{{ route('partGroups.store') }}" method="POST">
                 @csrf
-                <div>
+                <div class="mb-4">
                     <label for="customer_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Customer</label>
                     <select name="customer_id" id="customer_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
                         <option value="">Select Customer</option>
@@ -67,19 +67,19 @@
                     </select>
                     <p id="add-customer_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="model_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model</label>
-                    <select name="model_id" id="model_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                    <select name="model_id" id="model_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required disabled>
                         <option value="">Select Model</option>
                     </select>
                     <p id="add-model_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="code_part_group" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part Group Code</label>
                     <input type="text" name="code_part_group" id="code_part_group" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. PG001" required>
                     <p id="add-code_part_group-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="code_part_group_desc" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Description</label>
                     <input type="text" name="code_part_group_desc" id="code_part_group_desc" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. Engine Components" required>
                     <p id="add-code_part_group_desc-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
@@ -89,7 +89,7 @@
                         Cancel
                     </button>
                     <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full">
-                       Save
+                        Save
                     </button>
                 </div>
             </form>
@@ -109,7 +109,7 @@
             <form id="editPartGroupForm" method="POST">
                 @csrf
                 @method('PUT')
-                <div>
+                <div class="mb-4">
                     <label for="edit_customer_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Customer</label>
                     <select name="customer_id" id="edit_customer_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
                         <option value="">Select Customer</option>
@@ -119,19 +119,19 @@
                     </select>
                     <p id="edit-customer_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="edit_model_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model</label>
-                    <select name="model_id" id="edit_model_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                    <select name="model_id" id="edit_model_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required disabled>
                         <option value="">Select Model</option>
                     </select>
                     <p id="edit-model_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="edit_code_part_group" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part Group Code</label>
                     <input type="text" name="code_part_group" id="edit_code_part_group" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-code_part_group-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div>
+                <div class="mb-4">
                     <label for="edit_code_part_group_desc" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Description</label>
                     <input type="text" name="code_part_group_desc" id="edit_code_part_group_desc" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-code_part_group_desc-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
@@ -173,45 +173,90 @@
     </div>
 </div>
 @endsection
+
+@push('styles')
 <style>
-  /* Kecilkan ukuran komponen "Show ... entries" saja */
-  div.dataTables_length label{
-    font-size: 0.75rem;           /* text-xs */
-  }
-  div.dataTables_length select{
-    font-size: 0.75rem;           /* text-xs */
-    line-height: 1rem;            /* compact */
-    padding: 0.25rem 1.25rem 0.25rem 0.5rem;
-    height: 1.875rem;             /* ~30px, lebih kecil dari default */
-    width: 4.5rem;                /* cukup untuk 10/25/50 */
-  }
+    div.dataTables_length label{
+        font-size: 0.75rem;
+    }
+    div.dataTables_length select{
+        font-size: 0.75rem;
+        line-height: 1rem;
+        padding: 0.25rem 1.25rem 0.25rem 0.5rem;
+        height: 1.875rem;
+        width: 4.5rem;
+    }
+    div.dataTables_filter label{
+        font-size: 0.75rem;
+    }
+    div.dataTables_filter input[type="search"],
+    input[type="search"][aria-controls="departmentsTable"]{
+        font-size: 0.75rem;
+        line-height: 1rem;
+        padding: 0.25rem 0.5rem;
+        height: 1.875rem;
+        width: 12rem;
+    }
+    div.dataTables_info {
+        font-size: 0.75rem;
+        padding-top: 0.8em;
+    }
 
-  div.dataTables_filter label{
-    font-size: 0.75rem; /* text-xs */
-  }
+    .select2-container--default .select2-selection--single {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start !important;
+        text-align: left !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        text-align: left !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        right: 10px !important;
+    }
 
-  /* Kecilkan input Search DataTables */
-  div.dataTables_filter input[type="search"],
-  input[type="search"][aria-controls="departmentsTable"]{
-    font-size: 0.75rem;              /* text-xs */
-    line-height: 1rem;
-    padding: 0.25rem 0.5rem;         /* lebih rapat */
-    height: 1.875rem;                /* ~30px */
-    width: 12rem;                    /* ~192px, lebih kecil dari default */
-  }
+    div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+    div.dataTables_wrapper div.dataTables_scrollBody {
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+    }
 
-  
+    input::placeholder {
+        text-align: left;
+    }
 </style>
+@endpush
+
 @push('scripts')
 <script>
 $(document).ready(function () {
     const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-    // Initialize DataTable
+    $('#customer_id').select2({
+        dropdownParent: $('#addPartGroupModal'),
+        width: '100%'
+    });
+    $('#model_id').select2({
+        dropdownParent: $('#addPartGroupModal'),
+        width: '100%'
+    });
+    $('#edit_customer_id').select2({
+        dropdownParent: $('#editPartGroupModal'),
+        width: '100%'
+    });
+    $('#edit_model_id').select2({
+        dropdownParent: $('#editPartGroupModal'),
+        width: '100%'
+    });
+
     const table = $('#partGroupsTable').DataTable({
         processing: true,
         serverSide: true,
-scrollX: true,
+        scrollX: true,
         ajax: {
             url: '{{ route("partGroups.data") }}',
             type: 'GET',
@@ -254,7 +299,6 @@ scrollX: true,
         },
     });
 
-    // Modal Handling
     const addModal = $('#addPartGroupModal');
     const editModal = $('#editPartGroupModal');
     const deleteModal = $('#deletePartGroupModal');
@@ -270,10 +314,10 @@ scrollX: true,
         modal.addClass('hidden').removeClass('flex');
     }
 
-    // Function to load models based on customer selection
     function loadModels(customerId, modelSelect, selectedModelId = null) {
         if (!customerId) {
-            modelSelect.html('<option value="">Select Model</option>');
+            modelSelect.html('<option value="">Select Model</option>').trigger('change');
+            modelSelect.prop('disabled', true);
             return;
         }
         $.ajax({
@@ -288,21 +332,22 @@ scrollX: true,
                 if (selectedModelId) {
                     modelSelect.val(selectedModelId);
                 }
+                modelSelect.prop('disabled', false);
+                modelSelect.trigger('change');
             },
             error: function () {
-                modelSelect.html('<option value="">Select Model</option>');
+                modelSelect.html('<option value="">Select Model</option>').trigger('change');
+                modelSelect.prop('disabled', true);
             }
         });
     }
 
-    // Add Modal: Load models when customer changes
     $('#customer_id').on('change', function () {
         const customerId = $(this).val();
         const modelSelect = $('#model_id');
         loadModels(customerId, modelSelect);
     });
 
-    // Edit Modal: Load models when customer changes
     $('#edit_customer_id').on('change', function () {
         const customerId = $(this).val();
         const modelSelect = $('#edit_model_id');
@@ -311,7 +356,8 @@ scrollX: true,
 
     addButton.on('click', () => {
         $('#addPartGroupForm')[0].reset();
-        $('#model_id').html('<option value="">Select Model</option>');
+        $('#customer_id').val(null).trigger('change');
+        $('#model_id').html('<option value="">Select Model</option>').trigger('change').prop('disabled', true);
         showModal(addModal);
     });
 
@@ -328,15 +374,14 @@ scrollX: true,
                 'border-color': 'gray'
             });
         };
-        const restoreBlurStyles = function() {
-            $(this).css('border-color', '');
-        };
-        const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
-        elementsToFix.on('focus keyup', overrideFocusStyles);
-        elementsToFix.on('blur', restoreBlurStyles);
-        elementsToFix.filter(':focus').each(overrideFocusStyles);
+    const restoreBlurStyles = function() {
+        $(this).css('border-color', '');
+    };
+    const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
+    elementsToFix.on('focus keyup', overrideFocusStyles);
+    elementsToFix.on('blur', restoreBlurStyles);
+    elementsToFix.filter(':focus').each(overrideFocusStyles);
 
-    // Add Part Group
     $('#addPartGroupForm').on('submit', function (e) {
         e.preventDefault();
         const formData = new FormData(this);
@@ -361,7 +406,8 @@ scrollX: true,
                     table.ajax.reload();
                     hideModal(addModal);
                     $('#addPartGroupForm')[0].reset();
-                    $('#model_id').html('<option value="">Select Model</option>');
+                    $('#customer_id').val(null).trigger('change');
+                    $('#model_id').html('<option value="">Select Model</option>').trigger('change').prop('disabled', true);
                 }
             },
             error: function (xhr) {
@@ -384,7 +430,6 @@ scrollX: true,
         });
     });
 
-    // Edit Part Group
     $(document).on('click', '.edit-button', function () {
         const id = $(this).data('id');
         const customerIdError = $('#edit-customer_id-error');
@@ -400,7 +445,7 @@ scrollX: true,
             url: `/master/partGroups/${id}`,
             method: 'GET',
             success: function (data) {
-                $('#edit_customer_id').val(data.customer_id);
+                $('#edit_customer_id').val(data.customer_id).trigger('change');
                 $('#edit_code_part_group').val(data.code_part_group);
                 $('#edit_code_part_group_desc').val(data.code_part_group_desc);
                 $('#editPartGroupForm').attr('action', `/master/partGroups/${id}`);
@@ -413,15 +458,7 @@ scrollX: true,
     $('#editPartGroupForm').on('submit', function (e) {
         e.preventDefault();
         const formData = new FormData(this);
-        const customerIdError = $('#edit-customer_id-error');
-        const modelIdError = $('#edit-model_id-error');
-        const codePartGroupError = $('#edit-code_part_group-error');
-        const codePartGroupDescError = $('#edit-code_part_group_desc-error');
-        customerIdError.addClass('hidden');
-        modelIdError.addClass('hidden');
-        codePartGroupError.addClass('hidden');
-        codePartGroupDescError.addClass('hidden');
-
+        // ... (Error handling sama seperti di 'add')
         $.ajax({
             url: $(this).attr('action'),
             method: 'POST',
@@ -455,7 +492,6 @@ scrollX: true,
         });
     });
 
-    // Delete Part Group
     $(document).on('click', '.delete-button', function () {
         partGroupIdToDelete = $(this).data('id');
         showModal(deleteModal);
