@@ -26,10 +26,10 @@ class PartGroupsController extends Controller
                 $q->where('code_part_group', 'like', '%' . $request->search . '%')
                   ->orWhere('code_part_group_desc', 'like', '%' . $request->search . '%')
                   ->orWhereHas('customer', function($q) use ($request) {
-                      $q->where('code', 'like', '%' . $request->search . '%');
+                      $q->where('name', 'like', '%' . $request->search . '%');
                   })
                   ->orWhereHas('model', function($q) use ($request) {
-                      $q->where('code', 'like', '%' . $request->search . '%');
+                      $q->where('name', 'like', '%' . $request->search . '%');
                   });
             });
         }
@@ -41,9 +41,9 @@ class PartGroupsController extends Controller
         if ($sortColumn == 'customer_code') {
             $query->join('customers', 'part_groups.customer_id', '=', 'customers.id')
                   ->orderBy('customers.code', $sortDir);
-        } elseif ($sortColumn == 'model_code') {
+        } elseif ($sortColumn == 'model_name') {
             $query->join('models', 'part_groups.model_id', '=', 'models.id')
-                  ->orderBy('models.code', $sortDir);
+                  ->orderBy('models.name', $sortDir);
         } else {
             $query->orderBy($sortColumn, $sortDir);
         }
@@ -65,7 +65,7 @@ class PartGroupsController extends Controller
                 return [
                     'id' => $partGroup->id,
                     'customer_code' => $partGroup->customer ? $partGroup->customer->code : '-',
-                    'model_code' => $partGroup->model ? $partGroup->model->code : '-',
+                    'model_name' => $partGroup->model ? $partGroup->model->name : '-',
                     'code_part_group' => $partGroup->code_part_group,
                     'code_part_group_desc' => $partGroup->code_part_group_desc,
                 ];
@@ -147,7 +147,7 @@ class PartGroupsController extends Controller
     public function getModelsByCustomer(Request $request)
     {
         $customerId = $request->query('customer_id');
-        $models = Models::where('customer_id', $customerId)->select('id', 'code')->get();
+        $models = Models::where('customer_id', $customerId)->select('id', 'name')->get();
         return response()->json($models);
     }
 }

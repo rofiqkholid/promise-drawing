@@ -93,7 +93,7 @@
                 </div>
             </div>
             <div>
-                <label for="sub_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sub Type</label>
+                <label for="sub_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
                 <div class="relative mt-1">
                     <select id="sub_type" name="sub_type" class="w-full">
                     </select>
@@ -351,7 +351,7 @@
                 };
 
                 if (docGroupId) {
-                    options.placeholder = 'Select Sub Type';
+                    options.placeholder = 'Select Category';
                     options.ajax = {
                         url: "{{ route('dashboard.getSubType') }}",
                         method: 'POST',

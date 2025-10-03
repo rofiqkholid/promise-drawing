@@ -139,15 +139,15 @@ class DashboardController extends Controller
         $offset = ($page - 1) * $resultsPerPage;
 
         $query = DB::table('models')
-            ->select('id', 'code')
+            ->select('id', 'name')
             ->where('customer_id', $customer_id);
 
         if ($searchTerm) {
-            $query->where('code', 'LIKE', '%' . $searchTerm . '%');
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
         }
 
         $totalCount = $query->count();
-        $groups = $query->orderBy('code', 'asc')
+        $groups = $query->orderBy('name', 'asc')
             ->offset($offset)
             ->limit($resultsPerPage)
             ->get();
@@ -155,7 +155,7 @@ class DashboardController extends Controller
         $formattedGroups = $groups->map(function ($group) {
             return [
                 'id'   => $group->id,
-                'text' => $group->code
+                'text' => $group->name
             ];
         });
 

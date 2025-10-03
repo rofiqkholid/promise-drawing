@@ -31,9 +31,7 @@
                         <th scope="col" class="px-6 py-3 sorting" data-column="name">
                             Model Name
                         </th>
-                        <th scope="col" class="px-6 py-3 sorting" data-column="code">
-                            Model Code
-                        </th>
+
                         <th scope="col" class="px-6 py-3 text-center">Action</th>
                     </tr>
                 </thead>
@@ -67,11 +65,7 @@
                     <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. Product X" required>
                     <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div class="mb-4">
-                    <label for="code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model Code</label>
-                    <input type="text" name="code" id="code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. PRDX" required>
-                    <p id="add-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
+               
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
                         Cancel
@@ -110,11 +104,7 @@
                     <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-                <div class="mb-4">
-                    <label for="edit_code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model Code</label>
-                    <input type="text" name="code" id="edit_code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
-                    <p id="edit-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
+               
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
                         Cancel
@@ -153,29 +143,33 @@
 </div>
 @endsection
 
-@push('styles')
+@push('style')
 <style>
-    div.dataTables_length label{
+    div.dataTables_length label {
         font-size: 0.75rem;
     }
-    div.dataTables_length select{
+
+    div.dataTables_length select {
         font-size: 0.75rem;
         line-height: 1rem;
         padding: 0.25rem 1.25rem 0.25rem 0.5rem;
         height: 1.875rem;
         width: 4.5rem;
     }
-    div.dataTables_filter label{
+
+    div.dataTables_filter label {
         font-size: 0.75rem;
     }
+
     div.dataTables_filter input[type="search"],
-    input[type="search"][aria-controls="departmentsTable"]{
+    input[type="search"][aria-controls="departmentsTable"] {
         font-size: 0.75rem;
         line-height: 1rem;
         padding: 0.25rem 0.5rem;
         height: 1.875rem;
         width: 12rem;
     }
+
     div.dataTables_info {
         font-size: 0.75rem;
         padding-top: 0.8em;
@@ -187,9 +181,11 @@
         justify-content: flex-start !important;
         text-align: left !important;
     }
+
     .select2-container--default .select2-selection--single .select2-selection__rendered {
         text-align: left !important;
     }
+
     .select2-container--default .select2-selection--single .select2-selection__arrow {
         right: 10px !important;
     }
@@ -199,6 +195,7 @@
         width: 0 !important;
         height: 0 !important;
     }
+
     div.dataTables_wrapper div.dataTables_scrollBody {
         -ms-overflow-style: none !important;
         scrollbar-width: none !important;
@@ -212,47 +209,51 @@
 
 @push('scripts')
 <script>
-$(document).ready(function () {
-    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+    $(document).ready(function() {
+        const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-    // Inisialisasi Select2
-    $('#customer_id').select2({
-        dropdownParent: $('#addModelModal'),
-        width: '100%'
-    });
-    $('#edit_customer_id').select2({
-        dropdownParent: $('#editModelModal'),
-        width: '100%'
-    });
+        // Inisialisasi Select2
+        $('#customer_id').select2({
+            dropdownParent: $('#addModelModal'),
+            width: '100%'
+        });
+        $('#edit_customer_id').select2({
+            dropdownParent: $('#editModelModal'),
+            width: '100%'
+        });
 
-    // Initialize DataTable
-    const table = $('#modelsTable').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: '{{ route("models.data") }}',
-            type: 'GET',
-            data: function (d) {
-                d.search = d.search.value;
-            }
-        },
-        columns: [
-            {
-                data: null,
-                render: function (data, type, row, meta) {
-                    return meta.row + meta.settings._iDisplayStart + 1;
+        // Initialize DataTable
+        const table = $('#modelsTable').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '{{ route("models.data") }}',
+                type: 'GET',
+                data: function(d) {
+                    d.search = d.search.value;
                 }
             },
-            { data: 'customer.code', name: 'customer' },
-            { data: 'name', name: 'name' },
-            { data: 'code', name: 'code' },
-            {
-                data: null,
-                orderable: false,
-                searchable: false,
-                className: 'text-center',
-                render: function (data, type, row) {
-                    return `
+            columns: [{
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    }
+                },
+                {
+                    data: 'customer.code',
+                    name: 'customer'
+                },
+                {
+                    data: 'name',
+                    name: 'name'
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    className: 'text-center',
+                    render: function(data, type, row) {
+                        return `
                         <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
                             <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
                         </button>
@@ -260,107 +261,111 @@ $(document).ready(function () {
                             <i class="fa-solid fa-trash-can fa-lg m-2"></i>
                         </button>
                     `;
+                    }
                 }
-            }
-        ],
-        pageLength: 10,
-        lengthMenu: [10, 25, 50],
-        order: [[2, 'asc']],
-        language: {
-            emptyTable: '<div class="text-gray-500 dark:text-gray-400">No models found.</div>'
-        },
-    });
-
-    // Modal Handling
-    const addModal = $('#addModelModal');
-    const editModal = $('#editModelModal');
-    const deleteModal = $('#deleteModelModal');
-    const addButton = $('#add-button');
-    const closeButtons = $('.close-modal-button');
-    let modelIdToDelete = null;
-
-    function showModal(modal) {
-        modal.removeClass('hidden').addClass('flex');
-    }
-
-    function hideModal(modal) {
-        modal.addClass('hidden').removeClass('flex');
-    }
-
-    addButton.on('click', () => {
-        $('#addModelForm')[0].reset();
-        // Reset and populate customer dropdown
-        populateCustomerDropdown($('#customer_id'));
-        $('#customer_id').val(null).trigger('change');
-        showModal(addModal);
-    });
-
-    closeButtons.on('click', () => {
-        hideModal(addModal);
-        hideModal(editModal);
-        hideModal(deleteModal);
-    });
-
-    // Helper to populate customer dropdown
-    function populateCustomerDropdown($select, selectedId = null) {
-        $.get('{{ route("models.getCustomers") }}', function(customers) {
-            $select.empty();
-            $select.append('<option value="">Select Customer</option>');
-            customers.forEach(function(customer) {
-                $select.append(
-                    `<option value="${customer.id}"${selectedId == customer.id ? ' selected' : ''}>${customer.name}</option>`
-                );
-            });
-            // Trigger change for Select2 to update
-            $select.trigger('change');
-        });
-    }
-
-    // Add Model
-    $('#addModelForm').on('submit', function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const customerIdError = $('#add-customer_id-error');
-        const nameError = $('#add-name-error');
-        const codeError = $('#add-code-error');
-        customerIdError.addClass('hidden');
-        nameError.addClass('hidden');
-        codeError.addClass('hidden');
-
-        $.ajax({
-            url: $(this).attr('action'),
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (data) {
-                if (data.success) {
-                    table.ajax.reload();
-                    hideModal(addModal);
-                    $('#addModelForm')[0].reset();
-                    $('#customer_id').val(null).trigger('change');
-                }
+            ],
+            pageLength: 10,
+            lengthMenu: [10, 25, 50],
+            order: [
+                [2, 'asc']
+            ],
+            language: {
+                emptyTable: '<div class="text-gray-500 dark:text-gray-400">No models found.</div>'
             },
-            error: function (xhr) {
-                const errors = xhr.responseJSON?.errors;
-                if (errors) {
-                    if (errors.customer_id) {
-                        customerIdError.text(errors.customer_id[0]).removeClass('hidden');
+        });
+
+        // Modal Handling
+        const addModal = $('#addModelModal');
+        const editModal = $('#editModelModal');
+        const deleteModal = $('#deleteModelModal');
+        const addButton = $('#add-button');
+        const closeButtons = $('.close-modal-button');
+        let modelIdToDelete = null;
+
+        function showModal(modal) {
+            modal.removeClass('hidden').addClass('flex');
+        }
+
+        function hideModal(modal) {
+            modal.addClass('hidden').removeClass('flex');
+        }
+
+        addButton.on('click', () => {
+            $('#addModelForm')[0].reset();
+            // Reset and populate customer dropdown
+            populateCustomerDropdown($('#customer_id'));
+            $('#customer_id').val(null).trigger('change');
+            showModal(addModal);
+        });
+
+        closeButtons.on('click', () => {
+            hideModal(addModal);
+            hideModal(editModal);
+            hideModal(deleteModal);
+        });
+
+        // Helper to populate customer dropdown
+        function populateCustomerDropdown($select, selectedId = null) {
+            $.get('{{ route("models.getCustomers") }}', function(customers) {
+                $select.empty();
+                $select.append('<option value="">Select Customer</option>');
+                customers.forEach(function(customer) {
+                    $select.append(
+                        `<option value="${customer.id}"${selectedId == customer.id ? ' selected' : ''}>${customer.name}</option>`
+                    );
+                });
+                // Trigger change for Select2 to update
+                $select.trigger('change');
+            });
+        }
+
+        // Add Model
+        $('#addModelForm').on('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const customerIdError = $('#add-customer_id-error');
+            const nameError = $('#add-name-error');
+            const codeError = $('#add-code-error');
+            customerIdError.addClass('hidden');
+            nameError.addClass('hidden');
+            codeError.addClass('hidden');
+
+            $.ajax({
+                url: $(this).attr('action'),
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
+                    if (data.success) {
+                        table.ajax.reload();
+                        hideModal(addModal);
+                        $('#addModelForm')[0].reset();
+                        $('#customer_id').val(null).trigger('change');
                     }
-                    if (errors.name) {
-                        nameError.text(errors.name[0]).removeClass('hidden');
-                    }
-                    if (errors.code) {
-                        codeError.text(errors.code[0]).removeClass('hidden');
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors) {
+                        if (errors.customer_id) {
+                            customerIdError.text(errors.customer_id[0]).removeClass('hidden');
+                        }
+                        if (errors.name) {
+                            nameError.text(errors.name[0]).removeClass('hidden');
+                        }
+                        if (errors.code) {
+                            codeError.text(errors.code[0]).removeClass('hidden');
+                        }
                     }
                 }
-            }
+            });
         });
-    });
 
 
-    const overrideFocusStyles = function() {
+        const overrideFocusStyles = function() {
             $(this).css({
                 'outline': 'none',
                 'box-shadow': 'none',
@@ -375,96 +380,100 @@ $(document).ready(function () {
         elementsToFix.on('blur', restoreBlurStyles);
         elementsToFix.filter(':focus').each(overrideFocusStyles);
 
-    // Edit Model
-    $(document).on('click', '.edit-button', function () {
-        const id = $(this).data('id');
-        const customerIdError = $('#edit-customer_id-error');
-        const nameError = $('#edit-name-error');
-        const codeError = $('#edit-code-error');
-        customerIdError.addClass('hidden');
-        nameError.addClass('hidden');
-        codeError.addClass('hidden');
+        // Edit Model
+        $(document).on('click', '.edit-button', function() {
+            const id = $(this).data('id');
+            const customerIdError = $('#edit-customer_id-error');
+            const nameError = $('#edit-name-error');
+            const codeError = $('#edit-code-error');
+            customerIdError.addClass('hidden');
+            nameError.addClass('hidden');
+            codeError.addClass('hidden');
 
-        $.ajax({
-            url: `/master/models/${id}`,
-            method: 'GET',
-            success: function (data) {
-                populateCustomerDropdown($('#edit_customer_id'), data.customer_id);
-                $('#edit_name').val(data.name);
-                $('#edit_code').val(data.code);
-                $('#editModelForm').attr('action', `/master/models/${id}`);
-                showModal(editModal);
-            }
-        });
-    });
-
-    $('#editModelForm').on('submit', function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const customerIdError = $('#edit-customer_id-error');
-        const nameError = $('#edit-name-error');
-        const codeError = $('#edit-code-error');
-        customerIdError.addClass('hidden');
-        nameError.addClass('hidden');
-        codeError.addClass('hidden');
-
-        $.ajax({
-            url: $(this).attr('action'),
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (data) {
-                if (data.success) {
-                    table.ajax.reload();
-                    hideModal(editModal);
-                }
-            },
-            error: function (xhr) {
-                const errors = xhr.responseJSON?.errors;
-                if (errors) {
-                    if (errors.customer_id) {
-                        customerIdError.text(errors.customer_id[0]).removeClass('hidden');
-                    }
-                    if (errors.name) {
-                        nameError.text(errors.name[0]).removeClass('hidden');
-                    }
-                    if (errors.code) {
-                        codeError.text(errors.code[0]).removeClass('hidden');
-                    }
-                }
-            }
-        });
-    });
-
-    // Delete Model
-    $(document).on('click', '.delete-button', function () {
-        modelIdToDelete = $(this).data('id');
-        showModal(deleteModal);
-    });
-
-    $('#confirmDeleteButton').on('click', function () {
-        if (modelIdToDelete) {
             $.ajax({
-                url: `/master/models/${modelIdToDelete}`,
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
-                success: function (data) {
-                    if (data.success) {
-                        table.ajax.reload();
-                        hideModal(deleteModal);
-                        modelIdToDelete = null;
-                    } else {
-                        alert('Error deleting model.');
-                    }
-                },
-                error: function () {
-                    alert('Error deleting model.');
+                url: `/master/models/${id}`,
+                method: 'GET',
+                success: function(data) {
+                    populateCustomerDropdown($('#edit_customer_id'), data.customer_id);
+                    $('#edit_name').val(data.name);
+                    $('#edit_code').val(data.code);
+                    $('#editModelForm').attr('action', `/master/models/${id}`);
+                    showModal(editModal);
                 }
             });
-        }
+        });
+
+        $('#editModelForm').on('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const customerIdError = $('#edit-customer_id-error');
+            const nameError = $('#edit-name-error');
+            const codeError = $('#edit-code-error');
+            customerIdError.addClass('hidden');
+            nameError.addClass('hidden');
+            codeError.addClass('hidden');
+
+            $.ajax({
+                url: $(this).attr('action'),
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(data) {
+                    if (data.success) {
+                        table.ajax.reload();
+                        hideModal(editModal);
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors) {
+                        if (errors.customer_id) {
+                            customerIdError.text(errors.customer_id[0]).removeClass('hidden');
+                        }
+                        if (errors.name) {
+                            nameError.text(errors.name[0]).removeClass('hidden');
+                        }
+                        if (errors.code) {
+                            codeError.text(errors.code[0]).removeClass('hidden');
+                        }
+                    }
+                }
+            });
+        });
+
+        // Delete Model
+        $(document).on('click', '.delete-button', function() {
+            modelIdToDelete = $(this).data('id');
+            showModal(deleteModal);
+        });
+
+        $('#confirmDeleteButton').on('click', function() {
+            if (modelIdToDelete) {
+                $.ajax({
+                    url: `/master/models/${modelIdToDelete}`,
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    success: function(data) {
+                        if (data.success) {
+                            table.ajax.reload();
+                            hideModal(deleteModal);
+                            modelIdToDelete = null;
+                        } else {
+                            alert('Error deleting model.');
+                        }
+                    },
+                    error: function() {
+                        alert('Error deleting model.');
+                    }
+                });
+            }
+        });
     });
-});
 </script>
 @endpush

@@ -28,7 +28,7 @@
                         <th scope="col" class="px-6 py-3 sorting" data-column="customer_code">
                             Customer Code
                         </th>
-                        <th scope="col" class="px-6 py-3 sorting" data-column="model_code">
+                        <th scope="col" class="px-6 py-3 sorting" data-column="model_name">
                             Model Code
                         </th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="code_part_group">
@@ -271,7 +271,7 @@ $(document).ready(function () {
                 }
             },
             { data: 'customer_code', name: 'customer_code' },
-            { data: 'model_code', name: 'model_code' },
+            { data: 'model_name', name: 'model_name' },
             { data: 'code_part_group', name: 'code_part_group' },
             { data: 'code_part_group_desc', name: 'code_part_group_desc' },
             {
@@ -327,7 +327,7 @@ $(document).ready(function () {
             success: function (data) {
                 modelSelect.html('<option value="">Select Model</option>');
                 data.forEach(function (model) {
-                    modelSelect.append(`<option value="${model.id}">${model.code}</option>`);
+                    modelSelect.append(`<option value="${model.id}">${model.name}</option>`);
                 });
                 if (selectedModelId) {
                     modelSelect.val(selectedModelId);

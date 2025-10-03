@@ -19,26 +19,46 @@ class ModelsController extends Controller
 
         // Handle Search
         if ($request->has('search') && !empty($request->search)) {
-            $query->where(function($q) use ($request) {
+            $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('code', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('customer', function($q) use ($request) {
-                      $q->where('name', 'like', '%' . $request->search . '%');
-                  });
+                    ->orWhere('code', 'like', '%' . $request->search . '%')
+                    ->orWhereHas('customer', function ($q) use ($request) {
+                        $q->where('name', 'like', '%' . $request->search . '%');
+                    });
             });
         }
 
         // Handle Sorting
-        $sortBy = $request->get('order')[0]['column'] ?? 1;
-        $sortDir = $request->get('order')[0]['dir'] ?? 'asc';
-        $sortColumn = $request->get('columns')[$sortBy]['data'] ?? 'name';
-        if ($sortColumn === 'customer') {
-            $query->join('customers', 'models.customer_id', '=', 'customers.id')
-                  ->orderBy('customers.code', $sortDir)
-                  ->select('models.*');
-        } else {
-            $query->orderBy($sortColumn, $sortDir);
+        $sortBy   = $request->input('order.0.column', 1);
+        $sortDir  = $request->input('order.0.dir', 'asc');
+        $columns  = $request->input('columns', []);
+
+        $sortData = $columns[$sortBy]['data'] ?? 'name';
+        $sortName = $columns[$sortBy]['name'] ?? null;
+
+
+        $sortKey = $sortData;
+
+        if ($sortName === 'customer') {
+            $sortKey = 'customer';
         }
+
+
+        $sortMap = [
+            'customer'      => 'customers.code',
+            'customer.code' => 'customers.code',
+            'name'          => 'models.name',
+            'code'          => 'models.code',
+        ];
+
+        $sortColumn = $sortMap[$sortKey] ?? 'models.name';
+
+        if (str_starts_with($sortColumn, 'customers.')) {
+            $query->leftJoin('customers', 'models.customer_id', '=', 'customers.id')
+                ->select('models.*');
+        }
+
+        $query->orderBy($sortColumn, $sortDir);
 
         // Handle Pagination
         $perPage = $request->get('length', 10);
@@ -83,7 +103,6 @@ class ModelsController extends Controller
         $validated = $request->validate([
             'customer_id' => 'required|integer|exists:customers,id',
             'name' => 'required|string|max:50',
-            'code' => 'required|string|max:10|unique:models,code',
         ]);
 
         Models::create($validated);
@@ -111,12 +130,7 @@ class ModelsController extends Controller
                 'string',
                 'max:50',
             ],
-            'code' => [
-                'required',
-                'string',
-                'max:10',
-                Rule::unique('models')->ignore($model->id),
-            ],
+            
         ]);
 
         $model->update($validated);
