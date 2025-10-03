@@ -15,7 +15,7 @@ class UserMaintenanceController extends Controller
      */
     public function data(Request $request)
     {
-        $query = User::query()->select(['id','name','email','nik','email_verification_at']);
+        $query = User::query()->select(['id','name','email','nik','is_active']);
 
         // Search (mengikuti JS Anda: d.search = d.search.value)
         if ($request->filled('search')) {
@@ -33,7 +33,7 @@ class UserMaintenanceController extends Controller
         $columns   = $request->input('columns', []);
         $sortColumn= $columns[$sortBy]['data'] ?? 'name';
         // amankan nama kolom
-        if (!in_array($sortColumn, ['name','email','nik','email_verification_at'])) {
+        if (!in_array($sortColumn, ['name','email','nik','is_active'])) {
             $sortColumn = 'name';
         }
         $query->orderBy($sortColumn, $sortDir);
@@ -60,7 +60,7 @@ class UserMaintenanceController extends Controller
      */
     public function show(User $user)
     {
-        return response()->json($user->only(['id','name','email','nik']));
+        return response()->json($user->only(['id','name','email','nik','is_active']));
     }
 
     /**
@@ -73,6 +73,7 @@ class UserMaintenanceController extends Controller
             'email'    => ['required','string','email','max:50','unique:users,email'],
             'nik'      => ['required','string','max:20','unique:users,nik'],
             'password' => ['required','string','min:6','max:255'],
+            'is_active'=> ['required','boolean'],
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
@@ -98,6 +99,7 @@ class UserMaintenanceController extends Controller
                 Rule::unique('users','nik')->ignore($user->id),
             ],
             'password' => ['nullable','string','min:6','max:255'],
+            'is_active' => ['required','boolean'],
         ]);
 
         if (!empty($validated['password'])) {

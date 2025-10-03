@@ -89,7 +89,6 @@
                 <label for="doc_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Document Group</label>
                 <div class="relative mt-1">
                     <select id="doc_group" name="doc_group" class="w-full">
-                        <option value="ALL">ALL</option>
                     </select>
                 </div>
             </div>
@@ -97,7 +96,6 @@
                 <label for="sub_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sub Type</label>
                 <div class="relative mt-1">
                     <select id="sub_type" name="sub_type" class="w-full">
-                        <option value="ALL">ALL</option>
                     </select>
                 </div>
             </div>
@@ -124,7 +122,6 @@
                         <label for="customer" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
                         <div class="relative mt-1">
                             <select id="customer" name="customer" class="w-full">
-                                <option value="ALL">ALL</option>
                             </select>
                         </div>
                     </div>
@@ -132,7 +129,6 @@
                         <label for="model" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
                         <div class="relative mt-1">
                             <select id="model" name="model" class="w-full">
-                                <option value="ALL">ALL</option>
                             </select>
                         </div>
                     </div>
@@ -140,7 +136,6 @@
                         <label for="project_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
                         <div class="relative mt-1">
                             <select id="project_status" name="project_status" class="w-full">
-                                <option value="ALL">ALL</option>
                             </select>
                         </div>
                     </div>
@@ -148,7 +143,6 @@
                         <label for="part_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
                         <div class="relative mt-1">
                             <select id="part_group" name="part_group" class="w-full">
-                                <option value="ALL">ALL</option>
                             </select>
                         </div>
                     </div>
@@ -232,7 +226,7 @@
     function fetchActiveUsers() {
         const apiUrl = '/api/active-users-count';
         const userCountElement = document.getElementById('activeUserCount');
-        userCountElement.textContent = '...'; 
+        userCountElement.textContent = '...';
         fetch(apiUrl)
             .then(response => {
                 if (!response.ok) {
@@ -297,7 +291,7 @@
                 $('#doc_group').select2({
                     dropdownParent: $('#doc_group').parent(),
                     width: '100%',
-                    placeholder: 'Pilih Document Group',
+                    placeholder: 'Select Document Group',
                     ajax: {
                         url: "{{ route('dashboard.getDocumentGroups') }}",
                         method: 'POST',
@@ -335,14 +329,14 @@
 
                     let subTypeSelect = $('#sub_type');
                     subTypeSelect.val('ALL').trigger('change.select2');
-                    subTypeSelect.select2('destroy'); 
+                    subTypeSelect.select2('destroy');
 
                     if (docGroupId && docGroupId !== 'ALL') {
                         subTypeSelect.prop('disabled', false);
-                        component.initSubTypeSelect2(docGroupId); 
+                        component.initSubTypeSelect2(docGroupId);
                     } else {
                         subTypeSelect.prop('disabled', true);
-                        component.initSubTypeSelect2(); 
+                        component.initSubTypeSelect2();
                     }
                 });
             },
@@ -353,11 +347,11 @@
                 let options = {
                     dropdownParent: subTypeSelect.parent(),
                     width: '100%',
-                    placeholder: 'Pilih Document Group dulu'
+                    placeholder: 'Doc Group First'
                 };
 
                 if (docGroupId) {
-                    options.placeholder = 'Pilih Sub Type';
+                    options.placeholder = 'Select Sub Type';
                     options.ajax = {
                         url: "{{ route('dashboard.getSubType') }}",
                         method: 'POST',
@@ -404,7 +398,7 @@
                 $('#customer').select2({
                     dropdownParent: $('#customer').parent(),
                     width: '100%',
-                    placeholder: 'Pilih Customer',
+                    placeholder: 'Select Customer',
                     ajax: {
                         url: "{{ route('dashboard.getCustomer') }}",
                         method: 'POST',
@@ -458,11 +452,11 @@
                 let options = {
                     dropdownParent: modelSelect.parent(),
                     width: '100%',
-                    placeholder: 'Pilih Customer dulu'
+                    placeholder: 'Select Customer First'
                 };
 
                 if (customerId) {
-                    options.placeholder = 'Pilih Model';
+                    options.placeholder = 'Select Model';
                     options.ajax = {
                         url: "{{ route('dashboard.getModel') }}",
                         method: 'POST',
@@ -472,7 +466,7 @@
                             return {
                                 _token: "{{ csrf_token() }}",
                                 q: params.term,
-                                customer_id: customerId, 
+                                customer_id: customerId,
                                 page: params.page || 1
                             };
                         },
@@ -507,7 +501,7 @@
                 $('#part_group').select2({
                     dropdownParent: $('#part_group').parent(),
                     width: '100%',
-                    placeholder: 'Pilih Part Group',
+                    placeholder: 'Select Part Group',
                     ajax: {
                         url: "{{ route('dashboard.getPartGroup') }}",
                         method: 'POST',
@@ -545,7 +539,7 @@
                 $('#project_status').select2({
                     dropdownParent: $('#project_status').parent(),
                     width: '100%',
-                    placeholder: 'Pilih Status',
+                    placeholder: 'Select Status',
                     ajax: {
                         url: "{{ route('dashboard.getStatus') }}",
                         method: 'POST',
