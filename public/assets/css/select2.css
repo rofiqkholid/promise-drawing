@@ -115,3 +115,18 @@
 .dark .select2-results__message {
     color: #9ca3af;
 }
+
+
+/* ini untuk dropwon yg di disable mode gelap  */
+.dark .select2-container--disabled .select2-selection--single {
+    background-color: #32363f;
+    border-color: #353b42; 
+}
+
+.dark .select2-container--disabled .select2-selection__rendered {
+    color: #0062e3; 
+}
+
+.dark .select2-container--disabled .select2-selection__arrow b {
+    border-color: #9ca3af transparent transparent transparent;
+}

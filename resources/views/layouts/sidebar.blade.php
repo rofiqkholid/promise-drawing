@@ -110,7 +110,6 @@
                 </svg>
             </div>
             <span class="ml-3 whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">
-                Ganti Tema
             </span>
         </button>
     </div>
