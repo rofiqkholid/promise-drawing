@@ -159,16 +159,12 @@
                                 </select>
                             </div>
                         </div>
-
                         <div>
-                            <label for="model" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
+                            <label for="model" class="block text-sm text-gray-700 dark:text-gray-300">Model</label>
                             <div class="relative mt-1">
-                                <select id="model" x-model="model" class="appearance-none block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md shadow-sm py-2 sm:text-sm">
+                                <select id="model" name="model" class="appearance-none block w-full border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md shadow-sm py-2 sm:text-sm">
                                     <option value="">Select Model</option>
                                 </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-700 dark:text-gray-400">
-                                    <i class="fa-solid fa-chevron-down fa-xs"></i>
-                                </div>
                             </div>
                         </div>
 
@@ -242,16 +238,17 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const openModalButton = document.getElementById('openUploadModalBtn');
+        const modal = document.getElementById('uploadModal');
 
         openModalButton.addEventListener('click', function() {
             setTimeout(function() {
                 if ($('#customer').hasClass('select2-hidden-accessible')) {
                     $('#customer').select2('destroy');
                 }
-
                 $('#customer').select2({
-                    dropdownParent: $('#uploadModal'), 
+                    dropdownParent: $(modal), 
                     width: '100%',
+                    placeholder: 'Select Customer',
                     ajax: {
                         url: "{{ route('upload.getDataCustomer') }}",
                         method: 'POST',
@@ -274,14 +271,76 @@
                             };
                         },
                         cache: true
-                    },
-                    placeholder: 'Select Customer',
-                    minimumInputLength: 0
-                }).on('change', function() {
-                    this.dispatchEvent(new Event('change'));
+                    }
                 });
 
-            }, 100);
+                if ($('#model').hasClass('select2-hidden-accessible')) {
+                    $('#model').select2('destroy');
+                }
+                $('#model').select2({
+                    dropdownParent: $(modal),
+                    width: '100%',
+                    placeholder: 'Select Customer First',
+                }).prop('disabled', true); 
+
+
+
+                $('#customer').on('change', function() {
+                    const customerId = $(this).val();
+
+                    $('#model').val(null).trigger('change');
+                    $('#model').select2('destroy'); 
+
+                    if (customerId) {
+                        $('#model').prop('disabled', false);
+                        $('#model').select2({
+                            dropdownParent: $(modal),
+                            width: '100%',
+                            placeholder: 'Select Model',
+                            ajax: {
+                                url: "{{ route('upload.getDataModel') }}", 
+                                method: 'POST',
+                                dataType: 'json',
+                                delay: 250,
+                                data: function(params) {
+                                    return {
+                                        _token: "{{ csrf_token() }}",
+                                        q: params.term,
+                                        customer_id: customerId 
+                                    };
+                                },
+                                processResults: function(data) {
+                                    return {
+                                        results: data.results
+                                    };
+                                }
+                            }
+                        });
+                    } else {
+                        $('#model').prop('disabled', true).select2({
+                            placeholder: 'Select Customer First'
+                        });
+                    }
+                });
+
+            }, 100); 
+        });
+
+        const alpineComponent = document.querySelector('[x-data]');
+        new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'style' && alpineComponent.style.display === 'none') {
+                    $('#customer').off('change');
+                    if ($('#customer').hasClass('select2-hidden-accessible')) {
+                        $('#customer').select2('destroy');
+                    }
+                    if ($('#model').hasClass('select2-hidden-accessible')) {
+                        $('#model').select2('destroy');
+                    }
+                }
+            });
+        }).observe(alpineComponent, {
+            attributes: true
         });
     });
 </script>

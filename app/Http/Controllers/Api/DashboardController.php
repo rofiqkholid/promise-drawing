@@ -65,12 +65,14 @@ class DashboardController extends Controller
     public function getSubType(Request $request): JsonResponse
     {
         $searchTerm = $request->q;
+        $document_group_id = $request->document_group_id;
         $page = $request->page ?: 1;
         $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
         $query = DB::table('doctype_subcategories')
-            ->select('id', 'name');
+            ->select('id', 'name')
+            ->where('doctype_group_id', $document_group_id);
 
         if ($searchTerm) {
             $query->where('name', 'LIKE', '%' . $searchTerm . '%');
@@ -131,12 +133,14 @@ class DashboardController extends Controller
     public function getModel(Request $request): JsonResponse
     {
         $searchTerm = $request->q;
+        $customer_id = $request->customer_id;
         $page = $request->page ?: 1;
         $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
         $query = DB::table('models')
-            ->select('id', 'code');
+            ->select('id', 'code')
+            ->where('customer_id', $customer_id);
 
         if ($searchTerm) {
             $query->where('code', 'LIKE', '%' . $searchTerm . '%');

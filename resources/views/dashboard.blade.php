@@ -220,17 +220,19 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-
         fetchActiveUsers();
-
     });
 
     function fetchActiveUsers() {
         const apiUrl = '/api/active-users-count';
         const userCountElement = document.getElementById('activeUserCount');
-        userCountElement.textContent = '...';
+        userCountElement.textContent = '...'; 
         fetch(apiUrl)
             .then(response => {
                 if (!response.ok) {
@@ -274,20 +276,20 @@
 
             initializeDashboard() {
                 const component = this;
-
                 setTimeout(() => {
                     component.$nextTick(() => {
                         component.initCharts();
                         component.initDocGroupSelect2();
                         component.initSubTypeSelect2();
                         component.initCustomerSelect2();
+                        component.initModelSelect2();
                         component.initPartGroupSelect2();
                         component.initStatusSelect2();
-                        component.initModelSelect2();
                         component.chartsInitialized = true;
                     });
                 }, 100);
             },
+
 
             initDocGroupSelect2() {
                 let component = this;
@@ -295,6 +297,7 @@
                 $('#doc_group').select2({
                     dropdownParent: $('#doc_group').parent(),
                     width: '100%',
+                    placeholder: 'Pilih Document Group',
                     ajax: {
                         url: "{{ route('dashboard.getDocumentGroups') }}",
                         method: 'POST',
@@ -309,28 +312,99 @@
                         },
                         processResults: function(data, params) {
                             params.page = params.page || 1;
+                            let results = data.results;
+                            if (params.page === 1 && !params.term) {
+                                results.unshift({
+                                    id: 'ALL',
+                                    text: 'ALL'
+                                });
+                            }
                             return {
-                                results: data.results,
+                                results: results,
                                 pagination: {
                                     more: (params.page * 10) < data.total_count
                                 }
                             };
                         },
                         cache: true
-                    },
-                    placeholder: 'Cari atau pilih Document Group',
-                    minimumInputLength: 0
+                    }
                 }).on('change', function(e) {
-                    let selectedValue = $(this).val();
-                    component.showExtraFilters = (selectedValue !== 'ALL' && selectedValue !== '' && selectedValue !== null);
+                    let docGroupId = $(this).val();
+
+                    component.showExtraFilters = (docGroupId !== 'ALL' && docGroupId !== '' && docGroupId !== null);
+
+                    let subTypeSelect = $('#sub_type');
+                    subTypeSelect.val('ALL').trigger('change.select2');
+                    subTypeSelect.select2('destroy'); 
+
+                    if (docGroupId && docGroupId !== 'ALL') {
+                        subTypeSelect.prop('disabled', false);
+                        component.initSubTypeSelect2(docGroupId); 
+                    } else {
+                        subTypeSelect.prop('disabled', true);
+                        component.initSubTypeSelect2(); 
+                    }
                 });
             },
+
+            initSubTypeSelect2(docGroupId = null) {
+                let subTypeSelect = $('#sub_type');
+
+                let options = {
+                    dropdownParent: subTypeSelect.parent(),
+                    width: '100%',
+                    placeholder: 'Pilih Document Group dulu'
+                };
+
+                if (docGroupId) {
+                    options.placeholder = 'Pilih Sub Type';
+                    options.ajax = {
+                        url: "{{ route('dashboard.getSubType') }}",
+                        method: 'POST',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                _token: "{{ csrf_token() }}",
+                                q: params.term,
+                                document_group_id: docGroupId,
+                                page: params.page || 1
+                            };
+                        },
+                        processResults: function(data, params) {
+                            params.page = params.page || 1;
+                            let results = data.results;
+                            if (params.page === 1 && !params.term) {
+                                results.unshift({
+                                    id: 'ALL',
+                                    text: 'ALL'
+                                });
+                            }
+                            return {
+                                results: results,
+                                pagination: {
+                                    more: (params.page * 10) < data.total_count
+                                }
+                            };
+                        },
+                        cache: true
+                    };
+                }
+
+                subTypeSelect.select2(options);
+
+                if (!docGroupId) {
+                    subTypeSelect.prop('disabled', true);
+                }
+            },
+
             initCustomerSelect2() {
                 let component = this;
 
                 $('#customer').select2({
                     dropdownParent: $('#customer').parent(),
                     width: '100%',
+                    placeholder: 'Pilih Customer',
                     ajax: {
                         url: "{{ route('dashboard.getCustomer') }}",
                         method: 'POST',
@@ -345,29 +419,51 @@
                         },
                         processResults: function(data, params) {
                             params.page = params.page || 1;
+                            let results = data.results;
+                            if (params.page === 1 && !params.term) {
+                                results.unshift({
+                                    id: 'ALL',
+                                    text: 'ALL'
+                                });
+                            }
                             return {
-                                results: data.results,
+                                results: results,
                                 pagination: {
                                     more: (params.page * 10) < data.total_count
                                 }
                             };
                         },
                         cache: true
-                    },
-                    placeholder: 'Cari atau pilih Document Group',
-                    minimumInputLength: 0
+                    }
                 }).on('change', function(e) {
-                    let selectedValue = $(this).val();
-                    component.showExtraFilters = (selectedValue !== 'ALL' && selectedValue !== '' && selectedValue !== null);
+                    let customerId = $(this).val();
+
+                    let modelSelect = $('#model');
+                    modelSelect.val('ALL').trigger('change.select2');
+                    modelSelect.select2('destroy');
+
+                    if (customerId && customerId !== 'ALL') {
+                        modelSelect.prop('disabled', false);
+                        component.initModelSelect2(customerId);
+                    } else {
+                        modelSelect.prop('disabled', true);
+                        component.initModelSelect2();
+                    }
                 });
             },
-            initModelSelect2() {
-                let component = this;
 
-                $('#model').select2({
-                    dropdownParent: $('#model').parent(),
+            initModelSelect2(customerId = null) {
+                let modelSelect = $('#model');
+
+                let options = {
+                    dropdownParent: modelSelect.parent(),
                     width: '100%',
-                    ajax: {
+                    placeholder: 'Pilih Customer dulu'
+                };
+
+                if (customerId) {
+                    options.placeholder = 'Pilih Model';
+                    options.ajax = {
                         url: "{{ route('dashboard.getModel') }}",
                         method: 'POST',
                         dataType: 'json',
@@ -376,33 +472,42 @@
                             return {
                                 _token: "{{ csrf_token() }}",
                                 q: params.term,
+                                customer_id: customerId, 
                                 page: params.page || 1
                             };
                         },
                         processResults: function(data, params) {
                             params.page = params.page || 1;
+                            let results = data.results;
+                            if (params.page === 1 && !params.term) {
+                                results.unshift({
+                                    id: 'ALL',
+                                    text: 'ALL'
+                                });
+                            }
                             return {
-                                results: data.results,
+                                results: results,
                                 pagination: {
                                     more: (params.page * 10) < data.total_count
                                 }
                             };
                         },
                         cache: true
-                    },
-                    placeholder: 'Cari atau pilih Document Group',
-                    minimumInputLength: 0
-                }).on('change', function(e) {
-                    let selectedValue = $(this).val();
-                    component.showExtraFilters = (selectedValue !== 'ALL' && selectedValue !== '' && selectedValue !== null);
-                });
-            },
-            initPartGroupSelect2() {
-                let component = this;
+                    };
+                }
 
+                modelSelect.select2(options);
+
+                if (!customerId) {
+                    modelSelect.prop('disabled', true);
+                }
+            },
+
+            initPartGroupSelect2() {
                 $('#part_group').select2({
                     dropdownParent: $('#part_group').parent(),
                     width: '100%',
+                    placeholder: 'Pilih Part Group',
                     ajax: {
                         url: "{{ route('dashboard.getPartGroup') }}",
                         method: 'POST',
@@ -417,28 +522,30 @@
                         },
                         processResults: function(data, params) {
                             params.page = params.page || 1;
+                            let results = data.results;
+                            if (params.page === 1 && !params.term) {
+                                results.unshift({
+                                    id: 'ALL',
+                                    text: 'ALL'
+                                });
+                            }
                             return {
-                                results: data.results,
+                                results: results,
                                 pagination: {
                                     more: (params.page * 10) < data.total_count
                                 }
                             };
                         },
                         cache: true
-                    },
-                    placeholder: 'Cari atau pilih Document Group',
-                    minimumInputLength: 0
-                }).on('change', function(e) {
-                    let selectedValue = $(this).val();
-                    component.showExtraFilters = (selectedValue !== 'ALL' && selectedValue !== '' && selectedValue !== null);
+                    }
                 });
             },
-            initStatusSelect2() {
-                let component = this;
 
+            initStatusSelect2() {
                 $('#project_status').select2({
                     dropdownParent: $('#project_status').parent(),
                     width: '100%',
+                    placeholder: 'Pilih Status',
                     ajax: {
                         url: "{{ route('dashboard.getStatus') }}",
                         method: 'POST',
@@ -453,56 +560,22 @@
                         },
                         processResults: function(data, params) {
                             params.page = params.page || 1;
+                            let results = data.results;
+                            if (params.page === 1 && !params.term) {
+                                results.unshift({
+                                    id: 'ALL',
+                                    text: 'ALL'
+                                });
+                            }
                             return {
-                                results: data.results,
+                                results: results,
                                 pagination: {
                                     more: (params.page * 10) < data.total_count
                                 }
                             };
                         },
                         cache: true
-                    },
-                    placeholder: 'Cari atau pilih Document Group',
-                    minimumInputLength: 0
-                }).on('change', function(e) {
-                    let selectedValue = $(this).val();
-                    component.showExtraFilters = (selectedValue !== 'ALL' && selectedValue !== '' && selectedValue !== null);
-                });
-            },
-            initSubTypeSelect2() {
-                let component = this;
-
-                $('#sub_type').select2({
-                    dropdownParent: $('#sub_type').parent(),
-                    width: '100%',
-                    ajax: {
-                        url: "{{ route('dashboard.getSubType') }}",
-                        method: 'POST',
-                        dataType: 'json',
-                        delay: 250,
-                        data: function(params) {
-                            return {
-                                _token: "{{ csrf_token() }}",
-                                q: params.term,
-                                page: params.page || 1
-                            };
-                        },
-                        processResults: function(data, params) {
-                            params.page = params.page || 1;
-                            return {
-                                results: data.results,
-                                pagination: {
-                                    more: (params.page * 10) < data.total_count
-                                }
-                            };
-                        },
-                        cache: true
-                    },
-                    placeholder: 'Cari atau pilih Document Group',
-                    minimumInputLength: 0
-                }).on('change', function(e) {
-                    let selectedValue = $(this).val();
-                    component.showExtraFilters = (selectedValue !== 'ALL' && selectedValue !== '' && selectedValue !== null);
+                    }
                 });
             },
 
@@ -516,15 +589,12 @@
                     console.warn(`Canvas element with id '${canvasId}' not found`);
                     return null;
                 }
-
                 const canvas = document.getElementById(canvasId);
                 const context = canvas.getContext('2d');
-
                 if (!context) {
                     console.error(`Unable to get 2D context for canvas '${canvasId}'`);
                     return null;
                 }
-
                 return context;
             },
 
@@ -542,7 +612,6 @@
                 if (this.chartsInitialized) {
                     return;
                 }
-
                 if (typeof Chart === 'undefined') {
                     console.error('Chart.js is not loaded!');
                     setTimeout(() => this.initCharts(), 100);
@@ -589,7 +658,6 @@
                     }
                 };
 
-                // Inisialisasi Chart "Total Documents"
                 if (this.canvasExists('totalDocsChart')) {
                     try {
                         this.totalDocsChart = new Chart('totalDocsChart', {
@@ -611,7 +679,6 @@
                     }
                 }
 
-                // Inisialisasi Chart "Uploads"
                 if (this.canvasExists('uploadsChart')) {
                     try {
                         this.uploadsChart = new Chart('uploadsChart', {
@@ -633,7 +700,6 @@
                     }
                 }
 
-                // Inisialisasi Chart "Downloads"
                 if (this.canvasExists('downloadsChart')) {
                     try {
                         this.downloadsChart = new Chart('downloadsChart', {
@@ -655,7 +721,6 @@
                     }
                 }
 
-                // Inisialisasi Chart "Active Users"
                 if (this.canvasExists('activeUsersChart')) {
                     try {
                         this.activeUsersChart = new Chart('activeUsersChart', {
@@ -677,7 +742,6 @@
                     }
                 }
 
-                // Inisialisasi Chart "Plan vs Actual"
                 if (this.canvasExists('planVsActualChart')) {
                     try {
                         this.planVsActualChart = new Chart('planVsActualChart', {
@@ -791,7 +855,6 @@
                     }
                 }
 
-                // Inisialisasi Chart "Upload vs Download Trend"
                 if (this.canvasExists('uploadDownloadChart')) {
                     try {
                         this.uploadDownloadChart = new Chart('uploadDownloadChart', {
@@ -883,7 +946,9 @@
                         const component = dashboardElement.__x.$data;
                         if (component && typeof component.initCharts === 'function') {
                             setTimeout(() => {
+                                component.chartsInitialized = false;
                                 component.initCharts();
+                                component.chartsInitialized = true;
                             }, 300);
                         }
                     }
