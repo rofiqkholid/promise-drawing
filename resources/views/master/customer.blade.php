@@ -20,11 +20,11 @@
 
     {{-- Main Content: Table Card --}}
     <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
-        <div class="p-4 md:p-6">
+        <div class="p-4 md:p-6 overflow-x-auto">
             <table id="customersTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                        <th scope="col" class="px-6 py-3 w-16">#</th>
+                        <th scope="col" class="px-6 py-3 w-16">No</th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="name">
                             Customer Name
                         </th>
@@ -34,7 +34,7 @@
                         <th scope="col" class="px-6 py-3 sorting" data-column="is_active">
                             Status
                         </th>
-                        <th scope="col" class="px-6 py-3 text-start">Action</th>
+                        <th scope="col" class="px-6 py-3 text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -46,12 +46,12 @@
 {{-- Add Customer Modal --}}
 <div id="addCustomerModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
     <div class="relative p-4 w-full max-w-md h-full md:h-auto">
-        <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+        <div class="relative p-4 text-left bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
             <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
                 <i class="fa-solid fa-xmark w-5 h-5"></i>
                 <span class="sr-only">Close modal</span>
             </button>
-            <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Add New Customer</h3>
+            <h3 class="mb-4 text-xl text-center font-medium text-gray-900 dark:text-white">Add New Customer</h3>
             <form id="addCustomerForm" action="{{ route('customers.store') }}" method="POST">
                 @csrf
                 <div class="mb-4">
@@ -149,7 +149,7 @@
 </div>
 @endsection
 
-@push('styles')
+@push('style')
 <style>
     div.dataTables_length label{
         font-size: 0.75rem;
@@ -201,7 +201,6 @@
         const table = $('#customersTable').DataTable({
             processing: true,
             serverSide: true,
-            scrollX: true,
             ajax: {
                 url: '{{ route("customers.data") }}',
                 type: 'GET',
@@ -238,6 +237,7 @@
                     data: null,
                     orderable: false,
                     searchable: false,
+                    className: 'text-center',
                     render: function(data, type, row) {
                         return `
                         <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">

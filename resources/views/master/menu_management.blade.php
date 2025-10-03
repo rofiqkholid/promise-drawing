@@ -159,7 +159,7 @@
     </div>
 </div>
 @endsection
-
+@push('style')
 <style>
     div.dataTables_length label {
         font-size: 0.75rem;
@@ -186,6 +186,7 @@
         padding-top: 0.8em;
     }
 </style>
+@endpush
 
 @push('scripts')
 <script>

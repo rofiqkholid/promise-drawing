@@ -20,11 +20,11 @@
 
     {{-- Main Content: Table Card --}}
     <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
-        <div class="p-4 md:p-6">
+        <div class="p-4 md:p-6 overflow-x-auto">
             <table id="suppliersTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                        <th scope="col" class="px-6 py-3 w-16">#</th>
+                        <th scope="col" class="px-6 py-3 w-16">No</th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="name">
                             Supplier Name
                         </th>
@@ -34,7 +34,7 @@
                         <th scope="col" class="px-6 py-3 sorting" data-column="is_active">
                             Status
                         </th>
-                        <th scope="col" class="px-6 py-3 text-start">Action</th>
+                        <th scope="col" class="px-6 py-3 text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -154,7 +154,7 @@
 @endsection
 
 
-@push('styles')
+@push('style')
 <style>
     div.dataTables_length label{
         font-size: 0.75rem;
@@ -206,7 +206,6 @@
         const table = $('#suppliersTable').DataTable({
             processing: true,
             serverSide: true,
-            scrollX: true,
             ajax: {
                 url: '{{ route("suppliers.data") }}',
                 type: 'GET',
@@ -243,6 +242,7 @@
                     data: null,
                     orderable: false,
                     searchable: false,
+                    className: 'text-center',
                     render: function(data, type, row) {
                         return `
                         <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">

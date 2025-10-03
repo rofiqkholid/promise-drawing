@@ -32,7 +32,7 @@
                         <th scope="col" class="px-6 py-3 sorting" data-column="code">
                             Department Code
                         </th>
-                        <th scope="col" class="px-6 py-3 text-start">Action</th>
+                        <th scope="col" class="px-6 py-3 text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -137,7 +137,7 @@
 @endsection
 
 
-@push('styles')
+@push('style')
 <style>
     div.dataTables_length label{
         font-size: 0.75rem;
@@ -216,6 +216,7 @@
                     data: null,
                     orderable: false,
                     searchable: false,
+                    className: 'text-center',
                     render: function(data, type, row) {
                         return `
                         <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
