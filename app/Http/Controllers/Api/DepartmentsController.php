@@ -13,11 +13,11 @@ class DepartmentsController extends Controller
     {
         $query = Departments::query();
 
-        if ($request->has('search') && !empty($request->search['value'])) {
-            $searchValue = $request->search['value'];
-            $query->where(function ($q) use ($searchValue) {
-                $q->where('name', 'like', '%' . $searchValue . '%')
-                    ->orWhere('code', 'like', '%' . $searchValue . '%');
+        
+        if ($request->has('search') && !empty($request->search)) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('code', 'like', '%' . $request->search . '%');
             });
         }
 
