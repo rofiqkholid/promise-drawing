@@ -122,7 +122,7 @@ Route::middleware(['auth'])->group(function () {
         return view('master.menu_management');
     })->name('menu-management');
 
-    
+
     Route::get('/user-maintenance', function () {
         return view('user_management.user_maintenance');
     })->name('user-maintenance');
@@ -135,68 +135,99 @@ Route::middleware(['auth'])->group(function () {
         return view('user_management.user_role');
     })->name('user-role');
 
+    #Region Stamp Format
     Route::get('stampFormat/data', [StampFormatController::class, 'data'])->name('stampFormat.data');
     Route::resource('master/stampFormat', StampFormatController::class)->names('stampFormat')->except(['create', 'edit']);
+    #End region
+
+    #Region Departement
     Route::resource('master/departments', DepartmentsController::class)->names('departments')->except(['create', 'edit']);
     Route::get('/departments/data', [DepartmentsController::class, 'data'])->name('departments.data');
+    #End region
+
+    #Region Suppliers
     Route::resource('master/suppliers', SuppliersController::class)->names('suppliers')->except(['create', 'edit']);
     Route::get('/suppliers/data', [SuppliersController::class, 'data'])->name('suppliers.data');
+    #End region
+
+    #Region Customers
     Route::resource('master/customers', CustomersController::class)->names('customers')->except(['create', 'edit']);
     Route::get('/customers/data', [CustomersController::class, 'data'])->name('customers.data');
+    #End region
+
+    #Region Model
     Route::resource('master/models', ModelsController::class)->names('models')->except(['create', 'edit']);
     Route::get('/models/data', [ModelsController::class, 'data'])->name('models.data');
     Route::get('/models/get-customers', [ModelsController::class, 'getCustomers'])->name('models.getCustomers');
+    #End region
+
+    #Region Doc Type Group
     Route::resource('master/docTypeGroups', DocTypeGroupsController::class)->names('docTypeGroups')->except(['create', 'edit']);
     Route::get('/docTypeGroups/data', [DocTypeGroupsController::class, 'data'])->name('docTypeGroups.data');
+    #End region
+
+    #Region Doc Sub Category
     Route::resource('master/docTypeSubCategories', DocTypeSubCategoriesController::class)->names('docTypeSubCategories')->except(['create', 'edit']);
     Route::get('/docTypeSubCategories/data', [DocTypeSubCategoriesController::class, 'data'])->name('docTypeSubCategories.data');
     Route::get('/docTypeSubCategories/getDocTypeGroups', [DocTypeSubCategoriesController::class, 'getDocTypeGroups'])->name('docTypeSubCategories.getDocTypeGroups');
+    #End region
+
+    #Region File Extension
     Route::resource('master/fileExtensions', FileExtensionsController::class)->names('fileExtensions')->except(['create', 'edit']);
     Route::get('/fileExtensions/data', [FileExtensionsController::class, 'data'])->name('fileExtensions.data');
+    #End region
+
+    #Region Category Activities
     Route::resource('master/categoryActivities', CategoryActivitiesController::class)->names('categoryActivities')->except(['create', 'edit']);
     Route::get('/categoryActivities/data', [CategoryActivitiesController::class, 'data'])->name('categoryActivities.data');
+    #End region
+
+    #Region Project Status
     Route::resource('master/projectStatus', ProjectStatusController::class)->names('projectStatus')->except(['create', 'edit']);
     Route::get('/projectStatus/data', [ProjectStatusController::class, 'data'])->name('projectStatus.data');
+    #End region
+
+    #Region Part Group
     Route::resource('master/partGroups', PartGroupsController::class)->names('partGroups')->except(['create', 'edit']);
     Route::get('/partGroups/data', [PartGroupsController::class, 'data'])->name('partGroups.data');
     Route::get('/partGroups/getModelsByCustomer', [PartGroupsController::class, 'getModelsByCustomer'])->name('partGroups.getModelsByCustomer');
+
+    #End region
+
+    #Region User Maintenance
     Route::resource('master/userMaintenance', UserMaintenanceController::class)->only(['store', 'show', 'update', 'destroy'])->parameters(['userMaintenance' => 'user'])->names('userMaintenance');
     Route::get('userMaintenance/data', [UserMaintenanceController::class, 'data'])->name('userMaintenance.data');
+    #End region
+
+    #Region Menu
     Route::resource('master/menus', MenuController::class)->names('menus')->except(['create', 'edit', 'index']);
     Route::get('/menus/data', [MenuController::class, 'data'])->name('menus.data');
     Route::get('/menus/get-parents', [MenuController::class, 'getParents'])->name('menus.getParents');
+    #End region
 
-
+    #Region Dashboard
     Route::post('/dashboard/getDocumentGroups', [DashboardController::class, 'getDocumentGroups'])->name('dashboard.getDocumentGroups');
     Route::post('/dashboard/getSubType', [DashboardController::class, 'getSubType'])->name('dashboard.getSubType');
     Route::post('/dashboard/getCustomer', [DashboardController::class, 'getCustomer'])->name('dashboard.getCustomer');
     Route::post('/dashboard/getModel', [DashboardController::class, 'getModel'])->name('dashboard.getModel');
     Route::post('/dashboard/getPartGroup', [DashboardController::class, 'getPartGroup'])->name('dashboard.getPartGroup');
     Route::post('/dashboard/getStatus', [DashboardController::class, 'getStatus'])->name('dashboard.getStatus');
-
-
-
     Route::post('upload.getDataCustomer', [DashboardController::class, 'getCustomer'])->name('upload.getDataCustomer');
     Route::post('upload.getDataModel', [DashboardController::class, 'getModel'])->name('upload.getDataModel');
+    #End region
 
-
+    #Region User Role
     Route::get('/user-role/pair', [UserRoleController::class, 'pairShow'])->name('user-role.pairShow');
     Route::put('/user-role/pair', [UserRoleController::class, 'pairUpdate'])->name('user-role.pairUpdate');
     Route::delete('/user-role/pair', [UserRoleController::class, 'pairDestroy'])->name('user-role.pairDestroy');
-
     Route::get('/user-role/data',      [UserRoleController::class, 'data'])->name('user-role.data');
     Route::get('/user-role/dropdowns', [UserRoleController::class, 'dropdowns'])->name('user-role.dropdowns');
+    Route::resource('user_management/user-role', UserRoleController::class)->names('user-role')->except(['create', 'edit', 'show']);
+    #End region
 
-
+    #Region Role
     Route::resource('user_management/role', RoleController::class)->names('role')->except(['create', 'edit']);
     Route::get('/role/data', [RoleController::class, 'data'])->name('role.data');
     Route::get('/role/get-models', [RoleController::class, 'getModels'])->name('role.getModels');
-
-    Route::get('/partGroups/getModelsByCustomer', [PartGroupsController::class, 'getModelsByCustomer'])->name('partGroups.getModelsByCustomer');
-    Route::resource('master/userMaintenance', UserMaintenanceController::class)->only(['store', 'show', 'update', 'destroy'])->parameters(['userMaintenance' => 'user'])->names('userMaintenance');
-    Route::get('userMaintenance/data', [UserMaintenanceController::class, 'data'])->name('userMaintenance.data');
-
-    Route::resource('user_management/user-role', UserRoleController::class)->names('user-role')->except(['create', 'edit', 'show']);
-
-
+    #End region
 });
