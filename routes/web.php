@@ -16,6 +16,8 @@ use App\Http\Controllers\Api\PartGroupsController;
 use App\Http\Controllers\Api\StampFormatController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\UserMaintenanceController;
+use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\UserRoleController;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -120,6 +122,19 @@ Route::middleware(['auth'])->group(function () {
         return view('master.menu_management');
     })->name('menu-management');
 
+    
+    Route::get('/user-maintenance', function () {
+        return view('user_management.user_maintenance');
+    })->name('user-maintenance');
+
+    Route::get('/role', function () {
+        return view('user_management.role');
+    })->name('role');
+
+    Route::get('/user-role', function () {
+        return view('user_management.user_role');
+    })->name('user-role');
+
     Route::get('stampFormat/data', [StampFormatController::class, 'data'])->name('stampFormat.data');
     Route::resource('master/stampFormat', StampFormatController::class)->names('stampFormat')->except(['create', 'edit']);
     Route::resource('master/departments', DepartmentsController::class)->names('departments')->except(['create', 'edit']);
@@ -163,4 +178,25 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('upload.getDataCustomer', [DashboardController::class, 'getCustomer'])->name('upload.getDataCustomer');
     Route::post('upload.getDataModel', [DashboardController::class, 'getModel'])->name('upload.getDataModel');
+
+
+    Route::get('/user-role/pair', [UserRoleController::class, 'pairShow'])->name('user-role.pairShow');
+    Route::put('/user-role/pair', [UserRoleController::class, 'pairUpdate'])->name('user-role.pairUpdate');
+    Route::delete('/user-role/pair', [UserRoleController::class, 'pairDestroy'])->name('user-role.pairDestroy');
+
+    Route::get('/user-role/data',      [UserRoleController::class, 'data'])->name('user-role.data');
+    Route::get('/user-role/dropdowns', [UserRoleController::class, 'dropdowns'])->name('user-role.dropdowns');
+
+
+    Route::resource('user_management/role', RoleController::class)->names('role')->except(['create', 'edit']);
+    Route::get('/role/data', [RoleController::class, 'data'])->name('role.data');
+    Route::get('/role/get-models', [RoleController::class, 'getModels'])->name('role.getModels');
+
+    Route::get('/partGroups/getModelsByCustomer', [PartGroupsController::class, 'getModelsByCustomer'])->name('partGroups.getModelsByCustomer');
+    Route::resource('master/userMaintenance', UserMaintenanceController::class)->only(['store', 'show', 'update', 'destroy'])->parameters(['userMaintenance' => 'user'])->names('userMaintenance');
+    Route::get('userMaintenance/data', [UserMaintenanceController::class, 'data'])->name('userMaintenance.data');
+
+    Route::resource('user_management/user-role', UserRoleController::class)->names('user-role')->except(['create', 'edit', 'show']);
+
+
 });

@@ -31,7 +31,6 @@
                         <th scope="col" class="px-6 py-3 sorting" data-column="name">
                             Model Name
                         </th>
-
                         <th scope="col" class="px-6 py-3 text-center">Action</th>
                     </tr>
                 </thead>
@@ -58,12 +57,13 @@
                         <option value="">Select Customer</option>
                         {{-- Options will be populated by JS --}}
                     </select>
+                    <p id="add-customer_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model Name</label>
                     <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. Product X" required>
+                    <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
                         Cancel
@@ -95,12 +95,13 @@
                         <option value="">Select Customer</option>
                         {{-- Options will be populated by JS --}}
                     </select>
+                    <p id="edit-customer_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model Name</label>
                     <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                    <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
                         Cancel
@@ -144,7 +145,6 @@
     div.dataTables_length label {
         font-size: 0.75rem;
     }
-
     div.dataTables_length select {
         font-size: 0.75rem;
         line-height: 1rem;
@@ -152,51 +152,42 @@
         height: 1.875rem;
         width: 4.5rem;
     }
-
     div.dataTables_filter label {
         font-size: 0.75rem;
     }
-
     div.dataTables_filter input[type="search"],
-    input[type="search"][aria-controls="departmentsTable"] {
+    input[type="search"][aria-controls="modelsTable"] {
         font-size: 0.75rem;
         line-height: 1rem;
         padding: 0.25rem 0.5rem;
         height: 1.875rem;
         width: 12rem;
     }
-
     div.dataTables_info {
         font-size: 0.75rem;
         padding-top: 0.8em;
     }
-
     .select2-container--default .select2-selection--single {
         display: flex;
         align-items: center;
         justify-content: flex-start !important;
         text-align: left !important;
     }
-
     .select2-container--default .select2-selection--single .select2-selection__rendered {
         text-align: left !important;
     }
-
     .select2-container--default .select2-selection--single .select2-selection__arrow {
         right: 10px !important;
     }
-
     div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar {
         display: none !important;
         width: 0 !important;
         height: 0 !important;
     }
-
     div.dataTables_wrapper div.dataTables_scrollBody {
         -ms-overflow-style: none !important;
         scrollbar-width: none !important;
     }
-
     input::placeholder {
         text-align: left;
     }
@@ -204,22 +195,28 @@
 @endpush
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
+        // Initialize Select2
         $('#customer_id').select2({
             dropdownParent: $('#addModelModal'),
-            width: '100%'
+            width: '100%',
+            placeholder: 'Select Customer'
         });
         $('#edit_customer_id').select2({
             dropdownParent: $('#editModelModal'),
-            width: '100%'
+            width: '100%',
+            placeholder: 'Select Customer'
         });
 
+        // Initialize DataTable
         const table = $('#modelsTable').DataTable({
             processing: true,
             serverSide: true,
+            scrollX: true,
             ajax: {
                 url: '{{ route("models.data") }}',
                 type: 'GET',
@@ -266,8 +263,11 @@
             language: {
                 emptyTable: '<div class="text-gray-500 dark:text-gray-400">No models found.</div>'
             },
+            responsive: true,
+            autoWidth: false,
         });
 
+        // Modal Handling
         const addModal = $('#addModelModal');
         const editModal = $('#editModelModal');
         const deleteModal = $('#deleteModelModal');
@@ -283,6 +283,156 @@
             modal.addClass('hidden').removeClass('flex');
         }
 
+        // Helper: Button loading state
+        function setButtonLoading($btn, isLoading, loadingText = 'Processing...') {
+            if (!$btn || $btn.length === 0) return;
+            if (isLoading) {
+                if (!$btn.data('orig-html')) $btn.data('orig-html', $btn.html());
+                $btn.prop('disabled', true);
+                $btn.addClass('opacity-70 cursor-not-allowed');
+                $btn.html(`
+                    <span class="inline-flex items-center gap-2">
+                    <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    ${loadingText}
+                    </span>
+                `);
+            } else {
+                const orig = $btn.data('orig-html');
+                if (orig) $btn.html(orig);
+                $btn.prop('disabled', false);
+                $btn.removeClass('opacity-70 cursor-not-allowed');
+            }
+        }
+
+        // Helper: Disable/enable form fields during request
+        function setFormBusy($form, busy) {
+            $form.find('input, select, textarea, button').prop('disabled', busy);
+        }
+
+        // Helper: SweetAlert notifications
+        function detectTheme() {
+        const hasDarkClass = document.documentElement.classList.contains('dark');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = hasDarkClass || prefersDark;
+
+        return isDark ? {
+        mode: 'dark',
+        bg: 'rgba(15, 23, 42, 0.94)',
+        fg: '#E5E7EB',
+        border: 'rgba(148, 163, 184, .22)',
+        progress: 'rgba(255,255,255,.9)',
+        icon: {
+            success: '#22c55e',
+            error:   '#ef4444',
+            warning: '#f59e0b',
+            info:    '#60a5fa'
+        }
+        } : {
+        mode: 'light',
+        bg: 'rgba(255, 255, 255, 0.98)',
+        fg: '#0f172a',
+        border: 'rgba(15, 23, 42, .10)',
+        progress: 'rgba(15,23,42,.8)',
+        icon: {
+            success: '#16a34a',
+            error:   '#dc2626',
+            warning: '#d97706',
+            info:    '#2563eb'
+        }
+        };
+    }
+
+    const BaseToast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2600,
+        timerProgressBar: true,
+        showClass: { popup: 'swal2-animate-toast-in' },
+        hideClass: { popup: 'swal2-animate-toast-out' },
+        didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+    });
+
+    function renderToast({ icon = 'success', title = 'Success', text = '' } = {}) {
+        const t = detectTheme();
+
+        BaseToast.fire({
+        icon,
+        title,
+        text,
+        iconColor: t.icon[icon] || t.icon.success,
+        background: t.bg,
+        color: t.fg,
+        customClass: {
+            popup: 'swal2-toast border',
+            title: '',
+            timerProgressBar: ''
+        },
+        didOpen: (toast) => {
+            const bar = toast.querySelector('.swal2-timer-progress-bar');
+            if (bar) bar.style.background = t.progress;
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+        });
+    }
+
+    function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') {
+        renderToast({ icon: 'success', title, text });
+    }
+    function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') {
+        BaseToast.update({ timer: 3400 });
+        renderToast({ icon: 'error', title, text });
+        BaseToast.update({ timer: 2600 });
+    }
+    function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') {
+        renderToast({ icon: 'warning', title, text });
+    }
+    function toastInfo(title = 'Informasi', text = '') {
+        renderToast({ icon: 'info', title, text });
+    }
+
+    window.toastSuccess = toastSuccess;
+    window.toastError = toastError;
+    window.toastWarning = toastWarning;
+    window.toastInfo = toastInfo;
+
+        // Helper to populate customer dropdown
+        function populateCustomerDropdown($select, selectedId = null) {
+            $.ajax({
+                url: '{{ route("models.getCustomers") }}',
+                method: 'GET',
+                beforeSend: function() {
+                    $select.prop('disabled', true);
+                    $select.html('<option value="">Loading...</option>').trigger('change');
+                },
+                success: function(customers) {
+                    $select.empty();
+                    $select.append('<option value="">Select Customer</option>');
+                    customers.forEach(function(customer) {
+                        $select.append(
+                            `<option value="${customer.id}"${selectedId == customer.id ? ' selected' : ''}>${customer.name}</option>`
+                        );
+                    });
+                    $select.trigger('change');
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Failed to load customers.';
+                    toastError('Error', msg);
+                },
+                complete: function() {
+                    $select.prop('disabled', false);
+                }
+            });
+        }
+
         addButton.on('click', () => {
             $('#addModelForm')[0].reset();
             populateCustomerDropdown($('#customer_id'));
@@ -296,96 +446,173 @@
             hideModal(deleteModal);
         });
 
-        function populateCustomerDropdown($select, selectedId = null) {
-            $.get('{{ route("models.getCustomers") }}', function(customers) {
-                $select.empty();
-                $select.append('<option value="">Select Customer</option>');
-                customers.forEach(function(customer) {
-                    $select.append(
-                        `<option value="${customer.id}"${selectedId == customer.id ? ' selected' : ''}>${customer.name}</option>`
-                    );
-                });
-                $select.trigger('change');
-            });
-        }
-
+        // Add Model
         $('#addModelForm').on('submit', function(e) {
             e.preventDefault();
-
-            const submitButton = $(this).find('button[type="submit"]');
-            const originalButtonHtml = submitButton.html();
-
-            submitButton.prop('disabled', true);
-            submitButton.html('<i class="fa-solid fa-spinner fa-spin"></i> Please wait...');
-
-            const formData = new FormData(this);
+            const $form = $(this);
+            const $btn = $form.find('[type="submit"]');
             const customerIdError = $('#add-customer_id-error');
             const nameError = $('#add-name-error');
-            const codeError = $('#add-code-error');
             customerIdError.addClass('hidden');
             nameError.addClass('hidden');
-            codeError.addClass('hidden');
 
+            const formData = new FormData(this);
 
             $.ajax({
-                url: $(this).attr('action'),
+                url: $form.attr('action'),
                 method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                },
+                headers: { 'X-CSRF-TOKEN': csrfToken },
                 data: formData,
                 processData: false,
                 contentType: false,
+                beforeSend: function() {
+                    setButtonLoading($btn, true, 'Saving...');
+                    setFormBusy($form, true);
+                },
                 success: function(data) {
                     if (data.success) {
                         table.ajax.reload();
                         hideModal(addModal);
-                        $('#addModelForm')[0].reset();
+                        $form[0].reset();
                         $('#customer_id').val(null).trigger('change');
-
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'success',
-                            title: data.message || 'Successfully!',
-                            showConfirmButton: false,
-                            timer: 3000,
-                            timerProgressBar: true,
-                        });
+                        toastSuccess('Success', 'Model added successfully.');
+                    } else {
+                        toastError('Error', data.message || 'Failed to add model.');
                     }
                 },
                 error: function(xhr) {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'error',
-                        title: xhr.responseJSON?.message || 'Failed!',
-                        showConfirmButton: false,
-                        timer: 4000,
-                        timerProgressBar: true,
-                    });
-
                     const errors = xhr.responseJSON?.errors;
                     if (errors) {
-                        if (errors.customer_id) {
-                            customerIdError.text(errors.customer_id[0]).removeClass('hidden');
-                        }
-                        if (errors.name) {
-                            nameError.text(errors.name[0]).removeClass('hidden');
-                        }
-                        if (errors.code) {
-                            codeError.text(errors.code[0]).removeClass('hidden');
-                        }
+                        if (errors.customer_id) customerIdError.text(errors.customer_id[0]).removeClass('hidden');
+                        if (errors.name) nameError.text(errors.name[0]).removeClass('hidden');
                     }
+                    const msg = xhr.responseJSON?.message || 'Failed to add model.';
+                    toastError('Error', msg);
                 },
                 complete: function() {
-                    submitButton.prop('disabled', false);
-                    submitButton.html(originalButtonHtml);
+                    setButtonLoading($btn, false);
+                    setFormBusy($form, false);
                 }
             });
         });
 
+        // Edit Model
+        $(document).on('click', '.edit-button', function() {
+            const id = $(this).data('id');
+            const customerIdError = $('#edit-customer_id-error');
+            const nameError = $('#edit-name-error');
+            customerIdError.addClass('hidden');
+            nameError.addClass('hidden');
 
+            $.ajax({
+                url: `/master/models/${id}`,
+                method: 'GET',
+                beforeSend: function() {
+                    setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, '');
+                },
+                success: function(data) {
+                    populateCustomerDropdown($('#edit_customer_id'), data.customer_id);
+                    $('#edit_name').val(data.name);
+                    $('#editModelForm').attr('action', `/master/models/${id}`);
+                    showModal(editModal);
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Failed to fetch model data.';
+                    toastError('Error', msg);
+                },
+                complete: function() {
+                    setButtonLoading($('.edit-button[data-id="' + id + '"]'), false);
+                }
+            });
+        });
+
+        $('#editModelForm').on('submit', function(e) {
+            e.preventDefault();
+            const $form = $(this);
+            const $btn = $form.find('[type="submit"]');
+            const customerIdError = $('#edit-customer_id-error');
+            const nameError = $('#edit-name-error');
+            customerIdError.addClass('hidden');
+            nameError.addClass('hidden');
+
+            const formData = new FormData(this);
+
+            $.ajax({
+                url: $form.attr('action'),
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function() {
+                    setButtonLoading($btn, true, 'Saving...');
+                    setFormBusy($form, true);
+                },
+                success: function(data) {
+                    if (data.success) {
+                        table.ajax.reload();
+                        hideModal(editModal);
+                        toastSuccess('Success', 'Model updated successfully.');
+                    } else {
+                        toastError('Error', data.message || 'Failed to update model.');
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors) {
+                        if (errors.customer_id) customerIdError.text(errors.customer_id[0]).removeClass('hidden');
+                        if (errors.name) nameError.text(errors.name[0]).removeClass('hidden');
+                    }
+                    const msg = xhr.responseJSON?.message || 'Failed to update model.';
+                    toastError('Error', msg);
+                },
+                complete: function() {
+                    setButtonLoading($btn, false);
+                    setFormBusy($form, false);
+                }
+            });
+        });
+
+        // Delete Model
+        $(document).on('click', '.delete-button', function() {
+            modelIdToDelete = $(this).data('id');
+            showModal(deleteModal);
+        });
+
+        $('#confirmDeleteButton').on('click', function() {
+            if (!modelIdToDelete) return;
+            const $btn = $(this);
+
+            $.ajax({
+                url: `/master/models/${modelIdToDelete}`,
+                method: 'DELETE',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                beforeSend: function() {
+                    setButtonLoading($btn, true, 'Deleting...');
+                    setFormBusy($('#deleteModelModal'), true);
+                },
+                success: function(data) {
+                    if (data.success) {
+                        table.ajax.reload();
+                        hideModal(deleteModal);
+                        modelIdToDelete = null;
+                        toastSuccess('Success', 'Model deleted successfully.');
+                    } else {
+                        toastError('Error', data.message || 'Failed to delete model.');
+                    }
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Failed to delete model.';
+                    toastError('Error', msg);
+                },
+                complete: function() {
+                    setButtonLoading($btn, false);
+                    setFormBusy($('#deleteModelModal'), false);
+                }
+            });
+        });
+
+        // Fix DataTables input/select focus styles
         const overrideFocusStyles = function() {
             $(this).css({
                 'outline': 'none',
@@ -400,158 +627,6 @@
         elementsToFix.on('focus keyup', overrideFocusStyles);
         elementsToFix.on('blur', restoreBlurStyles);
         elementsToFix.filter(':focus').each(overrideFocusStyles);
-
-        $(document).on('click', '.edit-button', function() {
-            const id = $(this).data('id');
-            const customerIdError = $('#edit-customer_id-error');
-            const nameError = $('#edit-name-error');
-            const codeError = $('#edit-code-error');
-            customerIdError.addClass('hidden');
-            nameError.addClass('hidden');
-            codeError.addClass('hidden');
-
-            $.ajax({
-                url: `/master/models/${id}`,
-                method: 'GET',
-                success: function(data) {
-                    populateCustomerDropdown($('#edit_customer_id'), data.customer_id);
-                    $('#edit_name').val(data.name);
-                    $('#edit_code').val(data.code);
-                    $('#editModelForm').attr('action', `/master/models/${id}`);
-                    showModal(editModal);
-                }
-            });
-        });
-
-        $('#editModelForm').on('submit', function(e) {
-            e.preventDefault();
-
-            const submitButton = $(this).find('button[type="submit"]');
-            const originalButtonHtml = submitButton.html();
-
-            submitButton.prop('disabled', true);
-            submitButton.html('<i class="fa-solid fa-spinner fa-spin"></i> Please wait...');
-
-            const formData = new FormData(this);
-            formData.append('_method', 'PUT');
-
-            const customerIdError = $('#edit-customer_id-error');
-            const nameError = $('#edit-name-error');
-            const codeError = $('#edit-code-error');
-            customerIdError.addClass('hidden');
-            nameError.addClass('hidden');
-            codeError.addClass('hidden');
-
-            $.ajax({
-                url: $(this).attr('action'),
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(data) {
-                    if (data.success) {
-                        table.ajax.reload();
-                        hideModal(editModal);
-
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'success',
-                            title: data.message || 'Successfully!',
-                            showConfirmButton: false,
-                            timer: 3000,
-                            timerProgressBar: true,
-                        });
-                    }
-                },
-                error: function(xhr) {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'error',
-                        title: xhr.responseJSON?.message || 'Failed!',
-                        showConfirmButton: false,
-                        timer: 4000,
-                        timerProgressBar: true,
-                    });
-
-                    const errors = xhr.responseJSON?.errors;
-                    if (errors) {
-                        if (errors.customer_id) {
-                            customerIdError.text(errors.customer_id[0]).removeClass('hidden');
-                        }
-                        if (errors.name) {
-                            nameError.text(errors.name[0]).removeClass('hidden');
-                        }
-                        if (errors.code) {
-                            codeError.text(errors.code[0]).removeClass('hidden');
-                        }
-                    }
-                },
-                complete: function() {
-                    submitButton.prop('disabled', false);
-                    submitButton.html(originalButtonHtml);
-                }
-            });
-        });
-
-        $(document).on('click', '.delete-button', function() {
-            modelIdToDelete = $(this).data('id');
-            showModal(deleteModal);
-        });
-
-        $('#confirmDeleteButton').on('click', function() {
-            if (modelIdToDelete) {
-                const button = $(this);
-                const originalButtonHtml = button.html();
-
-                button.prop('disabled', true);
-                button.html('<i class="fa-solid fa-spinner fa-spin"></i> Please wait...');
-
-                $.ajax({
-                    url: `/master/models/${modelIdToDelete}`,
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    success: function(data) {
-                        if (data.success) {
-                            table.ajax.reload();
-                            hideModal(deleteModal);
-                            modelIdToDelete = null;
-
-                            Swal.fire({
-                                toast: true,
-                                position: 'top-end',
-                                icon: 'success',
-                                title: data.message || 'Successfully!',
-                                showConfirmButton: false,
-                                timer: 3000,
-                                timerProgressBar: true,
-                            });
-                        }
-                    },
-                    error: function(xhr) {
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'error',
-                            title: xhr.responseJSON?.message || 'Failed.',
-                            showConfirmButton: false,
-                            timer: 4000,
-                            timerProgressBar: true,
-                        });
-                    },
-                    complete: function() {
-                        button.prop('disabled', false);
-                        button.html(originalButtonHtml);
-                    }
-                });
-            }
-        });
     });
 </script>
 @endpush

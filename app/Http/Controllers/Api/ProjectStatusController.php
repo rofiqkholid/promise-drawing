@@ -18,7 +18,10 @@ class ProjectStatusController extends Controller
 
         // Handle Search
         if ($request->has('search') && !empty($request->search)) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
+            });
         }
 
         // Handle Sorting
@@ -45,15 +48,13 @@ class ProjectStatusController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
-     */
-    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:50|unique:project_status,name',
+            'description' => 'nullable|string|max:100',
         ]);
 
         ProjectStatus::create($validated);
@@ -81,6 +82,7 @@ class ProjectStatusController extends Controller
                 'max:50',
                 Rule::unique('project_status')->ignore($projectStatus->id),
             ],
+            'description' => 'nullable|string|max:100',
         ]);
 
         $projectStatus->update($validated);

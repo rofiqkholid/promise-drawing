@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\StampFormat; // Pastikan model StampFormat sudah ada
+use App\Models\StampFormat;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -14,42 +14,41 @@ class StampFormatController extends Controller
      */
     public function data(Request $request)
     {
-        // Menggunakan StampFormat model
         $query = StampFormat::query();
 
-        // Handle Search (mencari berdasarkan prefix atau suffix)
+        // Handle Search
         if ($request->has('search') && !empty($request->search['value'])) {
-             $searchValue = $request->search['value'];
-             $query->where(function($q) use ($searchValue) {
-                 $q->where('prefix', 'like', '%' . $searchValue . '%')
-                   ->orWhere('suffix', 'like', '%' . $searchValue . '%');
-             });
+            $searchValue = $request->search['value'];
+            $query->where(function ($q) use ($searchValue) {
+                $q->where('prefix', 'like', '%' . $searchValue . '%')
+                    ->orWhere('suffix', 'like', '%' . $searchValue . '%');
+
+                if (strtolower($searchValue) === 'active') {
+                    $q->orWhere('is_active', true);
+                } elseif (strtolower($searchValue) === 'inactive') {
+                    $q->orWhere('is_active', false);
+                }
+            });
         }
 
-
         // Handle Sorting
-        $sortBy = $request->get('order')[0]['column'] ?? 1;
-        $sortDir = $request->get('order')[0]['dir'] ?? 'asc';
-        $sortColumn = $request->get('columns')[$sortBy]['data'] ?? 'prefix'; // Default sort by prefix
+        $sortColumn = $request->input('columns.' . $request->input('order.0.column', 1) . '.data', 'prefix');
+        $sortDir = $request->input('order.0.dir', 'asc');
 
-        // Pastikan kolom yang disortir valid
-        if (in_array($sortColumn, ['prefix', 'suffix', 'is_active', 'id'])) {
+        if (in_array($sortColumn, ['prefix', 'suffix', 'is_active'])) {
             $query->orderBy($sortColumn, $sortDir);
-        } else {
-             $query->orderBy('prefix', $sortDir);
         }
 
         // Handle Pagination
         $perPage = $request->get('length', 10);
         $start = $request->get('start', 0);
-        $draw = $request->get('draw', 1);
 
         $totalRecords = StampFormat::count();
         $filteredRecords = $query->count();
         $stampFormats = $query->skip($start)->take($perPage)->get();
 
         return response()->json([
-            'draw' => (int)$draw,
+            'draw' => (int)$request->get('draw', 1),
             'recordsTotal' => $totalRecords,
             'recordsFiltered' => $filteredRecords,
             'data' => $stampFormats
@@ -63,13 +62,11 @@ class StampFormatController extends Controller
     {
         $validated = $request->validate([
             'prefix' => 'required|string|max:50',
-            // Asumsi suffix harus unik, seperti 'code' pada contoh sebelumnya
             'suffix' => 'required|string|max:50|unique:stamp_formats,suffix',
-            'is_active' => 'sometimes|boolean', // Diterima sebagai 0 atau 1
+            'is_active' => 'nullable|boolean',
         ]);
 
-        // Jika is_active tidak ada dalam request (karena checkbox tidak dicentang), atur ke 0
-        $validated['is_active'] = $request->boolean('is_active', false);
+        $validated['is_active'] = $request->has('is_active');
 
         StampFormat::create($validated);
 
@@ -95,13 +92,11 @@ class StampFormatController extends Controller
                 'required',
                 'string',
                 'max:50',
-                // Pastikan suffix unik, kecuali untuk data ini sendiri
                 Rule::unique('stamp_formats')->ignore($stampFormat->id),
             ],
-            'is_active' => 'sometimes|boolean', // Diterima sebagai 0 atau 1
+            'is_active' => 'nullable|boolean',
         ]);
 
-        // Jika is_active tidak ada dalam request (karena checkbox tidak dicentang), atur ke 0
         $validated['is_active'] = $request->boolean('is_active', false);
 
         $stampFormat->update($validated);

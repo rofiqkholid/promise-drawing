@@ -146,7 +146,7 @@ class PartGroupsController extends Controller
      */
     public function getModelsByCustomer(Request $request)
     {
-        $customerId = $request->query('customer_id');
+        $customerId = $request->get('customer_id');
         $models = Models::where('customer_id', $customerId)->select('id', 'name')->get();
         return response()->json($models);
     }

@@ -137,7 +137,7 @@ class MenuController extends Controller
 
             DB::commit();
 
-            return response()->json(['message' => 'Menu created successfully.'], 201);
+            return response()->json(['success' => true, 'message' => 'Menu created successfully.'], 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Failed to create menu. Details: ' . $e->getMessage()], 500);
@@ -190,7 +190,7 @@ class MenuController extends Controller
 
             DB::commit();
 
-            return response()->json(['message' => 'Menu updated successfully.']);
+            return response()->json(['success' => true, 'message' => 'Menu updated successfully.']);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Failed to update menu. Details: ' . $e->getMessage()], 500);
@@ -213,7 +213,7 @@ class MenuController extends Controller
 
             DB::commit();
 
-            return response()->json(['message' => 'Menu deleted successfully.']);
+            return response()->json(['success' => true, 'message' => 'Menu deleted successfully.']);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => 'Failed to delete menu. Details: ' . $e->getMessage()], 500);

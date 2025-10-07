@@ -9,50 +9,59 @@ use Illuminate\Validation\Rule;
 
 class CustomersController extends Controller
 {
+    /**
+     * Display a listing of the resource for DataTables.
+     */
     public function data(Request $request)
     {
         $query = Customers::query();
 
-        if ($request->has('search') && !empty($request->search['value'])) {
-            $searchValue = $request->search['value'];
-            $query->where(function ($q) use ($searchValue) {
-                $q->where('name', 'like', '%' . $searchValue . '%')
-                    ->orWhere('code', 'like', '%' . $searchValue . '%');
+        // Handle Search
+        if ($request->has('search') && !empty($request->search)) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('code', 'like', '%' . $request->search . '%')
+                  ->orWhere('email', 'like', '%' . $request->search . '%')
+                  ->orWhere('phone', 'like', '%' . $request->search . '%')
+                  ->orWhere('address', 'like', '%' . $request->search . '%');
             });
         }
 
-        $filteredRecords = $query->count();
+        // Handle Sorting
+        $sortBy = $request->get('order')[0]['column'] ?? 1;
+        $sortDir = $request->get('order')[0]['dir'] ?? 'asc';
+        $sortColumn = $request->get('columns')[$sortBy]['data'] ?? 'name';
+        $query->orderBy($sortColumn, $sortDir);
 
-        if ($request->has('order')) {
-            $sortBy = $request->get('order')[0]['column'];
-            $sortDir = $request->get('order')[0]['dir'];
-            $sortColumn = $request->get('columns')[$sortBy]['data'];
-            $query->orderBy($sortColumn, $sortDir);
-        }
-
+        // Handle Pagination
         $perPage = $request->get('length', 10);
         $start = $request->get('start', 0);
         $draw = $request->get('draw', 1);
-        $totalRecords = Customers::count();
 
+        $totalRecords = Customers::count();
+        $filteredRecords = $query->count();
         $customers = $query->skip($start)->take($perPage)->get();
 
         return response()->json([
-            'draw' => intval($draw),
+            'draw' => $draw,
             'recordsTotal' => $totalRecords,
             'recordsFiltered' => $filteredRecords,
             'data' => $customers
         ]);
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:50',
             'code' => 'required|string|max:10|unique:customers,code',
+            'email' => 'nullable|email|max:50',
+            'phone' => 'nullable|string|max:15',
+            'address' => 'nullable|string',
             'is_active' => 'required|boolean',
-        ], [
-            'code.unique' => 'The code has already been taken.',
         ]);
 
         Customers::create($validated);
@@ -60,11 +69,17 @@ class CustomersController extends Controller
         return response()->json(['success' => true, 'message' => 'Customer created successfully.']);
     }
 
+    /**
+     * Display the specified resource for editing.
+     */
     public function show(Customers $customer)
     {
         return response()->json($customer);
     }
 
+    /**
+     * Update the specified resource in storage.
+     */
     public function update(Request $request, Customers $customer)
     {
         $validated = $request->validate([
@@ -75,9 +90,10 @@ class CustomersController extends Controller
                 'max:10',
                 Rule::unique('customers')->ignore($customer->id),
             ],
+            'email' => 'nullable|email|max:50',
+            'phone' => 'nullable|string|max:15',
+            'address' => 'nullable|string',
             'is_active' => 'required|boolean',
-        ], [
-            'code.unique' => 'The code has already been taken.',
         ]);
 
         $customer->update($validated);
@@ -85,10 +101,12 @@ class CustomersController extends Controller
         return response()->json(['success' => true, 'message' => 'Customer updated successfully.']);
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy(Customers $customer)
     {
         $customer->delete();
-
         return response()->json(['success' => true, 'message' => 'Customer deleted successfully.']);
     }
 }

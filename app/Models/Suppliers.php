@@ -10,18 +10,27 @@ class Suppliers extends Model
     use HasFactory;
 
     /**
-     * The attributes that are mass assignable.
+     * Nama tabel secara eksplisit.
+     *
+     * @var string
+     */
+
+    /**
+     * Kolom yang boleh diisi secara massal.
      *
      * @var array<int, string>
      */
     protected $fillable = [
         'name',
         'code',
+        'email',
+        'phone',
+        'address',
         'is_active',
     ];
 
     /**
-     * The attributes that should be cast.
+     * Cast kolom agar bisa langsung digunakan.
      *
      * @var array<string, string>
      */

@@ -4,7 +4,6 @@
 
 @section('content')
 <div class="p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
-    {{-- Header Section --}}
     <div class="sm:flex sm:items-center sm:justify-between mb-6">
         <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Menu Management</h2>
@@ -18,7 +17,6 @@
         </div>
     </div>
 
-    {{-- Main Content: Table Card --}}
     <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
         <div class="p-4 md:p-6">
             <table id="menuTable" class="min-w-full w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -39,7 +37,6 @@
     </div>
 </div>
 
-{{-- Add Menu Modal --}}
 <div id="addMenuModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
     <div class="relative p-4 w-full max-w-md h-full md:h-auto">
         <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
@@ -74,7 +71,7 @@
                 <div>
                     <label for="parent_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Parent Menu</label>
                     <select name="parent_id" id="parent_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
-                        <option value="">-- No Parent --</option>
+                        <option value="">No Parent</option>
                     </select>
                     <p id="add-parent_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
@@ -87,7 +84,6 @@
     </div>
 </div>
 
-{{-- Edit Menu Modal --}}
 <div id="editMenuModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
     <div class="relative p-4 w-full max-w-md h-full md:h-auto">
         <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5 text-center">
@@ -123,9 +119,9 @@
                 <div>
                     <label for="edit_parent_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Parent Menu</label>
                     <select name="parent_id" id="edit_parent_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
-                        <option value="">-- No Parent --</option>
+                        <option value="">No Parent</option>
                     </select>
-                     <p id="edit-parent_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                    <p id="edit-parent_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 w-full">Cancel</button>
@@ -136,7 +132,6 @@
     </div>
 </div>
 
-{{-- Delete Confirmation Modal --}}
 <div id="deleteMenuModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
     <div class="relative p-4 w-full max-w-md h-full md:h-auto">
         <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
@@ -159,6 +154,7 @@
     </div>
 </div>
 @endsection
+
 @push('style')
 <style>
     div.dataTables_length label {
@@ -185,144 +181,492 @@
         font-size: 0.75rem;
         padding-top: 0.8em;
     }
+    .select2-container--default .select2-selection--single {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start !important;
+        text-align: left !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        text-align: left !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        right: 10px !important;
+    }
+    div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+    div.dataTables_wrapper div.dataTables_scrollBody {
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+    }
 </style>
 @endpush
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function () {
     const csrfToken = $('meta[name="csrf-token"]').attr('content');
-    $.ajaxSetup({ headers: { 'X-CSRF-TOKEN': csrfToken } });
 
+    // Initialize Select2 for parent menu dropdowns
+    $('#parent_id').select2({
+        dropdownParent: $('#addMenuModal'),
+        width: '100%'
+    });
+    $('#edit_parent_id').select2({
+        dropdownParent: $('#editMenuModal'),
+        width: '100%'
+    });
+
+    // Initialize DataTable
     const table = $('#menuTable').DataTable({
         processing: true,
         serverSide: true,
-        ajax: '{{ route("menus.data") }}',
+        ajax: {
+            url: '{{ route("menus.data") }}',
+            type: 'GET',
+            data: function (d) {
+                d.search = d.search.value;
+            }
+        },
         order: [[5, 'asc']],
         columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
-            { data: 'title', name: 'title' },
-            { data: 'parent_name', name: 'parent.title', defaultContent: '-' },
-            { data: 'route', name: 'route', render: data => data ? `<code>${data}</code>` : '-' },
-            { data: 'icon', name: 'icon', className: 'text-center', render: data => data ? `<i class="${data} text-lg"></i>` : '-' },
-            { data: 'sort_order', name: 'sort_order', className: 'text-center', render: data => `<span class="inline-flex items-center gap-1.5 text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/70 dark:text-blue-200 rounded-full px-3 py-1"><i class="fa-solid fa-arrow-down-short-wide"></i> ${data}</span>` },
-            { data: null, orderable: false, searchable: false, className: 'text-center', render: (data, type, row) => `
-                <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}"><i class="fa-solid fa-pen-to-square fa-lg m-2"></i></button>
-                <button class="delete-button text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete" data-id="${row.id}"><i class="fa-solid fa-trash-can fa-lg m-2"></i></button>
-            `}
+            {
+                data: null,
+                render: function (data, type, row, meta) {
+                    return meta.row + meta.settings._iDisplayStart + 1;
+                },
+                className: 'text-center'
+            },
+            {
+                data: 'title',
+                name: 'title',
+                render: function (data) {
+                    return data || '-';
+                }
+            },
+            {
+                data: 'parent_name',
+                name: 'parent.title',
+                render: function (data) {
+                    return data || '-';
+                }
+            },
+            {
+                data: 'route',
+                name: 'route',
+                render: function (data) {
+                    return data ? `<code>${data}</code>` : '-';
+                }
+            },
+            {
+                data: 'icon',
+                name: 'icon',
+                className: 'text-center',
+                render: function (data) {
+                    return data ? `<i class="${data} text-lg"></i>` : '-';
+                }
+            },
+            {
+                data: 'sort_order',
+                name: 'sort_order',
+                className: 'text-center',
+                render: function (data) {
+                    return `<span class="inline-flex items-center gap-1.5 text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/70 dark:text-blue-200 rounded-full px-3 py-1"><i class="fa-solid fa-arrow-down-short-wide"></i> ${data}</span>`;
+                }
+            },
+            {
+                data: null,
+                orderable: false,
+                searchable: false,
+                className: 'text-center',
+                render: function (data, type, row) {
+                    return `
+                        <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}"><i class="fa-solid fa-pen-to-square fa-lg m-2"></i></button>
+                        <button class="delete-button text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete" data-id="${row.id}"><i class="fa-solid fa-trash-can fa-lg m-2"></i></button>
+                    `;
+                }
+            }
         ],
         pageLength: 10,
         lengthMenu: [10, 25, 50],
         responsive: true,
         autoWidth: false,
         scrollX: true,
+        language: {
+            emptyTable: '<div class="text-gray-500 dark:text-gray-400">No menus found.</div>'
+        }
     });
 
+    // Fix DataTables input/select focus styles
+    const overrideFocusStyles = function() {
+        $(this).css({
+            'outline': 'none',
+            'box-shadow': 'none',
+            'border-color': 'gray'
+        });
+    };
+    const restoreBlurStyles = function() {
+        $(this).css('border-color', '');
+    };
+    const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
+    elementsToFix.on('focus keyup', overrideFocusStyles);
+    elementsToFix.on('blur', restoreBlurStyles);
+    elementsToFix.filter(':focus').each(overrideFocusStyles);
+
+    // Modal Handling
     const addModal = $('#addMenuModal');
     const editModal = $('#editMenuModal');
     const deleteModal = $('#deleteMenuModal');
+    const addButton = $('#add-button');
+    const closeButtons = $('.close-modal-button');
     let menuIdToDelete = null;
 
-    const showModal = modal => modal.removeClass('hidden').addClass('flex');
-    const hideModal = modal => modal.addClass('hidden').removeClass('flex');
+    // Helper: Show modal
+    function showModal(modal) {
+        modal.removeClass('hidden').addClass('flex');
+    }
 
-    const resetErrors = () => {
-        $('.error-message').addClass('hidden').text('');
-    };
+    // Helper: Hide modal
+    function hideModal(modal) {
+        modal.addClass('hidden').removeClass('flex');
+    }
 
-    const displayErrors = (errors, prefix) => {
-        resetErrors();
+    // Helper: Button loading state
+    function setButtonLoading($btn, isLoading, loadingText = 'Processing...') {
+        if (!$btn || $btn.length === 0) return;
+        if (isLoading) {
+            if (!$btn.data('orig-html')) $btn.data('orig-html', $btn.html());
+            $btn.prop('disabled', true);
+            $btn.addClass('opacity-70 cursor-not-allowed');
+            $btn.html(`
+                <span class="inline-flex items-center gap-2">
+                <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                ${loadingText}
+                </span>
+            `);
+        } else {
+            const orig = $btn.data('orig-html');
+            if (orig) $btn.html(orig);
+            $btn.prop('disabled', false);
+            $btn.removeClass('opacity-70 cursor-not-allowed');
+        }
+    }
+
+    // Helper: Disable/enable form fields during request
+    function setFormBusy($form, busy) {
+        $form.find('input, select, textarea, button').prop('disabled', busy);
+    }
+
+    // Helper: SweetAlert notifications
+        function detectTheme() {
+        const hasDarkClass = document.documentElement.classList.contains('dark');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = hasDarkClass || prefersDark;
+
+        return isDark ? {
+        mode: 'dark',
+        bg: 'rgba(15, 23, 42, 0.94)',
+        fg: '#E5E7EB',
+        border: 'rgba(148, 163, 184, .22)',
+        progress: 'rgba(255,255,255,.9)',
+        icon: {
+            success: '#22c55e',
+            error:   '#ef4444',
+            warning: '#f59e0b',
+            info:    '#60a5fa'
+        }
+        } : {
+        mode: 'light',
+        bg: 'rgba(255, 255, 255, 0.98)',
+        fg: '#0f172a',
+        border: 'rgba(15, 23, 42, .10)',
+        progress: 'rgba(15,23,42,.8)',
+        icon: {
+            success: '#16a34a',
+            error:   '#dc2626',
+            warning: '#d97706',
+            info:    '#2563eb'
+        }
+        };
+    }
+
+    const BaseToast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2600,
+        timerProgressBar: true,
+        showClass: { popup: 'swal2-animate-toast-in' },
+        hideClass: { popup: 'swal2-animate-toast-out' },
+        didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+    });
+
+    function renderToast({ icon = 'success', title = 'Success', text = '' } = {}) {
+        const t = detectTheme();
+
+        BaseToast.fire({
+        icon,
+        title,
+        text,
+        iconColor: t.icon[icon] || t.icon.success,
+        background: t.bg,
+        color: t.fg,
+        customClass: {
+            popup: 'swal2-toast border',
+            title: '',
+            timerProgressBar: ''
+        },
+        didOpen: (toast) => {
+            const bar = toast.querySelector('.swal2-timer-progress-bar');
+            if (bar) bar.style.background = t.progress;
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+        });
+    }
+
+    function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') {
+        renderToast({ icon: 'success', title, text });
+    }
+    function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') {
+        BaseToast.update({ timer: 3400 });
+        renderToast({ icon: 'error', title, text });
+        BaseToast.update({ timer: 2600 });
+    }
+    function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') {
+        renderToast({ icon: 'warning', title, text });
+    }
+    function toastInfo(title = 'Informasi', text = '') {
+        renderToast({ icon: 'info', title, text });
+    }
+
+    window.toastSuccess = toastSuccess;
+    window.toastError = toastError;
+    window.toastWarning = toastWarning;
+    window.toastInfo = toastInfo;
+
+    // Helper: Reset errors
+    function resetErrors(prefix) {
+        $(`#${prefix}-title-error`).addClass('hidden').text('');
+        $(`#${prefix}-sort_order-error`).addClass('hidden').text('');
+        $(`#${prefix}-route-error`).addClass('hidden').text('');
+        $(`#${prefix}-icon-error`).addClass('hidden').text('');
+        $(`#${prefix}-parent_id-error`).addClass('hidden').text('');
+    }
+
+    // Helper: Display errors
+    function displayErrors(errors, prefix) {
+        resetErrors(prefix);
         for (const key in errors) {
             $(`#${prefix}-${key}-error`).text(errors[key][0]).removeClass('hidden');
         }
-    };
+    }
 
-    const populateParentDropdown = ($select, selectedId = null) => {
-        $.get('{{ route("menus.getParents") }}', function(parents) {
-            $select.empty().append('<option value="">-- No Parent --</option>');
-            parents.forEach(parent => {
-                const isSelected = selectedId == parent.id ? ' selected' : '';
-                $select.append(`<option value="${parent.id}"${isSelected}>${parent.title}</option>`);
-            });
+    // Populate Parent Menu Dropdown
+    function populateParentDropdown($select, selectedId = null) {
+        $.ajax({
+            url: '{{ route("menus.getParents") }}',
+            method: 'GET',
+            beforeSend: function() {
+                $select.prop('disabled', true);
+            },
+            success: function (parents) {
+                $select.empty().append('<option value="">No Parent</option>');
+                parents.forEach(parent => {
+                    const selected = parent.id == selectedId ? 'selected' : '';
+                    $select.append(`<option value="${parent.id}" ${selected}>${parent.title}</option>`);
+                });
+                $select.trigger('change');
+            },
+            error: function (xhr) {
+                toastError('Error', xhr.responseJSON?.message || 'Failed to load parent menus.');
+            },
+            complete: function() {
+                $select.prop('disabled', false);
+            }
         });
-    };
+    }
 
-    $('#add-button').on('click', () => {
+    // Add Button Click
+    addButton.on('click', () => {
         $('#addMenuForm')[0].reset();
-        resetErrors();
+        resetErrors('add');
         populateParentDropdown($('#parent_id'));
+        $('#parent_id').val('').trigger('change');
         showModal(addModal);
     });
 
-    $('.close-modal-button').on('click', () => {
+    // Close Modal Buttons
+    closeButtons.on('click', () => {
         hideModal(addModal);
         hideModal(editModal);
         hideModal(deleteModal);
     });
 
-    $('#addMenuForm').on('submit', function(e) {
+    // Add Menu
+    $('#addMenuForm').on('submit', function (e) {
         e.preventDefault();
+        const $form = $(this);
+        const $btn = $form.find('[type="submit"]');
+        resetErrors('add');
+
         $.ajax({
-            url: $(this).attr('action'),
+            url: $form.attr('action'),
             method: 'POST',
             data: new FormData(this),
             processData: false,
             contentType: false,
-            success: () => {
-                table.ajax.reload();
-                hideModal(addModal);
+            headers: { 'X-CSRF-TOKEN': csrfToken },
+            beforeSend: function() {
+                setButtonLoading($btn, true, 'Saving...');
+                setFormBusy($form, true);
             },
-            error: xhr => displayErrors(xhr.responseJSON.errors, 'add')
+            success: function (data) {
+                if (data.success) {
+                    table.ajax.reload();
+                    hideModal(addModal);
+                    $form[0].reset();
+                    $('#parent_id').val('').trigger('change');
+                    toastSuccess('Success', 'Menu added successfully.');
+                } else {
+                    toastError('Error', data.message || 'Failed to add menu.');
+                }
+            },
+            error: function (xhr) {
+                const errors = xhr.responseJSON?.errors;
+                if (errors) {
+                    displayErrors(errors, 'add');
+                }
+                const msg = xhr.responseJSON?.message || 'Failed to add menu.';
+                toastError('Error', msg);
+            },
+            complete: function() {
+                setButtonLoading($btn, false);
+                setFormBusy($form, false);
+            }
         });
     });
 
+    // Edit Menu
     $(document).on('click', '.edit-button', function () {
         const id = $(this).data('id');
-        resetErrors();
-        $.get(`/master/menus/${id}`, function (data) {
-            $('#edit_title').val(data.title);
-            $('#edit_sort_order').val(data.sort_order);
-            $('#edit_route').val(data.route);
-            $('#edit_icon').val(data.icon);
-            populateParentDropdown($('#edit_parent_id'), data.parent_id);
-            $('#editMenuForm').attr('action', `/master/menus/${id}`);
-            showModal(editModal);
+        resetErrors('edit');
+
+        $.ajax({
+            url: `/master/menus/${id}`,
+            method: 'GET',
+            beforeSend: function() {
+                setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, '');
+            },
+            success: function (data) {
+                $('#edit_title').val(data.title);
+                $('#edit_sort_order').val(data.sort_order);
+                $('#edit_route').val(data.route || '');
+                $('#edit_icon').val(data.icon || '');
+                populateParentDropdown($('#edit_parent_id'), data.parent_id);
+                $('#editMenuForm').attr('action', `/master/menus/${id}`);
+                showModal(editModal);
+            },
+            error: function (xhr) {
+                const msg = xhr.responseJSON?.message || 'Failed to fetch menu data.';
+                toastError('Error', msg);
+            },
+            complete: function() {
+                setButtonLoading($('.edit-button[data-id="' + id + '"]'), false);
+            }
         });
     });
 
+    // Submit Edit Form
     $('#editMenuForm').on('submit', function (e) {
         e.preventDefault();
+        const $form = $(this);
+        const $btn = $form.find('[type="submit"]');
+        resetErrors('edit');
+
         $.ajax({
-            url: $(this).attr('action'),
+            url: $form.attr('action'),
             method: 'POST',
             data: new FormData(this),
             processData: false,
             contentType: false,
-            success: () => {
-                table.ajax.reload();
-                hideModal(editModal);
+            headers: { 'X-CSRF-TOKEN': csrfToken },
+            beforeSend: function() {
+                setButtonLoading($btn, true, 'Saving...');
+                setFormBusy($form, true);
             },
-            error: xhr => displayErrors(xhr.responseJSON.errors, 'edit')
+            success: function (data) {
+                if (data.success) {
+                    table.ajax.reload();
+                    hideModal(editModal);
+                    toastSuccess('Success', 'Menu updated successfully.');
+                } else {
+                    toastError('Error', data.message || 'Failed to update menu.');
+                }
+            },
+            error: function (xhr) {
+                const errors = xhr.responseJSON?.errors;
+                if (errors) {
+                    displayErrors(errors, 'edit');
+                }
+                const msg = xhr.responseJSON?.message || 'Failed to update menu.';
+                toastError('Error', msg);
+            },
+            complete: function() {
+                setButtonLoading($btn, false);
+                setFormBusy($form, false);
+            }
         });
     });
 
+    // Delete Menu
     $(document).on('click', '.delete-button', function () {
         menuIdToDelete = $(this).data('id');
         showModal(deleteModal);
     });
 
     $('#confirmDeleteButton').on('click', function () {
-        if (menuIdToDelete) {
-            $.ajax({
-                url: `/master/menus/${menuIdToDelete}`,
-                method: 'DELETE',
-                success: () => {
+        if (!menuIdToDelete) return;
+        const $btn = $(this);
+
+        $.ajax({
+            url: `/master/menus/${menuIdToDelete}`,
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': csrfToken },
+            beforeSend: function() {
+                setButtonLoading($btn, true, 'Deleting...');
+                setFormBusy($('#deleteMenuModal'), true);
+            },
+            success: function (data) {
+                if (data.success) {
                     table.ajax.reload();
                     hideModal(deleteModal);
                     menuIdToDelete = null;
+                    toastSuccess('Success', 'Menu deleted successfully.');
+                } else {
+                    toastError('Error', data.message || 'Failed to delete menu.');
                 }
-            });
-        }
+            },
+            error: function (xhr) {
+                const msg = xhr.responseJSON?.message || 'Failed to delete menu.';
+                toastError('Error', msg);
+            },
+            complete: function() {
+                setButtonLoading($btn, false);
+                setFormBusy($('#deleteMenuModal'), false);
+            }
+        });
     });
 });
 </script>

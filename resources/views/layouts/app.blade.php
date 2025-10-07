@@ -66,6 +66,53 @@
                 transform: rotate(360deg);
             }
         }
+
+         /* Ukuran font & padding toast lebih kecil */
+        .swal2-container {
+            z-index: 99999 !important;
+        }
+        .swal2-toast {
+            font-size: 0.85rem;
+            padding: 0.625rem 0.75rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,.15), 0 4px 8px rgba(0,0,0,.08);
+            backdrop-filter: saturate(140%) blur(6px);
+        }
+        .swal2-title {
+            font-weight: 600;
+            letter-spacing: .1px;
+        }
+        .swal2-html-container {
+            /* margin: .2rem 0 0 0 !important; */
+            font-size: 0.8rem;
+            opacity: .9;
+        }
+        .swal2-timer-progress-bar {
+            height: 2px;
+            opacity: .6;
+        }
+
+        @keyframes toast-in {
+            from { transform: translateX(18px) translateY(0); opacity: 0; }
+            to   { transform: translateX(0) translateY(0);   opacity: 1; }
+        }
+        @keyframes toast-out {
+            from { transform: translateX(0) translateY(0);   opacity: 1; }
+            to   { transform: translateX(18px) translateY(0); opacity: 0; }
+        }
+        .swal2-animate-toast-in {
+            animation: toast-in .36s cubic-bezier(.22,.61,.36,1) both;
+        }
+        .swal2-animate-toast-out {
+            animation: toast-out .28s cubic-bezier(.4,0,.2,1) both;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .swal2-animate-toast-in,
+            .swal2-animate-toast-out {
+            animation: none !important;
+            }
+        }
     </style>
 
     @stack('style')
@@ -95,6 +142,7 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.tailwindcss.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         window.onload = function() {

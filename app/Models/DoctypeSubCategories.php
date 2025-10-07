@@ -17,6 +17,7 @@ class DocTypeSubCategories extends Model
     protected $fillable = [
         'doctype_group_id',
         'name',
+        'description',
     ];
 
     /**

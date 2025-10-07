@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProjectStatus extends Model
+class Products extends Model
 {
     use HasFactory;
 
@@ -15,8 +15,9 @@ class ProjectStatus extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
-        'description',
+        'model_id',
+        'part_no',
+        'part_name',
     ];
 
     /**
@@ -24,5 +25,13 @@ class ProjectStatus extends Model
      *
      * @var string
      */
-    protected $table = 'project_status';
+    protected $table = 'products';
+
+    /**
+     * Get the model that owns the product.
+     */
+    public function model()
+    {
+        return $this->belongsTo(Models::class, 'model_id');
+    }
 }

@@ -192,11 +192,62 @@
 @endpush
 
 @push('scripts')
+{{-- SweetAlert2 --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
-$(document).ready(function() {
+$(function() {
     const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-    /* ===== Helpers modal ===== */
+    /* ========= Theme-aware SweetAlert2 ========= */
+    const isDark = () => document.documentElement.classList.contains('dark');
+    function themeToast(icon, title){
+        const dark = isDark();
+        Swal.fire({
+            toast: true,
+            icon, title,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2200,
+            timerProgressBar: true,
+            background: dark ? '#1f2937' : '#ffffff',  // slate-800 vs white
+            color:       dark ? '#f9fafb' : '#111827',
+            didOpen: el => {
+                const bar = el.querySelector('.swal2-timer-progress-bar');
+                if (bar) bar.style.background = dark ? '#10b981' : '#3b82f6';
+            }
+        });
+    }
+
+    /* ========= Spinner & Busy Helpers (global) ========= */
+    const spinnerSVG = `
+      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>`;
+
+    function beginBusy($btn, text='Processing...'){
+        if ($btn.data('busy')) return false; // already busy
+        $btn.data('busy', true);
+        if (!$btn.data('orig-html')) $btn.data('orig-html', $btn.html());
+        $btn.prop('disabled', true).addClass('opacity-75 cursor-not-allowed');
+        $btn.html(`<span class="inline-flex items-center">${spinnerSVG}${text}</span>`);
+        return true;
+    }
+    function endBusy($btn){
+        const orig = $btn.data('orig-html');
+        if (orig) $btn.html(orig);
+        $btn.prop('disabled', false).removeClass('opacity-75 cursor-not-allowed');
+        $btn.data('busy', false);
+    }
+
+    // Guard: cegah klik tombol yang sedang busy (termasuk action buttons di table)
+    $(document).on('click', 'button', function(e){
+        const $b = $(this);
+        if ($b.data('busy')) { e.preventDefault(); e.stopImmediatePropagation(); return false; }
+    });
+
+    /* ========= Modal helpers ========= */
     const addModal    = $('#addUserModal');
     const editModal   = $('#editUserModal');
     const deleteModal = $('#deleteUserModal');
@@ -204,13 +255,26 @@ $(document).ready(function() {
     const closeButtons= $('.close-modal-button');
     let userIdToDelete = null;
 
-    function showModal(modal){ modal.removeClass('hidden').addClass('flex'); }
-    function hideModal(modal){ modal.addClass('hidden').removeClass('flex'); }
+    const showModal = m => m.removeClass('hidden').addClass('flex');
+    const hideModal = m => m.addClass('hidden').removeClass('flex');
 
-    addButton.on('click', () => showModal(addModal));
-    closeButtons.on('click', () => { hideModal(addModal); hideModal(editModal); hideModal(deleteModal); });
+    // Open Add (spinner on Add New)
+    addButton.on('click', function(){
+        const $btn = $(this);
+        if (!beginBusy($btn, 'Opening...')) return;
+        showModal(addModal);
+        setTimeout(()=>endBusy($btn), 150);
+    });
 
-    /* ===== DataTable ===== */
+    // Close modals (spinner short feedback)
+    closeButtons.on('click', function(){
+        const $btn = $(this);
+        if (!beginBusy($btn, 'Closing...')) return;
+        hideModal(addModal); hideModal(editModal); hideModal(deleteModal);
+        setTimeout(()=>endBusy($btn), 150);
+    });
+
+    /* ========= DataTable ========= */
     const table = $('#usersTable').DataTable({
         processing: true,
         serverSide: true,
@@ -218,39 +282,24 @@ $(document).ready(function() {
         ajax: {
             url: '{{ route("userMaintenance.data") }}',
             type: 'GET',
-            data: function(d){ d.search = d.search.value; }
+            data: d => { d.search = d.search.value; }
         },
         columns: [
-            { // No
-                data: null,
-                render: function(data, type, row, meta){ return meta.row + meta.settings._iDisplayStart + 1; }
-            },
+            { data: null, render: (d,t,r,m) => m.row + m.settings._iDisplayStart + 1 },
             { data: 'name',  name: 'name'  },
             { data: 'email', name: 'email' },
             { data: 'nik',   name: 'nik'   },
-            { // Status (Active / Inactive dari is_active: 1/0)
-    data: 'is_active',
-    render: function(val){
-        const active = String(val) === '1';
-        return active
-            ? `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>`
-            : `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>`;
-    }
+            { data: 'is_active', render: v => String(v)==='1'
+                ? `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>`
+                : `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>`
             },
-            { // Action
-                data: null,
-                orderable: false,
-                searchable: false,
-                render: function(data, type, row){
-                    return `
-                        <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
-                            <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
-                        </button>
-                        <button class="delete-button text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete" data-id="${row.id}">
-                            <i class="fa-solid fa-trash-can fa-lg m-2"></i>
-                        </button>
-                    `;
-                }
+            { data: null, orderable:false, searchable:false, render: row => `
+                <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
+                    <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
+                </button>
+                <button class="delete-button text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete" data-id="${row.id}">
+                    <i class="fa-solid fa-trash-can fa-lg m-2"></i>
+                </button>`
             }
         ],
         pageLength: 10,
@@ -260,113 +309,151 @@ $(document).ready(function() {
         autoWidth: false,
     });
 
-    /* ===== Create ===== */
+    /* ========= Create ========= */
     $('#addUserForm').on('submit', function(e){
         e.preventDefault();
+        const $btn = $(this).find('button[type=submit]');
+        if (!beginBusy($btn, 'Saving...')) return;
+
         const formData = new FormData(this);
         formData.set('is_active', $('#add_is_active').is(':checked') ? '1' : '0');
-        const nameErr = $('#add-name-error'), emailErr = $('#add-email-error'), nikErr = $('#add-nik-error'), passErr = $('#add-password-error');
+
+        const nameErr = $('#add-name-error'),
+              emailErr= $('#add-email-error'),
+              nikErr  = $('#add-nik-error'),
+              passErr = $('#add-password-error');
         nameErr.addClass('hidden'); emailErr.addClass('hidden'); nikErr.addClass('hidden'); passErr.addClass('hidden');
 
         $.ajax({
             url: $(this).attr('action'),
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false, contentType: false,
-            success: function(res){
+            data: formData, processData:false, contentType:false,
+            success: res => {
                 if (res.success){
                     table.ajax.reload(null, false);
                     hideModal(addModal);
-                    $('#addUserForm')[0].reset();
+                    this.reset();
+                    themeToast('success', 'User created');
+                } else {
+                    themeToast('error', res.message || 'Failed to create');
                 }
             },
-            error: function(xhr){
+            error: xhr => {
                 const errors = xhr.responseJSON?.errors;
-                if (!errors) return;
-                if (errors.name)     nameErr.text(errors.name[0]).removeClass('hidden');
-                if (errors.email)    emailErr.text(errors.email[0]).removeClass('hidden');
-                if (errors.nik)      nikErr.text(errors.nik[0]).removeClass('hidden');
-                if (errors.password) passErr.text(errors.password[0]).removeClass('hidden');
-            }
+                if (errors){
+                    if (errors.name)     nameErr.text(errors.name[0]).removeClass('hidden');
+                    if (errors.email)    emailErr.text(errors.email[0]).removeClass('hidden');
+                    if (errors.nik)      nikErr.text(errors.nik[0]).removeClass('hidden');
+                    if (errors.password) passErr.text(errors.password[0]).removeClass('hidden');
+                    themeToast('error', 'Validation error');
+                } else {
+                    themeToast('error', 'Request failed');
+                }
+            },
+            complete: () => endBusy($btn)
         });
     });
 
-    /* ===== Read (prefill edit) ===== */
-    $(document).on('click', '.edit-button', function () {
-    const id = $(this).data('id');
+    /* ========= Prefill Edit (open) — spinner di tombol action ========= */
+    $(document).on('click', '.edit-button', function(){
+        const $btn = $(this);
+        if (!beginBusy($btn, 'Loading...')) return;
 
-    const showUrl   = "{{ route('userMaintenance.show', ':id') }}".replace(':id', id);
-    const updateUrl = "{{ route('userMaintenance.update', ':id') }}".replace(':id', id);
+        const id = $btn.data('id');
+        const showUrl   = "{{ route('userMaintenance.show', ':id') }}".replace(':id', id);
+        const updateUrl = "{{ route('userMaintenance.update', ':id') }}".replace(':id', id);
 
-    // reset error
-    $('#edit-name-error, #edit-email-error, #edit-nik-error').addClass('hidden');
+        $('#edit-name-error, #edit-email-error, #edit-nik-error').addClass('hidden');
 
-    $.get(showUrl, function (data) {
-        $('#edit_name').val(data.name);
-        $('#edit_email').val(data.email);
-        $('#edit_nik').val(data.nik);
-        $('#edit_is_active').prop('checked', data.is_active == 1);
-        $('#editUserForm').attr('action', updateUrl);
-        $('#editUserModal').removeClass('hidden').addClass('flex');
+        $.get(showUrl, function (data) {
+            $('#edit_name').val(data.name);
+            $('#edit_email').val(data.email);
+            $('#edit_nik').val(data.nik);
+            $('#edit_is_active').prop('checked', data.is_active == 1);
+            $('#editUserForm').attr('action', updateUrl);
+            showModal(editModal);
+        }).fail(function(){
+            themeToast('error', 'Failed to load user');
+        }).always(function(){
+            endBusy($btn);
+        });
     });
-});
 
-    /* ===== Update ===== */
+    /* ========= Update ========= */
     $('#editUserForm').on('submit', function(e){
         e.preventDefault();
+        const $btn = $(this).find('button[type=submit]');
+        if (!beginBusy($btn, 'Updating...')) return;
+
         const formData = new FormData(this);
         formData.set('is_active', $('#edit_is_active').is(':checked') ? '1' : '0');
         $('#edit-name-error, #edit-email-error, #edit-nik-error').addClass('hidden');
 
         $.ajax({
             url: $(this).attr('action'),
-            method: 'POST', // pakai @method('PUT')
+            method: 'POST', // spoof PUT
             headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false, contentType: false,
-            success: function(res){
+            data: formData, processData:false, contentType:false,
+            success: res => {
                 if (res.success){
                     table.ajax.reload(null, false);
                     hideModal(editModal);
+                    themeToast('success', 'User updated');
+                } else {
+                    themeToast('error', res.message || 'Failed to update');
                 }
             },
-            error: function(xhr){
+            error: xhr => {
                 const errors = xhr.responseJSON?.errors;
-                if (!errors) return;
-                if (errors.name)  $('#edit-name-error').text(errors.name[0]).removeClass('hidden');
-                if (errors.email) $('#edit-email-error').text(errors.email[0]).removeClass('hidden');
-                if (errors.nik)   $('#edit-nik-error').text(errors.nik[0]).removeClass('hidden');
-            }
+                if (errors){
+                    if (errors.name)  $('#edit-name-error').text(errors.name[0]).removeClass('hidden');
+                    if (errors.email) $('#edit-email-error').text(errors.email[0]).removeClass('hidden');
+                    if (errors.nik)   $('#edit-nik-error').text(errors.nik[0]).removeClass('hidden');
+                    themeToast('error', 'Validation error');
+                } else {
+                    themeToast('error', 'Request failed');
+                }
+            },
+            complete: () => endBusy($btn)
         });
     });
 
-    /* ===== Delete ===== */
+    /* ========= Delete (open) — spinner di tombol action ========= */
     $(document).on('click', '.delete-button', function(){
-        userIdToDelete = $(this).data('id');
+        const $btn = $(this);
+        if (!beginBusy($btn, 'Opening...')) return;
+        userIdToDelete = $btn.data('id');
         showModal(deleteModal);
+        setTimeout(()=>endBusy($btn), 150);
     });
 
+    /* ========= Delete (confirm) ========= */
     $('#confirmDeleteButton').on('click', function(){
         if (!userIdToDelete) return;
+        const $btn = $(this);
+        if (!beginBusy($btn, 'Deleting...')) return;
+
         $.ajax({
             url: `/master/userMaintenance/${userIdToDelete}`,
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': csrfToken },
-            success: function(res){
+            success: res => {
                 if (res.success){
                     table.ajax.reload(null, false);
                     hideModal(deleteModal);
                     userIdToDelete = null;
+                    themeToast('success', 'User deleted');
                 } else {
-                    alert('Error deleting user.');
+                    themeToast('error', res.message || 'Failed to delete');
                 }
             },
-            error: function(){ alert('Error deleting user.'); }
+            error: () => themeToast('error', 'Error deleting user'),
+            complete: () => endBusy($btn)
         });
     });
 
-    /* ===== Focus tweak untuk kontrol length/search (opsional) ===== */
+    /* ========= Small UX tweak ========= */
     const overrideFocus = function(){ $(this).css({'outline':'none','box-shadow':'none','border-color':'gray'}); };
     const restoreBlur   = function(){ $(this).css('border-color',''); };
     const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
@@ -376,3 +463,5 @@ $(document).ready(function() {
 });
 </script>
 @endpush
+
+

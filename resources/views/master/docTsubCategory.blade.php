@@ -31,6 +31,9 @@
                         <th scope="col" class="px-6 py-3 sorting" data-column="name">
                             Subcategory Name
                         </th>
+                        <th scope="col" class="px-6 py-3 sorting" data-column="description">
+                            Description
+                        </th>
                         <th scope="col" class="px-6 py-3 text-center">Action</th>
                     </tr>
                 </thead>
@@ -62,6 +65,11 @@
                     <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Subcategory Name</label>
                     <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. Agreements" required>
                     <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div class="mb-4">
+                    <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Description</label>
+                    <textarea name="description" id="description" rows="4" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Enter a description"></textarea>
+                    <p id="add-description-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
@@ -99,6 +107,11 @@
                     <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Subcategory Name</label>
                     <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div class="mb-4">
+                    <label for="edit_description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Description</label>
+                    <textarea name="description" id="edit_description" rows="4" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Enter a description"></textarea>
+                    <p id="edit-description-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
@@ -196,6 +209,7 @@
 @endpush
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function () {
     const csrfToken = $('meta[name="csrf-token"]').attr('content');
@@ -212,6 +226,7 @@ $(document).ready(function () {
     const table = $('#docTypeSubCategoriesTable').DataTable({
         processing: true,
         serverSide: true,
+        scrollX: true,
         ajax: {
             url: '{{ route("docTypeSubCategories.data") }}',
             type: 'GET',
@@ -235,13 +250,20 @@ $(document).ready(function () {
             },
             { data: 'name', name: 'name' },
             {
+                data: 'description',
+                name: 'description',
+                render: function (data) {
+                    return data || '-';
+                }
+            },
+            {
                 data: null,
                 orderable: false,
                 searchable: false,
                 className: 'text-center',
                 render: function (data, type, row) {
                     return `
-                        <button class="edit-button text-gary-400 hover:text-gary-700 dark:text-gary-400 dark:hover:text-gary-300" title="Edit" data-id="${row.id}">
+                        <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
                             <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
                         </button>
                         <button class="delete-button text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete" data-id="${row.id}">
@@ -257,8 +279,11 @@ $(document).ready(function () {
         language: {
             emptyTable: '<div class="text-gray-500 dark:text-gray-400">No document type subcategories found.</div>'
         },
+        responsive: true,
+        autoWidth: false,
     });
 
+    // Fix DataTables input/select focus styles
     const overrideFocusStyles = function() {
         $(this).css({
             'outline': 'none',
@@ -281,18 +306,145 @@ $(document).ready(function () {
     const closeButtons = $('.close-modal-button');
     let docTypeSubCategoryIdToDelete = null;
 
+    // Helper: Show modal
     function showModal(modal) {
         modal.removeClass('hidden').addClass('flex');
     }
 
+    // Helper: Hide modal
     function hideModal(modal) {
         modal.addClass('hidden').removeClass('flex');
     }
 
+    // Helper: Button loading state
+    function setButtonLoading($btn, isLoading, loadingText = 'Processing...') {
+        if (!$btn || $btn.length === 0) return;
+        if (isLoading) {
+            if (!$btn.data('orig-html')) $btn.data('orig-html', $btn.html());
+            $btn.prop('disabled', true);
+            $btn.addClass('opacity-70 cursor-not-allowed');
+            $btn.html(`
+                <span class="inline-flex items-center gap-2">
+                <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                ${loadingText}
+                </span>
+            `);
+        } else {
+            const orig = $btn.data('orig-html');
+            if (orig) $btn.html(orig);
+            $btn.prop('disabled', false);
+            $btn.removeClass('opacity-70 cursor-not-allowed');
+        }
+    }
+
+    // Helper: Disable/enable form fields during request
+    function setFormBusy($form, busy) {
+        $form.find('input, select, textarea, button').prop('disabled', busy);
+    }
+
+    // Helper: SweetAlert notifications
+        function detectTheme() {
+        const hasDarkClass = document.documentElement.classList.contains('dark');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = hasDarkClass || prefersDark;
+
+        return isDark ? {
+        mode: 'dark',
+        bg: 'rgba(15, 23, 42, 0.94)',
+        fg: '#E5E7EB',
+        border: 'rgba(148, 163, 184, .22)',
+        progress: 'rgba(255,255,255,.9)',
+        icon: {
+            success: '#22c55e',
+            error:   '#ef4444',
+            warning: '#f59e0b',
+            info:    '#60a5fa'
+        }
+        } : {
+        mode: 'light',
+        bg: 'rgba(255, 255, 255, 0.98)',
+        fg: '#0f172a',
+        border: 'rgba(15, 23, 42, .10)',
+        progress: 'rgba(15,23,42,.8)',
+        icon: {
+            success: '#16a34a',
+            error:   '#dc2626',
+            warning: '#d97706',
+            info:    '#2563eb'
+        }
+        };
+    }
+
+    const BaseToast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2600,
+        timerProgressBar: true,
+        showClass: { popup: 'swal2-animate-toast-in' },
+        hideClass: { popup: 'swal2-animate-toast-out' },
+        didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+    });
+
+    function renderToast({ icon = 'success', title = 'Success', text = '' } = {}) {
+        const t = detectTheme();
+
+        BaseToast.fire({
+        icon,
+        title,
+        text,
+        iconColor: t.icon[icon] || t.icon.success,
+        background: t.bg,
+        color: t.fg,
+        customClass: {
+            popup: 'swal2-toast border',
+            title: '',
+            timerProgressBar: ''
+        },
+        didOpen: (toast) => {
+            const bar = toast.querySelector('.swal2-timer-progress-bar');
+            if (bar) bar.style.background = t.progress;
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+        });
+    }
+
+    function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') {
+        renderToast({ icon: 'success', title, text });
+    }
+    function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') {
+        BaseToast.update({ timer: 3400 });
+        renderToast({ icon: 'error', title, text });
+        BaseToast.update({ timer: 2600 });
+    }
+    function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') {
+        renderToast({ icon: 'warning', title, text });
+    }
+    function toastInfo(title = 'Informasi', text = '') {
+        renderToast({ icon: 'info', title, text });
+    }
+
+    window.toastSuccess = toastSuccess;
+    window.toastError = toastError;
+    window.toastWarning = toastWarning;
+    window.toastInfo = toastInfo;
+
+    // Populate Document Type Group Dropdown
     function populateDocTypeGroupDropdown(selectElement, selectedId = null) {
         $.ajax({
             url: '{{ route("docTypeSubCategories.getDocTypeGroups") }}',
             method: 'GET',
+            beforeSend: function() {
+                selectElement.prop('disabled', true);
+            },
             success: function (data) {
                 selectElement.empty().append('<option value="">Select a group</option>');
                 data.forEach(function (group) {
@@ -301,46 +453,67 @@ $(document).ready(function () {
                 });
                 selectElement.trigger('change');
             },
-            error: function () {
-                alert('Error loading document type groups.');
+            error: function (xhr) {
+                toastError('Error', xhr.responseJSON?.message || 'Failed to load document type groups.');
+            },
+            complete: function() {
+                selectElement.prop('disabled', false);
             }
         });
     }
 
+    // Add Button Click
     addButton.on('click', () => {
         $('#addDocTypeSubCategoryForm')[0].reset();
+        $('#add-doctype_group_id-error').addClass('hidden');
+        $('#add-name-error').addClass('hidden');
+        $('#add-description-error').addClass('hidden');
         populateDocTypeGroupDropdown($('#doctype_group_id'));
         $('#doctype_group_id').val(null).trigger('change');
         showModal(addModal);
     });
 
+    // Close Modal Buttons
     closeButtons.on('click', () => {
         hideModal(addModal);
         hideModal(editModal);
         hideModal(deleteModal);
     });
 
+    // Add Document Type Subcategory
     $('#addDocTypeSubCategoryForm').on('submit', function (e) {
         e.preventDefault();
-        const formData = new FormData(this);
+        const $form = $(this);
+        const $btn = $form.find('[type="submit"]');
         const doctypeGroupIdError = $('#add-doctype_group_id-error');
         const nameError = $('#add-name-error');
+        const descriptionError = $('#add-description-error');
         doctypeGroupIdError.addClass('hidden');
         nameError.addClass('hidden');
+        descriptionError.addClass('hidden');
+
+        const formData = new FormData(this);
 
         $.ajax({
-            url: $(this).attr('action'),
+            url: $form.attr('action'),
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': csrfToken },
             data: formData,
             processData: false,
             contentType: false,
+            beforeSend: function() {
+                setButtonLoading($btn, true, 'Saving...');
+                setFormBusy($form, true);
+            },
             success: function (data) {
                 if (data.success) {
                     table.ajax.reload();
                     hideModal(addModal);
-                    $('#addDocTypeSubCategoryForm')[0].reset();
+                    $form[0].reset();
                     $('#doctype_group_id').val('').trigger('change');
+                    toastSuccess('Success', 'Document type subcategory added successfully.');
+                } else {
+                    toastError('Error', data.message || 'Failed to add document type subcategory.');
                 }
             },
             error: function (xhr) {
@@ -352,49 +525,85 @@ $(document).ready(function () {
                     if (errors.name) {
                         nameError.text(errors.name[0]).removeClass('hidden');
                     }
+                    if (errors.description) {
+                        descriptionError.text(errors.description[0]).removeClass('hidden');
+                    }
                 }
+                const msg = xhr.responseJSON?.message || 'Failed to add document type subcategory.';
+                toastError('Error', msg);
+            },
+            complete: function() {
+                setButtonLoading($btn, false);
+                setFormBusy($form, false);
             }
         });
     });
 
+    // Edit Document Type Subcategory
     $(document).on('click', '.edit-button', function () {
         const id = $(this).data('id');
         const doctypeGroupIdError = $('#edit-doctype_group_id-error');
         const nameError = $('#edit-name-error');
+        const descriptionError = $('#edit-description-error');
         doctypeGroupIdError.addClass('hidden');
         nameError.addClass('hidden');
+        descriptionError.addClass('hidden');
 
         $.ajax({
             url: `/master/docTypeSubCategories/${id}`,
             method: 'GET',
+            beforeSend: function() {
+                setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, '');
+            },
             success: function (data) {
                 $('#edit_name').val(data.name);
+                $('#edit_description').val(data.description || '');
                 populateDocTypeGroupDropdown($('#edit_doctype_group_id'), data.doctype_group_id);
                 $('#editDocTypeSubCategoryForm').attr('action', `/master/docTypeSubCategories/${id}`);
                 showModal(editModal);
+            },
+            error: function (xhr) {
+                const msg = xhr.responseJSON?.message || 'Failed to fetch document type subcategory data.';
+                toastError('Error', msg);
+            },
+            complete: function() {
+                setButtonLoading($('.edit-button[data-id="' + id + '"]'), false);
             }
         });
     });
 
+    // Submit Edit Form
     $('#editDocTypeSubCategoryForm').on('submit', function (e) {
         e.preventDefault();
-        const formData = new FormData(this);
+        const $form = $(this);
+        const $btn = $form.find('[type="submit"]');
         const doctypeGroupIdError = $('#edit-doctype_group_id-error');
         const nameError = $('#edit-name-error');
+        const descriptionError = $('#edit-description-error');
         doctypeGroupIdError.addClass('hidden');
         nameError.addClass('hidden');
+        descriptionError.addClass('hidden');
+
+        const formData = new FormData(this);
 
         $.ajax({
-            url: $(this).attr('action'),
+            url: $form.attr('action'),
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': csrfToken },
             data: formData,
             processData: false,
             contentType: false,
+            beforeSend: function() {
+                setButtonLoading($btn, true, 'Saving...');
+                setFormBusy($form, true);
+            },
             success: function (data) {
                 if (data.success) {
                     table.ajax.reload();
                     hideModal(editModal);
+                    toastSuccess('Success', 'Document type subcategory updated successfully.');
+                } else {
+                    toastError('Error', data.message || 'Failed to update document type subcategory.');
                 }
             },
             error: function (xhr) {
@@ -406,36 +615,57 @@ $(document).ready(function () {
                     if (errors.name) {
                         nameError.text(errors.name[0]).removeClass('hidden');
                     }
+                    if (errors.description) {
+                        descriptionError.text(errors.description[0]).removeClass('hidden');
+                    }
                 }
+                const msg = xhr.responseJSON?.message || 'Failed to update document type subcategory.';
+                toastError('Error', msg);
+            },
+            complete: function() {
+                setButtonLoading($btn, false);
+                setFormBusy($form, false);
             }
         });
     });
 
+    // Delete Document Type Subcategory
     $(document).on('click', '.delete-button', function () {
         docTypeSubCategoryIdToDelete = $(this).data('id');
         showModal(deleteModal);
     });
 
     $('#confirmDeleteButton').on('click', function () {
-        if (docTypeSubCategoryIdToDelete) {
-            $.ajax({
-                url: `/master/docTypeSubCategories/${docTypeSubCategoryIdToDelete}`,
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
-                success: function (data) {
-                    if (data.success) {
-                        table.ajax.reload();
-                        hideModal(deleteModal);
-                        docTypeSubCategoryIdToDelete = null;
-                    } else {
-                        alert('Error deleting document type subcategory.');
-                    }
-                },
-                error: function () {
-                    alert('Error deleting document type subcategory.');
+        if (!docTypeSubCategoryIdToDelete) return;
+        const $btn = $(this);
+
+        $.ajax({
+            url: `/master/docTypeSubCategories/${docTypeSubCategoryIdToDelete}`,
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': csrfToken },
+            beforeSend: function() {
+                setButtonLoading($btn, true, 'Deleting...');
+                setFormBusy($('#deleteDocTypeSubCategoryModal'), true);
+            },
+            success: function (data) {
+                if (data.success) {
+                    table.ajax.reload();
+                    hideModal(deleteModal);
+                    docTypeSubCategoryIdToDelete = null;
+                    toastSuccess('Success', 'Document type subcategory deleted successfully.');
+                } else {
+                    toastError('Error', data.message || 'Failed to delete document type subcategory.');
                 }
-            });
-        }
+            },
+            error: function (xhr) {
+                const msg = xhr.responseJSON?.message || 'Failed to delete document type subcategory.';
+                toastError('Error', msg);
+            },
+            complete: function() {
+                setButtonLoading($btn, false);
+                setFormBusy($('#deleteDocTypeSubCategoryModal'), false);
+            }
+        });
     });
 });
 </script>

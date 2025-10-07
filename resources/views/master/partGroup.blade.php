@@ -232,55 +232,74 @@
 @endpush
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-$(document).ready(function () {
-    const csrfToken = $('meta[name="csrf-token"]').attr('content');
+    $(document).ready(function() {
+        const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-    $('#customer_id').select2({
-        dropdownParent: $('#addPartGroupModal'),
-        width: '100%'
-    });
-    $('#model_id').select2({
-        dropdownParent: $('#addPartGroupModal'),
-        width: '100%'
-    });
-    $('#edit_customer_id').select2({
-        dropdownParent: $('#editPartGroupModal'),
-        width: '100%'
-    });
-    $('#edit_model_id').select2({
-        dropdownParent: $('#editPartGroupModal'),
-        width: '100%'
-    });
+        // Initialize Select2
+        $('#customer_id').select2({
+            dropdownParent: $('#addPartGroupModal'),
+            width: '100%',
+            placeholder: 'Select Customer'
+        });
+        $('#edit_customer_id').select2({
+            dropdownParent: $('#editPartGroupModal'),
+            width: '100%',
+            placeholder: 'Select Customer'
+        });
+        $('#model_id').select2({
+            dropdownParent: $('#addPartGroupModal'),
+            width: '100%',
+            placeholder: 'Select Model'
+        });
+        $('#edit_model_id').select2({
+            dropdownParent: $('#editPartGroupModal'),
+            width: '100%',
+            placeholder: 'Select Model'
+        });
 
-    const table = $('#partGroupsTable').DataTable({
-        processing: true,
-        serverSide: true,
-        ajax: {
-            url: '{{ route("partGroups.data") }}',
-            type: 'GET',
-            data: function (d) {
-                d.search = d.search.value;
-            }
-        },
-        columns: [
-            {
-                data: null,
-                render: function (data, type, row, meta) {
-                    return meta.row + meta.settings._iDisplayStart + 1;
+        // Initialize DataTable
+        const table = $('#partGroupsTable').DataTable({
+            processing: true,
+            serverSide: true,
+            scrollX: true,
+            ajax: {
+                url: '{{ route("partGroups.data") }}',
+                type: 'GET',
+                data: function(d) {
+                    d.search = d.search.value;
                 }
             },
-            { data: 'customer_code', name: 'customer_code' },
-            { data: 'model_name', name: 'model_name' },
-            { data: 'code_part_group', name: 'code_part_group' },
-            { data: 'code_part_group_desc', name: 'code_part_group_desc' },
-            {
-                data: null,
-                orderable: false,
-                searchable: false,
-                className: 'text-center',
-                render: function (data, type, row) {
-                    return `
+            columns: [{
+                    data: null,
+                    render: function(data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    }
+                },
+                {
+                    data: 'customer_code',
+                    name: 'customer_code'
+                },
+                {
+                    data: 'model_name',
+                    name: 'model_name'
+                },
+                {
+                    data: 'code_part_group',
+                    name: 'code_part_group'
+                },
+                {
+                    data: 'code_part_group_desc',
+                    name: 'code_part_group_desc'
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    className: 'text-center',
+                    render: function(data, type, row) {
+                        return `
                         <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
                             <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
                         </button>
@@ -288,236 +307,415 @@ $(document).ready(function () {
                             <i class="fa-solid fa-trash-can fa-lg m-2"></i>
                         </button>
                     `;
+                    }
                 }
+            ],
+            pageLength: 10,
+            lengthMenu: [10, 25, 50],
+            order: [
+                [1, 'asc']
+            ],
+            language: {
+                emptyTable: '<div class="text-gray-500 dark:text-gray-400">No part groups found.</div>'
+            },
+            responsive: true,
+            autoWidth: false,
+        });
+
+        // Modal Handling
+        const addModal = $('#addPartGroupModal');
+        const editModal = $('#editPartGroupModal');
+        const deleteModal = $('#deletePartGroupModal');
+        const addButton = $('#add-button');
+        const closeButtons = $('.close-modal-button');
+        let partGroupIdToDelete = null;
+
+        function showModal(modal) {
+            modal.removeClass('hidden').addClass('flex');
+        }
+
+        function hideModal(modal) {
+            modal.addClass('hidden').removeClass('flex');
+        }
+
+        // Helper: Button loading state
+        function setButtonLoading($btn, isLoading, loadingText = 'Processing...') {
+            if (!$btn || $btn.length === 0) return;
+            if (isLoading) {
+                if (!$btn.data('orig-html')) $btn.data('orig-html', $btn.html());
+                $btn.prop('disabled', true);
+                $btn.addClass('opacity-70 cursor-not-allowed');
+                $btn.html(`
+                    <span class="inline-flex items-center gap-2">
+                    <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    ${loadingText}
+                    </span>
+                `);
+            } else {
+                const orig = $btn.data('orig-html');
+                if (orig) $btn.html(orig);
+                $btn.prop('disabled', false);
+                $btn.removeClass('opacity-70 cursor-not-allowed');
             }
-        ],
-        pageLength: 10,
-        lengthMenu: [10, 25, 50],
-        order: [[3, 'asc']],
-        language: {
-            emptyTable: '<div class="text-gray-500 dark:text-gray-400">No part groups found.</div>'
-        },
+        }
+
+        // Helper: Disable/enable form fields during request
+        function setFormBusy($form, busy) {
+            $form.find('input, select, textarea, button').prop('disabled', busy);
+        }
+
+        // Helper: SweetAlert notifications
+        function detectTheme() {
+        const hasDarkClass = document.documentElement.classList.contains('dark');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = hasDarkClass || prefersDark;
+
+        return isDark ? {
+        mode: 'dark',
+        bg: 'rgba(15, 23, 42, 0.94)',
+        fg: '#E5E7EB',
+        border: 'rgba(148, 163, 184, .22)',
+        progress: 'rgba(255,255,255,.9)',
+        icon: {
+            success: '#22c55e',
+            error:   '#ef4444',
+            warning: '#f59e0b',
+            info:    '#60a5fa'
+        }
+        } : {
+        mode: 'light',
+        bg: 'rgba(255, 255, 255, 0.98)',
+        fg: '#0f172a',
+        border: 'rgba(15, 23, 42, .10)',
+        progress: 'rgba(15,23,42,.8)',
+        icon: {
+            success: '#16a34a',
+            error:   '#dc2626',
+            warning: '#d97706',
+            info:    '#2563eb'
+        }
+        };
+    }
+
+    const BaseToast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2600,
+        timerProgressBar: true,
+        showClass: { popup: 'swal2-animate-toast-in' },
+        hideClass: { popup: 'swal2-animate-toast-out' },
+        didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
     });
 
-    const addModal = $('#addPartGroupModal');
-    const editModal = $('#editPartGroupModal');
-    const deleteModal = $('#deletePartGroupModal');
-    const addButton = $('#add-button');
-    const closeButtons = $('.close-modal-button');
-    let partGroupIdToDelete = null;
+    function renderToast({ icon = 'success', title = 'Success', text = '' } = {}) {
+        const t = detectTheme();
 
-    function showModal(modal) {
-        modal.removeClass('hidden').addClass('flex');
-    }
-
-    function hideModal(modal) {
-        modal.addClass('hidden').removeClass('flex');
-    }
-
-    function loadModels(customerId, modelSelect, selectedModelId = null) {
-        if (!customerId) {
-            modelSelect.html('<option value="">Select Model</option>').trigger('change');
-            modelSelect.prop('disabled', true);
-            return;
+        BaseToast.fire({
+        icon,
+        title,
+        text,
+        iconColor: t.icon[icon] || t.icon.success,
+        background: t.bg,
+        color: t.fg,
+        customClass: {
+            popup: 'swal2-toast border',
+            title: '',
+            timerProgressBar: ''
+        },
+        didOpen: (toast) => {
+            const bar = toast.querySelector('.swal2-timer-progress-bar');
+            if (bar) bar.style.background = t.progress;
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
         }
-        $.ajax({
-            url: '{{ route("partGroups.getModelsByCustomer") }}',
-            method: 'GET',
-            data: { customer_id: customerId },
-            success: function (data) {
-                modelSelect.html('<option value="">Select Model</option>');
-                data.forEach(function (model) {
-                    modelSelect.append(`<option value="${model.id}">${model.name}</option>`);
-                });
-                if (selectedModelId) {
-                    modelSelect.val(selectedModelId);
-                }
-                modelSelect.prop('disabled', false);
-                modelSelect.trigger('change');
-            },
-            error: function () {
-                modelSelect.html('<option value="">Select Model</option>').trigger('change');
-                modelSelect.prop('disabled', true);
-            }
         });
     }
 
-    $('#customer_id').on('change', function () {
-        const customerId = $(this).val();
-        const modelSelect = $('#model_id');
-        loadModels(customerId, modelSelect);
-    });
+    function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') {
+        renderToast({ icon: 'success', title, text });
+    }
+    function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') {
+        BaseToast.update({ timer: 3400 });
+        renderToast({ icon: 'error', title, text });
+        BaseToast.update({ timer: 2600 });
+    }
+    function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') {
+        renderToast({ icon: 'warning', title, text });
+    }
+    function toastInfo(title = 'Informasi', text = '') {
+        renderToast({ icon: 'info', title, text });
+    }
 
-    $('#edit_customer_id').on('change', function () {
-        const customerId = $(this).val();
-        const modelSelect = $('#edit_model_id');
-        loadModels(customerId, modelSelect);
-    });
+    window.toastSuccess = toastSuccess;
+    window.toastError = toastError;
+    window.toastWarning = toastWarning;
+    window.toastInfo = toastInfo;
 
-    addButton.on('click', () => {
-        $('#addPartGroupForm')[0].reset();
-        $('#customer_id').val(null).trigger('change');
-        $('#model_id').html('<option value="">Select Model</option>').trigger('change').prop('disabled', true);
-        showModal(addModal);
-    });
+        // Function to load models based on customer ID
+        function loadModels(customerId, $modelSelect, selectedModelId = null) {
+            if (!customerId) {
+                $modelSelect.html('<option value="">Select Model</option>').prop('disabled', true).trigger('change');
+                return;
+            }
 
-    closeButtons.on('click', () => {
-        hideModal(addModal);
-        hideModal(editModal);
-        hideModal(deleteModal);
-    });
+            $.ajax({
+                url: '{{ route('partGroups.getModelsByCustomer') }}',
+                method: 'GET',
+                data: {
+                    customer_id: customerId
+                },
+                beforeSend: function() {
+                    $modelSelect.prop('disabled', true);
+                    $modelSelect.html('<option value="">Loading...</option>').trigger('change');
+                },
+                success: function(data) {
+                    $modelSelect.html('<option value="">Select Model</option>');
+                    data.forEach(function(model) {
+                        $modelSelect.append(
+                            `<option value="${model.id}"${selectedModelId == model.id ? ' selected' : ''}>${model.name}</option>`
+                        );
+                    });
+                    $modelSelect.prop('disabled', false).trigger('change');
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Failed to load models.';
+                    toastError('Error', msg);
+                    $modelSelect.html('<option value="">Select Model</option>').prop('disabled', true).trigger('change');
+                }
+            });
+        }
 
-    const overrideFocusStyles = function() {
+        $('#customer_id').on('change', function() {
+            const customerId = $(this).val();
+            loadModels(customerId, $('#model_id'));
+        });
+
+        $('#edit_customer_id').on('change', function() {
+            const customerId = $(this).val();
+            loadModels(customerId, $('#edit_model_id'));
+        });
+
+        addButton.on('click', () => {
+            $('#addPartGroupForm')[0].reset();
+            $('#customer_id').val(null).trigger('change');
+            $('#model_id').html('<option value="">Select Model</option>').trigger('change').prop('disabled', true);
+            showModal(addModal);
+        });
+
+        closeButtons.on('click', () => {
+            hideModal(addModal);
+            hideModal(editModal);
+            hideModal(deleteModal);
+        });
+
+        // Add Part Group
+        $('#addPartGroupForm').on('submit', function(e) {
+            e.preventDefault();
+            const $form = $(this);
+            const $btn = $form.find('[type="submit"]');
+            const customerIdError = $('#add-customer_id-error');
+            const modelIdError = $('#add-model_id-error');
+            const codePartGroupError = $('#add-code_part_group-error');
+            const codePartGroupDescError = $('#add-code_part_group_desc-error');
+            customerIdError.addClass('hidden');
+            modelIdError.addClass('hidden');
+            codePartGroupError.addClass('hidden');
+            codePartGroupDescError.addClass('hidden');
+
+            const formData = new FormData(this);
+
+            $.ajax({
+                url: $form.attr('action'),
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function() {
+                    setButtonLoading($btn, true, 'Saving...');
+                    setFormBusy($form, true);
+                },
+                success: function(data) {
+                    if (data.success) {
+                        table.ajax.reload();
+                        hideModal(addModal);
+                        $form[0].reset();
+                        $('#customer_id').val(null).trigger('change');
+                        $('#model_id').html('<option value="">Select Model</option>').trigger('change').prop('disabled', true);
+                        toastSuccess('Success', 'Part group added successfully.');
+                    } else {
+                        toastError('Error', data.message || 'Failed to add part group.');
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors) {
+                        if (errors.customer_id) customerIdError.text(errors.customer_id[0]).removeClass('hidden');
+                        if (errors.model_id) modelIdError.text(errors.model_id[0]).removeClass('hidden');
+                        if (errors.code_part_group) codePartGroupError.text(errors.code_part_group[0]).removeClass('hidden');
+                        if (errors.code_part_group_desc) codePartGroupDescError.text(errors.code_part_group_desc[0]).removeClass('hidden');
+                    }
+                    const msg = xhr.responseJSON?.message || 'Failed to add part group.';
+                    toastError('Error', msg);
+                },
+                complete: function() {
+                    setButtonLoading($btn, false);
+                    setFormBusy($form, false);
+                }
+            });
+        });
+
+        // Edit Part Group
+        $(document).on('click', '.edit-button', function() {
+            const id = $(this).data('id');
+            const customerIdError = $('#edit-customer_id-error');
+            const modelIdError = $('#edit-model_id-error');
+            const codePartGroupError = $('#edit-code_part_group-error');
+            const codePartGroupDescError = $('#edit-code_part_group_desc-error');
+            customerIdError.addClass('hidden');
+            modelIdError.addClass('hidden');
+            codePartGroupError.addClass('hidden');
+            codePartGroupDescError.addClass('hidden');
+
+            $.ajax({
+                url: `/master/partGroups/${id}`,
+                method: 'GET',
+                beforeSend: function() {
+                    setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, 'Loading...');
+                },
+                success: function(data) {
+                    $('#edit_customer_id').val(data.customer_id).trigger('change');
+                    $('#edit_code_part_group').val(data.code_part_group);
+                    $('#edit_code_part_group_desc').val(data.code_part_group_desc);
+                    $('#editPartGroupForm').attr('action', `/master/partGroups/${id}`);
+                    loadModels(data.customer_id, $('#edit_model_id'), data.model_id);
+                    showModal(editModal);
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Failed to fetch part group data.';
+                    toastError('Error', msg);
+                },
+                complete: function() {
+                    setButtonLoading($('.edit-button[data-id="' + id + '"]'), false);
+                }
+            });
+        });
+
+        $('#editPartGroupForm').on('submit', function(e) {
+            e.preventDefault();
+            const $form = $(this);
+            const $btn = $form.find('[type="submit"]');
+            const customerIdError = $('#edit-customer_id-error');
+            const modelIdError = $('#edit-model_id-error');
+            const codePartGroupError = $('#edit-code_part_group-error');
+            const codePartGroupDescError = $('#edit-code_part_group_desc-error');
+            customerIdError.addClass('hidden');
+            modelIdError.addClass('hidden');
+            codePartGroupError.addClass('hidden');
+            codePartGroupDescError.addClass('hidden');
+
+            const formData = new FormData(this);
+
+            $.ajax({
+                url: $form.attr('action'),
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function() {
+                    setButtonLoading($btn, true, 'Saving...');
+                    setFormBusy($form, true);
+                },
+                success: function(data) {
+                    if (data.success) {
+                        table.ajax.reload();
+                        hideModal(editModal);
+                        toastSuccess('Success', 'Part group updated successfully.');
+                    } else {
+                        toastError('Error', data.message || 'Failed to update part group.');
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors) {
+                        if (errors.customer_id) customerIdError.text(errors.customer_id[0]).removeClass('hidden');
+                        if (errors.model_id) modelIdError.text(errors.model_id[0]).removeClass('hidden');
+                        if (errors.code_part_group) codePartGroupError.text(errors.code_part_group[0]).removeClass('hidden');
+                        if (errors.code_part_group_desc) codePartGroupDescError.text(errors.code_part_group_desc[0]).removeClass('hidden');
+                    }
+                    const msg = xhr.responseJSON?.message || 'Failed to update part group.';
+                    toastError('Error', msg);
+                },
+                complete: function() {
+                    setButtonLoading($btn, false);
+                    setFormBusy($form, false);
+                }
+            });
+        });
+
+        // Delete Part Group
+        $(document).on('click', '.delete-button', function() {
+            partGroupIdToDelete = $(this).data('id');
+            showModal(deleteModal);
+        });
+
+        $('#confirmDeleteButton').on('click', function() {
+            if (!partGroupIdToDelete) return;
+            const $btn = $(this);
+
+            $.ajax({
+                url: `/master/partGroups/${partGroupIdToDelete}`,
+                method: 'DELETE',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                beforeSend: function() {
+                    setButtonLoading($btn, true, 'Deleting...');
+                    setFormBusy($('#deletePartGroupModal'), true);
+                },
+                success: function(data) {
+                    if (data.success) {
+                        table.ajax.reload();
+                        hideModal(deleteModal);
+                        partGroupIdToDelete = null;
+                        toastSuccess('Success', 'Part group deleted successfully.');
+                    } else {
+                        toastError('Error', data.message || 'Failed to delete part group.');
+                    }
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Failed to delete part group.';
+                    toastError('Error', msg);
+                },
+                complete: function() {
+                    setButtonLoading($btn, false);
+                    setFormBusy($('#deletePartGroupModal'), false);
+                }
+            });
+        });
+
+        // Fix DataTables input/select focus styles
+        const overrideFocusStyles = function() {
             $(this).css({
                 'outline': 'none',
                 'box-shadow': 'none',
                 'border-color': 'gray'
             });
         };
-    const restoreBlurStyles = function() {
-        $(this).css('border-color', '');
-    };
-    const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
-    elementsToFix.on('focus keyup', overrideFocusStyles);
-    elementsToFix.on('blur', restoreBlurStyles);
-    elementsToFix.filter(':focus').each(overrideFocusStyles);
-
-    $('#addPartGroupForm').on('submit', function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const customerIdError = $('#add-customer_id-error');
-        const modelIdError = $('#add-model_id-error');
-        const codePartGroupError = $('#add-code_part_group-error');
-        const codePartGroupDescError = $('#add-code_part_group_desc-error');
-        customerIdError.addClass('hidden');
-        modelIdError.addClass('hidden');
-        codePartGroupError.addClass('hidden');
-        codePartGroupDescError.addClass('hidden');
-
-        $.ajax({
-            url: $(this).attr('action'),
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (data) {
-                if (data.success) {
-                    table.ajax.reload();
-                    hideModal(addModal);
-                    $('#addPartGroupForm')[0].reset();
-                    $('#customer_id').val(null).trigger('change');
-                    $('#model_id').html('<option value="">Select Model</option>').trigger('change').prop('disabled', true);
-                }
-            },
-            error: function (xhr) {
-                const errors = xhr.responseJSON?.errors;
-                if (errors) {
-                    if (errors.customer_id) {
-                        customerIdError.text(errors.customer_id[0]).removeClass('hidden');
-                    }
-                    if (errors.model_id) {
-                        modelIdError.text(errors.model_id[0]).removeClass('hidden');
-                    }
-                    if (errors.code_part_group) {
-                        codePartGroupError.text(errors.code_part_group[0]).removeClass('hidden');
-                    }
-                    if (errors.code_part_group_desc) {
-                        codePartGroupDescError.text(errors.code_part_group_desc[0]).removeClass('hidden');
-                    }
-                }
-            }
-        });
+        const restoreBlurStyles = function() {
+            $(this).css('border-color', '');
+        };
+        const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
+        elementsToFix.on('focus keyup', overrideFocusStyles);
+        elementsToFix.on('blur', restoreBlurStyles);
+        elementsToFix.filter(':focus').each(overrideFocusStyles);
     });
-
-    $(document).on('click', '.edit-button', function () {
-        const id = $(this).data('id');
-        const customerIdError = $('#edit-customer_id-error');
-        const modelIdError = $('#edit-model_id-error');
-        const codePartGroupError = $('#edit-code_part_group-error');
-        const codePartGroupDescError = $('#edit-code_part_group_desc-error');
-        customerIdError.addClass('hidden');
-        modelIdError.addClass('hidden');
-        codePartGroupError.addClass('hidden');
-        codePartGroupDescError.addClass('hidden');
-
-        $.ajax({
-            url: `/master/partGroups/${id}`,
-            method: 'GET',
-            success: function (data) {
-                $('#edit_customer_id').val(data.customer_id).trigger('change');
-                $('#edit_code_part_group').val(data.code_part_group);
-                $('#edit_code_part_group_desc').val(data.code_part_group_desc);
-                $('#editPartGroupForm').attr('action', `/master/partGroups/${id}`);
-                loadModels(data.customer_id, $('#edit_model_id'), data.model_id);
-                showModal(editModal);
-            }
-        });
-    });
-
-    $('#editPartGroupForm').on('submit', function (e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        // ... (Error handling sama seperti di 'add')
-        $.ajax({
-            url: $(this).attr('action'),
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (data) {
-                if (data.success) {
-                    table.ajax.reload();
-                    hideModal(editModal);
-                }
-            },
-            error: function (xhr) {
-                const errors = xhr.responseJSON?.errors;
-                if (errors) {
-                    if (errors.customer_id) {
-                        customerIdError.text(errors.customer_id[0]).removeClass('hidden');
-                    }
-                    if (errors.model_id) {
-                        modelIdError.text(errors.model_id[0]).removeClass('hidden');
-                    }
-                    if (errors.code_part_group) {
-                        codePartGroupError.text(errors.code_part_group[0]).removeClass('hidden');
-                    }
-                    if (errors.code_part_group_desc) {
-                        codePartGroupDescError.text(errors.code_part_group_desc[0]).removeClass('hidden');
-                    }
-                }
-            }
-        });
-    });
-
-    $(document).on('click', '.delete-button', function () {
-        partGroupIdToDelete = $(this).data('id');
-        showModal(deleteModal);
-    });
-
-    $('#confirmDeleteButton').on('click', function () {
-        if (partGroupIdToDelete) {
-            $.ajax({
-                url: `/master/partGroups/${partGroupIdToDelete}`,
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
-                success: function (data) {
-                    if (data.success) {
-                        table.ajax.reload();
-                        hideModal(deleteModal);
-                        partGroupIdToDelete = null;
-                    } else {
-                        alert('Error deleting part group.');
-                    }
-                },
-                error: function () {
-                    alert('Error deleting part group.');
-                }
-            });
-        }
-    });
-});
 </script>
 @endpush

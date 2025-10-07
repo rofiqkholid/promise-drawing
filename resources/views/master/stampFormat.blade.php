@@ -151,21 +151,21 @@
 
 @push('style')
 <style>
-    div.dataTables_length label{
+    div.dataTables_length label {
         font-size: 0.75rem;
     }
-    div.dataTables_length select{
+    div.dataTables_length select {
         font-size: 0.75rem;
         line-height: 1rem;
         padding: 0.25rem 1.25rem 0.25rem 0.5rem;
         height: 1.875rem;
         width: 4.5rem;
     }
-    div.dataTables_filter label{
+    div.dataTables_filter label {
         font-size: 0.75rem;
     }
     div.dataTables_filter input[type="search"],
-    input[type="search"][aria-controls="departmentsTable"]{
+    input[type="search"][aria-controls="stampFormatsTable"] {
         font-size: 0.75rem;
         line-height: 1rem;
         padding: 0.25rem 0.5rem;
@@ -185,7 +185,6 @@
         -ms-overflow-style: none !important;
         scrollbar-width: none !important;
     }
-
     input::placeholder {
         text-align: left;
     }
@@ -193,6 +192,7 @@
 @endpush
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
@@ -201,8 +201,9 @@
         const table = $('#stampFormatsTable').DataTable({
             processing: true,
             serverSide: true,
+            scrollX: true,
             ajax: {
-                url: '{{ route("stampFormat.data") }}', // Updated route
+                url: '{{ route("stampFormat.data") }}',
                 type: 'GET',
                 data: function(d) {
                     d.search = d.search.value;
@@ -217,29 +218,23 @@
                 {
                     data: 'prefix',
                     name: 'prefix'
-                }, // Updated column
+                },
                 {
                     data: 'suffix',
                     name: 'suffix'
-                }, // Updated column
+                },
                 {
                     data: 'is_active',
                     name: 'is_active',
-                    orderable: true,
-                    searchable: false,
-                    className: 'px-6 py-4 whitespace-nowrap text-center',
                     render: function(data, type, row) {
-                        const isActive = data == 1;
-                        const badgeClass = isActive ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-                        const text = isActive ? 'Active' : 'Inactive';
-                        return `<span class="px-2 py-0.5 font-medium rounded-full text-xs inline-flex items-center justify-center ${badgeClass}">${text}</span>`;
+                        return data ? '<span class="inline-block px-3 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Active</span>' : '<span class="inline-block px-3 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full">Inactive</span>';
                     }
                 },
                 {
                     data: null,
                     orderable: false,
                     searchable: false,
-                    className: 'px-6 py-4 whitespace-nowrap text-center',
+                    className: 'text-center',
                     render: function(data, type, row) {
                         return `
                         <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
@@ -260,6 +255,8 @@
             language: {
                 emptyTable: '<div class="text-gray-500 dark:text-gray-400">No stamp formats found.</div>'
             },
+            responsive: true,
+            autoWidth: false,
         });
 
         // Modal Handling
@@ -278,9 +275,130 @@
             modal.addClass('hidden').removeClass('flex');
         }
 
+        // Helper: Button loading state
+        function setButtonLoading($btn, isLoading, loadingText = 'Processing...') {
+            if (!$btn || $btn.length === 0) return;
+            if (isLoading) {
+                if (!$btn.data('orig-html')) $btn.data('orig-html', $btn.html());
+                $btn.prop('disabled', true);
+                $btn.addClass('opacity-70 cursor-not-allowed');
+                $btn.html(`
+                    <span class="inline-flex items-center gap-2">
+                    <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    ${loadingText}
+                    </span>
+                `);
+            } else {
+                const orig = $btn.data('orig-html');
+                if (orig) $btn.html(orig);
+                $btn.prop('disabled', false);
+                $btn.removeClass('opacity-70 cursor-not-allowed');
+            }
+        }
+
+        // Helper: Disable/enable form fields during request
+        function setFormBusy($form, busy) {
+            $form.find('input, select, textarea, button').prop('disabled', busy);
+        }
+
+        // Helper: SweetAlert notifications
+        function detectTheme() {
+        const hasDarkClass = document.documentElement.classList.contains('dark');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const isDark = hasDarkClass || prefersDark;
+
+        return isDark ? {
+        mode: 'dark',
+        bg: 'rgba(15, 23, 42, 0.94)',
+        fg: '#E5E7EB',
+        border: 'rgba(148, 163, 184, .22)',
+        progress: 'rgba(255,255,255,.9)',
+        icon: {
+            success: '#22c55e',
+            error:   '#ef4444',
+            warning: '#f59e0b',
+            info:    '#60a5fa'
+        }
+        } : {
+        mode: 'light',
+        bg: 'rgba(255, 255, 255, 0.98)',
+        fg: '#0f172a',
+        border: 'rgba(15, 23, 42, .10)',
+        progress: 'rgba(15,23,42,.8)',
+        icon: {
+            success: '#16a34a',
+            error:   '#dc2626',
+            warning: '#d97706',
+            info:    '#2563eb'
+        }
+        };
+    }
+
+    const BaseToast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2600,
+        timerProgressBar: true,
+        showClass: { popup: 'swal2-animate-toast-in' },
+        hideClass: { popup: 'swal2-animate-toast-out' },
+        didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+    });
+
+    function renderToast({ icon = 'success', title = 'Success', text = '' } = {}) {
+        const t = detectTheme();
+
+        BaseToast.fire({
+        icon,
+        title,
+        text,
+        iconColor: t.icon[icon] || t.icon.success,
+        background: t.bg,
+        color: t.fg,
+        customClass: {
+            popup: 'swal2-toast border',
+            title: '',
+            timerProgressBar: ''
+        },
+        didOpen: (toast) => {
+            const bar = toast.querySelector('.swal2-timer-progress-bar');
+            if (bar) bar.style.background = t.progress;
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+        });
+    }
+
+    function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') {
+        renderToast({ icon: 'success', title, text });
+    }
+    function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') {
+        BaseToast.update({ timer: 3400 });
+        renderToast({ icon: 'error', title, text });
+        BaseToast.update({ timer: 2600 });
+    }
+    function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') {
+        renderToast({ icon: 'warning', title, text });
+    }
+    function toastInfo(title = 'Informasi', text = '') {
+        renderToast({ icon: 'info', title, text });
+    }
+
+    window.toastSuccess = toastSuccess;
+    window.toastError = toastError;
+    window.toastWarning = toastWarning;
+    window.toastInfo = toastInfo;
+
         addButton.on('click', () => {
             $('#addStampFormatForm')[0].reset();
-            $('#is_active').prop('checked', true); // Ensure 'Is Active' is checked by default for add
+            $('#is_active').prop('checked', true);
             showModal(addModal);
         });
 
@@ -290,7 +408,177 @@
             hideModal(deleteModal);
         });
 
-        // Fix DataTables search/length focus styles (retained from original request)
+        // Add Stamp Format
+        $('#addStampFormatForm').on('submit', function(e) {
+            e.preventDefault();
+            const $form = $(this);
+            const $btn = $form.find('[type="submit"]');
+            const prefixError = $('#add-prefix-error');
+            const suffixError = $('#add-suffix-error');
+            prefixError.addClass('hidden');
+            suffixError.addClass('hidden');
+
+            const formData = new FormData(this);
+            formData.set('is_active', $('#is_active').is(':checked') ? '1' : '0');
+
+            $.ajax({
+                url: $form.attr('action'),
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function() {
+                    setButtonLoading($btn, true, 'Saving...');
+                    setFormBusy($form, true);
+                },
+                success: function(data) {
+                    if (data.success) {
+                        table.ajax.reload();
+                        hideModal(addModal);
+                        $form[0].reset();
+                        $('#is_active').prop('checked', true);
+                        toastSuccess('Success', 'Stamp format added successfully.');
+                    } else {
+                        toastError('Error', data.message || 'Failed to add stamp format.');
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors) {
+                        if (errors.prefix) prefixError.text(errors.prefix[0]).removeClass('hidden');
+                        if (errors.suffix) suffixError.text(errors.suffix[0]).removeClass('hidden');
+                    }
+                    const msg = xhr.responseJSON?.message || 'Failed to add stamp format.';
+                    toastError('Error', msg);
+                },
+                complete: function() {
+                    setButtonLoading($btn, false);
+                    setFormBusy($form, false);
+                }
+            });
+        });
+
+        // Edit Stamp Format - Fetch Data
+        $(document).on('click', '.edit-button', function() {
+            const id = $(this).data('id');
+            const prefixError = $('#edit-prefix-error');
+            const suffixError = $('#edit-suffix-error');
+            prefixError.addClass('hidden');
+            suffixError.addClass('hidden');
+
+            $.ajax({
+                url: `/master/stampFormat/${id}`,
+                method: 'GET',
+                beforeSend: function() {
+                    setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, '');
+                },
+                success: function(data) {
+                    $('#edit_prefix').val(data.prefix);
+                    $('#edit_suffix').val(data.suffix);
+                    $('#edit_is_active').prop('checked', data.is_active == 1);
+                    $('#editStampFormatForm').attr('action', `/master/stampFormat/${id}`);
+                    showModal(editModal);
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Failed to fetch stamp format data.';
+                    toastError('Error', msg);
+                },
+                complete: function() {
+                    setButtonLoading($('.edit-button[data-id="' + id + '"]'), false);
+                }
+            });
+        });
+
+        // Edit Stamp Format
+        $('#editStampFormatForm').on('submit', function(e) {
+            e.preventDefault();
+            const $form = $(this);
+            const $btn = $form.find('[type="submit"]');
+            const prefixError = $('#edit-prefix-error');
+            const suffixError = $('#edit-suffix-error');
+            prefixError.addClass('hidden');
+            suffixError.addClass('hidden');
+
+            const formData = new FormData(this);
+            formData.set('is_active', $('#edit_is_active').is(':checked') ? '1' : '0');
+
+            $.ajax({
+                url: $form.attr('action'),
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function() {
+                    setButtonLoading($btn, true, 'Saving...');
+                    setFormBusy($form, true);
+                },
+                success: function(data) {
+                    if (data.success) {
+                        table.ajax.reload();
+                        hideModal(editModal);
+                        toastSuccess('Success', 'Stamp format updated successfully.');
+                    } else {
+                        toastError('Error', data.message || 'Failed to update stamp format.');
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors) {
+                        if (errors.prefix) prefixError.text(errors.prefix[0]).removeClass('hidden');
+                        if (errors.suffix) suffixError.text(errors.suffix[0]).removeClass('hidden');
+                    }
+                    const msg = xhr.responseJSON?.message || 'Failed to update stamp format.';
+                    toastError('Error', msg);
+                },
+                complete: function() {
+                    setButtonLoading($btn, false);
+                    setFormBusy($form, false);
+                }
+            });
+        });
+
+        // Delete Stamp Format
+        $(document).on('click', '.delete-button', function() {
+            stampFormatIdToDelete = $(this).data('id');
+            showModal(deleteModal);
+        });
+
+        // Delete Stamp Format - Execute
+        $('#confirmDeleteButton').on('click', function() {
+            if (!stampFormatIdToDelete) return;
+            const $btn = $(this);
+
+            $.ajax({
+                url: `/master/stampFormat/${stampFormatIdToDelete}`,
+                method: 'DELETE',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                beforeSend: function() {
+                    setButtonLoading($btn, true, 'Deleting...');
+                    setFormBusy($('#deleteStampFormatModal'), true);
+                },
+                success: function(data) {
+                    if (data.success) {
+                        table.ajax.reload();
+                        hideModal(deleteModal);
+                        stampFormatIdToDelete = null;
+                        toastSuccess('Success', 'Stamp format deleted successfully.');
+                    } else {
+                        toastError('Error', data.message || 'Failed to delete stamp format.');
+                    }
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Failed to delete stamp format.';
+                    toastError('Error', msg);
+                },
+                complete: function() {
+                    setButtonLoading($btn, false);
+                    setFormBusy($('#deleteStampFormatModal'), false);
+                }
+            });
+        });
+
         const overrideFocusStyles = function() {
             $(this).css({
                 'outline': 'none',
@@ -305,158 +593,6 @@
         elementsToFix.on('focus keyup', overrideFocusStyles);
         elementsToFix.on('blur', restoreBlurStyles);
         elementsToFix.filter(':focus').each(overrideFocusStyles);
-
-        // Add Stamp Format
-        $('#addStampFormatForm').on('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const prefixError = $('#add-prefix-error');
-            const suffixError = $('#add-suffix-error');
-            prefixError.addClass('hidden');
-            suffixError.addClass('hidden');
-
-            // Manually add unchecked 'is_active' if not present
-            if (!$('#is_active').is(':checked')) {
-                formData.set('is_active', '0');
-            }
-
-            $.ajax({
-                url: $(this).attr('action'),
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(data) {
-                    if (data.success) {
-                        table.ajax.reload();
-                        hideModal(addModal);
-                        $('#addStampFormatForm')[0].reset();
-                    }
-                },
-                error: function(xhr) {
-                    const errors = xhr.responseJSON?.errors;
-                    if (errors) {
-                        if (errors.prefix) {
-                            prefixError.text(errors.prefix[0]).removeClass('hidden');
-                        }
-                        if (errors.suffix) {
-                            suffixError.text(errors.suffix[0]).removeClass('hidden');
-                        }
-                    }
-                }
-            });
-        });
-
-        // Edit Stamp Format - Fetch Data
-        $(document).on('click', '.edit-button', function() {
-            const id = $(this).data('id');
-            const prefixError = $('#edit-prefix-error');
-            const suffixError = $('#edit-suffix-error');
-            prefixError.addClass('hidden');
-            suffixError.addClass('hidden');
-
-            $.ajax({
-                url: `/master/stampFormat/${id}`, // Updated URL
-                method: 'GET',
-                success: function(data) {
-                    $('#edit_prefix').val(data.prefix);
-                    $('#edit_suffix').val(data.suffix);
-                    // Set checkbox state based on is_active (1 or 0)
-                    $('#edit_is_active').prop('checked', data.is_active == 1);
-                    $('#editStampFormatForm').attr('action', `/master/stampFormat/${id}`); // Updated URL
-                    showModal(editModal);
-                }
-            });
-        });
-
-        // Edit Stamp Format - Submit Update
-        $('#editStampFormatForm').on('submit', function(e) {
-            e.preventDefault();
-            const form = $(this);
-            const formData = new FormData(this);
-            const prefixError = $('#edit-prefix-error');
-            const suffixError = $('#edit-suffix-error');
-            prefixError.addClass('hidden');
-            suffixError.addClass('hidden');
-
-            // Manually handle PUT/PATCH request method
-            formData.append('_method', 'PUT');
-
-            // Manually add unchecked 'is_active' if not present
-            if (!$('#edit_is_active').is(':checked')) {
-                formData.set('is_active', '0');
-            } else {
-                // Ensure checked sends '1'
-                formData.set('is_active', '1');
-            }
-
-            // Remove the existing PUT method field to prevent double submission
-            formData.delete('_method');
-
-            $.ajax({
-                url: form.attr('action'),
-                method: 'POST', // Use POST method to send PUT data via FormData
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(data) {
-                    if (data.success) {
-                        table.ajax.reload();
-                        hideModal(editModal);
-                    }
-                },
-                error: function(xhr) {
-                    const errors = xhr.responseJSON?.errors;
-                    if (errors) {
-                        if (errors.prefix) {
-                            prefixError.text(errors.prefix[0]).removeClass('hidden');
-                        }
-                        if (errors.suffix) {
-                            suffixError.text(errors.suffix[0]).removeClass('hidden');
-                        }
-                    }
-                }
-            });
-        });
-
-        // Delete Stamp Format - Confirmation
-        $(document).on('click', '.delete-button', function() {
-            stampFormatIdToDelete = $(this).data('id');
-            showModal(deleteModal);
-        });
-
-        // Delete Stamp Format - Execute
-        $('#confirmDeleteButton').on('click', function() {
-            if (stampFormatIdToDelete) {
-                $.ajax({
-                    url: `/master/stampFormat/${stampFormatIdToDelete}`, // Updated URL
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    success: function(data) {
-                        if (data.success) {
-                            table.ajax.reload();
-                            hideModal(deleteModal);
-                            stampFormatIdToDelete = null;
-                        } else {
-                            // Using custom modal/message box instead of alert()
-                            console.error('Error deleting stamp format.');
-                        }
-                    },
-                    error: function() {
-                        // Using custom modal/message box instead of alert()
-                        console.error('Error deleting stamp format.');
-                    }
-                });
-            }
-        });
     });
 </script>
 @endpush
