@@ -120,13 +120,59 @@
 /* ini untuk dropwon yg di disable mode gelap  */
 .dark .select2-container--disabled .select2-selection--single {
     background-color: #32363f;
-    border-color: #353b42; 
+    border-color: #353b42;
 }
 
 .dark .select2-container--disabled .select2-selection__rendered {
-    color: #0062e3; 
+    color: #0062e3;
 }
 
 .dark .select2-container--disabled .select2-selection__arrow b {
     border-color: #9ca3af transparent transparent transparent;
+}
+
+
+div.dataTables_length label {
+    font-size: 0.75rem;
+}
+
+div.dataTables_length select {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    padding: 0.25rem 1.25rem 0.25rem 0.5rem;
+    height: 1.875rem;
+    width: 4.5rem;
+}
+
+div.dataTables_filter label {
+    font-size: 0.75rem;
+}
+
+div.dataTables_filter input[type="search"],
+input[type="search"][aria-controls="departmentsTable"] {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    padding: 0.25rem 0.5rem;
+    height: 1.875rem;
+    width: 12rem;
+}
+
+div.dataTables_info {
+    font-size: 0.75rem;
+    padding-top: 0.8em;
+}
+
+div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+div.dataTables_wrapper div.dataTables_scrollBody {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+}
+
+input::placeholder {
+    text-align: left;
 }

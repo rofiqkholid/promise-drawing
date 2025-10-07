@@ -9,51 +9,50 @@ use Illuminate\Validation\Rule;
 
 class SuppliersController extends Controller
 {
-    /**
-     * Display a listing of the resource for DataTables.
-     */
     public function data(Request $request)
     {
         $query = Suppliers::query();
 
-        // Handle Search
-        if ($request->has('search') && !empty($request->search)) {
-            $query->where(function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('code', 'like', '%' . $request->search . '%');
+        if ($request->has('search') && !empty($request->search['value'])) {
+            $searchValue = $request->search['value'];
+            $query->where(function($q) use ($searchValue) {
+                $q->where('name', 'like', '%' . $searchValue . '%')
+                  ->orWhere('code', 'like', '%' . $searchValue . '%');
             });
         }
+        
+        $filteredRecords = $query->count();
 
-        // Handle Sorting
-        $sortBy = $request->get('order')[0]['column'] ?? 1;
-        $sortDir = $request->get('order')[0]['dir'] ?? 'asc';
-        $sortColumn = $request->get('columns')[$sortBy]['data'] ?? 'name';
-        $query->orderBy($sortColumn, $sortDir);
+        if ($request->has('order')) {
+            $sortBy = $request->get('order')[0]['column'];
+            $sortDir = $request->get('order')[0]['dir'];
+            $sortColumn = $request->get('columns')[$sortBy]['data'];
+            $query->orderBy($sortColumn, $sortDir);
+        }
 
-        // Handle Pagination
         $perPage = $request->get('length', 10);
         $start = $request->get('start', 0);
         $draw = $request->get('draw', 1);
-
         $totalRecords = Suppliers::count();
-        $filteredRecords = $query->count();
+        
         $suppliers = $query->skip($start)->take($perPage)->get();
 
         return response()->json([
-            'draw' => $draw,
+            'draw' => intval($draw),
             'recordsTotal' => $totalRecords,
             'recordsFiltered' => $filteredRecords,
             'data' => $suppliers
         ]);
     }
 
-    
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:50',
             'code' => 'required|string|max:10|unique:suppliers,code',
             'is_active' => 'required|boolean',
+        ], [
+            'code.unique' => 'The code has already been taken.',
         ]);
 
         Suppliers::create($validated);
@@ -61,25 +60,15 @@ class SuppliersController extends Controller
         return response()->json(['success' => true, 'message' => 'Supplier created successfully.']);
     }
 
-    /**
-     * Display the specified resource for editing.
-     */
     public function show(Suppliers $supplier)
     {
         return response()->json($supplier);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Suppliers $supplier)
     {
         $validated = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:50',
-            ],
+            'name' => 'required|string|max:50',
             'code' => [
                 'required',
                 'string',
@@ -87,6 +76,8 @@ class SuppliersController extends Controller
                 Rule::unique('suppliers')->ignore($supplier->id),
             ],
             'is_active' => 'required|boolean',
+        ], [
+            'code.unique' => 'The code has already been taken.',
         ]);
 
         $supplier->update($validated);
@@ -94,12 +85,10 @@ class SuppliersController extends Controller
         return response()->json(['success' => true, 'message' => 'Supplier updated successfully.']);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Suppliers $supplier)
     {
         $supplier->delete();
+        
         return response()->json(['success' => true, 'message' => 'Supplier deleted successfully.']);
     }
 }

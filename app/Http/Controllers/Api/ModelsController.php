@@ -10,79 +10,55 @@ use Illuminate\Validation\Rule;
 
 class ModelsController extends Controller
 {
-    /**
-     * Display a listing of the resource for DataTables.
-     */
     public function data(Request $request)
     {
         $query = Models::with('customer');
 
-        // Handle Search
-        if ($request->has('search') && !empty($request->search)) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                    ->orWhere('code', 'like', '%' . $request->search . '%')
-                    ->orWhereHas('customer', function ($q) use ($request) {
-                        $q->where('name', 'like', '%' . $request->search . '%');
+        if ($request->has('search') && !empty($request->search['value'])) {
+            $searchValue = $request->search['value'];
+            $query->where(function ($q) use ($searchValue) {
+                $q->where('name', 'like', '%' . $searchValue . '%')
+                    ->orWhere('code', 'like', '%' . $searchValue . '%')
+                    ->orWhereHas('customer', function ($q) use ($searchValue) {
+                        $q->where('name', 'like', '%' . $searchValue . '%');
                     });
             });
         }
+        
+        $filteredRecords = $query->count();
 
-        // Handle Sorting
-        $sortBy   = $request->input('order.0.column', 1);
-        $sortDir  = $request->input('order.0.dir', 'asc');
-        $columns  = $request->input('columns', []);
-
-        $sortData = $columns[$sortBy]['data'] ?? 'name';
-        $sortName = $columns[$sortBy]['name'] ?? null;
-
-
-        $sortKey = $sortData;
-
-        if ($sortName === 'customer') {
-            $sortKey = 'customer';
+        if ($request->has('order')) {
+            $sortBy = $request->get('order')[0]['column'];
+            $sortDir = $request->get('order')[0]['dir'];
+            $sortColumnName = $request->get('columns')[$sortBy]['data'];
+            
+            if ($sortColumnName == 'customer.name') {
+                 $query->join('customers', 'models.customer_id', '=', 'customers.id')
+                       ->orderBy('customers.name', $sortDir)
+                       ->select('models.*');
+            } else {
+                $query->orderBy($sortColumnName, $sortDir);
+            }
         }
 
-
-        $sortMap = [
-            'customer'      => 'customers.code',
-            'customer.code' => 'customers.code',
-            'name'          => 'models.name',
-            'code'          => 'models.code',
-        ];
-
-        $sortColumn = $sortMap[$sortKey] ?? 'models.name';
-
-        if (str_starts_with($sortColumn, 'customers.')) {
-            $query->leftJoin('customers', 'models.customer_id', '=', 'customers.id')
-                ->select('models.*');
-        }
-
-        $query->orderBy($sortColumn, $sortDir);
-
-        // Handle Pagination
         $perPage = $request->get('length', 10);
         $start = $request->get('start', 0);
         $draw = $request->get('draw', 1);
-
         $totalRecords = Models::count();
-        $filteredRecords = $query->count();
+        
         $models = $query->skip($start)->take($perPage)->get();
 
         return response()->json([
-            'draw' => $draw,
+            'draw' => intval($draw),
             'recordsTotal' => $totalRecords,
             'recordsFiltered' => $filteredRecords,
             'data' => $models
         ]);
     }
 
-    /**
-     * Get all customers for dropdown.
-     */
     public function getCustomers()
     {
-        $customers = Customers::select('id', 'code', 'name')->get()->map(function ($customer) {
+        $customers = Customers::where('is_active', true)->select('id', 'code', 'name')->get()->map(function ($customer) {
             return [
                 'id' => $customer->id,
                 'name' => $customer->code . ' - ' . $customer->name,
@@ -91,18 +67,20 @@ class ModelsController extends Controller
         return response()->json($customers);
     }
 
-    /**
-     * Display a listing of the resource.
-     */
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'customer_id' => 'required|integer|exists:customers,id',
-            'name' => 'required|string|max:50',
+            'name' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('models')->where(function ($query) use ($request) {
+                    return $query->where('customer_id', $request->customer_id);
+                }),
+            ],
+        ], [
+            'name.unique' => 'The model name has already been taken for this customer.',
         ]);
 
         Models::create($validated);
@@ -110,17 +88,11 @@ class ModelsController extends Controller
         return response()->json(['success' => true, 'message' => 'Model created successfully.']);
     }
 
-    /**
-     * Display the specified resource for editing.
-     */
     public function show(Models $model)
     {
         return response()->json($model);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Models $model)
     {
         $validated = $request->validate([
@@ -129,8 +101,12 @@ class ModelsController extends Controller
                 'required',
                 'string',
                 'max:50',
+                Rule::unique('models')->where(function ($query) use ($request) {
+                    return $query->where('customer_id', $request->customer_id);
+                })->ignore($model->id),
             ],
-            
+        ], [
+            'name.unique' => 'The model name has already been taken for this customer.',
         ]);
 
         $model->update($validated);
@@ -138,12 +114,10 @@ class ModelsController extends Controller
         return response()->json(['success' => true, 'message' => 'Model updated successfully.']);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Models $model)
     {
         $model->delete();
+        
         return response()->json(['success' => true, 'message' => 'Model deleted successfully.']);
     }
 }

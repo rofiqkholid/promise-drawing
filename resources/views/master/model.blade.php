@@ -58,14 +58,12 @@
                         <option value="">Select Customer</option>
                         {{-- Options will be populated by JS --}}
                     </select>
-                    <p id="add-customer_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model Name</label>
                     <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. Product X" required>
-                    <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-               
+
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
                         Cancel
@@ -97,14 +95,12 @@
                         <option value="">Select Customer</option>
                         {{-- Options will be populated by JS --}}
                     </select>
-                    <p id="edit-customer_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model Name</label>
                     <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
-                    <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
-               
+
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
                         Cancel
@@ -212,7 +208,6 @@
     $(document).ready(function() {
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-        // Inisialisasi Select2
         $('#customer_id').select2({
             dropdownParent: $('#addModelModal'),
             width: '100%'
@@ -222,7 +217,6 @@
             width: '100%'
         });
 
-        // Initialize DataTable
         const table = $('#modelsTable').DataTable({
             processing: true,
             serverSide: true,
@@ -274,7 +268,6 @@
             },
         });
 
-        // Modal Handling
         const addModal = $('#addModelModal');
         const editModal = $('#editModelModal');
         const deleteModal = $('#deleteModelModal');
@@ -292,7 +285,6 @@
 
         addButton.on('click', () => {
             $('#addModelForm')[0].reset();
-            // Reset and populate customer dropdown
             populateCustomerDropdown($('#customer_id'));
             $('#customer_id').val(null).trigger('change');
             showModal(addModal);
@@ -304,7 +296,6 @@
             hideModal(deleteModal);
         });
 
-        // Helper to populate customer dropdown
         function populateCustomerDropdown($select, selectedId = null) {
             $.get('{{ route("models.getCustomers") }}', function(customers) {
                 $select.empty();
@@ -314,14 +305,19 @@
                         `<option value="${customer.id}"${selectedId == customer.id ? ' selected' : ''}>${customer.name}</option>`
                     );
                 });
-                // Trigger change for Select2 to update
                 $select.trigger('change');
             });
         }
 
-        // Add Model
         $('#addModelForm').on('submit', function(e) {
             e.preventDefault();
+
+            const submitButton = $(this).find('button[type="submit"]');
+            const originalButtonHtml = submitButton.html();
+
+            submitButton.prop('disabled', true);
+            submitButton.html('<i class="fa-solid fa-spinner fa-spin"></i> Please wait...');
+
             const formData = new FormData(this);
             const customerIdError = $('#add-customer_id-error');
             const nameError = $('#add-name-error');
@@ -329,6 +325,7 @@
             customerIdError.addClass('hidden');
             nameError.addClass('hidden');
             codeError.addClass('hidden');
+
 
             $.ajax({
                 url: $(this).attr('action'),
@@ -345,9 +342,29 @@
                         hideModal(addModal);
                         $('#addModelForm')[0].reset();
                         $('#customer_id').val(null).trigger('change');
+
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message || 'Successfully!',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
                     }
                 },
                 error: function(xhr) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: xhr.responseJSON?.message || 'Failed!',
+                        showConfirmButton: false,
+                        timer: 4000,
+                        timerProgressBar: true,
+                    });
+
                     const errors = xhr.responseJSON?.errors;
                     if (errors) {
                         if (errors.customer_id) {
@@ -360,6 +377,10 @@
                             codeError.text(errors.code[0]).removeClass('hidden');
                         }
                     }
+                },
+                complete: function() {
+                    submitButton.prop('disabled', false);
+                    submitButton.html(originalButtonHtml);
                 }
             });
         });
@@ -380,7 +401,6 @@
         elementsToFix.on('blur', restoreBlurStyles);
         elementsToFix.filter(':focus').each(overrideFocusStyles);
 
-        // Edit Model
         $(document).on('click', '.edit-button', function() {
             const id = $(this).data('id');
             const customerIdError = $('#edit-customer_id-error');
@@ -405,7 +425,16 @@
 
         $('#editModelForm').on('submit', function(e) {
             e.preventDefault();
+
+            const submitButton = $(this).find('button[type="submit"]');
+            const originalButtonHtml = submitButton.html();
+
+            submitButton.prop('disabled', true);
+            submitButton.html('<i class="fa-solid fa-spinner fa-spin"></i> Please wait...');
+
             const formData = new FormData(this);
+            formData.append('_method', 'PUT');
+
             const customerIdError = $('#edit-customer_id-error');
             const nameError = $('#edit-name-error');
             const codeError = $('#edit-code-error');
@@ -426,9 +455,29 @@
                     if (data.success) {
                         table.ajax.reload();
                         hideModal(editModal);
+
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message || 'Successfully!',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
                     }
                 },
                 error: function(xhr) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: xhr.responseJSON?.message || 'Failed!',
+                        showConfirmButton: false,
+                        timer: 4000,
+                        timerProgressBar: true,
+                    });
+
                     const errors = xhr.responseJSON?.errors;
                     if (errors) {
                         if (errors.customer_id) {
@@ -441,11 +490,14 @@
                             codeError.text(errors.code[0]).removeClass('hidden');
                         }
                     }
+                },
+                complete: function() {
+                    submitButton.prop('disabled', false);
+                    submitButton.html(originalButtonHtml);
                 }
             });
         });
 
-        // Delete Model
         $(document).on('click', '.delete-button', function() {
             modelIdToDelete = $(this).data('id');
             showModal(deleteModal);
@@ -453,6 +505,12 @@
 
         $('#confirmDeleteButton').on('click', function() {
             if (modelIdToDelete) {
+                const button = $(this);
+                const originalButtonHtml = button.html();
+
+                button.prop('disabled', true);
+                button.html('<i class="fa-solid fa-spinner fa-spin"></i> Please wait...');
+
                 $.ajax({
                     url: `/master/models/${modelIdToDelete}`,
                     method: 'DELETE',
@@ -464,12 +522,32 @@
                             table.ajax.reload();
                             hideModal(deleteModal);
                             modelIdToDelete = null;
-                        } else {
-                            alert('Error deleting model.');
+
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: data.message || 'Successfully!',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true,
+                            });
                         }
                     },
-                    error: function() {
-                        alert('Error deleting model.');
+                    error: function(xhr) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: xhr.responseJSON?.message || 'Failed.',
+                            showConfirmButton: false,
+                            timer: 4000,
+                            timerProgressBar: true,
+                        });
+                    },
+                    complete: function() {
+                        button.prop('disabled', false);
+                        button.html(originalButtonHtml);
                     }
                 });
             }

@@ -61,7 +61,6 @@
                 <div class="mb-4">
                     <label for="code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Department Code</label>
                     <input type="text" name="code" id="code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. ENG" required>
-                    <p id="add-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
@@ -136,57 +135,11 @@
 </div>
 @endsection
 
-
-@push('style')
-<style>
-    div.dataTables_length label{
-        font-size: 0.75rem;
-    }
-    div.dataTables_length select{
-        font-size: 0.75rem;
-        line-height: 1rem;
-        padding: 0.25rem 1.25rem 0.25rem 0.5rem;
-        height: 1.875rem;
-        width: 4.5rem;
-    }
-    div.dataTables_filter label{
-        font-size: 0.75rem;
-    }
-    div.dataTables_filter input[type="search"],
-    input[type="search"][aria-controls="departmentsTable"]{
-        font-size: 0.75rem;
-        line-height: 1rem;
-        padding: 0.25rem 0.5rem;
-        height: 1.875rem;
-        width: 12rem;
-    }
-    div.dataTables_info {
-        font-size: 0.75rem;
-        padding-top: 0.8em;
-    }
-    div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar {
-        display: none !important;
-        width: 0 !important;
-        height: 0 !important;
-    }
-    div.dataTables_wrapper div.dataTables_scrollBody {
-        -ms-overflow-style: none !important;
-        scrollbar-width: none !important;
-    }
-
-    input::placeholder {
-        text-align: left;
-    }
-</style>
-@endpush
-
-
 @push('scripts')
 <script>
     $(document).ready(function() {
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-        // Initialize DataTable
         const table = $('#departmentsTable').DataTable({
             processing: true,
             serverSide: true,
@@ -237,13 +190,10 @@
                 emptyTable: '<div class="text-gray-500 dark:text-gray-400">No departments found.</div>'
             },
 
-            // [RESPONSIVE ADD]
             responsive: true,
             autoWidth: false,
-            // [END RESPONSIVE ADD]
         });
 
-        // Modal Handling
         const addModal = $('#addDepartmentModal');
         const editModal = $('#editDepartmentModal');
         const deleteModal = $('#deleteDepartmentModal');
@@ -266,9 +216,15 @@
             hideModal(deleteModal);
         });
 
-        // Add Department
         $('#addDepartmentForm').on('submit', function(e) {
             e.preventDefault();
+
+            const submitButton = $(this).find('button[type="submit"]');
+            const originalButtonHtml = submitButton.html();
+
+            submitButton.prop('disabled', true);
+            submitButton.html('<i class="fa-solid fa-spinner fa-spin"></i> Please wait...');
+
             const formData = new FormData(this);
             const nameError = $('#add-name-error');
             const codeError = $('#add-code-error');
@@ -289,9 +245,30 @@
                         table.ajax.reload();
                         hideModal(addModal);
                         $('#addDepartmentForm')[0].reset();
+
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message || 'Successfully!',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
                     }
                 },
                 error: function(xhr) {
+                    // Notifikasi error
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: xhr.responseJSON?.message || 'Failed!',
+                        showConfirmButton: false,
+                        timer: 4000,
+                        timerProgressBar: true,
+                    });
+
                     const errors = xhr.responseJSON?.errors;
                     if (errors) {
                         if (errors.name) {
@@ -301,6 +278,10 @@
                             codeError.text(errors.code[0]).removeClass('hidden');
                         }
                     }
+                },
+                complete: function() {
+                    submitButton.prop('disabled', false);
+                    submitButton.html(originalButtonHtml);
                 }
             });
         });
@@ -341,6 +322,13 @@
 
         $('#editDepartmentForm').on('submit', function(e) {
             e.preventDefault();
+
+            const submitButton = $(this).find('button[type="submit"]');
+            const originalButtonHtml = submitButton.html();
+
+            submitButton.prop('disabled', true);
+            submitButton.html(`<i class="fa-solid fa-spinner fa-spin"></i> Please wait...`);
+
             const formData = new FormData(this);
             const nameError = $('#edit-name-error');
             const codeError = $('#edit-code-error');
@@ -360,9 +348,29 @@
                     if (data.success) {
                         table.ajax.reload();
                         hideModal(editModal);
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message || 'Successfully!',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
                     }
                 },
                 error: function(xhr) {
+
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: xhr.responseJSON?.message || 'An error occurred!',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true,
+                    });
+
                     const errors = xhr.responseJSON?.errors;
                     if (errors) {
                         if (errors.name) {
@@ -372,6 +380,10 @@
                             codeError.text(errors.code[0]).removeClass('hidden');
                         }
                     }
+                },
+                complete: function() {
+                    submitButton.prop('disabled', false);
+                    submitButton.html(originalButtonHtml);
                 }
             });
         });
@@ -383,6 +395,12 @@
 
         $('#confirmDeleteButton').on('click', function() {
             if (departmentIdToDelete) {
+                const button = $(this);
+                const originalButtonHtml = button.html();
+
+                button.prop('disabled', true);
+                button.html('<i class="fa-solid fa-spinner fa-spin"></i> Please wait...');
+
                 $.ajax({
                     url: `/master/departments/${departmentIdToDelete}`,
                     method: 'DELETE',
@@ -394,12 +412,42 @@
                             table.ajax.reload();
                             hideModal(deleteModal);
                             departmentIdToDelete = null;
+
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: data.message || 'Successfully!',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true,
+                            });
                         } else {
-                            alert('Error deleting department.');
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'error',
+                                title: data.message || 'Failed!.',
+                                showConfirmButton: false,
+                                timer: 4000,
+                                timerProgressBar: true,
+                            });
                         }
                     },
-                    error: function() {
-                        alert('Error deleting department.');
+                    error: function(xhr) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: xhr.responseJSON?.message || 'An error occurred.',
+                            showConfirmButton: false,
+                            timer: 4000,
+                            timerProgressBar: true,
+                        });
+                    },
+                    complete: function() {
+                        button.prop('disabled', false);
+                        button.html(originalButtonHtml);
                     }
                 });
             }

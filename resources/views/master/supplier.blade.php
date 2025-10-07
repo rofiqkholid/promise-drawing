@@ -57,12 +57,10 @@
                 <div class="mb-4">
                     <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Name</label>
                     <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. ABC Corp" required>
-                    <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Code</label>
                     <input type="text" name="code" id="code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. ABC" required>
-                    <p id="add-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div>
                     <label for="is_active" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Status</label>
@@ -70,7 +68,6 @@
                         <input type="checkbox" name="is_active" id="is_active" value="1" class="bg-gray-50 border border-gray-300 text-primary-600 rounded focus:ring-primary-600 focus:border-primary-600 h-4 w-4 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600" checked>
                         <label for="is_active" class="ml-2 text-sm text-gray-900 dark:text-white">Active</label>
                     </div>
-                    <p id="add-is_active-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
@@ -100,12 +97,10 @@
                 <div class="mb-4">
                     <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Name</label>
                     <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
-                    <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="edit_code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Code</label>
                     <input type="text" name="code" id="edit_code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
-                    <p id="edit-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div>
                     <label for="edit_is_active" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Status</label>
@@ -113,7 +108,6 @@
                         <input type="checkbox" name="is_active" id="edit_is_active" value="1" class="bg-gray-50 border border-gray-300 text-primary-600 rounded focus:ring-primary-600 focus:border-primary-600 h-4 w-4 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600">
                         <label for="edit_is_active" class="ml-2 text-sm text-gray-900 dark:text-white">Active</label>
                     </div>
-                    <p id="edit-is_active-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
@@ -153,56 +147,11 @@
 </div>
 @endsection
 
-
-@push('style')
-<style>
-    div.dataTables_length label{
-        font-size: 0.75rem;
-    }
-    div.dataTables_length select{
-        font-size: 0.75rem;
-        line-height: 1rem;
-        padding: 0.25rem 1.25rem 0.25rem 0.5rem;
-        height: 1.875rem;
-        width: 4.5rem;
-    }
-    div.dataTables_filter label{
-        font-size: 0.75rem;
-    }
-    div.dataTables_filter input[type="search"],
-    input[type="search"][aria-controls="departmentsTable"]{
-        font-size: 0.75rem;
-        line-height: 1rem;
-        padding: 0.25rem 0.5rem;
-        height: 1.875rem;
-        width: 12rem;
-    }
-    div.dataTables_info {
-        font-size: 0.75rem;
-        padding-top: 0.8em;
-    }
-    div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar {
-        display: none !important;
-        width: 0 !important;
-        height: 0 !important;
-    }
-    div.dataTables_wrapper div.dataTables_scrollBody {
-        -ms-overflow-style: none !important;
-        scrollbar-width: none !important;
-    }
-
-    input::placeholder {
-        text-align: left;
-    }
-</style>
-@endpush
-
 @push('scripts')
 <script>
     $(document).ready(function() {
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-        // Initialize DataTable
         const table = $('#suppliersTable').DataTable({
             processing: true,
             serverSide: true,
@@ -281,7 +230,6 @@
         elementsToFix.on('blur', restoreBlurStyles);
         elementsToFix.filter(':focus').each(overrideFocusStyles);
 
-        // Modal Handling
         const addModal = $('#addSupplierModal');
         const editModal = $('#editSupplierModal');
         const deleteModal = $('#deleteSupplierModal');
@@ -298,7 +246,7 @@
         }
 
         addButton.on('click', () => {
-            $('#is_active').prop('checked', true); // Set default to checked (Active)
+            $('#is_active').prop('checked', true);
             showModal(addModal);
         });
 
@@ -308,12 +256,18 @@
             hideModal(deleteModal);
         });
 
-        // Add Supplier
         $('#addSupplierForm').on('submit', function(e) {
             e.preventDefault();
+
+            const submitButton = $(this).find('button[type="submit"]');
+            const originalButtonHtml = submitButton.html();
+
+            submitButton.prop('disabled', true);
+            submitButton.html('<i class="fa-solid fa-spinner fa-spin"></i> Please wait...');
+
             const formData = new FormData(this);
-            // Ensure is_active is sent as 1 or 0
             formData.set('is_active', $('#is_active').is(':checked') ? '1' : '0');
+
             const nameError = $('#add-name-error');
             const codeError = $('#add-code-error');
             const isActiveError = $('#add-is_active-error');
@@ -335,10 +289,30 @@
                         table.ajax.reload();
                         hideModal(addModal);
                         $('#addSupplierForm')[0].reset();
-                        $('#is_active').prop('checked', true); // Reset to checked
+                        $('#is_active').prop('checked', true);
+
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message || 'Successfully!',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
                     }
                 },
                 error: function(xhr) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: xhr.responseJSON?.message || 'Failed!',
+                        showConfirmButton: false,
+                        timer: 4000,
+                        timerProgressBar: true,
+                    });
+
                     const errors = xhr.responseJSON?.errors;
                     if (errors) {
                         if (errors.name) {
@@ -351,11 +325,14 @@
                             isActiveError.text(errors.is_active[0]).removeClass('hidden');
                         }
                     }
+                },
+                complete: function() {
+                    submitButton.prop('disabled', false);
+                    submitButton.html(originalButtonHtml);
                 }
             });
         });
 
-        // Edit Supplier
         $(document).on('click', '.edit-button', function() {
             const id = $(this).data('id');
             const nameError = $('#edit-name-error');
@@ -380,9 +357,16 @@
 
         $('#editSupplierForm').on('submit', function(e) {
             e.preventDefault();
+
+            const submitButton = $(this).find('button[type="submit"]');
+            const originalButtonHtml = submitButton.html();
+
+            submitButton.prop('disabled', true);
+            submitButton.html('<i class="fa-solid fa-spinner fa-spin"></i> Please wait...');
+
             const formData = new FormData(this);
-            // Ensure is_active is sent as 1 or 0
             formData.set('is_active', $('#edit_is_active').is(':checked') ? '1' : '0');
+            formData.append('_method', 'PUT');
             const nameError = $('#edit-name-error');
             const codeError = $('#edit-code-error');
             const isActiveError = $('#edit-is_active-error');
@@ -403,9 +387,29 @@
                     if (data.success) {
                         table.ajax.reload();
                         hideModal(editModal);
+
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message || 'Successfully!',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
                     }
                 },
                 error: function(xhr) {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: xhr.responseJSON?.message || 'Failed!',
+                        showConfirmButton: false,
+                        timer: 4000,
+                        timerProgressBar: true,
+                    });
+
                     const errors = xhr.responseJSON?.errors;
                     if (errors) {
                         if (errors.name) {
@@ -418,11 +422,14 @@
                             isActiveError.text(errors.is_active[0]).removeClass('hidden');
                         }
                     }
+                },
+                complete: function() {
+                    submitButton.prop('disabled', false);
+                    submitButton.html(originalButtonHtml);
                 }
             });
         });
 
-        // Delete Supplier
         $(document).on('click', '.delete-button', function() {
             supplierIdToDelete = $(this).data('id');
             showModal(deleteModal);
@@ -430,6 +437,12 @@
 
         $('#confirmDeleteButton').on('click', function() {
             if (supplierIdToDelete) {
+                const button = $(this);
+                const originalButtonHtml = button.html();
+
+                button.prop('disabled', true);
+                button.html('<i class="fa-solid fa-spinner fa-spin"></i> Please wait...');
+
                 $.ajax({
                     url: `/master/suppliers/${supplierIdToDelete}`,
                     method: 'DELETE',
@@ -441,12 +454,32 @@
                             table.ajax.reload();
                             hideModal(deleteModal);
                             supplierIdToDelete = null;
-                        } else {
-                            alert('Error deleting supplier.');
+
+                            Swal.fire({
+                                toast: true,
+                                position: 'top-end',
+                                icon: 'success',
+                                title: data.message || 'Successfully!',
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true,
+                            });
                         }
                     },
-                    error: function() {
-                        alert('Error deleting supplier.');
+                    error: function(xhr) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'error',
+                            title: xhr.responseJSON?.message || 'An error occurred.',
+                            showConfirmButton: false,
+                            timer: 4000,
+                            timerProgressBar: true,
+                        });
+                    },
+                    complete: function() {
+                        button.prop('disabled', false);
+                        button.html(originalButtonHtml);
                     }
                 });
             }

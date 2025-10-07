@@ -5,13 +5,13 @@
 
 <div x-data="dashboardController()" x-init="init()">
 
-    <div class="sm:flex sm:items-center sm:gap-x-24">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Dashboard</h2>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Analys File Management</p>
         </div>
 
-        <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:mt-0">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
 
             <div
                 class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
@@ -70,13 +70,17 @@
         </div>
     </div>
 
-    <div class="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+    {{-- Jarak vertikal antar blok utama dipertahankan mt-6 (konsisten) --}}
+    <div class="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
             <i class="fa-solid fa-filter mr-2 text-gray-500"></i>
             Filter Data
         </h3>
-        <div class="grid grid-cols-1 xl:grid-cols-6 gap-x-12 gap-y-6 items-end">
-            <div class="xl:col-span-2">
+
+        {{-- Jarak antar filter (gap-6) dipertahankan --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+
+            <div>
                 <label for="key_word" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Key Word</label>
                 <div class="relative mt-1">
                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -88,71 +92,89 @@
             <div>
                 <label for="doc_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Document Group</label>
                 <div class="relative mt-1">
-                    <select id="doc_group" name="doc_group" class="w-full">
-                    </select>
+                    <select id="doc_group" name="doc_group" class="w-full"></select>
                 </div>
             </div>
             <div>
                 <label for="sub_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
                 <div class="relative mt-1">
-                    <select id="sub_type" name="sub_type" class="w-full">
-                    </select>
+                    <select id="sub_type" name="sub_type" class="w-full"></select>
                 </div>
             </div>
             <div>
-                <label for="from_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">From</label>
-                <input type="date" name="from_date" id="from_date" value="{{ date('Y-m-01') }}" class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:ring-0 focus:outline-none sm:text-sm py-2 px-3">
-            </div>
-            <div>
-                <label for="to_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">To</label>
-                <input type="date" name="to_date" id="to_date" value="{{ date('Y-m-d') }}" class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:ring-0 focus:outline-none sm:text-sm py-2 px-3">
+                <label for="date_range" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Range</label>
+                <input type="text" id="date_range" class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:ring-0 focus:outline-none sm:text-sm py-2 px-3">
+                <input type="hidden" name="from_date" id="from_date">
+                <input type="hidden" name="to_date" id="to_date">
             </div>
 
-            <div class="xl:col-span-6"
-                x-show="showExtraFilters"
-                x-transition:enter="transition ease-out duration-300"
+            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300"
                 x-transition:enter-start="opacity-0 transform -translate-y-4"
                 x-transition:enter-end="opacity-100 transform translate-y-0"
                 x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="opacity-100 transform translate-y-0"
                 x-transition:leave-end="opacity-0 transform -translate-y-4"
                 style="display: none;">
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-end border-t border-gray-200 dark:border-gray-700 pt-6">
-                    <div>
-                        <label for="customer" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
-                        <div class="relative mt-1">
-                            <select id="customer" name="customer" class="w-full">
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="model" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
-                        <div class="relative mt-1">
-                            <select id="model" name="model" class="w-full">
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="project_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                        <div class="relative mt-1">
-                            <select id="project_status" name="project_status" class="w-full">
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label for="part_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
-                        <div class="relative mt-1">
-                            <select id="part_group" name="part_group" class="w-full">
-                            </select>
-                        </div>
-                    </div>
+                <label for="customer" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
+                <div class="relative mt-1">
+                    <select id="customer" name="customer" class="w-full"></select>
+                </div>
+            </div>
 
+            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 transform -translate-y-4"
+                x-transition:enter-end="opacity-100 transform translate-y-0"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 transform translate-y-0"
+                x-transition:leave-end="opacity-0 transform -translate-y-4"
+                style="display: none;">
+                <label for="model" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
+                <div class="relative mt-1">
+                    <select id="model" name="model" class="w-full"></select>
+                </div>
+            </div>
+
+            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 transform -translate-y-4"
+                x-transition:enter-end="opacity-100 transform translate-y-0"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 transform translate-y-0"
+                x-transition:leave-end="opacity-0 transform -translate-y-4"
+                style="display: none;">
+                <label for="project_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                <div class="relative mt-1">
+                    <select id="project_status" name="project_status" class="w-full"></select>
+                </div>
+            </div>
+
+            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 transform -translate-y-4"
+                x-transition:enter-end="opacity-100 transform translate-y-0"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 transform translate-y-0"
+                x-transition:leave-end="opacity-0 transform -translate-y-4"
+                style="display: none;">
+                <label for="part_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
+                <div class="relative mt-1">
+                    <select id="part_group" name="part_group" class="w-full"></select>
+                </div>
+            </div>
+
+            <div class="lg:col-span-4 w-full flex justify-end items-center pt-4 border-t border-gray-200 dark:border-gray-700 mt-2">
+                <div class="flex space-x-3">
+                    <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+                        Reset
+                    </button>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700">
+                        <i class="fa-solid fa-check mr-2"></i>
+                        Terapkan Filter
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="mt-8 grid grid-cols-1 lg:grid-cols-6 gap-8">
+    <div class="mt-6 grid grid-cols-1 lg:grid-cols-6 gap-6">
         <div class="lg:col-span-4 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
             <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-chart-column mr-2 text-blue-500"></i>Plan vs Actual (Quantity) & Progress %</h3>
             <div class="h-96"><canvas id="planVsActualChart"></canvas></div>
@@ -163,7 +185,8 @@
         </div>
     </div>
 
-    <div class="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+    {{-- Jarak vertikal mt-6 dipertahankan --}}
+    <div class="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-newspaper mr-2 text-gray-500"></i>Newsfeed / Activity Log</h3>
         <div class="divide-y divide-gray-200 dark:divide-gray-700">
             <div class="grid grid-cols-[auto,1fr,auto,auto] items-center gap-x-6 py-4">
@@ -213,15 +236,40 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         fetchActiveUsers();
     });
+
+    const startDate = "{{ date('Y-m-d', strtotime('first day of this month')) }}";
+    const endDate = "{{ date('Y-m-d') }}";
+
+    const picker = new Litepicker({
+        element: document.getElementById('date_range'),
+        singleMode: false,
+        format: 'DD MMM YYYY',
+        tooltipText: {
+            one: 'day',
+            other: 'days'
+        },
+        setup: (picker) => {
+            picker.on('selected', (date1, date2) => {
+                const from = date1.format('YYYY-MM-DD');
+                const to = date2.format('YYYY-MM-DD');
+
+                document.getElementById('from_date').value = from;
+                document.getElementById('to_date').value = to;
+
+            });
+        }
+    });
+
+    picker.setDateRange(new Date(startDate), new Date(endDate));
+
+    document.getElementById('from_date').value = startDate;
+    document.getElementById('to_date').value = endDate;
 
     function fetchActiveUsers() {
         const apiUrl = '/api/active-users-count';
