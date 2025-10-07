@@ -21,7 +21,7 @@ class ModelsController extends Controller
         if ($request->has('search') && !empty($request->search)) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
-                    ->orWhere('code', 'like', '%' . $request->search . '%')
+                    
                     ->orWhereHas('customer', function ($q) use ($request) {
                         $q->where('name', 'like', '%' . $request->search . '%');
                     });
@@ -48,7 +48,6 @@ class ModelsController extends Controller
             'customer'      => 'customers.code',
             'customer.code' => 'customers.code',
             'name'          => 'models.name',
-            'code'          => 'models.code',
         ];
 
         $sortColumn = $sortMap[$sortKey] ?? 'models.name';

@@ -371,27 +371,25 @@
 
         // Helper: SweetAlert notifications
         function detectTheme() {
-            const hasDarkClass = document.documentElement.classList.contains('dark');
-            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const isDark = hasDarkClass || prefersDark;
+            const isDark = document.documentElement.classList.contains('dark');
 
             return isDark ? {
                 mode: 'dark',
-                bg: 'rgba(15, 23, 42, 0.94)',
+                bg: 'rgba(30, 41, 59, 0.95)',
                 fg: '#E5E7EB',
-                border: 'rgba(148, 163, 184, .22)',
+                border: 'rgba(71, 85, 105, 0.5)',
                 progress: 'rgba(255,255,255,.9)',
                 icon: {
                     success: '#22c55e',
                     error: '#ef4444',
                     warning: '#f59e0b',
-                    info: '#60a5fa'
+                    info: '#3b82f6'
                 }
             } : {
                 mode: 'light',
                 bg: 'rgba(255, 255, 255, 0.98)',
                 fg: '#0f172a',
-                border: 'rgba(15, 23, 42, .10)',
+                border: 'rgba(226, 232, 240, 1)',
                 progress: 'rgba(15,23,42,.8)',
                 icon: {
                     success: '#16a34a',
@@ -442,6 +440,8 @@
                 didOpen: (toast) => {
                     const bar = toast.querySelector('.swal2-timer-progress-bar');
                     if (bar) bar.style.background = t.progress;
+                    const popup = toast.querySelector('.swal2-popup');
+                    if (popup) popup.style.borderColor = t.border;
                     toast.addEventListener('mouseenter', Swal.stopTimer);
                     toast.addEventListener('mouseleave', Swal.resumeTimer);
                 }

@@ -348,94 +348,125 @@ $(document).ready(function () {
 
     // Helper: SweetAlert notifications
         function detectTheme() {
-        const hasDarkClass = document.documentElement.classList.contains('dark');
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const isDark = hasDarkClass || prefersDark;
+            const isDark = document.documentElement.classList.contains('dark');
 
-        return isDark ? {
-        mode: 'dark',
-        bg: 'rgba(15, 23, 42, 0.94)',
-        fg: '#E5E7EB',
-        border: 'rgba(148, 163, 184, .22)',
-        progress: 'rgba(255,255,255,.9)',
-        icon: {
-            success: '#22c55e',
-            error:   '#ef4444',
-            warning: '#f59e0b',
-            info:    '#60a5fa'
+            return isDark ? {
+                mode: 'dark',
+                bg: 'rgba(30, 41, 59, 0.95)',
+                fg: '#E5E7EB',
+                border: 'rgba(71, 85, 105, 0.5)',
+                progress: 'rgba(255,255,255,.9)',
+                icon: {
+                    success: '#22c55e',
+                    error: '#ef4444',
+                    warning: '#f59e0b',
+                    info: '#3b82f6'
+                }
+            } : {
+                mode: 'light',
+                bg: 'rgba(255, 255, 255, 0.98)',
+                fg: '#0f172a',
+                border: 'rgba(226, 232, 240, 1)',
+                progress: 'rgba(15,23,42,.8)',
+                icon: {
+                    success: '#16a34a',
+                    error: '#dc2626',
+                    warning: '#d97706',
+                    info: '#2563eb'
+                }
+            };
         }
-        } : {
-        mode: 'light',
-        bg: 'rgba(255, 255, 255, 0.98)',
-        fg: '#0f172a',
-        border: 'rgba(15, 23, 42, .10)',
-        progress: 'rgba(15,23,42,.8)',
-        icon: {
-            success: '#16a34a',
-            error:   '#dc2626',
-            warning: '#d97706',
-            info:    '#2563eb'
-        }
-        };
-    }
 
-    const BaseToast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 2600,
-        timerProgressBar: true,
-        showClass: { popup: 'swal2-animate-toast-in' },
-        hideClass: { popup: 'swal2-animate-toast-out' },
-        didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer);
-        toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
-    });
-
-    function renderToast({ icon = 'success', title = 'Success', text = '' } = {}) {
-        const t = detectTheme();
-
-        BaseToast.fire({
-        icon,
-        title,
-        text,
-        iconColor: t.icon[icon] || t.icon.success,
-        background: t.bg,
-        color: t.fg,
-        customClass: {
-            popup: 'swal2-toast border',
-            title: '',
-            timerProgressBar: ''
-        },
-        didOpen: (toast) => {
-            const bar = toast.querySelector('.swal2-timer-progress-bar');
-            if (bar) bar.style.background = t.progress;
-            toast.addEventListener('mouseenter', Swal.stopTimer);
-            toast.addEventListener('mouseleave', Swal.resumeTimer);
-        }
+        const BaseToast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2600,
+            timerProgressBar: true,
+            showClass: {
+                popup: 'swal2-animate-toast-in'
+            },
+            hideClass: {
+                popup: 'swal2-animate-toast-out'
+            },
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
         });
-    }
 
-    function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') {
-        renderToast({ icon: 'success', title, text });
-    }
-    function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') {
-        BaseToast.update({ timer: 3400 });
-        renderToast({ icon: 'error', title, text });
-        BaseToast.update({ timer: 2600 });
-    }
-    function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') {
-        renderToast({ icon: 'warning', title, text });
-    }
-    function toastInfo(title = 'Informasi', text = '') {
-        renderToast({ icon: 'info', title, text });
-    }
+        function renderToast({
+            icon = 'success',
+            title = 'Success',
+            text = ''
+        } = {}) {
+            const t = detectTheme();
 
-    window.toastSuccess = toastSuccess;
-    window.toastError = toastError;
-    window.toastWarning = toastWarning;
-    window.toastInfo = toastInfo;
+            BaseToast.fire({
+                icon,
+                title,
+                text,
+                iconColor: t.icon[icon] || t.icon.success,
+                background: t.bg,
+                color: t.fg,
+                customClass: {
+                    popup: 'swal2-toast border',
+                    title: '',
+                    timerProgressBar: ''
+                },
+                didOpen: (toast) => {
+                    const bar = toast.querySelector('.swal2-timer-progress-bar');
+                    if (bar) bar.style.background = t.progress;
+                    const popup = toast.querySelector('.swal2-popup');
+                    if (popup) popup.style.borderColor = t.border;
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+        }
+
+        function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') {
+            renderToast({
+                icon: 'success',
+                title,
+                text
+            });
+        }
+
+        function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') {
+            BaseToast.update({
+                timer: 3400
+            });
+            renderToast({
+                icon: 'error',
+                title,
+                text
+            });
+            BaseToast.update({
+                timer: 2600
+            });
+        }
+
+        function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') {
+            renderToast({
+                icon: 'warning',
+                title,
+                text
+            });
+        }
+
+        function toastInfo(title = 'Informasi', text = '') {
+            renderToast({
+                icon: 'info',
+                title,
+                text
+            });
+        }
+
+        window.toastSuccess = toastSuccess;
+        window.toastError = toastError;
+        window.toastWarning = toastWarning;
+        window.toastInfo = toastInfo;
 
     // Populate Document Type Group Dropdown
     function populateDocTypeGroupDropdown(selectElement, selectedId = null) {

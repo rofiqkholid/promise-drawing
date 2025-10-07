@@ -67,7 +67,6 @@
             }
         }
 
-         /* Ukuran font & padding toast lebih kecil */
         .swal2-container {
             z-index: 99999 !important;
         }
@@ -83,7 +82,6 @@
             letter-spacing: .1px;
         }
         .swal2-html-container {
-            /* margin: .2rem 0 0 0 !important; */
             font-size: 0.8rem;
             opacity: .9;
         }

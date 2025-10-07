@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\PartGroupsController;
 use App\Http\Controllers\Api\StampFormatController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\UserMaintenanceController;
+use App\Http\Controllers\Api\ProductsController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserRoleController;
 use Illuminate\Support\Facades\Auth;
@@ -133,6 +134,11 @@ Route::middleware(['auth'])->group(function () {
         return view('user_management.user_role');
     })->name('user-role');
 
+    Route::get('/product', function () {
+        return view('master.product');
+    })->name('product');
+
+
     #Region Stamp Format
     Route::get('stampFormat/data', [StampFormatController::class, 'data'])->name('stampFormat.data');
     Route::resource('master/stampFormat', StampFormatController::class)->names('stampFormat')->except(['create', 'edit']);
@@ -228,4 +234,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/role/data', [RoleController::class, 'data'])->name('role.data');
     Route::get('/role/get-models', [RoleController::class, 'getModels'])->name('role.getModels');
     #End region
+
+    Route::resource('master/products', ProductsController::class)->names('products')->except(['create', 'edit']);
+    Route::get('/products/data', [ProductsController::class, 'data'])->name('products.data');
+    Route::get('/products/get-models', [ProductsController::class, 'getModels'])->name('products.getModels');
 });

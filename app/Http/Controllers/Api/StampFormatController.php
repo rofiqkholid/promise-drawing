@@ -9,29 +9,18 @@ use Illuminate\Validation\Rule;
 
 class StampFormatController extends Controller
 {
-    /**
-     * Display a listing of the resource for DataTables.
-     */
+
     public function data(Request $request)
     {
         $query = StampFormat::query();
 
-        // Handle Search
-        if ($request->has('search') && !empty($request->search['value'])) {
-            $searchValue = $request->search['value'];
-            $query->where(function ($q) use ($searchValue) {
-                $q->where('prefix', 'like', '%' . $searchValue . '%')
-                    ->orWhere('suffix', 'like', '%' . $searchValue . '%');
-
-                if (strtolower($searchValue) === 'active') {
-                    $q->orWhere('is_active', true);
-                } elseif (strtolower($searchValue) === 'inactive') {
-                    $q->orWhere('is_active', false);
-                }
+        if ($request->has('search') && !empty($request->search)) {
+            $query->where(function ($q) use ($request) {
+                $q->where('prefix', 'like', '%' . $request->search . '%')
+                ->orWhere('suffix', 'like', '%' . $request->search . '%');
             });
         }
 
-        // Handle Sorting
         $sortColumn = $request->input('columns.' . $request->input('order.0.column', 1) . '.data', 'prefix');
         $sortDir = $request->input('order.0.dir', 'asc');
 
@@ -39,7 +28,6 @@ class StampFormatController extends Controller
             $query->orderBy($sortColumn, $sortDir);
         }
 
-        // Handle Pagination
         $perPage = $request->get('length', 10);
         $start = $request->get('start', 0);
 
@@ -55,9 +43,7 @@ class StampFormatController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+   
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -73,17 +59,13 @@ class StampFormatController extends Controller
         return response()->json(['success' => true, 'message' => 'Stamp Format created successfully.']);
     }
 
-    /**
-     * Display the specified resource for editing.
-     */
+  
     public function show(StampFormat $stampFormat)
     {
         return response()->json($stampFormat);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+  
     public function update(Request $request, StampFormat $stampFormat)
     {
         $validated = $request->validate([
@@ -104,9 +86,7 @@ class StampFormatController extends Controller
         return response()->json(['success' => true, 'message' => 'Stamp Format updated successfully.']);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+   
     public function destroy(StampFormat $stampFormat)
     {
         $stampFormat->delete();

@@ -10,32 +10,24 @@ use Illuminate\Support\Facades\Validator;
 
 class MenuController extends Controller
 {
-    /**
-     * Fetch menu data for DataTables.
-     */
+
     public function data(Request $request)
     {
         $query = Menu::with('parent')->select('menus.*');
 
-        // Total records
         $totalRecords = $query->count();
 
-        // Search
-        if ($request->has('search') && $request->input('search.value') != '') {
-            $searchValue = $request->input('search.value');
-            $query->where(function($q) use ($searchValue) {
-                $q->where('title', 'like', '%' . $searchValue . '%')
-                  ->orWhere('route', 'like', '%' . $searchValue . '%')
-                  ->orWhereHas('parent', function($q) use ($searchValue) {
-                      $q->where('title', 'like', '%' . $searchValue . '%');
-                  });
+
+
+        if ($request->has('search') && !empty($request->search)) {
+            $query->where(function ($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->search . '%')
+                    ->orWhere('route', 'like', '%' . $request->search . '%');
             });
         }
 
-        // Total filtered records
         $totalFiltered = $query->count();
 
-        // Order
         if ($request->has('order')) {
             $orderColumnIndex = $request->input('order.0.column');
             $orderDirection = $request->input('order.0.dir');
@@ -43,8 +35,8 @@ class MenuController extends Controller
 
             if ($column === 'parent.title') {
                 $query->leftJoin('menus as parent_menu', 'menus.parent_id', '=', 'parent_menu.id')
-                      ->orderBy('parent_menu.title', $orderDirection)
-                      ->select('menus.*');
+                    ->orderBy('parent_menu.title', $orderDirection)
+                    ->select('menus.*');
             } else {
                 $query->orderBy($column, $orderDirection);
             }
@@ -52,7 +44,6 @@ class MenuController extends Controller
             $query->orderBy('sort_order', 'asc');
         }
 
-        // Pagination
         if ($request->has('length') && $request->input('length') != -1) {
             $query->skip($request->input('start'))->take($request->input('length'));
         }
@@ -60,7 +51,7 @@ class MenuController extends Controller
         $menus = $query->get();
 
         $start = $request->input('start', 0);
-        $data = $menus->map(function($menu, $index) use ($start) {
+        $data = $menus->map(function ($menu, $index) use ($start) {
             return [
                 'DT_RowIndex' => $start + $index + 1,
                 'id' => $menu->id,
@@ -80,9 +71,6 @@ class MenuController extends Controller
         ]);
     }
 
-    /**
-     * Fetch potential parent menus.
-     */
     public function getParents(Request $request)
     {
         $query = Menu::whereNull('parent_id')->orderBy('title');
@@ -91,7 +79,6 @@ class MenuController extends Controller
             $query->where('id', '!=', $request->exclude);
         }
 
-        // Also exclude children of the excluded ID to prevent circular dependencies
         if ($request->has('exclude')) {
             $excludedId = $request->exclude;
             $childIds = Menu::where('parent_id', $excludedId)->pluck('id');
@@ -104,9 +91,6 @@ class MenuController extends Controller
         return response()->json($query->get());
     }
 
-    /**
-     * Store a newly created menu in storage.
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -144,19 +128,11 @@ class MenuController extends Controller
         }
     }
 
-
-    /**
-     * Display the specified resource.
-     */
     public function show(Menu $menu)
     {
         return response()->json($menu);
     }
 
-
-    /**
-     * Update the specified menu in storage.
-     */
     public function update(Request $request, Menu $menu)
     {
         $validator = Validator::make($request->all(), [
@@ -179,9 +155,8 @@ class MenuController extends Controller
                 $data['parent_id'] = null;
             }
 
-            // Prevent a menu from becoming its own parent
             if (isset($data['parent_id']) && $data['parent_id'] == $menu->id) {
-                 return response()->json(['errors' => ['parent_id' => ['A menu cannot be its own parent.']]], 422);
+                return response()->json(['errors' => ['parent_id' => ['A menu cannot be its own parent.']]], 422);
             }
 
             $data['level'] = $data['parent_id'] ? (Menu::find($data['parent_id'])->level + 1) : 0;
@@ -197,16 +172,11 @@ class MenuController extends Controller
         }
     }
 
-
-    /**
-     * Remove the specified menu from storage.
-     */
     public function destroy(Menu $menu)
     {
         try {
             DB::beginTransaction();
 
-            // Set children's parent_id to null before deleting the menu
             $menu->children()->update(['parent_id' => null]);
 
             $menu->delete();
