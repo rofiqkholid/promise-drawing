@@ -4,475 +4,720 @@
 
 @section('content')
 <div class="p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
-    <div class="sm:flex sm:items-center sm:justify-between mb-6">
-        <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">User Maintenance</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage application users.</p>
-        </div>
-        <div class="mt-4 sm:mt-0">
-            <button type="button" id="add-button" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
-                <i class="fa-solid fa-plus"></i>
-                Add New
-            </button>
-        </div>
-    </div>
 
+  {{-- Header --}}
+  <div class="sm:flex sm:items-center sm:justify-between mb-6">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">User Maintenance</h2>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage application users.</p>
+    </div>
+    <div class="mt-4 sm:mt-0">
+      <button type="button" id="add-button"
+        class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+        <i class="fa-solid fa-plus"></i>
+        Add New
+      </button>
+    </div>
+  </div>
+
+  {{-- SECTION: LIST (landing) --}}
+  <section id="listSection" class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
+    <div class="p-4 md:p-6">
+      <table id="usersTable" class="min-w-full w-full text-sm text-left text-gray-500 dark:text-gray-400">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+          <tr>
+            <th class="px-6 py-3 w-16">No</th>
+            <th class="px-6 py-3">Name</th>
+            <th class="px-6 py-3">Email</th>
+            <th class="px-6 py-3">NIK</th>
+            <th class="px-6 py-3">Status</th>
+            <th class="px-6 py-3 text-start">Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  {{-- SECTION: FORM (Add/Edit) --}}
+  <section id="formSection" class="hidden">
     <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
-        <div class="p-4 md:p-6">
-            <table id="usersTable" class="min-w-full w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 w-16">No</th>
-                        <th scope="col" class="px-6 py-3 sorting" data-column="name">Name</th>
-                        <th scope="col" class="px-6 py-3 sorting" data-column="email">Email</th>
-                        <th scope="col" class="px-6 py-3 sorting" data-column="nik">NIK</th>
-                        <th scope="col" class="px-6 py-3">Status</th>
-                        <th scope="col" class="px-6 py-3 text-start">Action</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+      <div class="p-4 md:p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+            <span id="formTitle">Add New User</span>
+          </h3>
+          <button type="button" id="backToList"
+            class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border hover:bg-gray-50 dark:hover:bg-gray-700">
+            <i class="fa-solid fa-arrow-left"></i> Back
+          </button>
         </div>
-    </div>
-</div>
 
-<div id="addUserModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
-    <div class="relative p-4 w-full max-w-md h-full md:h-auto">
-        <div class="relative p-4 text-left bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
-            <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                <i class="fa-solid fa-xmark w-5 h-5"></i>
-                <span class="sr-only">Close modal</span>
-            </button>
-            <h3 class="mb-4 text-xl text-center font-medium text-gray-900 dark:text-white">Add New User</h3>
-            <form id="addUserForm" action="{{ route('userMaintenance.store') }}" method="POST">
-                @csrf
-                <div>
-                    <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Full Name</label>
-                    <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. John Doe" required>
-                    <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
-                <div>
-                    <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Email</label>
-                    <input type="email" name="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="user@example.com" required>
-                    <p id="add-email-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
-                <div>
-                    <label for="nik" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">NIK</label>
-                    <input type="text" name="nik" id="nik" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. 2025-001" required>
-                    <p id="add-nik-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
-                <div>
-                    <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Password</label>
-                    <input type="password" name="password" id="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="••••••••" required>
-                    <p id="add-password-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
-                <div>
-                    <label for="add_is_active" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Status</label>
-                    <input type="checkbox" name="is_active" id="add_is_active" value="1"
-                        class="bg-gray-50 border border-gray-300 text-primary-600 rounded focus:ring-primary-600 focus:border-primary-600 h-4 w-4 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600"
-                        checked>
-                    <label for="add_is_active" class="ml-2 text-sm text-gray-900 dark:text-white">Active</label>
-                    <p id="add-is_active-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
+        <form id="userForm" action="{{ route('userMaintenance.store') }}" method="POST">
+          @csrf
+          <input type="hidden" name="_method" id="methodSpoof" value="POST">
 
-                <div class="flex items-center space-x-4 mt-6">
-                    <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
-                        Cancel
-                    </button>
-                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full">
-                        Save
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<div id="editUserModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
-    <div class="relative p-4 w-full max-w-md h-full md:h-auto">
-        <div class="relative p-4 text-left bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
-            <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                <i class="fa-solid fa-xmark w-5 h-5"></i>
-                <span class="sr-only">Close modal</span>
-            </button>
-            <h3 class="mb-4 text-xl text-center font-medium text-gray-900 dark:text-white">Edit User</h3>
-            <form id="editUserForm" method="POST">
-                @csrf
-                @method('PUT')
-                <div>
-                    <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Full Name</label>
-                    <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
-                    <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
-                <div>
-                    <label for="edit_email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Email</label>
-                    <input type="email" name="email" id="edit_email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
-                    <p id="edit-email-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
-                <div>
-                    <label for="edit_nik" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">NIK</label>
-                    <input type="text" name="nik" id="edit_nik" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
-                    <p id="edit-nik-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
-                <div>
-                    <label for="edit_password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">New Password (optional)</label>
-                    <input type="password" name="password" id="edit_password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Leave blank to keep current">
-                </div>
-
-                <div>
-                    <label for="add_is_active" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Status</label>
-                    <input type="checkbox" name="is_active" id="edit_is_active" value="1"
-                        class="bg-gray-50 border border-gray-300 text-primary-600 rounded focus:ring-primary-600 focus:border-primary-600 h-4 w-4 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600"
-                        checked>
-                    <label for="add_is_active" class="ml-2 text-sm text-gray-900 dark:text-white">Active</label>
-                    <p id="add-is_active-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
-
-                <div class="flex items-center space-x-4 mt-6">
-                    <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
-                        Cancel
-                    </button>
-                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full">
-                        Save Changes
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<div id="deleteUserModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
-    <div class="relative p-4 w-full max-w-md h-full md:h-auto">
-        <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
-            <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                <i class="fa-solid fa-xmark w-5 h-5"></i>
-                <span class="sr-only">Close modal</span>
-            </button>
-            <div class="flex items-center justify-center w-16 h-16 mx-auto mb-3.5">
-                <i class="fa-solid fa-trash-can text-gray-400 dark:text-gray-500 text-4xl"></i>
+          <div class="flex flex-col md:flex-row md:items-end md:flex-wrap gap-4">
+            <div class="flex-1 min-w-[220px]">
+              <label for="f_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Full Name</label>
+              <input type="text" id="f_name" name="name"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                required>
+              <p id="err-name" class="text-red-500 text-xs mt-1 hidden"></p>
             </div>
-            <p class="mb-4 text-gray-500 dark:text-gray-300">Are you sure you want to delete this user?</p>
-            <div class="flex justify-center items-center space-x-4">
-                <button type="button" class="close-modal-button py-2 px-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">
-                    No, cancel
-                </button>
-                <button type="button" id="confirmDeleteButton" class="py-2 px-3 text-sm font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900">
-                    Yes, I'm sure
-                </button>
+
+            <div class="flex-1 min-w-[250px]">
+              <label for="f_email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
+              <input type="email" id="f_email" name="email"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                required>
+              <p id="err-email" class="text-red-500 text-xs mt-1 hidden"></p>
             </div>
-        </div>
+
+            <div class="flex-1 min-w-[160px]">
+              <label for="f_nik" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">NIK</label>
+              <input type="text" id="f_nik" name="nik"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                required>
+              <p id="err-nik" class="text-red-500 text-xs mt-1 hidden"></p>
+            </div>
+
+            <div class="flex-1 min-w-[220px]">
+              <label for="f_password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Password <span id="pwdHint" class="text-xs text-gray-400">(required)</span>
+              </label>
+              <input type="password" id="f_password" name="password" placeholder="••••••••"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+              <p id="err-password" class="text-red-500 text-xs mt-1 hidden"></p>
+            </div>
+
+            <div class="w-full md:w-auto md:min-w-[180px]">
+              <label for="f_status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+              <select id="f_status" name="is_active"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="1" selected>Active</option>
+                <option value="0">Inactive</option>
+              </select>
+            </div>
+
+            <div class="flex gap-3 md:ml-auto md:pt-6">
+              <button type="button" id="cancelForm"
+                class="text-gray-700 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">
+                Cancel
+              </button>
+              <button type="submit" id="saveForm"
+                class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5">
+                Save
+              </button>
+            </div>
+          </div>
+        </form>
+
+        {{-- === USER ROLES (edit only) === --}}
+        <section id="roleSection" class="mt-6 hidden">
+          <div class=" dark:bg-gray-800  overflow-hidden">
+            <div class="p-4 md:p-6">
+              <div class="flex items-center justify-between">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">User Roles</h4>
+                <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                  Manage roles
+                </span>
+              </div>
+
+              <div id="roleLocked" class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                Save the user first to manage roles.
+              </div>
+
+              <div id="roleContent" class="mt-4 hidden">
+                <div id="roleList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"></div>
+                <div class="flex justify-end mt-4">
+                  <button type="button" id="saveRolesBtn"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 text-sm rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800">
+                    Save Roles
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {{-- === MENU ACCESS PER USER (edit only) === --}}
+        <section id="userMenuSection" class="mt-6 hidden">
+          <div class=" dark:bg-gray-800  overflow-hidden">
+            <div class="p-4 md:p-6">
+              <div class="flex items-center justify-between">
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Menu Access</h4>
+                <span class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                  Choose what this user can access
+                </span>
+              </div>
+
+              <p id="userMenuLocked" class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                Save the user first to manage menu access.
+              </p>
+
+              <div id="userMenuContent" class="mt-4 hidden">
+                <div id="userMenuList" class="space-y-2"></div>
+                <div class="flex justify-end mt-4">
+                  <button type="button" id="saveUserMenusBtn"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 text-sm rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800">
+                    Save Menu Access
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
     </div>
+  </section>
+
 </div>
 @endsection
 
+@push('style')
+<style>
+  /* kecilkan kontrol DataTables */
+  div.dataTables_length label {
+    font-size: 0.75rem;
+  }
+
+  div.dataTables_length select {
+    font-size: .75rem;
+    line-height: 1rem;
+    padding: .25rem 1.25rem .25rem .5rem;
+    height: 1.875rem;
+    width: 4.5rem;
+  }
+
+  div.dataTables_filter label {
+    font-size: .75rem;
+  }
+
+  div.dataTables_filter input[type="search"],
+  input[type="search"][aria-controls="usersTable"] {
+    font-size: .75rem;
+    line-height: 1rem;
+    padding: .25rem .5rem;
+    height: 1.875rem;
+    width: 12rem;
+  }
+
+  div.dataTables_info {
+    font-size: .75rem;
+    padding-top: .8em;
+  }
+</style>
+@endpush
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
-    $(function() {
-        const csrfToken = $('meta[name="csrf-token"]').attr('content');
+  $(function() {
+    const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-        const isDark = () => document.documentElement.classList.contains('dark');
+    /* ========= Toast ========= */
+    const isDark = () => document.documentElement.classList.contains('dark');
 
-        function themeToast(icon, title) {
-            const dark = isDark();
-            Swal.fire({
-                toast: true,
-                icon,
-                title,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 2200,
-                timerProgressBar: true,
-                background: dark ? '#1f2937' : '#ffffff', 
-                color: dark ? '#f9fafb' : '#111827',
-                didOpen: el => {
-                    const bar = el.querySelector('.swal2-timer-progress-bar');
-                    if (bar) bar.style.background = dark ? '#10b981' : '#3b82f6';
-                }
-            });
+    function themeToast(icon, title) {
+      const dark = isDark();
+      Swal.fire({
+        toast: true,
+        icon,
+        title,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2200,
+        timerProgressBar: true,
+        background: dark ? '#1f2937' : '#ffffff',
+        color: dark ? '#f9fafb' : '#111827',
+        didOpen: el => {
+          const bar = el.querySelector('.swal2-timer-progress-bar');
+          if (bar) bar.style.background = dark ? '#10b981' : '#3b82f6';
         }
+      });
+    }
 
-        const spinnerSVG = `
-      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-      </svg>`;
+    /* ========= Busy helpers ========= */
+    const spinnerSVG = `
+    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+    </svg>`;
 
-        function beginBusy($btn, text = 'Processing...') {
-            if ($btn.data('busy')) return false; 
-            $btn.data('busy', true);
-            if (!$btn.data('orig-html')) $btn.data('orig-html', $btn.html());
-            $btn.prop('disabled', true).addClass('opacity-75 cursor-not-allowed');
-            $btn.html(`<span class="inline-flex items-center">${spinnerSVG}${text}</span>`);
-            return true;
-        }
+    function beginBusy($btn, text = 'Processing...') {
+      if ($btn.data('busy')) return false;
+      $btn.data('busy', true);
+      if (!$btn.data('orig-html')) $btn.data('orig-html', $btn.html());
+      $btn.prop('disabled', true).addClass('opacity-75 cursor-not-allowed');
+      $btn.html(`<span class="inline-flex items-center">${spinnerSVG}${text}</span>`);
+      return true;
+    }
 
-        function endBusy($btn) {
-            const orig = $btn.data('orig-html');
-            if (orig) $btn.html(orig);
-            $btn.prop('disabled', false).removeClass('opacity-75 cursor-not-allowed');
-            $btn.data('busy', false);
-        }
-
-        $(document).on('click', 'button', function(e) {
-            const $b = $(this);
-            if ($b.data('busy')) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
-                return false;
-            }
-        });
-
-        const addModal = $('#addUserModal');
-        const editModal = $('#editUserModal');
-        const deleteModal = $('#deleteUserModal');
-        const addButton = $('#add-button');
-        const closeButtons = $('.close-modal-button');
-        let userIdToDelete = null;
-
-        const showModal = m => m.removeClass('hidden').addClass('flex');
-        const hideModal = m => m.addClass('hidden').removeClass('flex');
-
-        addButton.on('click', function() {
-            const $btn = $(this);
-            if (!beginBusy($btn, 'Opening...')) return;
-            showModal(addModal);
-            setTimeout(() => endBusy($btn), 150);
-        });
-
-        closeButtons.on('click', function() {
-            const $btn = $(this);
-            if (!beginBusy($btn, 'Closing...')) return;
-            hideModal(addModal);
-            hideModal(editModal);
-            hideModal(deleteModal);
-            setTimeout(() => endBusy($btn), 150);
-        });
-
-        const table = $('#usersTable').DataTable({
-            processing: true,
-            serverSide: true,
-            scrollX: true,
-            ajax: {
-                url: '{{ route("userMaintenance.data") }}',
-                type: 'GET',
-                data: d => {
-                    d.search = d.search.value;
-                }
-            },
-            columns: [{
-                    data: null,
-                    render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1
-                },
-                {
-                    data: 'name',
-                    name: 'name'
-                },
-                {
-                    data: 'email',
-                    name: 'email'
-                },
-                {
-                    data: 'nik',
-                    name: 'nik'
-                },
-                {
-                    data: 'is_active',
-                    render: v => String(v) === '1' ?
-                        `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>` :
-                        `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>`
-                },
-                {
-                    data: null,
-                    orderable: false,
-                    searchable: false,
-                    render: row => `
-                <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
-                    <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
-                </button>
-                <button class="delete-button text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete" data-id="${row.id}">
-                    <i class="fa-solid fa-trash-can fa-lg m-2"></i>
-                </button>`
-                }
-            ],
-            pageLength: 10,
-            order: [
-                [1, 'asc']
-            ],
-            language: {
-                emptyTable: '<div class="text-gray-500 dark:text-gray-400">No users found.</div>'
-            },
-            responsive: true,
-            autoWidth: false,
-        });
-
-        $('#addUserForm').on('submit', function(e) {
-            e.preventDefault();
-            const $btn = $(this).find('button[type=submit]');
-            if (!beginBusy($btn, 'Saving...')) return;
-
-            const formData = new FormData(this);
-            formData.set('is_active', $('#add_is_active').is(':checked') ? '1' : '0');
-
-            const nameErr = $('#add-name-error'),
-                emailErr = $('#add-email-error'),
-                nikErr = $('#add-nik-error'),
-                passErr = $('#add-password-error');
-            nameErr.addClass('hidden');
-            emailErr.addClass('hidden');
-            nikErr.addClass('hidden');
-            passErr.addClass('hidden');
-
-            $.ajax({
-                url: $(this).attr('action'),
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: res => {
-                    if (res.success) {
-                        table.ajax.reload(null, false);
-                        hideModal(addModal);
-                        this.reset();
-                        themeToast('success', 'User created');
-                    } else {
-                        themeToast('error', res.message || 'Failed to create');
-                    }
-                },
-                error: xhr => {
-                    const errors = xhr.responseJSON?.errors;
-                    if (errors) {
-                        if (errors.name) nameErr.text(errors.name[0]).removeClass('hidden');
-                        if (errors.email) emailErr.text(errors.email[0]).removeClass('hidden');
-                        if (errors.nik) nikErr.text(errors.nik[0]).removeClass('hidden');
-                        if (errors.password) passErr.text(errors.password[0]).removeClass('hidden');
-                        themeToast('error', 'Validation error');
-                    } else {
-                        themeToast('error', 'Request failed');
-                    }
-                },
-                complete: () => endBusy($btn)
-            });
-        });
-
-        $(document).on('click', '.edit-button', function() {
-            const $btn = $(this);
-            if (!beginBusy($btn, 'Loading...')) return;
-
-            const id = $btn.data('id');
-            const showUrl = "{{ route('userMaintenance.show', ':id') }}".replace(':id', id);
-            const updateUrl = "{{ route('userMaintenance.update', ':id') }}".replace(':id', id);
-
-            $('#edit-name-error, #edit-email-error, #edit-nik-error').addClass('hidden');
-
-            $.get(showUrl, function(data) {
-                $('#edit_name').val(data.name);
-                $('#edit_email').val(data.email);
-                $('#edit_nik').val(data.nik);
-                $('#edit_is_active').prop('checked', data.is_active == 1);
-                $('#editUserForm').attr('action', updateUrl);
-                showModal(editModal);
-            }).fail(function() {
-                themeToast('error', 'Failed to load user');
-            }).always(function() {
-                endBusy($btn);
-            });
-        });
-
-        $('#editUserForm').on('submit', function(e) {
-            e.preventDefault();
-            const $btn = $(this).find('button[type=submit]');
-            if (!beginBusy($btn, 'Updating...')) return;
-
-            const formData = new FormData(this);
-            formData.set('is_active', $('#edit_is_active').is(':checked') ? '1' : '0');
-            $('#edit-name-error, #edit-email-error, #edit-nik-error').addClass('hidden');
-
-            $.ajax({
-                url: $(this).attr('action'),
-                method: 'POST', 
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: res => {
-                    if (res.success) {
-                        table.ajax.reload(null, false);
-                        hideModal(editModal);
-                        themeToast('success', 'User updated');
-                    } else {
-                        themeToast('error', res.message || 'Failed to update');
-                    }
-                },
-                error: xhr => {
-                    const errors = xhr.responseJSON?.errors;
-                    if (errors) {
-                        if (errors.name) $('#edit-name-error').text(errors.name[0]).removeClass('hidden');
-                        if (errors.email) $('#edit-email-error').text(errors.email[0]).removeClass('hidden');
-                        if (errors.nik) $('#edit-nik-error').text(errors.nik[0]).removeClass('hidden');
-                        themeToast('error', 'Validation error');
-                    } else {
-                        themeToast('error', 'Request failed');
-                    }
-                },
-                complete: () => endBusy($btn)
-            });
-        });
-
-        $(document).on('click', '.delete-button', function() {
-            const $btn = $(this);
-            if (!beginBusy($btn, 'Opening...')) return;
-            userIdToDelete = $btn.data('id');
-            showModal(deleteModal);
-            setTimeout(() => endBusy($btn), 150);
-        });
-
-        $('#confirmDeleteButton').on('click', function() {
-            if (!userIdToDelete) return;
-            const $btn = $(this);
-            if (!beginBusy($btn, 'Deleting...')) return;
-
-            $.ajax({
-                url: `/master/userMaintenance/${userIdToDelete}`,
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                success: res => {
-                    if (res.success) {
-                        table.ajax.reload(null, false);
-                        hideModal(deleteModal);
-                        userIdToDelete = null;
-                        themeToast('success', 'User deleted');
-                    } else {
-                        themeToast('error', res.message || 'Failed to delete');
-                    }
-                },
-                error: () => themeToast('error', 'Error deleting user'),
-                complete: () => endBusy($btn)
-            });
-        });
-
-        const overrideFocus = function() {
-            $(this).css({
-                'outline': 'none',
-                'box-shadow': 'none',
-                'border-color': 'gray'
-            });
-        };
-        const restoreBlur = function() {
-            $(this).css('border-color', '');
-        };
-        const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
-        elementsToFix.on('focus keyup', overrideFocus);
-        elementsToFix.on('blur', restoreBlur);
-        elementsToFix.filter(':focus').each(overrideFocus);
+    function endBusy($btn) {
+      const orig = $btn.data('orig-html');
+      if (orig) $btn.html(orig);
+      $btn.prop('disabled', false).removeClass('opacity-75 cursor-not-allowed');
+      $btn.data('busy', false);
+    }
+    $(document).on('click', 'button', function(e) {
+      const $b = $(this);
+      if ($b.data('busy')) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        return false;
+      }
     });
+
+    /* ========= Sections & State ========= */
+    const $list = $('#listSection');
+    const $form = $('#formSection');
+    const $formEl = $('#userForm');
+    const $methodSpoof = $('#methodSpoof');
+    const $pwd = $('#f_password');
+    const $pwdHint = $('#pwdHint');
+    let editingId = null; // null = ADD mode
+
+    function showList() {
+      $form.addClass('hidden');
+      $list.removeClass('hidden');
+      $formEl[0].reset();
+      $('#err-name,#err-email,#err-nik,#err-password').addClass('hidden').text('');
+      editingId = null;
+      $methodSpoof.val('POST');
+      $formEl.attr('action', `{{ route('userMaintenance.store') }}`);
+      $('#f_status').val('1');
+      $pwd.prop('required', true);
+      $pwdHint.text('(required)');
+      // hide role & user menu panels
+      showRoleSection(false);
+      toggleRoleSectionEnabled(false);
+      setUserMenuVisible(false);
+      toggleUserMenuEnabled(false);
+    }
+
+    function showForm() {
+      $list.addClass('hidden');
+      $form.removeClass('hidden');
+    }
+
+    // ===== Role panel =====
+    function showRoleSection(show) {
+      show ? $('#roleSection').removeClass('hidden') : $('#roleSection').addClass('hidden');
+    }
+
+    function toggleRoleSectionEnabled(enabled) {
+      if (enabled) {
+        $('#roleLocked').addClass('hidden');
+        $('#roleContent').removeClass('hidden');
+      } else {
+        $('#roleLocked').removeClass('hidden');
+        $('#roleContent').addClass('hidden');
+      }
+    }
+
+    // ===== User Menu panel =====
+    function setUserMenuVisible(show) {
+      show ? $('#userMenuSection').removeClass('hidden') : $('#userMenuSection').addClass('hidden');
+    }
+
+    function toggleUserMenuEnabled(enabled) {
+      if (enabled) {
+        $('#userMenuLocked').addClass('hidden');
+        $('#userMenuContent').removeClass('hidden');
+      } else {
+        $('#userMenuLocked').removeClass('hidden');
+        $('#userMenuContent').addClass('hidden');
+      }
+    }
+
+    // === Roles ===
+    function loadRolesForUser(userId) {
+      return $.get("{{ route('role.data') }}", {
+          user_id: userId,
+          length: 1000
+        })
+        .then(res => {
+          const rows = Array.isArray(res?.data) ? res.data : [];
+          const $l = $('#roleList').empty();
+          rows.forEach(r => {
+            const checked = String(r.selected) === '1' || r.selected === 1 || r.selected === true;
+            $l.append(`
+            <label class="inline-flex items-center gap-2 p-2 rounded border dark:border-gray-700">
+              <input type="checkbox" class="role-checkbox h-4 w-4" value="${r.id}" ${checked ? 'checked' : ''}>
+              <span class="text-sm text-gray-800 dark:text-gray-200">${r.role_name}</span>
+            </label>
+          `);
+          });
+          return rows.length;
+        });
+    }
+
+    // === User Menus (GATED PERMISSIONS) ===
+    function loadMenusForUser(userId) {
+      if (!userId) return;
+      return $.get(`{{ route('role-menu.byUser', ':id') }}`.replace(':id', userId))
+        .then(res => {
+          const rows = Array.isArray(res?.data) ? res.data : [];
+          const $list = $('#userMenuList').empty();
+
+          if (rows.length === 0) {
+            $list.append('<div class="text-sm text-gray-500 dark:text-gray-400">No menus.</div>');
+            return;
+          }
+
+          rows.forEach(m => {
+            const enabled = String(m.selected) === '1' || m.selected === 1 || m.selected === true;
+            const row = $(`
+            <div class="menu-row flex items-center justify-between gap-3 p-2 border rounded dark:border-gray-700" data-id="${m.id}">
+              <div class="flex items-center gap-3">
+                <input type="checkbox" class="menu-enable h-4 w-4" ${enabled ? 'checked' : ''}>
+                <span class="text-sm text-gray-800 dark:text-gray-200">${m.title}</span>
+              </div>
+              <div class="perm-group flex items-center gap-4">
+                <label class="inline-flex items-center gap-2 text-sm">
+                  <input type="checkbox" class="perm perm-view h-4 w-4" ${Number(m.can_view) ? 'checked' : ''}>
+                  <span>View</span>
+                </label>
+                <label class="inline-flex items-center gap-2 text-sm">
+                  <input type="checkbox" class="perm perm-upload h-4 w-4" ${Number(m.can_upload) ? 'checked' : ''}>
+                  <span>Upload</span>
+                </label>
+                <label class="inline-flex items-center gap-2 text-sm">
+                  <input type="checkbox" class="perm perm-download h-4 w-4" ${Number(m.can_download) ? 'checked' : ''}>
+                  <span>Download</span>
+                </label>
+                <label class="inline-flex items-center gap-2 text-sm">
+                  <input type="checkbox" class="perm perm-delete h-4 w-4" ${Number(m.can_delete) ? 'checked' : ''}>
+                  <span>Delete</span>
+                </label>
+              </div>
+            </div>
+          `);
+
+            // Gating: disable permission ketika menu belum enable
+            row.find('.perm').prop('disabled', !enabled);
+            row.find('.perm-group').toggleClass('opacity-50', !enabled);
+
+            $list.append(row);
+          });
+        });
+    }
+
+    // Handler: toggle menu-enable -> atur permission
+    $(document).on('change', '.menu-row .menu-enable', function() {
+      const $row = $(this).closest('.menu-row');
+      const enabled = $(this).is(':checked');
+
+      if (!enabled) {
+        // OFF -> clear semua permission
+        $row.find('.perm').prop('checked', false);
+      }
+      // enable/disable permission + efek visual
+      $row.find('.perm').prop('disabled', !enabled);
+      $row.find('.perm-group').toggleClass('opacity-50', !enabled);
+    });
+
+    // ===== Modes =====
+    function enterAddMode() {
+      editingId = null;
+      $('#formTitle').text('Add New User');
+      $methodSpoof.val('POST');
+      $formEl.attr('action', `{{ route('userMaintenance.store') }}`);
+      $pwd.prop('required', true);
+      $pwdHint.text('(required)');
+      showRoleSection(false);
+      toggleRoleSectionEnabled(false);
+      setUserMenuVisible(false);
+      toggleUserMenuEnabled(false);
+    }
+
+    function enterEditMode(user) {
+      editingId = user.id;
+      $('#formTitle').text('Edit User');
+      $methodSpoof.val('PUT');
+      $formEl.attr('action', `{{ route('userMaintenance.update', ':id') }}`.replace(':id', editingId));
+
+      $('#f_name').val(user.name);
+      $('#f_email').val(user.email);
+      $('#f_nik').val(user.nik);
+      $('#f_status').val(String(user.is_active));
+      $pwd.val('').prop('required', false);
+      $pwdHint.text('(optional)');
+
+      // show & load roles
+      showRoleSection(true);
+      toggleRoleSectionEnabled(true);
+      loadRolesForUser(editingId).catch(() => themeToast('error', 'Failed to load roles'));
+
+      // show & load user menus (gated)
+      setUserMenuVisible(true);
+      toggleUserMenuEnabled(true);
+      loadMenusForUser(editingId).catch(() => themeToast('error', 'Failed to load menus'));
+    }
+
+    /* ========= DataTable ========= */
+    const table = $('#usersTable').DataTable({
+      processing: true,
+      serverSide: true,
+      scrollX: true,
+      ajax: {
+        url: '{{ route("userMaintenance.data") }}',
+        type: 'GET',
+        data: d => {
+          d.search = d.search.value;
+        }
+      },
+      columns: [{
+          data: null,
+          render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1
+        },
+        {
+          data: 'name',
+          name: 'name'
+        },
+        {
+          data: 'email',
+          name: 'email'
+        },
+        {
+          data: 'nik',
+          name: 'nik'
+        },
+        {
+          data: 'is_active',
+          render: v => String(v) === '1' ?
+            `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>` :
+            `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>`
+        },
+        {
+          data: null,
+          orderable: false,
+          searchable: false,
+          render: row => `
+          <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
+            <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
+          </button>
+          <button class="delete-button text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete" data-id="${row.id}">
+            <i class="fa-solid fa-trash-can fa-lg m-2"></i>
+          </button>`
+        }
+      ],
+      pageLength: 10,
+      order: [
+        [1, 'asc']
+      ],
+      language: {
+        emptyTable: '<div class="text-gray-500 dark:text-gray-400">No users found.</div>'
+      },
+      responsive: true,
+      autoWidth: false,
+    });
+
+    /* ========= Handlers ========= */
+
+    // Add New -> form
+    $('#add-button').on('click', function() {
+      const $btn = $(this);
+      if (!beginBusy($btn, 'Opening...')) return;
+      enterAddMode();
+      showForm();
+      endBusy($btn);
+    });
+
+    // Back / Cancel -> list
+    $('#backToList, #cancelForm').on('click', function() {
+      showList();
+    });
+
+    // Edit
+    $(document).on('click', '.edit-button', function() {
+      const $btn = $(this);
+      if (!beginBusy($btn, 'Loading...')) return;
+      const id = $(this).data('id');
+      const showUrl = "{{ route('userMaintenance.show', ':id') }}".replace(':id', id);
+
+      $.get(showUrl, function(data) {
+        showForm();
+        enterEditMode(data);
+      }).fail(function() {
+        themeToast('error', 'Failed to load user');
+      }).always(function() {
+        endBusy($btn);
+      });
+    });
+
+    // Delete
+    $(document).on('click', '.delete-button', function() {
+      const id = $(this).data('id');
+      Swal.fire({
+        title: 'Delete user?',
+        text: "This action cannot be undone.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        background: isDark() ? '#1f2937' : '#ffffff',
+        color: isDark() ? '#f9fafb' : '#111827',
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+        $.ajax({
+          url: `/master/userMaintenance/${id}`,
+          method: 'DELETE',
+          headers: {
+            'X-CSRF-TOKEN': csrfToken
+          },
+          success: res => {
+            if (res.success) {
+              themeToast('success', 'User deleted');
+              table.ajax.reload(null, false);
+            } else {
+              themeToast('error', res.message || 'Failed to delete');
+            }
+          },
+          error: () => themeToast('error', 'Error deleting user'),
+        });
+      });
+    });
+
+    // Save (Create/Update)
+    $('#userForm').on('submit', function(e) {
+      e.preventDefault();
+      const $btn = $('#saveForm');
+      if (!beginBusy($btn, 'Saving...')) return;
+
+      const formData = new FormData(this);
+      formData.set('is_active', $('#f_status').val());
+      $('#err-name,#err-email,#err-nik,#err-password').addClass('hidden').text('');
+
+      $.ajax({
+          url: $(this).attr('action'),
+          method: 'POST', // spoof PUT via _method
+          headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+          },
+          data: formData,
+          processData: false,
+          contentType: false,
+        })
+        .done(res => {
+          if (!res || !res.success) {
+            themeToast('error', res?.message || 'Failed to save');
+            return;
+          }
+          table.ajax.reload(null, false);
+
+          if (!editingId) {
+            const newId = res.id || res.data?.id;
+            if (!newId) {
+              themeToast('error', 'Server did not return new user id.');
+              return;
+            }
+            const userObj = res.data || {
+              id: newId,
+              name: $('#f_name').val(),
+              email: $('#f_email').val(),
+              nik: $('#f_nik').val(),
+              is_active: $('#f_status').val()
+            };
+            showForm();
+            enterEditMode(userObj);
+            themeToast('success', 'User saved. Assign roles & menu access.');
+          } else {
+            themeToast('success', 'User updated');
+            showRoleSection(true);
+            toggleRoleSectionEnabled(true);
+            loadRolesForUser(editingId).catch(() => {});
+            setUserMenuVisible(true);
+            toggleUserMenuEnabled(true);
+            loadMenusForUser(editingId).catch(() => {});
+          }
+        })
+        .fail(xhr => {
+          const errors = xhr.responseJSON?.errors;
+          if (errors) {
+            if (errors.name) $('#err-name').text(errors.name[0]).removeClass('hidden');
+            if (errors.email) $('#err-email').text(errors.email[0]).removeClass('hidden');
+            if (errors.nik) $('#err-nik').text(errors.nik[0]).removeClass('hidden');
+            if (errors.password) $('#err-password').text(errors.password[0]).removeClass('hidden');
+            themeToast('error', 'Validation error');
+          } else {
+            themeToast('error', 'Request failed');
+          }
+        })
+        .always(() => endBusy($btn));
+    });
+
+    // Save Roles
+    $('#saveRolesBtn').on('click', function() {
+      if (!editingId) return;
+      const $btn = $(this);
+      if (!beginBusy($btn, 'Saving...')) return;
+
+      const roleIds = $('.role-checkbox:checked').map(function() {
+        return $(this).val();
+      }).get();
+
+      $.ajax({
+          url: `{{ route('userMaintenance.update', ':id') }}`.replace(':id', editingId),
+          method: 'POST',
+          headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json'
+          },
+          data: {
+            _method: 'PUT',
+            role_ids: roleIds
+          },
+        })
+        .done(() => themeToast('success', 'Roles updated'))
+        .fail(() => themeToast('error', 'Request failed'))
+        .always(() => endBusy($btn));
+    });
+
+    // Save Menu Access (enabled diambil HANYA dari menu-enable)
+    $('#saveUserMenusBtn').on('click', function() {
+      if (!editingId) return;
+      const $btn = $(this);
+      if (!beginBusy($btn, 'Saving...')) return;
+
+      const payload = $('.menu-row').map(function() {
+        const $r = $(this);
+        const id = $r.data('id');
+        const en = $r.find('.menu-enable').is(':checked') ? 1 : 0; // gating ketat
+        const get = cls => $r.find(cls).is(':checked') ? 1 : 0;
+        return {
+          menu_id: id,
+          enabled: en,
+          can_view: get('.perm-view'),
+          can_upload: get('.perm-upload'),
+          can_download: get('.perm-download'),
+          can_delete: get('.perm-delete'),
+        };
+      }).get();
+
+      $.ajax({
+          url: '{{ route("role-menu.syncByUser", ":id") }}'.replace(':id', editingId),
+          method: 'POST',
+          headers: {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          data: JSON.stringify({
+            menus: payload
+          }),
+        })
+        .done(() => themeToast('success', 'Menu access updated'))
+        .fail(() => themeToast('error', 'Failed to update menu access'))
+        .always(() => endBusy($btn));
+    });
+
+    // Init
+    showList();
+  });
 </script>
 @endpush

@@ -17,7 +17,7 @@ class UserMaintenanceController extends Controller
     {
         $query = User::query()->select(['id','name','email','nik','is_active']);
 
-        // Search (mengikuti JS Anda: d.search = d.search.value)
+        // Frontend mengirim d.search = d.search.value (string)
         if ($request->filled('search')) {
             $s = $request->search;
             $query->where(function ($q) use ($s) {
@@ -28,11 +28,10 @@ class UserMaintenanceController extends Controller
         }
 
         // Sorting
-        $sortBy    = $request->input('order.0.column', 1);         // default kolom "name"
-        $sortDir   = $request->input('order.0.dir', 'asc');
-        $columns   = $request->input('columns', []);
-        $sortColumn= $columns[$sortBy]['data'] ?? 'name';
-        // amankan nama kolom
+        $sortBy     = $request->input('order.0.column', 1); // default kolom "name"
+        $sortDir    = $request->input('order.0.dir', 'asc');
+        $columns    = $request->input('columns', []);
+        $sortColumn = $columns[$sortBy]['data'] ?? 'name';
         if (!in_array($sortColumn, ['name','email','nik','is_active'])) {
             $sortColumn = 'name';
         }
@@ -56,7 +55,7 @@ class UserMaintenanceController extends Controller
     }
 
     /**
-     * Simpel show untuk prefilling modal edit.
+     * Show untuk prefilling edit.
      */
     public function show(User $user)
     {
@@ -65,53 +64,81 @@ class UserMaintenanceController extends Controller
 
     /**
      * Store user baru.
+     * FRONTEND mengharapkan JSON: { success, id, data }
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'     => ['required','string','max:50'],
-            'email'    => ['required','string','email','max:50','unique:users,email'],
-            'nik'      => ['required','string','max:20','unique:users,nik'],
-            'password' => ['required','string','min:6','max:255'],
-            'is_active'=> ['required','boolean'],
+            'name'      => ['required','string','max:50'],
+            'email'     => ['required','string','email','max:50','unique:users,email'],
+            'nik'       => ['required','string','max:20','unique:users,nik'],
+            'password'  => ['required','string','min:6','max:255'],
+            'is_active' => ['required','boolean'],
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
+        // pastikan boolean -> 1/0
+        $validated['is_active'] = $request->boolean('is_active') ? 1 : 0;
+        $validated['password']  = Hash::make($validated['password']);
 
-        User::create($validated);
+        $user = User::create($validated);
 
-        return response()->json(['success' => true, 'message' => 'User created successfully.']);
+        // penting: kirim id & data untuk dipakai membuka panel User Roles
+        return response()->json([
+            'success' => true,
+            'id'      => $user->id,
+            'data'    => $user->only(['id','name','email','nik','is_active']),
+        ]);
     }
 
     /**
      * Update user (password opsional).
+     * FRONTEND mengharapkan JSON: { success, data }
      */
-    public function update(Request $request, User $user)
-    {
-        $validated = $request->validate([
-            'name'  => ['required','string','max:50'],
-            'email' => [
-                'required','string','email','max:50',
-                Rule::unique('users','email')->ignore($user->id),
-            ],
-            'nik'   => [
-                'required','string','max:20',
-                Rule::unique('users','nik')->ignore($user->id),
-            ],
-            'password' => ['nullable','string','min:6','max:255'],
-            'is_active' => ['required','boolean'],
+   public function update(Request $request, User $user)
+{
+    // ===== Roles-only mode (tanpa ubah field user) =====
+    if ($request->has('role_ids') && !$request->has('name')) {
+        $data = $request->validate([
+            'role_ids'   => ['array'],
+            'role_ids.*' => ['integer','exists:roles,id'],
         ]);
 
-        if (!empty($validated['password'])) {
-            $validated['password'] = Hash::make($validated['password']);
-        } else {
-            unset($validated['password']);
-        }
+        $ids = collect($data['role_ids'] ?? [])->map(fn($v)=>(int)$v)->unique()->values()->all();
+        // withTimestamps() di relasi akan mengisi created_at & updated_at pivot
+        $user->roles()->sync($ids);
 
-        $user->update($validated);
-
-        return response()->json(['success' => true, 'message' => 'User updated successfully.']);
+        return response()->json(['success' => true]);
     }
+
+    // ===== Mode update biasa (nama/email/nik/dll) =====
+    $validated = $request->validate([
+        'name'      => ['required','string','max:50'],
+        'email'     => [
+            'required','string','email','max:50',
+            Rule::unique('users','email')->ignore($user->id),
+        ],
+        'nik'       => [
+            'required','string','max:20',
+            Rule::unique('users','nik')->ignore($user->id),
+        ],
+        'password'  => ['nullable','string','min:6','max:255'],
+        'is_active' => ['required','boolean'],
+    ]);
+
+    $validated['is_active'] = $request->boolean('is_active') ? 1 : 0;
+    if (!empty($validated['password'])) {
+        $validated['password'] = Hash::make($validated['password']);
+    } else {
+        unset($validated['password']);
+    }
+
+    $user->update($validated);
+
+    return response()->json([
+        'success' => true,
+        'data'    => $user->only(['id','name','email','nik','is_active']),
+    ]);
+}
 
     /**
      * Hapus user.

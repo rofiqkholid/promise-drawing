@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\ProductsController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\UserRoleController;
+use App\Http\Controllers\Api\RoleMenuController;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -131,6 +132,18 @@ Route::middleware(['auth'])->group(function () {
         return view('user_management.role');
     })->name('role');
 
+
+
+
+    Route::get('/role-menu', function () {
+        return view('user_management.role_menu');
+    })->name('role-menu');
+
+
+
+
+
+
     Route::get('/user-role', function () {
         return view('user_management.user_role');
     })->name('user-role');
@@ -175,6 +188,14 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('master/docTypeSubCategories', DocTypeSubCategoriesController::class)->names('docTypeSubCategories')->except(['create', 'edit']);
     Route::get('/docTypeSubCategories/data', [DocTypeSubCategoriesController::class, 'data'])->name('docTypeSubCategories.data');
     Route::get('/docTypeSubCategories/getDocTypeGroups', [DocTypeSubCategoriesController::class, 'getDocTypeGroups'])->name('docTypeSubCategories.getDocTypeGroups');
+
+    #New
+    Route::get('/docTypeSubCategories/get-customers', [DocTypeSubCategoriesController::class, 'getCustomers'])->name('docTypeSubCategories.getCustomers');
+    Route::get('/master/docTypeSubCategories/{subcategoryId}/aliases', [DocTypeSubCategoriesController::class, 'aliases'])->name('docTypeSubCategories.aliases.data');
+    Route::post('/master/aliases', [DocTypeSubCategoriesController::class, 'storeAlias'])->name('docTypeSubCategories.aliases.store');
+    Route::get('/master/aliases/{alias}', [DocTypeSubCategoriesController::class, 'showAlias'])->name('docTypeSubCategories.aliases.show');
+    Route::put('/master/aliases/{alias}', [DocTypeSubCategoriesController::class, 'updateAlias'])->name('docTypeSubCategories.aliases.update');
+    Route::delete('/master/aliases/{alias}', [DocTypeSubCategoriesController::class, 'destroyAlias'])->name('docTypeSubCategories.aliases.destroy');
     #End region
 
     #Region File Extension
@@ -245,15 +266,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('upload.getModelData', [UploadController::class, 'getModelData'])->name('upload.getModelData');
     #End region
 
+    #Region Role Menu
+    Route::get('/role-menu/pair', [RoleMenuController::class, 'pairShow'])->name('role-menu.pairShow');
+    Route::put('/role-menu/pair', [RoleMenuController::class, 'pairUpdate'])->name('role-menu.pairUpdate');
+    Route::delete('/role-menu/pair', [RoleMenuController::class, 'pairDestroy'])->name('role-menu.pairDestroy');
 
-
-
-
-    Route::get('/docTypeSubCategories/get-customers', [DocTypeSubCategoriesController::class, 'getCustomers'])->name('docTypeSubCategories.getCustomers');
-
-    Route::get('/master/docTypeSubCategories/{subcategoryId}/aliases', [DocTypeSubCategoriesController::class, 'aliases'])->name('docTypeSubCategories.aliases.data');
-    Route::post('/master/aliases', [DocTypeSubCategoriesController::class, 'storeAlias'])->name('docTypeSubCategories.aliases.store');
-    Route::get('/master/aliases/{alias}', [DocTypeSubCategoriesController::class, 'showAlias'])->name('docTypeSubCategories.aliases.show');
-    Route::put('/master/aliases/{alias}', [DocTypeSubCategoriesController::class, 'updateAlias'])->name('docTypeSubCategories.aliases.update');
-    Route::delete('/master/aliases/{alias}', [DocTypeSubCategoriesController::class, 'destroyAlias'])->name('docTypeSubCategories.aliases.destroy');
+    Route::get('/role-menu/data', [RoleMenuController::class, 'data'])->name('role-menu.data');        
+    Route::get('/role-menu/dropdowns', [RoleMenuController::class, 'dropdowns'])->name('role-menu.dropdowns'); 
+    Route::resource('user_management/role-menu', RoleMenuController::class)->names('role-menu')->except(['create', 'edit', 'show']);
+    Route::get('/user-role/by-user/{user}', [UserRoleController::class, 'byUser'])->name('user-role.byUser');
+    Route::post('/user-role/by-user/{user}', [UserRoleController::class, 'sync'])->name('user-role.sync');
+    Route::get('/role-menu/by-user/{user}', [RoleMenuController::class, 'byUser'])->name('role-menu.byUser');
+    Route::post('/role-menu/by-user/{user}', [RoleMenuController::class, 'syncByUser'])->name('role-menu.syncByUser');
 });

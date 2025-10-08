@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -12,44 +13,54 @@ class RoleController extends Controller
     /**
      * Listing untuk DataTables.
      */
-    public function data(Request $request)
-    {
-        $query = Role::query();
-        $searchTerm = $request->input('search.value',
-                        $request->input('search', $request->input('q')));
+   public function data(Request $request)
+{
+    $query = \App\Models\Role::query()->from('roles')
+        ->select(['roles.id','roles.role_name']);
 
-        if (!empty($searchTerm)) {
-            $query->where('role_name', 'like', '%' . $searchTerm . '%');
-        }
-
-        // --- Sorting (whitelist kolom agar aman)
-        $allowedSorts = ['role_name', 'created_at', 'updated_at', 'id'];
-        $orderReq     = $request->get('order')[0] ?? null;
-        $columnsReq   = $request->get('columns', []);
-
-        $sortByIndex  = $orderReq['column'] ?? 0;
-        $sortDir      = in_array(($orderReq['dir'] ?? 'asc'), ['asc','desc']) ? $orderReq['dir'] : 'asc';
-        $sortColumn   = $columnsReq[$sortByIndex]['data'] ?? 'role_name';
-        $sortColumn   = in_array($sortColumn, $allowedSorts) ? $sortColumn : 'role_name';
-
-        $query->orderBy($sortColumn, $sortDir);
-
-        // --- Pagination (DataTables)
-        $perPage = (int) $request->input('length', 10);
-        $start   = (int) $request->input('start', 0);
-        $draw    = (int) $request->input('draw', 1);
-
-        $totalRecords     = Role::count();
-        $filteredRecords  = (clone $query)->count();
-        $roles            = $query->skip($start)->take($perPage)->get();
-
-        return response()->json([
-            'draw'            => $draw,
-            'recordsTotal'    => $totalRecords,
-            'recordsFiltered' => $filteredRecords,
-            'data'            => $roles,
-        ]);
+    // jika dikirim user_id, ikutkan info selected
+    if ($request->filled('user_id')) {
+        $uid = (int) $request->user_id;
+        $query->leftJoin('user_roles as ur', function($j) use ($uid){
+            $j->on('ur.role_id','=','roles.id')->where('ur.user_id',$uid);
+        })->addSelect(DB::raw('CASE WHEN ur.user_id IS NULL THEN 0 ELSE 1 END AS selected'));
+    } else {
+        $query->addSelect(DB::raw('0 AS selected'));
     }
+
+    // optional search sederhana
+    if ($request->filled('search')) {
+        $s = $request->search;
+        $query->where('roles.role_name','like',"%{$s}%");
+    }
+
+    // sorting aman (DataTables/Non-DataTables)
+    $sortBy    = (int) $request->input('order.0.column', 1);
+    $sortDir   = $request->input('order.0.dir', 'asc');
+    $columns   = $request->input('columns', []);
+    $fallback  = [0 => 'id', 1 => 'role_name', 2 => 'selected'];
+    $candidate = $columns[$sortBy]['data'] ?? ($fallback[$sortBy] ?? 'role_name');
+    $allowed   = ['id','role_name','selected'];
+    $sortCol   = in_array($candidate,$allowed,true) ? $candidate : 'role_name';
+    $query->orderBy($sortCol, $sortDir);
+
+    // pagination aman
+    $perPage   = (int) $request->input('length', 1000);
+    $start     = (int) $request->input('start', 0);
+    $draw      = (int) $request->input('draw', 1);
+
+    $total     = \App\Models\Role::count();
+    $filtered  = (clone $query)->count();
+    $rows      = $query->skip($start)->take($perPage)->get();
+
+    return response()->json([
+        'draw'            => $draw,
+        'recordsTotal'    => $total,
+        'recordsFiltered' => $filtered,
+        'data'            => $rows,
+    ]);
+}
+
 
     /**
      * Simpel: return semua role (kalau butuh dropdown).

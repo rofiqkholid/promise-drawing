@@ -10,6 +10,8 @@ class User extends Authenticatable
 
     protected $table = 'users'; 
     protected $primaryKey = 'id'; 
+    protected $casts = ['is_active' => 'integer'];
+
 
     protected $fillable = [
         'name',
@@ -33,4 +35,10 @@ class User extends Authenticatable
     {
         return 'nik'; 
     }
+   public function roles()
+{
+    return $this->belongsToMany(\App\Models\Role::class, 'user_roles', 'user_id', 'role_id')
+                ->withTimestamps(); // created_at & updated_at di pivot otomatis
+}
+
 }

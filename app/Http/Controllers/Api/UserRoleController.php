@@ -180,4 +180,41 @@ class UserRoleController extends Controller
     return response()->json(['success' => false, 'message' => 'Mapping not found.'], 404);
 }
 
+// import yang sudah ada: use App\Models\User; use App\Models\UserRole; use App\Models\Role;
+
+public function byUser(User $user)
+{
+    // kembalikan array role_id saja, biar ringan untuk checkbox
+    $roleIds = UserRole::where('user_id', $user->id)->pluck('role_id');
+    return response()->json($roleIds);
+}
+
+public function sync(Request $request, User $user)
+{
+    $data = $request->validate([
+        'role_ids'   => ['array'],
+        'role_ids.*' => ['integer', 'exists:roles,id'],
+    ]);
+
+    // sinkronisasi sederhana: hapus yang tidak terpilih, tambah yang baru
+    $newIds = collect($data['role_ids'] ?? [])->unique()->values();
+
+    // ambil sekarang
+    $current = UserRole::where('user_id', $user->id)->pluck('role_id');
+
+    $toInsert = $newIds->diff($current);
+    $toDelete = $current->diff($newIds);
+
+    if ($toInsert->isNotEmpty()) {
+        $rows = $toInsert->map(fn($rid) => ['user_id' => $user->id, 'role_id' => $rid])->all();
+        UserRole::insert($rows);
+    }
+    if ($toDelete->isNotEmpty()) {
+        UserRole::where('user_id', $user->id)->whereIn('role_id', $toDelete)->delete();
+    }
+
+    return response()->json(['success' => true, 'message' => 'Roles synchronized.']);
+}
+
+
 }
