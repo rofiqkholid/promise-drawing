@@ -149,34 +149,171 @@
         </div>
     </div>
 </div>
+
+{{-- Alias Management Modal --}}
+<div id="aliasManagementModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
+    <div class="relative p-4 w-full max-w-4xl h-full md:h-auto">
+        <div class="relative bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+            <div class="flex justify-between items-center pb-4 mb-4 rounded-t border-b sm:mb-5 dark:border-gray-600">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    Manage Aliases for "<span id="aliasSubCategoryName"></span>"
+                </h3>
+                <button type="button" class="close-modal-button text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                    <i class="fa-solid fa-xmark w-5 h-5"></i>
+                    <span class="sr-only">Close modal</span>
+                </button>
+            </div>
+            <div class="flex justify-end mb-4">
+                <button id="add-alias-button" type="button" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700">
+                    <i class="fa-solid fa-plus"></i> Add New Alias
+                </button>
+            </div>
+            <div class="overflow-x-auto p-2">
+                <table id="aliasesTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 w-16">No</th>
+                            <th scope="col" class="px-6 py-3">Customer</th>
+                            <th scope="col" class="px-6 py-3">Alias Name</th>
+                            <th scope="col" class="px-6 py-3 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Add Alias Modal --}}
+<div id="addAliasModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
+    <div class="relative p-4 w-full max-w-md h-full md:h-auto">
+        <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+             <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark w-5 h-5"></i><span class="sr-only">Close modal</span>
+            </button>
+            <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Add New Alias</h3>
+            <form id="addAliasForm" action="{{ route('docTypeSubCategories.aliases.store') }}" method="POST">
+                @csrf
+                <input type="hidden" name="doctypesubcategory_id" id="add_alias_doctypesubcategory_id">
+                <div class="mb-4">
+                    <label for="add_alias_customer_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Customer</label>
+                    <select name="customer_id" id="add_alias_customer_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                        <option value="">Select a customer</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="add_alias_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Alias Name</label>
+                    <input type="text" name="name" id="add_alias_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                </div>
+                <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full">Save</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Edit Alias Modal --}}
+<div id="editAliasModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
+    <div class="relative p-4 w-full max-w-md h-full md:h-auto">
+        <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+             <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark w-5 h-5"></i><span class="sr-only">Close modal</span>
+            </button>
+            <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Edit Alias</h3>
+            <form id="editAliasForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="mb-4">
+                    <label for="edit_alias_customer_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Customer</label>
+                    <select name="customer_id" id="edit_alias_customer_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                        <option value="">Select a customer</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="edit_alias_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Alias Name</label>
+                    <input type="text" name="name" id="edit_alias_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                </div>
+                <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full">Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Delete Alias Confirmation Modal --}}
+<div id="deleteAliasModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
+    <div class="relative p-4 w-full max-w-md h-full md:h-auto">
+        <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+            <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark w-5 h-5"></i><span class="sr-only">Close modal</span>
+            </button>
+            <div class="flex items-center justify-center w-16 h-16 mx-auto mb-3.5"><i class="fa-solid fa-trash-can text-gray-400 dark:text-gray-500 text-4xl"></i></div>
+            <p class="mb-4 text-gray-500 dark:text-gray-300">Are you sure you want to delete this alias?</p>
+            <div class="flex justify-center items-center space-x-4">
+                <button type="button" class="close-modal-button py-2 px-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 hover:bg-gray-100">No, cancel</button>
+                <button type="button" id="confirmDeleteAliasButton" class="py-2 px-3 text-sm font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700">Yes, I'm sure</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('style')
 <style>
-    div.dataTables_length label{
-        font-size: 0.75rem;
+    div.dataTables_wrapper div.dataTables_filter input:focus,
+    div.dataTables_wrapper div.dataTables_length select:focus {
+        outline: none;
+        box-shadow: none;
+        border-color: #6b7280;
     }
-    div.dataTables_length select{
-        font-size: 0.75rem;
-        line-height: 1rem;
-        padding: 0.25rem 1.25rem 0.25rem 0.5rem;
-        height: 1.875rem;
-        width: 4.5rem;
+
+    html.dark #addAliasModal input,
+    html.dark #addAliasModal select,
+    html.dark #editAliasModal input,
+    html.dark #editAliasModal select {
+        color: #f3f4f6;
+        background-color: #374151;
+        border-color: #4b5563;
     }
-    div.dataTables_filter label{
-        font-size: 0.75rem;
+
+    html.dark div.dataTables_wrapper div.dataTables_filter input,
+    html.dark div.dataTables_wrapper div.dataTables_length select {
+        background-color: #374151;
+        border-color: #4b5563;
+        color: #f3f4f6;
     }
-    div.dataTables_filter input[type="search"],
-    input[type="search"][aria-controls="departmentsTable"]{
-        font-size: 0.75rem;
-        line-height: 1rem;
-        padding: 0.25rem 0.5rem;
-        height: 1.875rem;
-        width: 12rem;
+
+    html.dark div.dataTables_wrapper div.dataTables_filter input::placeholder {
+        color: #9ca3af;
     }
-    div.dataTables_info {
-        font-size: 0.75rem;
-        padding-top: 0.8em;
+
+    html.dark div.dataTables_wrapper div.dataTables_length label,
+    html.dark div.dataTables_wrapper div.dataTables_filter label,
+    html.dark div.dataTables_wrapper div.dataTables_info,
+    html.dark #aliasManagementModal .dataTables_length label,
+    html.dark #aliasManagementModal .dataTables_filter label,
+    html.dark #aliasManagementModal .dataTables_info {
+        color: #d1d5db;
+    }
+
+    html.dark div.dataTables_wrapper div.dataTables_paginate .paginate_button {
+        color: #d1d5db !important;
+    }
+    html.dark div.dataTables_wrapper div.dataTables_paginate .paginate_button.disabled {
+        color: #6b7280 !important;
+    }
+    html.dark div.dataTables_wrapper div.dataTables_paginate .paginate_button.current,
+    html.dark div.dataTables_wrapper div.dataTables_paginate .paginate_button.current:hover {
+        background: #3b82f6 !important;
+        color: white !important;
+        border-color: #3b82f6 !important;
+    }
+    html.dark div.dataTables_wrapper div.dataTables_paginate .paginate_button:hover {
+        background: #374151 !important;
+        border-color: #4b5563 !important;
+    }
+
+    html.dark .dataTable tbody tr {
+        border-bottom-color: #374151;
     }
 
     .select2-container--default .select2-selection--single {
@@ -269,6 +406,9 @@ $(document).ready(function () {
                         <button class="delete-button text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete" data-id="${row.id}">
                             <i class="fa-solid fa-trash-can fa-lg m-2"></i>
                         </button>
+                        <button class="alias-button text-blue-600 hover:text-blue-900 dark:text-blue-500 dark:hover:text-blue-400" title="Manage Aliases" data-id="${row.id}" data-name="${row.name}">
+                            <i class="fa-solid fa-tags fa-lg m-2"></i>
+                        </button>
                     `;
                 }
             }
@@ -283,7 +423,6 @@ $(document).ready(function () {
         autoWidth: false,
     });
 
-    // Fix DataTables input/select focus styles
     const overrideFocusStyles = function() {
         $(this).css({
             'outline': 'none',
@@ -306,17 +445,14 @@ $(document).ready(function () {
     const closeButtons = $('.close-modal-button');
     let docTypeSubCategoryIdToDelete = null;
 
-    // Helper: Show modal
     function showModal(modal) {
         modal.removeClass('hidden').addClass('flex');
     }
 
-    // Helper: Hide modal
     function hideModal(modal) {
         modal.addClass('hidden').removeClass('flex');
     }
 
-    // Helper: Button loading state
     function setButtonLoading($btn, isLoading, loadingText = 'Processing...') {
         if (!$btn || $btn.length === 0) return;
         if (isLoading) {
@@ -341,7 +477,6 @@ $(document).ready(function () {
         }
     }
 
-    // Helper: Disable/enable form fields during request
     function setFormBusy($form, busy) {
         $form.find('input, select, textarea, button').prop('disabled', busy);
     }
@@ -468,7 +603,6 @@ $(document).ready(function () {
         window.toastWarning = toastWarning;
         window.toastInfo = toastInfo;
 
-    // Populate Document Type Group Dropdown
     function populateDocTypeGroupDropdown(selectElement, selectedId = null) {
         $.ajax({
             url: '{{ route("docTypeSubCategories.getDocTypeGroups") }}',
@@ -697,6 +831,154 @@ $(document).ready(function () {
                 setFormBusy($('#deleteDocTypeSubCategoryModal'), false);
             }
         });
+    });
+
+    // Alias Management
+    const aliasManagementModal = $('#aliasManagementModal');
+    const addAliasModal = $('#addAliasModal');
+    const editAliasModal = $('#editAliasModal');
+    const deleteAliasModal = $('#deleteAliasModal');
+    let aliasTable;
+    let currentSubcategoryId = null;
+    let aliasIdToDelete = null;
+
+    $('#add_alias_customer_id').select2({ dropdownParent: $('#addAliasModal'), width: '100%' });
+    $('#edit_alias_customer_id').select2({ dropdownParent: $('#editAliasModal'), width: '100%' });
+
+    function populateCustomersDropdown(selectElement, selectedId = null) {
+        $.ajax({
+            url: '{{ route("docTypeSubCategories.getCustomers") }}',
+            method: 'GET',
+            success: function (data) {
+                selectElement.empty().append('<option value="">Select a customer</option>');
+                data.forEach(function (customer) {
+                    const selected = customer.id == selectedId ? 'selected' : '';
+                    selectElement.append(`<option value="${customer.id}" ${selected}>${customer.name}</option>`);
+                });
+                selectElement.trigger('change');
+            },
+            error: function () { toastError('Error', 'Failed to load customers.'); }
+        });
+    }
+
+    $(document).on('click', '.alias-button', function () {
+        currentSubcategoryId = $(this).data('id');
+        const subCategoryName = $(this).data('name');
+        $('#aliasSubCategoryName').text(subCategoryName);
+
+        if ($.fn.DataTable.isDataTable('#aliasesTable')) {
+            aliasTable.ajax.url(`/master/docTypeSubCategories/${currentSubcategoryId}/aliases`).load();
+        } else {
+            aliasTable = $('#aliasesTable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: `/master/docTypeSubCategories/${currentSubcategoryId}/aliases`,
+                    type: 'GET'
+                },
+                columns: [
+                    { data: null, searchable: false, orderable: false, render: (data, type, row, meta) => meta.row + meta.settings._iDisplayStart + 1 },
+                    { data: 'customer.name', name: 'customer' },
+                    { data: 'name', name: 'name' },
+                    {
+                        data: null, orderable: false, searchable: false, className: 'text-center',
+                        render: function (data, type, row) {
+                            return `
+                                <button class="edit-alias-button text-gray-400 hover:text-gray-700 mx-2" title="Edit Alias" data-id="${row.id}"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button class="delete-alias-button text-red-600 hover:text-red-900 mx-2" title="Delete Alias" data-id="${row.id}"><i class="fa-solid fa-trash-can"></i></button>
+                            `;
+                        }
+                    }
+                ],
+                order: [[1, 'asc']]
+            });
+        }
+        showModal(aliasManagementModal);
+    });
+
+    $('#add-alias-button').on('click', function () {
+        $('#addAliasForm')[0].reset();
+        $('#add_alias_doctypesubcategory_id').val(currentSubcategoryId);
+        populateCustomersDropdown($('#add_alias_customer_id'));
+        showModal(addAliasModal);
+    });
+
+    $('#addAliasForm').on('submit', function (e) {
+        e.preventDefault();
+        const $form = $(this);
+        $.ajax({
+            url: $form.attr('action'),
+            method: 'POST',
+            data: $form.serialize(),
+            success: function (data) {
+                if (data.success) {
+                    aliasTable.ajax.reload();
+                    hideModal(addAliasModal);
+                    toastSuccess('Success', 'Alias added successfully.');
+                }
+            },
+            error: function (xhr) { toastError('Error', xhr.responseJSON.message); }
+        });
+    });
+
+    $(document).on('click', '.edit-alias-button', function () {
+        const aliasId = $(this).data('id');
+        $.ajax({
+            url: `/master/aliases/${aliasId}`,
+            method: 'GET',
+            success: function (data) {
+                $('#edit_alias_name').val(data.name);
+                populateCustomersDropdown($('#edit_alias_customer_id'), data.customer_id);
+                $('#editAliasForm').attr('action', `/master/aliases/${aliasId}`);
+                showModal(editAliasModal);
+            },
+            error: function () { toastError('Error', 'Failed to fetch alias data.'); }
+        });
+    });
+
+    $('#editAliasForm').on('submit', function(e) {
+        e.preventDefault();
+        const $form = $(this);
+        $.ajax({
+            url: $form.attr('action'),
+            method: 'POST',
+            data: $form.serialize(),
+            success: function (data) {
+                if (data.success) {
+                    aliasTable.ajax.reload();
+                    hideModal(editAliasModal);
+                    toastSuccess('Success', 'Alias updated successfully.');
+                }
+            },
+            error: function (xhr) { toastError('Error', xhr.responseJSON.message); }
+        });
+    });
+
+    $(document).on('click', '.delete-alias-button', function () {
+        aliasIdToDelete = $(this).data('id');
+        showModal(deleteAliasModal);
+    });
+
+    $('#confirmDeleteAliasButton').on('click', function () {
+        $.ajax({
+            url: `/master/aliases/${aliasIdToDelete}`,
+            method: 'DELETE',
+            headers: { 'X-CSRF-TOKEN': csrfToken },
+            success: function (data) {
+                if (data.success) {
+                    aliasTable.ajax.reload();
+                    hideModal(deleteAliasModal);
+                    aliasIdToDelete = null;
+                    toastSuccess('Success', 'Alias deleted successfully.');
+                }
+            },
+            error: function (xhr) { toastError('Error', xhr.responseJSON.message); }
+        });
+    });
+
+    $(document).on('click', '.close-modal-button', function() {
+        const modalToClose = $(this).closest('[tabindex="-1"]');
+        hideModal(modalToClose);
     });
 });
 </script>

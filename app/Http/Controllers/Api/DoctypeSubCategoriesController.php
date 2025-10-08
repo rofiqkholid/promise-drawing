@@ -101,98 +101,92 @@ class DocTypeSubCategoriesController extends Controller
         return response()->json(['success' => true, 'message' => 'Document Type Subcategory deleted successfully.']);
     }
 
-
     public function getCustomers()
     {
-        $customers = Customers::select('id', 'name')->get();
+        $customers = Customers::select('id', 'name')->where('is_active', true)->orderBy('name')->get();
         return response()->json($customers);
     }
 
+    public function aliases(Request $request, $subcategoryId)
+    {
+        $query = DoctypeSubcategoriesAlias::with('customer')->where('doctypesubcategory_id', $subcategoryId);
 
-    // public function aliases(Request $request, $subcategoryId)
-    // {
-    //     $query = DoctypeSubcategoriesAlias::with('customer')->where('doctypesubcategory_id', $subcategoryId);
+        // Handle Search
+        if ($request->has('search') && !empty($request->search['value'])) {
+            $searchValue = $request->search['value'];
+            $query->where(function($q) use ($searchValue) {
+                $q->where('name', 'like', '%' . $searchValue . '%')
+                  ->orWhereHas('customer', function($q) use ($searchValue) {
+                      $q->where('name', 'like', '%' . $searchValue . '%');
+                  });
+            });
+        }
 
-    //     // Handle Search
-    //     if ($request->has('search') && !empty($request->search['value'])) {
-    //         $searchValue = $request->search['value'];
-    //         $query->where(function($q) use ($searchValue) {
-    //             $q->where('name', 'like', '%' . $searchValue . '%')
-    //               ->orWhereHas('customer', function($q) use ($searchValue) {
-    //                   $q->where('name', 'like', '%' . $searchValue . '%');
-    //               });
-    //         });
-    //     }
+        $totalRecords = DoctypeSubcategoriesAlias::where('doctypesubcategory_id', $subcategoryId)->count();
+        $filteredRecords = $query->count();
 
-    //     $totalRecords = $query->count();
+        // Handle Sorting
+        $sortBy = $request->get('order')[0]['column'] ?? 1;
+        $sortDir = $request->get('order')[0]['dir'] ?? 'asc';
+        $sortColumn = $request->get('columns')[$sortBy]['data'] ?? 'customer';
 
-    //     // Handle Sorting
-    //     if ($request->has('order')) {
-    //         $order = $request->order[0];
-    //         $sortColumn = $request->columns[$order['column']]['data'];
-    //         $sortDir = $order['dir'];
+        if ($sortColumn === 'customer') {
+            $query->join('customers', 'doctypesubcategories_alias.customer_id', '=', 'customers.id')
+                  ->orderBy('customers.name', $sortDir)
+                  ->select('doctypesubcategories_alias.*');
+        } else {
+            if (in_array($sortColumn, ['name'])) {
+                 $query->orderBy($sortColumn, $sortDir);
+            }
+        }
 
-    //         if ($sortColumn === 'customer') {
-    //             $query->join('customers', 'doctypesubcategories_alias.customer_id', '=', 'customers.id')
-    //                   ->orderBy('customers.name', $sortDir)
-    //                   ->select('doctypesubcategories_alias.*');
-    //         } else {
-    //             $query->orderBy($sortColumn, $sortDir);
-    //         }
-    //     }
+        if ($request->has('length') && $request->length != -1) {
+            $query->skip($request->start)->take($request->length);
+        }
 
-    //     // Handle Pagination
-    //     if ($request->has('length') && $request->length != -1) {
-    //         $query->skip($request->start)->take($request->length);
-    //     }
+        $aliases = $query->get();
 
-    //     $aliases = $query->get();
+        return response()->json([
+            'draw' => intval($request->draw),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $aliases
+        ]);
+    }
 
-    //     return response()->json([
-    //         'draw' => $request->draw,
-    //         'recordsTotal' => $totalRecords,
-    //         'recordsFiltered' => $totalRecords,
-    //         'data' => $aliases
-    //     ]);
-    // }
+    public function storeAlias(Request $request)
+    {
+        $validated = $request->validate([
+            'doctypesubcategory_id' => 'required|integer|exists:doctype_subcategories,id',
+            'customer_id' => 'required|integer|exists:customers,id',
+            'name' => 'required|string|max:50',
+        ]);
 
+        DoctypeSubcategoriesAlias::create($validated);
 
-    // public function storeAlias(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'doctypesubcategory_id' => 'required|integer|exists:doctype_subcategories,id',
-    //         'customer_id' => 'required|integer|exists:customers,id',
-    //         'name' => 'required|string|max:50',
-    //     ]);
+        return response()->json(['success' => true, 'message' => 'Alias created successfully.']);
+    }
 
-    //     DoctypeSubcategoriesAlias::create($validated);
+    public function showAlias(DoctypeSubcategoriesAlias $alias)
+    {
+        return response()->json($alias);
+    }
 
-    //     return response()->json(['success' => true, 'message' => 'Alias created successfully.']);
-    // }
+    public function updateAlias(Request $request, DoctypeSubcategoriesAlias $alias)
+    {
+        $validated = $request->validate([
+            'customer_id' => 'required|integer|exists:customers,id',
+            'name' => 'required|string|max:50',
+        ]);
 
+        $alias->update($validated);
 
-    // public function showAlias(DoctypeSubcategoriesAlias $alias)
-    // {
-    //     return response()->json($alias);
-    // }
+        return response()->json(['success' => true, 'message' => 'Alias updated successfully.']);
+    }
 
-
-    // public function updateAlias(Request $request, DoctypeSubcategoriesAlias $alias)
-    // {
-    //     $validated = $request->validate([
-    //         'customer_id' => 'required|integer|exists:customers,id',
-    //         'name' => 'required|string|max:50',
-    //     ]);
-
-    //     $alias->update($validated);
-
-    //     return response()->json(['success' => true, 'message' => 'Alias updated successfully.']);
-    // }
-
-
-    // public function destroyAlias(DoctypeSubcategoriesAlias $alias)
-    // {
-    //     $alias->delete();
-    //     return response()->json(['success' => true, 'message' => 'Alias deleted successfully.']);
-    // }
+    public function destroyAlias(DoctypeSubcategoriesAlias $alias)
+    {
+        $alias->delete();
+        return response()->json(['success' => true, 'message' => 'Alias deleted successfully.']);
+    }
 }

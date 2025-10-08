@@ -234,6 +234,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/role/get-models', [RoleController::class, 'getModels'])->name('role.getModels');
     #End region
 
+    #Region master
     Route::resource('master/products', ProductsController::class)->names('products')->except(['create', 'edit']);
     Route::get('/products/data', [ProductsController::class, 'data'])->name('products.data');
     Route::get('/products/get-models', [ProductsController::class, 'getModels'])->name('products.getModels');
@@ -243,4 +244,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('upload.getCustomerData', [UploadController::class, 'getCustomerData'])->name('upload.getCustomerData');
     Route::post('upload.getModelData', [UploadController::class, 'getModelData'])->name('upload.getModelData');
     #End region
+
+
+
+
+
+    Route::get('/docTypeSubCategories/get-customers', [DocTypeSubCategoriesController::class, 'getCustomers'])->name('docTypeSubCategories.getCustomers');
+
+    Route::get('/master/docTypeSubCategories/{subcategoryId}/aliases', [DocTypeSubCategoriesController::class, 'aliases'])->name('docTypeSubCategories.aliases.data');
+    Route::post('/master/aliases', [DocTypeSubCategoriesController::class, 'storeAlias'])->name('docTypeSubCategories.aliases.store');
+    Route::get('/master/aliases/{alias}', [DocTypeSubCategoriesController::class, 'showAlias'])->name('docTypeSubCategories.aliases.show');
+    Route::put('/master/aliases/{alias}', [DocTypeSubCategoriesController::class, 'updateAlias'])->name('docTypeSubCategories.aliases.update');
+    Route::delete('/master/aliases/{alias}', [DocTypeSubCategoriesController::class, 'destroyAlias'])->name('docTypeSubCategories.aliases.destroy');
 });
