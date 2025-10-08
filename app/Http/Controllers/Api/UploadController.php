@@ -9,72 +9,41 @@ use Illuminate\Support\Facades\DB;
 
 class UploadController extends Controller
 {
-
-    public function getCustomerData(Request $request): JsonResponse
+    public function listFiles(Request $request): JsonResponse
     {
-        $searchTerm = $request->q;
-        $page = $request->page ?: 1;
-        $resultsPerPage = 10;
-        $offset = ($page - 1) * $resultsPerPage;
-
-        $query = DB::table('customers')
-            ->select('id', 'code');
-
-        if ($searchTerm) {
-            $query->where('code', 'LIKE', '%' . $searchTerm . '%');
-        }
-
-        $totalCount = $query->count();
-        $groups = $query->orderBy('code', 'asc')
-            ->offset($offset)
-            ->limit($resultsPerPage)
-            ->get();
-
-        $formattedGroups = $groups->map(function ($group) {
-            return [
-                'id'   => $group->id,
-                'text' => $group->code
-            ];
-        });
+        // Dummy data for DataTable
+        $dummyData = [
+            [
+                'id' => 1,
+                'customer' => 'MMKI',
+                'model' => '5JH5',
+                'part_no' => '5251D644',
+                'revision' => 'Rev1',
+                'uploaded_at' => '2025-01-01 12:00:00',
+                'status' => 'Rejected'
+            ],
+            [
+                'id' => 2,
+                'customer' => 'XYZ Corp',
+                'model' => '7KL2',
+                'part_no' => '9876F321',
+                'revision' => 'Rev2',
+                'uploaded_at' => '2025-01-02 13:00:00',
+                'status' => 'Approved'
+            ],
+            [
+                'id' => 3,
+                'customer' => 'ABC Ltd',
+                'model' => '9MN4',
+                'part_no' => '1234G789',
+                'revision' => 'Rev3',
+                'uploaded_at' => '2025-01-03 14:00:00',
+                'status' => 'Pending'
+            ]
+        ];
 
         return response()->json([
-            'results'     => $formattedGroups,
-            'total_count' => $totalCount
-        ]);
-    }
-
-    public function getModelData(Request $request): JsonResponse
-    {
-        $searchTerm = $request->q;
-        $customer_id = $request->customer_id;
-        $page = $request->page ?: 1;
-        $resultsPerPage = 10;
-        $offset = ($page - 1) * $resultsPerPage;
-
-        $query = DB::table('models')
-            ->select('id', 'name')
-            ->where('customer_id', $customer_id);
-
-        if ($searchTerm) {
-            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
-        }
-
-        $totalCount = $query->count();
-        $groups = $query->orderBy('name', 'asc')
-            ->offset($offset)
-            ->limit($resultsPerPage)
-            ->get();
-
-        $formattedGroups = $groups->map(function ($group) {
-            return [
-                'id'   => $group->id,
-                'text' => $group->name
-            ];
-        });
-
-        return response()->json([
-            'results'     => $formattedGroups,
-            'total_count' => $totalCount
+            'data' => $dummyData
         ]);
     }
 }

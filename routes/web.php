@@ -21,6 +21,9 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\UserRoleController;
 use App\Http\Controllers\Api\RoleMenuController;
+use App\Http\Controllers\Api\ApprovalController;
+use App\Http\Controllers\Api\ExportController;
+use App\Http\Controllers\Api\DrawingUploadController;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -133,7 +136,9 @@ Route::middleware(['auth'])->group(function () {
     })->name('role');
 
 
-
+    Route::get('/drawing-upload', function () {
+        return view('file_management.drawing_upload');
+    })->name('drawing.upload');
 
     Route::get('/role-menu', function () {
         return view('user_management.role_menu');
@@ -270,12 +275,26 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/role-menu/pair', [RoleMenuController::class, 'pairShow'])->name('role-menu.pairShow');
     Route::put('/role-menu/pair', [RoleMenuController::class, 'pairUpdate'])->name('role-menu.pairUpdate');
     Route::delete('/role-menu/pair', [RoleMenuController::class, 'pairDestroy'])->name('role-menu.pairDestroy');
-
-    Route::get('/role-menu/data', [RoleMenuController::class, 'data'])->name('role-menu.data');        
-    Route::get('/role-menu/dropdowns', [RoleMenuController::class, 'dropdowns'])->name('role-menu.dropdowns'); 
+    Route::get('/role-menu/data', [RoleMenuController::class, 'data'])->name('role-menu.data');
+    Route::get('/role-menu/dropdowns', [RoleMenuController::class, 'dropdowns'])->name('role-menu.dropdowns');
     Route::resource('user_management/role-menu', RoleMenuController::class)->names('role-menu')->except(['create', 'edit', 'show']);
     Route::get('/user-role/by-user/{user}', [UserRoleController::class, 'byUser'])->name('user-role.byUser');
     Route::post('/user-role/by-user/{user}', [UserRoleController::class, 'sync'])->name('user-role.sync');
     Route::get('/role-menu/by-user/{user}', [RoleMenuController::class, 'byUser'])->name('role-menu.byUser');
     Route::post('/role-menu/by-user/{user}', [RoleMenuController::class, 'syncByUser'])->name('role-menu.syncByUser');
+    #End region
+
+
+
+    Route::post('upload.getCustomerData', [DrawingUploadController::class, 'getCustomerData'])->name('upload.getCustomerData');
+    Route::post('upload.getModelData', [DrawingUploadController::class, 'getModelData'])->name('upload.getModelData');
+    Route::post('upload.getProductData', [DrawingUploadController::class, 'getProductData'])->name('upload.getProductData');
+    Route::post('upload.getDocumentGroupData', [DrawingUploadController::class, 'getDocumentGroupData'])->name('upload.getDocumentGroupData');
+    Route::post('upload.getSubCategoryData', [DrawingUploadController::class, 'getSubCategoryData'])->name('upload.getSubCategoryData');
+
+    //dummy
+    Route::get('/files/list', [UploadController::class, 'listFiles'])->name('api.files.list');
+    Route::get('/files/downloadable', [ExportController::class, 'listDownloadableFiles'])->name('api.files.downloadable');
+    Route::get('/approvals/list', [ApprovalController::class, 'listApprovals'])->name('api.approvals.list');
+    Route::get('/approval/{id}', [ApprovalController::class, 'showDetail'])->name('approval.detail');
 });
