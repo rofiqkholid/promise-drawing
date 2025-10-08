@@ -4,7 +4,6 @@
 
 @section('content')
 <div class="p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
-    {{-- Header Section --}}
     <div class="sm:flex sm:items-center sm:justify-between mb-6">
         <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Document Type Group Master</h2>
@@ -18,7 +17,6 @@
         </div>
     </div>
 
-    {{-- Main Content: Table Card --}}
     <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
         <div class="p-4 md:p-6 overflow-x-auto">
             <table id="docTypeGroupsTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -37,7 +35,6 @@
     </div>
 </div>
 
-{{-- Add Document Type Group Modal --}}
 <div id="addDocTypeGroupModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
     <div class="relative p-4 w-full max-w-md h-full md:h-auto">
         <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
@@ -66,7 +63,6 @@
     </div>
 </div>
 
-{{-- Edit Document Type Group Modal --}}
 <div id="editDocTypeGroupModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
     <div class="relative p-4 w-full max-w-md h-full md:h-auto">
         <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
@@ -96,7 +92,6 @@
     </div>
 </div>
 
-{{-- Delete Confirmation Modal --}}
 <div id="deleteDocTypeGroupModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
     <div class="relative p-4 w-full max-w-md h-full md:h-auto">
         <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
@@ -126,6 +121,7 @@
     div.dataTables_length label {
         font-size: 0.75rem;
     }
+
     div.dataTables_length select {
         font-size: 0.75rem;
         line-height: 1rem;
@@ -133,9 +129,11 @@
         height: 1.875rem;
         width: 4.5rem;
     }
+
     div.dataTables_filter label {
         font-size: 0.75rem;
     }
+
     div.dataTables_filter input[type="search"],
     input[type="search"][aria-controls="docTypeGroupsTable"] {
         font-size: 0.75rem;
@@ -144,19 +142,23 @@
         height: 1.875rem;
         width: 12rem;
     }
+
     div.dataTables_info {
         font-size: 0.75rem;
         padding-top: 0.8em;
     }
+
     div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar {
         display: none !important;
         width: 0 !important;
         height: 0 !important;
     }
+
     div.dataTables_wrapper div.dataTables_scrollBody {
         -ms-overflow-style: none !important;
         scrollbar-width: none !important;
     }
+
     input::placeholder {
         text-align: left;
     }
@@ -413,7 +415,9 @@
             $.ajax({
                 url: $form.attr('action'),
                 method: 'POST',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
                 data: formData,
                 processData: false,
                 contentType: false,
@@ -485,7 +489,9 @@
             $.ajax({
                 url: $form.attr('action'),
                 method: 'POST',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
                 data: formData,
                 processData: false,
                 contentType: false,
@@ -530,7 +536,9 @@
             $.ajax({
                 url: `/master/docTypeGroups/${docTypeGroupIdToDelete}`,
                 method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
                 beforeSend: function() {
                     setButtonLoading($btn, true, 'Deleting...');
                     setFormBusy($('#deleteDocTypeGroupModal'), true);
