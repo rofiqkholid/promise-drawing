@@ -250,7 +250,7 @@
                     width: '100%',
                     placeholder: 'Select Customer',
                     ajax: {
-                        url: "{{ route('upload.getDataCustomer') }}",
+                        url: "{{ route('upload.getCustomerData') }}",
                         method: 'POST',
                         dataType: 'json',
                         delay: 250,

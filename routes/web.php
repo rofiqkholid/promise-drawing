@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\UserMaintenanceController;
 use App\Http\Controllers\Api\ProductsController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\UserRoleController;
 use Illuminate\Support\Facades\Auth;
 
@@ -238,4 +239,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('master/products', ProductsController::class)->names('products')->except(['create', 'edit']);
     Route::get('/products/data', [ProductsController::class, 'data'])->name('products.data');
     Route::get('/products/get-models', [ProductsController::class, 'getModels'])->name('products.getModels');
+
+
+
+    Route::post('upload.getCustomerData', [UploadController::class, 'getCustomerData'])->name('upload.getCustomerData');
 });
