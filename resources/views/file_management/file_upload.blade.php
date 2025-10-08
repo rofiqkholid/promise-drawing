@@ -298,7 +298,7 @@
                             width: '100%',
                             placeholder: 'Select Model',
                             ajax: {
-                                url: "{{ route('upload.getDataModel') }}", 
+                                url: "{{ route('upload.getModelData') }}", 
                                 method: 'POST',
                                 dataType: 'json',
                                 delay: 250,

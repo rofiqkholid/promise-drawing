@@ -42,4 +42,39 @@ class UploadController extends Controller
             'total_count' => $totalCount
         ]);
     }
+
+    public function getModelData(Request $request): JsonResponse
+    {
+        $searchTerm = $request->q;
+        $customer_id = $request->customer_id;
+        $page = $request->page ?: 1;
+        $resultsPerPage = 10;
+        $offset = ($page - 1) * $resultsPerPage;
+
+        $query = DB::table('models')
+            ->select('id', 'name')
+            ->where('customer_id', $customer_id);
+
+        if ($searchTerm) {
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+        }
+
+        $totalCount = $query->count();
+        $groups = $query->orderBy('name', 'asc')
+            ->offset($offset)
+            ->limit($resultsPerPage)
+            ->get();
+
+        $formattedGroups = $groups->map(function ($group) {
+            return [
+                'id'   => $group->id,
+                'text' => $group->name
+            ];
+        });
+
+        return response()->json([
+            'results'     => $formattedGroups,
+            'total_count' => $totalCount
+        ]);
+    }
 }

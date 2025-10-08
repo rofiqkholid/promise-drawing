@@ -164,6 +164,7 @@ class DashboardController extends Controller
             'total_count' => $totalCount
         ]);
     }
+    
     public function getPartGroup(Request $request): JsonResponse
     {
         $searchTerm = $request->q;

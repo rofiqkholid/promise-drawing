@@ -217,8 +217,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/dashboard/getModel', [DashboardController::class, 'getModel'])->name('dashboard.getModel');
     Route::post('/dashboard/getPartGroup', [DashboardController::class, 'getPartGroup'])->name('dashboard.getPartGroup');
     Route::post('/dashboard/getStatus', [DashboardController::class, 'getStatus'])->name('dashboard.getStatus');
-    Route::post('upload.getDataCustomer', [DashboardController::class, 'getCustomer'])->name('upload.getDataCustomer');
-    Route::post('upload.getDataModel', [DashboardController::class, 'getModel'])->name('upload.getDataModel');
     #End region
 
     #Region User Role
@@ -239,8 +237,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('master/products', ProductsController::class)->names('products')->except(['create', 'edit']);
     Route::get('/products/data', [ProductsController::class, 'data'])->name('products.data');
     Route::get('/products/get-models', [ProductsController::class, 'getModels'])->name('products.getModels');
+    #End region
 
-
-
+    #Region upload
     Route::post('upload.getCustomerData', [UploadController::class, 'getCustomerData'])->name('upload.getCustomerData');
+    Route::post('upload.getModelData', [UploadController::class, 'getModelData'])->name('upload.getModelData');
+    #End region
 });
