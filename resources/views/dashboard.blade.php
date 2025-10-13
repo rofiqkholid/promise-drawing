@@ -5,6 +5,7 @@
 
 <div x-data="dashboardController()" x-init="init()">
 
+    {{-- Bagian Statistik Utama --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-[15%]">
         <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Dashboard</h2>
@@ -12,9 +13,8 @@
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
-
-            <div
-                class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+            {{-- Total Document --}}
+            <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
                 <div class="flex items-center">
                     <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-500 dark:text-blue-400 rounded-lg p-2 mr-3 flex items-center justify-center h-9 w-9">
                         <i class="fa-solid fa-file-lines fa-lg"></i>
@@ -26,9 +26,8 @@
                 </div>
                 <div class="mt-2 h-8 w-full"><canvas id="totalDocsChart"></canvas></div>
             </div>
-
-            <div
-                class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+            {{-- Upload --}}
+            <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
                 <div class="flex items-center">
                     <div class="bg-green-100 dark:bg-green-900/50 text-green-500 dark:text-green-400 rounded-lg p-2 mr-3 flex items-center justify-center h-9 w-9">
                         <i class="fa-solid fa-cloud-arrow-up fa-lg"></i>
@@ -40,9 +39,8 @@
                 </div>
                 <div class="mt-2 h-8 w-full"><canvas id="uploadsChart"></canvas></div>
             </div>
-
-            <div
-                class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+            {{-- Download --}}
+            <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
                 <div class="flex items-center">
                     <div class="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-500 dark:text-yellow-400 rounded-lg p-2 mr-3 flex items-center justify-center h-9 w-9">
                         <i class="fa-solid fa-cloud-arrow-down fa-lg"></i>
@@ -54,7 +52,7 @@
                 </div>
                 <div class="mt-2 h-8 w-full"><canvas id="downloadsChart"></canvas></div>
             </div>
-
+            {{-- User Active --}}
             <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
                 <div class="flex items-center">
                     <div class="bg-red-100 dark:bg-red-900/50 text-red-500 dark:text-red-400 rounded-lg p-2 mr-3 flex items-center justify-center h-9 w-9">
@@ -70,16 +68,13 @@
         </div>
     </div>
 
-    {{-- Jarak vertikal antar blok utama dipertahankan mt-6 (konsisten) --}}
+    {{-- Bagian Filter --}}
     <div class="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
             <i class="fa-solid fa-filter mr-2 text-gray-500"></i>
             Filter Data
         </h3>
-
-        {{-- Jarak antar filter (gap-6) dipertahankan --}}
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
-
             <div>
                 <label for="key_word" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Key Word</label>
                 <div class="relative mt-1">
@@ -107,59 +102,30 @@
                 <input type="hidden" name="from_date" id="from_date">
                 <input type="hidden" name="to_date" id="to_date">
             </div>
-
-            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 transform -translate-y-4"
-                x-transition:enter-end="opacity-100 transform translate-y-0"
-                x-transition:leave="transition ease-in duration-200"
-                x-transition:leave-start="opacity-100 transform translate-y-0"
-                x-transition:leave-end="opacity-0 transform -translate-y-4"
-                style="display: none;">
+            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
                 <label for="customer" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
                 <div class="relative mt-1">
                     <select id="customer" name="customer" class="w-full"></select>
                 </div>
             </div>
-
-            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 transform -translate-y-4"
-                x-transition:enter-end="opacity-100 transform translate-y-0"
-                x-transition:leave="transition ease-in duration-200"
-                x-transition:leave-start="opacity-100 transform translate-y-0"
-                x-transition:leave-end="opacity-0 transform -translate-y-4"
-                style="display: none;">
+            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
                 <label for="model" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
                 <div class="relative mt-1">
                     <select id="model" name="model" class="w-full"></select>
                 </div>
             </div>
-
-            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 transform -translate-y-4"
-                x-transition:enter-end="opacity-100 transform translate-y-0"
-                x-transition:leave="transition ease-in duration-200"
-                x-transition:leave-start="opacity-100 transform translate-y-0"
-                x-transition:leave-end="opacity-0 transform -translate-y-4"
-                style="display: none;">
+            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
                 <label for="project_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
                 <div class="relative mt-1">
                     <select id="project_status" name="project_status" class="w-full"></select>
                 </div>
             </div>
-
-            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300"
-                x-transition:enter-start="opacity-0 transform -translate-y-4"
-                x-transition:enter-end="opacity-100 transform translate-y-0"
-                x-transition:leave="transition ease-in duration-200"
-                x-transition:leave-start="opacity-100 transform translate-y-0"
-                x-transition:leave-end="opacity-0 transform -translate-y-4"
-                style="display: none;">
+            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
                 <label for="part_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
                 <div class="relative mt-1">
                     <select id="part_group" name="part_group" class="w-full"></select>
                 </div>
             </div>
-
             <div class="lg:col-span-4 w-full flex justify-end items-center pt-4 border-t border-gray-200 dark:border-gray-700 mt-2">
                 <div class="flex space-x-3">
                     <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
@@ -174,60 +140,71 @@
         </div>
     </div>
 
-    <div class="mt-6 grid grid-cols-1 lg:grid-cols-6 gap-6">
-        <div class="lg:col-span-4 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-chart-column mr-2 text-blue-500"></i>Plan vs Actual (Quantity) & Progress %</h3>
+    {{-- Baris Chart Utama (2 Chart) --}}
+    <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-chart-column mr-2 text-blue-500"></i>Upload File Monitoring (ALL)</h3>
             <div class="h-96"><canvas id="planVsActualChart"></canvas></div>
         </div>
-        <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-chart-line mr-2 text-green-500"></i>Upload vs Download Trend</h3>
-            <div class="h-96"><canvas id="uploadDownloadChart"></canvas></div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-chart-column mr-2 text-purple-500"></i>Upload File Monitoring (Project)</h3>
+            <div class="h-96"><canvas id="planVsActualProjectChart"></canvas></div>
         </div>
     </div>
 
-    {{-- Jarak vertikal mt-6 dipertahankan --}}
-    <div class="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-        <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-newspaper mr-2 text-gray-500"></i>Newsfeed / Activity Log</h3>
-        <div class="divide-y divide-gray-200 dark:divide-gray-700">
-            <div class="grid grid-cols-[auto,1fr,auto,auto] items-center gap-x-6 py-4">
-                <div class="w-8 text-center"><i class="fa-solid fa-upload text-gray-500 text-lg"></i></div>
-                <p class="font-medium text-gray-800 dark:text-gray-200 truncate">Upload Part Dwg Rev2 - MMKI - 5J45</p>
-                <div class="text-right whitespace-nowrap">
-                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Andi Pratama</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">2025-09-25 14:10</p>
-                </div>
-                <div></div>
+    {{-- [MODIFIED] Baris Chart Trend & Newsfeed, diubah menjadi 2 kolom --}}
+    <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {{-- [MODIFIED] Menghapus lg:col-span-1 --}}
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
+            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-chart-line mr-2 text-green-500"></i>Upload vs Download Trend</h3>
+            <div class="flex-grow relative">
+                <canvas id="uploadDownloadChart"></canvas>
             </div>
-            <div class="grid grid-cols-[auto,1fr,auto,auto] items-center gap-x-6 py-4">
-                <div class="w-8 text-center"><i class="fa-solid fa-download text-blue-500 text-lg"></i></div>
-                <p class="font-medium text-gray-800 dark:text-gray-200 truncate">Download Assy Dwg - SUZUKI - YHA</p>
-                <div class="text-right whitespace-nowrap">
-                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Budi Santoso</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">2025-09-25 09:30</p>
+        </div>
+        {{-- [MODIFIED] Menghapus lg:col-span-2 --}}
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
+            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-newspaper mr-2 text-gray-500"></i>Newsfeed / Activity Log</h3>
+            <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                <div class="grid grid-cols-[auto,1fr,auto,auto] items-center gap-x-6 py-4">
+                    <div class="w-8 text-center"><i class="fa-solid fa-upload text-gray-500 text-lg"></i></div>
+                    <p class="font-medium text-gray-800 dark:text-gray-200 truncate">Upload Part Dwg Rev2 - MMKI - 5J45</p>
+                    <div class="text-right whitespace-nowrap">
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Andi Pratama</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">2025-09-25 14:10</p>
+                    </div>
+                    <div></div>
                 </div>
-                <div class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap"><span class="font-semibold">Tujuan:</span> Dikirim ke Customer SUZUKI</div>
-            </div>
-            <div class="grid grid-cols-[auto,1fr,auto,auto] items-center gap-x-6 py-4">
-                <div class="w-8 text-center">
-                    <div class="bg-blue-500 text-white rounded-full h-6 w-6 flex items-center justify-center mx-auto"><i class="fa-solid fa-arrows-rotate fa-xs"></i></div>
+                <div class="grid grid-cols-[auto,1fr,auto,auto] items-center gap-x-6 py-4">
+                    <div class="w-8 text-center"><i class="fa-solid fa-download text-blue-500 text-lg"></i></div>
+                    <p class="font-medium text-gray-800 dark:text-gray-200 truncate">Download Assy Dwg - SUZUKI - YHA</p>
+                    <div class="text-right whitespace-nowrap">
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Budi Santoso</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">2025-09-25 09:30</p>
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap"><span class="font-semibold">Tujuan:</span> Dikirim ke Customer SUZUKI</div>
                 </div>
-                <p class="font-medium text-gray-800 dark:text-gray-200 truncate">Revision Jig Design Rev1 - HPM - TG4R</p>
-                <div class="text-right whitespace-nowrap">
-                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Citra Lestari</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">2025-09-24 11:15</p>
+                <div class="grid grid-cols-[auto,1fr,auto,auto] items-center gap-x-6 py-4">
+                    <div class="w-8 text-center">
+                        <div class="bg-blue-500 text-white rounded-full h-6 w-6 flex items-center justify-center mx-auto"><i class="fa-solid fa-arrows-rotate fa-xs"></i></div>
+                    </div>
+                    <p class="font-medium text-gray-800 dark:text-gray-200 truncate">Revision Jig Design Rev1 - HPM - TG4R</p>
+                    <div class="text-right whitespace-nowrap">
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Citra Lestari</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">2025-09-24 11:15</p>
+                    </div>
+                    <div></div>
                 </div>
-                <div></div>
-            </div>
-            <div class="grid grid-cols-[auto,1fr,auto,auto] items-center gap-x-6 py-4">
-                <div class="w-8 text-center">
-                    <div class="bg-green-500 text-white rounded-md h-6 w-6 flex items-center justify-center mx-auto"><i class="fa-solid fa-check"></i></div>
+                <div class="grid grid-cols-[auto,1fr,auto,auto] items-center gap-x-6 py-4">
+                    <div class="w-8 text-center">
+                        <div class="bg-green-500 text-white rounded-md h-6 w-6 flex items-center justify-center mx-auto"><i class="fa-solid fa-check"></i></div>
+                    </div>
+                    <p class="font-medium text-gray-800 dark:text-gray-200 truncate">Approval Std Part Bolt - TOYOTA - D03B</p>
+                    <div class="text-right whitespace-nowrap">
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">David Firmansyah</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">2025-09-23 16:45</p>
+                    </div>
+                    <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/70 dark:text-green-300">Approved</span></div>
                 </div>
-                <p class="font-medium text-gray-800 dark:text-gray-200 truncate">Approval Std Part Bolt - TOYOTA - D03B</p>
-                <div class="text-right whitespace-nowrap">
-                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">David Firmansyah</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">2025-09-23 16:45</p>
-                </div>
-                <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/70 dark:text-green-300">Approved</span></div>
             </div>
         </div>
     </div>
@@ -258,16 +235,12 @@
             picker.on('selected', (date1, date2) => {
                 const from = date1.format('YYYY-MM-DD');
                 const to = date2.format('YYYY-MM-DD');
-
                 document.getElementById('from_date').value = from;
                 document.getElementById('to_date').value = to;
-
             });
         }
     });
-
     picker.setDateRange(new Date(startDate), new Date(endDate));
-
     document.getElementById('from_date').value = startDate;
     document.getElementById('to_date').value = endDate;
 
@@ -298,6 +271,7 @@
             showExtraFilters: false,
 
             planVsActualChart: null,
+            planVsActualProjectChart: null,
             uploadDownloadChart: null,
             totalDocsChart: null,
             uploadsChart: null,
@@ -332,10 +306,8 @@
                 }, 100);
             },
 
-
             initDocGroupSelect2() {
                 let component = this;
-
                 $('#doc_group').select2({
                     dropdownParent: $('#doc_group').parent(),
                     width: '100%',
@@ -372,13 +344,10 @@
                     }
                 }).on('change', function(e) {
                     let docGroupId = $(this).val();
-
                     component.showExtraFilters = (docGroupId !== 'ALL' && docGroupId !== '' && docGroupId !== null);
-
                     let subTypeSelect = $('#sub_type');
                     subTypeSelect.val('ALL').trigger('change.select2');
                     subTypeSelect.select2('destroy');
-
                     if (docGroupId && docGroupId !== 'ALL') {
                         subTypeSelect.prop('disabled', false);
                         component.initSubTypeSelect2(docGroupId);
@@ -391,13 +360,11 @@
 
             initSubTypeSelect2(docGroupId = null) {
                 let subTypeSelect = $('#sub_type');
-
                 let options = {
                     dropdownParent: subTypeSelect.parent(),
                     width: '100%',
                     placeholder: 'Doc Group First'
                 };
-
                 if (docGroupId) {
                     options.placeholder = 'Select Category';
                     options.ajax = {
@@ -432,9 +399,7 @@
                         cache: true
                     };
                 }
-
                 subTypeSelect.select2(options);
-
                 if (!docGroupId) {
                     subTypeSelect.prop('disabled', true);
                 }
@@ -442,7 +407,6 @@
 
             initCustomerSelect2() {
                 let component = this;
-
                 $('#customer').select2({
                     dropdownParent: $('#customer').parent(),
                     width: '100%',
@@ -479,11 +443,9 @@
                     }
                 }).on('change', function(e) {
                     let customerId = $(this).val();
-
                     let modelSelect = $('#model');
                     modelSelect.val('ALL').trigger('change.select2');
                     modelSelect.select2('destroy');
-
                     if (customerId && customerId !== 'ALL') {
                         modelSelect.prop('disabled', false);
                         component.initModelSelect2(customerId);
@@ -496,13 +458,11 @@
 
             initModelSelect2(customerId = null) {
                 let modelSelect = $('#model');
-
                 let options = {
                     dropdownParent: modelSelect.parent(),
                     width: '100%',
                     placeholder: 'Select Customer First'
                 };
-
                 if (customerId) {
                     options.placeholder = 'Select Model';
                     options.ajax = {
@@ -537,9 +497,7 @@
                         cache: true
                     };
                 }
-
                 modelSelect.select2(options);
-
                 if (!customerId) {
                     modelSelect.prop('disabled', true);
                 }
@@ -665,6 +623,7 @@
                 this.destroyChart(this.downloadsChart);
                 this.destroyChart(this.activeUsersChart);
                 this.destroyChart(this.planVsActualChart);
+                this.destroyChart(this.planVsActualProjectChart);
                 this.destroyChart(this.uploadDownloadChart);
 
                 const textColor = document.documentElement.classList.contains('dark') ? '#d1d5db' : '#6b7280';
@@ -784,29 +743,104 @@
                     }
                 }
 
+                const mainChartOptions = {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: textColor
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Quantity (docs)',
+                                color: textColor
+                            },
+                            suggestedMax: 220,
+                            ticks: {
+                                color: textColor
+                            },
+                            grid: {
+                                color: gridColor
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Progress %',
+                                color: textColor
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            },
+                            ticks: {
+                                callback: (value) => value + '%',
+                                color: textColor
+                            },
+                            suggestedMax: 100
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Bars = Quantity | Line = Progress %',
+                            position: 'top',
+                            align: 'end',
+                            color: textColor,
+                            font: {
+                                weight: 'normal',
+                                size: 12
+                            }
+                        },
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: textColor,
+                                usePointStyle: true,
+                                padding: 15
+                            }
+                        }
+                    }
+                };
+
                 if (this.canvasExists('planVsActualChart')) {
                     try {
                         this.planVsActualChart = new Chart('planVsActualChart', {
                             data: {
-                                labels: ['MMKI - 5H45', 'MMKI - 5J45', 'MMKI - 4L45W', 'HPM - TG4R', 'HPM - 3K6A', 'SUZUKI - YHA', 'TOYOTA - D03B'],
+                                labels: ['TOYOTA - D03B', 'SUZUKI - YHA', 'HPM - 3K6A', 'MMKI - 4L45W', 'HPM - TG4R'],
                                 datasets: [{
                                     type: 'bar',
                                     label: 'Actual (docs)',
-                                    data: [60, 88, 90, 115, 120, 148, 150],
+                                    data: [150, 148, 120, 90, 115],
                                     backgroundColor: 'rgba(22, 163, 74, 0.8)',
                                     yAxisID: 'y',
                                     order: 2
                                 }, {
                                     type: 'bar',
                                     label: 'Plan (docs)',
-                                    data: [80, 110, 140, 135, 170, 205, 205],
+                                    data: [205, 205, 170, 140, 135],
                                     backgroundColor: 'rgba(37, 99, 235, 0.8)',
                                     yAxisID: 'y',
                                     order: 2
                                 }, {
                                     type: 'line',
                                     label: 'Progress %',
-                                    data: [75, 80, 64, 85, 71, 72, 73],
+                                    data: [73, 72, 71, 64, 85],
                                     borderColor: 'rgba(249, 115, 22, 1)',
                                     backgroundColor: 'rgba(249, 115, 22, 0.2)',
                                     yAxisID: 'y1',
@@ -817,83 +851,50 @@
                                     order: 1
                                 }]
                             },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                interaction: {
-                                    mode: 'index',
-                                    intersect: false,
-                                },
-                                scales: {
-                                    x: {
-                                        ticks: {
-                                            color: textColor
-                                        },
-                                        grid: {
-                                            display: false
-                                        }
-                                    },
-                                    y: {
-                                        type: 'linear',
-                                        display: true,
-                                        position: 'left',
-                                        title: {
-                                            display: true,
-                                            text: 'Quantity (docs)',
-                                            color: textColor
-                                        },
-                                        suggestedMax: 220,
-                                        ticks: {
-                                            color: textColor
-                                        },
-                                        grid: {
-                                            color: gridColor
-                                        }
-                                    },
-                                    y1: {
-                                        type: 'linear',
-                                        display: true,
-                                        position: 'right',
-                                        title: {
-                                            display: true,
-                                            text: 'Progress %',
-                                            color: textColor
-                                        },
-                                        grid: {
-                                            drawOnChartArea: false
-                                        },
-                                        ticks: {
-                                            callback: (value) => value + '%',
-                                            color: textColor
-                                        },
-                                        suggestedMax: 100
-                                    }
-                                },
-                                plugins: {
-                                    title: {
-                                        display: true,
-                                        text: 'Bars = Quantity | Line = Progress %',
-                                        position: 'top',
-                                        align: 'end',
-                                        color: textColor,
-                                        font: {
-                                            weight: 'normal',
-                                            size: 12
-                                        }
-                                    },
-                                    legend: {
-                                        position: 'bottom',
-                                        labels: {
-                                            color: textColor,
-                                            usePointStyle: true,
-                                            padding: 15
-                                        }
-                                    }
-                                }
-                            }
+                            options: mainChartOptions
                         });
                     } catch (error) {
                         console.error('Error creating planVsActualChart:', error);
+                    }
+                }
+
+                if (this.canvasExists('planVsActualProjectChart')) {
+                    try {
+                        this.planVsActualProjectChart = new Chart('planVsActualProjectChart', {
+                            data: {
+                                labels: ['Project Phoenix', 'Facelift Gen-2', 'New EV Sedan', 'Cost Down 2026', 'Minor Change XA'],
+                                datasets: [{
+                                    type: 'bar',
+                                    label: 'Actual (docs)',
+                                    data: [210, 180, 95, 140, 75],
+                                    backgroundColor: 'rgba(107, 33, 168, 0.8)',
+                                    yAxisID: 'y',
+                                    order: 2
+                                }, {
+                                    type: 'bar',
+                                    label: 'Plan (docs)',
+                                    data: [250, 200, 150, 150, 100],
+                                    backgroundColor: 'rgba(129, 140, 248, 0.8)',
+                                    yAxisID: 'y',
+                                    order: 2
+                                }, {
+                                    type: 'line',
+                                    label: 'Progress %',
+                                    data: [84, 90, 63, 93, 75],
+                                    borderColor: 'rgba(217, 70, 239, 1)',
+                                    backgroundColor: 'rgba(217, 70, 239, 0.2)',
+                                    yAxisID: 'y1',
+                                    tension: 0.1,
+                                    borderWidth: 2,
+                                    pointRadius: 4,
+                                    pointBackgroundColor: 'rgba(217, 70, 239, 1)',
+                                    order: 1
+                                }]
+                            },
+                            options: mainChartOptions
+                        });
+                    } catch (error) {
+                        console.error('Error creating planVsActualProjectChart:', error);
                     }
                 }
 
@@ -945,7 +946,6 @@
                                     },
                                     y: {
                                         beginAtZero: true,
-                                        suggestedMax: 180,
                                         ticks: {
                                             color: textColor
                                         },
@@ -956,7 +956,7 @@
                                             display: true,
                                             text: 'Documents',
                                             color: textColor
-                                        }
+                                        },
                                     }
                                 },
                                 plugins: {
