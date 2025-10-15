@@ -765,7 +765,7 @@
                             position: 'left',
                             title: {
                                 display: true,
-                                text: 'Quantity (docs)',
+                                text: 'Quantity',
                                 color: textColor
                             },
                             suggestedMax: 220,
@@ -825,14 +825,14 @@
                                 labels: ['TOYOTA - D03B', 'SUZUKI - YHA', 'HPM - 3K6A', 'MMKI - 4L45W', 'HPM - TG4R'],
                                 datasets: [{
                                     type: 'bar',
-                                    label: 'Actual (docs)',
+                                    label: 'Actual',
                                     data: [150, 148, 120, 90, 115],
                                     backgroundColor: 'rgba(22, 163, 74, 0.8)',
                                     yAxisID: 'y',
                                     order: 2
                                 }, {
                                     type: 'bar',
-                                    label: 'Plan (docs)',
+                                    label: 'Plan',
                                     data: [205, 205, 170, 140, 135],
                                     backgroundColor: 'rgba(37, 99, 235, 0.8)',
                                     yAxisID: 'y',
@@ -865,14 +865,14 @@
                                 labels: ['TOYOTA - D03B', 'SUZUKI - YHA', 'HPM - 3K6A', 'MMKI - 4L45W', 'HPM - TG4R'],
                                 datasets: [{
                                     type: 'bar',
-                                    label: 'Actual (docs)',
+                                    label: 'Actual',
                                     data: [210, 180, 95, 140, 75],
                                     backgroundColor: 'rgba(107, 33, 168, 0.8)',
                                     yAxisID: 'y',
                                     order: 2
                                 }, {
                                     type: 'bar',
-                                    label: 'Plan (docs)',
+                                    label: 'Plan',
                                     data: [250, 200, 150, 150, 100],
                                     backgroundColor: 'rgba(129, 140, 248, 0.8)',
                                     yAxisID: 'y',
