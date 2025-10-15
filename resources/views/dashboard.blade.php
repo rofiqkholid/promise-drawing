@@ -862,7 +862,7 @@
                     try {
                         this.planVsActualProjectChart = new Chart('planVsActualProjectChart', {
                             data: {
-                                labels: ['Project Phoenix', 'Facelift Gen-2', 'New EV Sedan', 'Cost Down 2026', 'Minor Change XA'],
+                                labels: ['TOYOTA - D03B', 'SUZUKI - YHA', 'HPM - 3K6A', 'MMKI - 4L45W', 'HPM - TG4R'],
                                 datasets: [{
                                     type: 'bar',
                                     label: 'Actual (docs)',
