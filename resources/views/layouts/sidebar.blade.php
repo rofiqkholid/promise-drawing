@@ -26,7 +26,6 @@
         </div>
     </div>
 
-    {{-- Navigasi --}}
     @php
     $activeParentId = null;
     if (isset($menus)) {
@@ -47,9 +46,7 @@
     <nav class="flex-grow" x-data="{ openMenu: {{ $activeParentId ?? 'null' }} }">
         <ul>
             @foreach ($menus as $menu)
-            {{-- PERBAIKAN 1: Tambahkan kondisi IF untuk cek hak akses menu --}}
             @if (session()->has('allowed_menus') && in_array($menu->id, session('allowed_menus')))
-
             @if ($menu->children->isNotEmpty())
             <li class="mb-2">
                 <button type="button" @click.prevent="openMenu = (openMenu === {{ $menu->id }} ? null : {{ $menu->id }})"
@@ -71,7 +68,6 @@
 
                 <ul x-show="openMenu === {{ $menu->id }}" x-transition class="mt-1 pl-4 space-y-1 hidden group-hover:block" style="display: none;">
                     @foreach ($menu->children as $child)
-                    {{-- PERBAIKAN 2: Tambahkan kondisi IF juga untuk sub-menu --}}
                     @if (session()->has('allowed_menus') && in_array($child->id, session('allowed_menus')))
                     <li>
                         <a href="{{ route($child->route) }}" class="flex items-center p-3 rounded-lg transition-colors duration-200 text-xs font-medium
@@ -100,7 +96,7 @@
             </li>
             @endif
 
-            @endif {{-- Penutup dari @if hak akses --}}
+            @endif 
             @endforeach
         </ul>
     </nav>
