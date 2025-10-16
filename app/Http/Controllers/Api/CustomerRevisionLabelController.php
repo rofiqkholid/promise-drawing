@@ -86,7 +86,7 @@ class CustomerRevisionLabelController extends Controller
     $page = (int) $request->input('page', 1);         
     $perPage = 20;
 
-    $query = \App\Models\Customer::query()
+    $query = \App\Models\Customers::query()
        
         ->when($term !== '', fn($q) => $q->where('code', 'like', "%{$term}%"))
         ->orderBy('code');

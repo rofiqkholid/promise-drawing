@@ -24,6 +24,6 @@ class CustomerRevisionLabel extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class, 'customer_id');
+        return $this->belongsTo(Customers::class, 'customer_id');
     }
 }
