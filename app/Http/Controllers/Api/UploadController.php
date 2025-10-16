@@ -11,39 +11,90 @@ class UploadController extends Controller
 {
     public function listFiles(Request $request): JsonResponse
     {
-        // Dummy data for DataTable
-        $dummyData = [
-            [
-                'id' => 1,
-                'customer' => 'MMKI',
-                'model' => '5JH5',
-                'part_no' => '5251D644',
-                'revision' => 'Rev1',
-                'uploaded_at' => '2025-01-01 12:00:00',
-                'status' => 'Rejected'
-            ],
-            [
-                'id' => 2,
-                'customer' => 'XYZ Corp',
-                'model' => '7KL2',
-                'part_no' => '9876F321',
-                'revision' => 'Rev2',
-                'uploaded_at' => '2025-01-02 13:00:00',
-                'status' => 'Approved'
-            ],
-            [
-                'id' => 3,
-                'customer' => 'ABC Ltd',
-                'model' => '9MN4',
-                'part_no' => '1234G789',
-                'revision' => 'Rev3',
-                'uploaded_at' => '2025-01-03 14:00:00',
-                'status' => 'Pending'
-            ]
-        ];
+        $query = DB::table('doc_package_revisions as r')
+            ->leftJoin('doc_packages as p', 'r.package_id', '=', 'p.id')
+            ->leftJoin('customers as c', 'p.customer_id', '=', 'c.id')
+            ->leftJoin('models as m', 'p.model_id', '=', 'm.id')
+            ->leftJoin('products as pr', 'p.product_id', '=', 'pr.id')
+            ->select([
+                'r.id as id',
+                'p.package_no as package_no',
+                'c.code as customer',
+                'm.name as model',
+                'pr.part_no as part_no',
+                'r.revision_no as revision_no',
+                'r.updated_at as uploaded_at',
+                'r.revision_status as status'
+            ])
+            ->orderBy('r.updated_at', 'desc');
+
+        $perPage = $request->get('length') ?: 25;
+        // DataTables expects { data: [...] }
+        $rows = $query->limit($perPage)->get()->map(function($row) {
+            return [
+                'id' => $row->id,
+                'package_no' => $row->package_no,
+                'customer' => $row->customer ?? '-',
+                'model' => $row->model ?? '-',
+                'part_no' => $row->part_no ?? '-',
+                'revision' => is_null($row->revision_no) ? '0' : (string)$row->revision_no,
+                'uploaded_at' => $row->uploaded_at ? date('Y-m-d H:i:s', strtotime($row->uploaded_at)) : null,
+                'status' => $row->status ?? 'draft'
+            ];
+        });
 
         return response()->json([
-            'data' => $dummyData
+            'data' => $rows
+        ]);
+    }
+
+    /**
+     * Return package details: metadata, files count and total size per package id
+     */
+    public function getPackageDetails(Request $request, $id): JsonResponse
+    {
+        // Treat $id as a revision id and return revision-level details + package header metadata
+        $revisionId = (int) $id;
+
+        $rev = DB::table('doc_package_revisions as r')
+            ->leftJoin('doc_packages as p', 'r.package_id', '=', 'p.id')
+            ->leftJoin('customers as c', 'p.customer_id', '=', 'c.id')
+            ->leftJoin('models as m', 'p.model_id', '=', 'm.id')
+            ->leftJoin('products as pr', 'p.product_id', '=', 'pr.id')
+            ->leftJoin('doctype_groups as dg', 'p.doctype_group_id', '=', 'dg.id')
+            ->leftJoin('doctype_subcategories as sc', 'p.doctype_subcategory_id', '=', 'sc.id')
+            ->leftJoin('part_groups as pg', 'p.part_group_id', '=', 'pg.id')
+            ->select(
+                'r.id as id', 'r.package_id as package_id', 'p.package_no as package_no',
+                'r.revision_no as revision_no', 'r.revision_status as revision_status', 'r.note as revision_note',
+                'r.is_obsolete as is_obsolete', 'r.created_by as revision_created_by', 'r.created_at as created_at', 'r.updated_at as updated_at',
+                'p.project_status_id', 'p.created_by as package_created_by',
+                'c.id as customer_id','c.name as customer_name','c.code as customer_code',
+                'm.id as model_id','m.name as model_name',
+                'pr.id as product_id','pr.part_no as part_no',
+                'dg.id as docgroup_id','dg.name as docgroup_name',
+                'sc.id as subcategory_id','sc.name as subcategory_name',
+                'pg.id as part_group_id','pg.code_part_group'
+            )
+            ->where('r.id', $revisionId)
+            ->first();
+
+        if (!$rev) {
+            return response()->json(['error' => 'Revision not found'], 404);
+        }
+
+        // aggregate files for this revision
+        $agg = DB::table('doc_package_revision_files')
+            ->where('revision_id', $revisionId)
+            ->select(DB::raw('count(*) as total_files, sum(file_size) as total_bytes'))
+            ->first();
+
+        return response()->json([
+            'package' => $rev,
+            'files' => [
+                'count' => (int) ($agg->total_files ?? 0),
+                'size_bytes' => (int) ($agg->total_bytes ?? 0),
+            ]
         ]);
     }
 }

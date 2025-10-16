@@ -23,6 +23,7 @@
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                         <th scope="col" class="px-6 py-3 w-16">No</th>
+                        <th scope="col" class="px-6 py-3 sorting" data-column="model">Customer</th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="model">Model</th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="part_no">Part No</th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="part_name">Part Name</th>
@@ -37,29 +38,35 @@
 
 <div id="addProductModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
     <div class="relative p-4 w-full max-w-md h-full md:h-auto">
-        <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+        <div class="relative p-4 text-left bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
             <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
                 <i class="fa-solid fa-xmark w-5 h-5"></i>
                 <span class="sr-only">Close modal</span>
             </button>
-            <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Add New Product</h3>
+            <h3 class="mb-4 text-xl text-center font-medium text-gray-900 dark:text-white">Add New Product</h3>
             <form id="addProductForm" action="{{ route('products.store') }}" method="POST">
                 @csrf
+                <select name="customer_id" id="customer_id" required
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                    <option value="" disabled selected>Select Customer</option>
+                </select>
+                <p id="add-customer_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+
                 <div class="mb-4">
                     <label for="model_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model</label>
-                    <select name="model_id" id="model_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
-                        <option value="">Select Model</option>
+                    <select name="model_id" id="model_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white text-left" required>
+                        <option value="" disabled selected>Select Model</option>
                     </select>
                     <p id="add-model_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="part_no" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part No</label>
-                    <input type="text" name="part_no" id="part_no" maxlength="20" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. 123-ABC-45" required>
+                    <input type="text" name="part_no" id="part_no" maxlength="20" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. 123-ABC-45" required>
                     <p id="add-part_no-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="part_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part Name</label>
-                    <input type="text" name="part_name" id="part_name" maxlength="50" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. Bracket Assembly" required>
+                    <input type="text" name="part_name" id="part_name" maxlength="50" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. Bracket Assembly" required>
                     <p id="add-part_name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
@@ -86,6 +93,12 @@
             <form id="editProductForm" method="POST">
                 @csrf
                 @method('PUT')
+                <div class="mb-4">
+                    <label for="edit_customer_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Customer</label>
+                    <select name="customer_id" id="edit_customer_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                        <option value="" selected>Select Customer</option>
+                    </select>
+                </div>
                 <div class="mb-4">
                     <label for="edit_model_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model</label>
                     <select name="model_id" id="edit_model_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
@@ -141,31 +154,137 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     $(document).ready(function() {
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-        const isDark = () => document.documentElement.classList.contains('dark');
+        function detectTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
 
-        function toast(icon, title) {
-            const dark = isDark();
-            Swal.fire({
-                toast: true,
+            return isDark ? {
+                mode: 'dark',
+                bg: 'rgba(30, 41, 59, 0.95)',
+                fg: '#E5E7EB',
+                border: 'rgba(71, 85, 105, 0.5)',
+                progress: 'rgba(255,255,255,9)',
+                icon: {
+                    success: '#22c55e',
+                    error: '#ef4444',
+                    warning: '#f59e0b',
+                    info: '#3b82f6'
+                }
+            } : {
+                mode: 'light',
+                bg: 'rgba(255, 255, 255, 0.98)',
+                fg: '#0f172a',
+                border: 'rgba(226, 232, 240, 1)',
+                progress: 'rgba(15,23,42,8)',
+                icon: {
+                    success: '#16a34a',
+                    error: '#dc2626',
+                    warning: '#d97706',
+                    info: '#2563eb'
+                }
+            };
+        }
+
+        const BaseToast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2600,
+            timerProgressBar: true,
+            showClass: {
+                popup: 'swal2-animate-toast-in'
+            },
+            hideClass: {
+                popup: 'swal2-animate-toast-out'
+            },
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        function renderToast({
+            icon = 'success',
+            title = 'Success',
+            text = ''
+        } = {}) {
+            const t = detectTheme();
+
+            BaseToast.fire({
                 icon,
                 title,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 2200,
-                timerProgressBar: true,
-                background: dark ? '#1f2937' : '#ffffff',
-                color: dark ? '#f9fafb' : '#111827',
-                didOpen: el => {
+                text,
+                iconColor: t.icon[icon] || t.icon.success,
+                background: t.bg,
+                color: t.fg,
+                customClass: {
+                    popup: 'swal2-toast border',
+                    title: '',
+                    timerProgressBar: ''
+                },
+                didOpen: (el) => {
                     const bar = el.querySelector('.swal2-timer-progress-bar');
-                    if (bar) bar.style.background = dark ? '#10b981' : '#3b82f6';
+                    if (bar) bar.style.background = t.progress;
+                    const popup = el.querySelector('.swal2-popup');
+                    if (popup) popup.style.borderColor = t.border;
+                    el.addEventListener('mouseenter', Swal.stopTimer);
+                    el.addEventListener('mouseleave', Swal.resumeTimer);
                 }
             });
         }
+
+
+        function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') {
+            renderToast({
+                icon: 'success',
+                title,
+                text
+            });
+        }
+
+        function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') {
+            BaseToast.update({
+                timer: 3400
+            });
+            renderToast({
+                icon: 'error',
+                title,
+                text
+            });
+            BaseToast.update({
+                timer: 2600
+            });
+        }
+
+        function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') {
+            renderToast({
+                icon: 'warning',
+                title,
+                text
+            });
+        }
+
+        function toastInfo(title = 'Informasi', text = '') {
+            renderToast({
+                icon: 'info',
+                title,
+                text
+            });
+        }
+
+
+        function toast(icon, title, text = '') {
+            renderToast({
+                icon,
+                title,
+                text
+            });
+        }
+
 
         const spinnerSVG = `
         <svg class="animate-spin -ml-1 mr-2 h-4 w-4 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -205,6 +324,15 @@
             dropdownParent: $('#editProductModal'),
             width: '100%'
         });
+        $('#customer_id').select2({
+            dropdownParent: $('#addProductModal'),
+            width: '100%'
+        });
+        $('#edit_customer_id').select2({
+            dropdownParent: $('#editProductModal'),
+            width: '100%'
+        });
+
 
         const table = $('#productsTable').DataTable({
             processing: true,
@@ -219,6 +347,10 @@
             columns: [{
                     data: null,
                     render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1
+                },
+                {
+                    data: 'customer_code',
+                    name: 'customer_code'
                 },
                 {
                     data: 'model_name',
@@ -271,27 +403,49 @@
             modal.addClass('hidden').removeClass('flex');
         }
 
-        function populateModelDropdown($select, selectedId = null) {
-            $.get('{{ route("products.getModels") }}', function(models) {
+        function populateCustomerDropdown($select, selectedId = null) {
+            $.get('{{ route("products.getCustomers") }}', function(customers) {
+                $select.empty().append('<option value="" disabled>Select Customer</option>');
+                customers.forEach(function(c) {
+                    const label = c.code || c.label || '';
+                    $select.append(`<option value="${c.id}"${selectedId == c.id ? ' selected' : ''}>${label}</option>`);
+                });
+                if (!selectedId) $select.val('').trigger('change');
+                
+            }).fail(() => toastError('error', 'Failed to load customers'));
+        }
+
+
+        function populateModelDropdown($select, selectedId = null, customerId = null) {
+            const url = new URL('{{ route("products.getModels") }}', window.location.origin);
+            if (customerId) url.searchParams.set('customer_id', customerId);
+
+            $.get(url.toString(), function(models) {
                 $select.empty().append('<option value="">Select Model</option>');
                 models.forEach(function(m) {
                     const label = m.label || [m.code, m.name].filter(Boolean).join(' — ');
                     $select.append(`<option value="${m.id}"${selectedId == m.id ? ' selected' : ''}>${label}</option>`);
                 });
                 $select.trigger('change');
-            }).fail(() => toast('error', 'Failed to load models'));
+            }).fail(() => toastError('error', 'Failed to load models'));
         }
+
 
         addButton.on('click', function() {
             const $btn = $(this);
             if (!beginBusy($btn, 'Opening...')) return;
             $('#addProductForm')[0].reset();
             $('#add-model_id-error,#add-part_no-error,#add-part_name-error').addClass('hidden').text('');
-            populateModelDropdown($('#model_id'));
+
+            // ↓↓↓ Tambahan: load customer & model
+            populateCustomerDropdown($('#customer_id')); // default All Customers
+            populateModelDropdown($('#model_id'), null, null);
+
             $('#model_id').val(null).trigger('change');
             showModal(addModal);
             setTimeout(() => endBusy($btn), 150);
         });
+
 
         closeButtons.on('click', function() {
             const $btn = $(this);
@@ -330,9 +484,9 @@
                         hideModal(addModal);
                         $('#addProductForm')[0].reset();
                         $('#model_id').val(null).trigger('change');
-                        toast('success', 'Product created');
+                        toastSuccess('success', 'Product added successfully');
                     } else {
-                        toast('error', data.message || 'Failed to create');
+                        toastError('error', data.message || 'Failed to create');
                     }
                 },
                 error: function(xhr) {
@@ -340,7 +494,7 @@
                     if (errors.model_id) eModel.text(errors.model_id[0]).removeClass('hidden');
                     if (errors.part_no) eNo.text(errors.part_no[0]).removeClass('hidden');
                     if (errors.part_name) eName.text(errors.part_name[0]).removeClass('hidden');
-                    toast('error', 'Validation error');
+                    toastError('error', 'Validation error');
                 },
                 complete: function() {
                     endBusy($btn);
@@ -359,19 +513,36 @@
                 url: `/master/products/${id}`,
                 method: 'GET',
                 success: function(data) {
-                    populateModelDropdown($('#edit_model_id'), data.model_id);
+                    // prefill customer sesuai data DB
+                    populateCustomerDropdown($('#edit_customer_id'), data.customer_id);
+                    // filter & preselect model sesuai customer
+                    populateModelDropdown($('#edit_model_id'), data.model_id, data.customer_id);
+
                     $('#edit_part_no').val(data.part_no);
                     $('#edit_part_name').val(data.part_name);
                     $('#editProductForm').attr('action', `/master/products/${id}`);
                     showModal(editModal);
                 },
                 error: function() {
-                    toast('error', 'Failed to load product');
+                    toastError('error', 'Failed to load product');
                 },
                 complete: function() {
                     endBusy($btn);
                 }
             });
+        });
+
+        $('#customer_id').on('change', function() {
+            const custId = $(this).val() || null;
+            // reset model jika customer berubah
+            $('#model_id').val(null).trigger('change');
+            populateModelDropdown($('#model_id'), null, custId);
+        });
+
+        $('#edit_customer_id').on('change', function() {
+            const custId = $(this).val() || null;
+            $('#edit_model_id').val(null).trigger('change');
+            populateModelDropdown($('#edit_model_id'), null, custId);
         });
 
         $('#editProductForm').on('submit', function(e) {
@@ -400,17 +571,18 @@
                     if (data.success) {
                         table.ajax.reload(null, false);
                         hideModal(editModal);
-                        toast('success', 'Product updated');
+                        toastSuccess('success', 'Product updated successfully');
                     } else {
-                        toast('error', data.message || 'Failed to update');
+                        toastError('error', data.message || 'Failed to update');
                     }
                 },
                 error: function(xhr) {
                     const errors = xhr.responseJSON?.errors || {};
+                    if (errors.customer_id) $('#edit-customer_id-error').text(errors.customer_id[0]).removeClass('hidden');
                     if (errors.model_id) eModel.text(errors.model_id[0]).removeClass('hidden');
                     if (errors.part_no) eNo.text(errors.part_no[0]).removeClass('hidden');
                     if (errors.part_name) eName.text(errors.part_name[0]).removeClass('hidden');
-                    toast('error', 'Validation error');
+                    toastError('error', 'Validation error');
                 },
                 complete: function() {
                     endBusy($btn);
@@ -442,13 +614,13 @@
                         table.ajax.reload(null, false);
                         hideModal(deleteModal);
                         productIdToDelete = null;
-                        toast('success', 'Product deleted');
+                        toastSuccess('success', 'Product deleted');
                     } else {
-                        toast('error', data.message || 'Failed to delete');
+                        toastError('error', data.message || 'Failed to delete');
                     }
                 },
                 error: function() {
-                    toast('error', 'Error deleting product');
+                    toastError('error', 'Error deleting product');
                 },
                 complete: function() {
                     endBusy($btn);

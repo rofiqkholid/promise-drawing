@@ -15,6 +15,7 @@ class Products extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'customer_id',
         'model_id',
         'part_no',
         'part_name',
@@ -33,5 +34,10 @@ class Products extends Model
     public function model()
     {
         return $this->belongsTo(Models::class, 'model_id');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customers::class, 'customer_id');
     }
 }

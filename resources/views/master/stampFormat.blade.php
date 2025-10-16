@@ -57,12 +57,12 @@
                 <div class="space-y-4">
                     <div class="mb-4">
                         <label for="prefix" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Prefix</label>
-                        <input type="text" name="prefix" id="prefix" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. 4L45W" required>
+                        <input type="text" name="prefix" id="prefix" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. 4L45W" required>
                         <p id="add-prefix-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                     </div>
                     <div class="mb-4">
                         <label for="suffix" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Suffix</label>
-                        <input type="text" name="suffix" id="suffix" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. 4L45W" required>
+                        <input type="text" name="suffix" id="suffix" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. 4L45W" required>
                         <p id="add-suffix-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                     </div>
                     <div class="flex items-center justify-start mb-4">
@@ -98,12 +98,12 @@
                 <div class="space-y-4">
                     <div class="mb-4">
                         <label for="edit_prefix" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Prefix</label>
-                        <input type="text" name="prefix" id="edit_prefix" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                        <input type="text" name="prefix" id="edit_prefix" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                         <p id="edit-prefix-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                     </div>
                     <div class="mb-4">
                         <label for="edit_suffix" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Suffix</label>
-                        <input type="text" name="suffix" id="edit_suffix" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                        <input type="text" name="suffix" id="edit_suffix" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                         <p id="edit-suffix-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                     </div>
                     <div class="flex items-center justify-start mb-4">

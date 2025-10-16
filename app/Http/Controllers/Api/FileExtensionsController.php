@@ -60,6 +60,7 @@ class FileExtensionsController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:50',
             'code' => 'required|string|max:10|unique:file_extensions,code',
+            'icon' => 'nullable|string|max:100',
         ]);
 
         FileExtensions::create($validated);
@@ -88,6 +89,7 @@ class FileExtensionsController extends Controller
                 'max:10',
                 Rule::unique('file_extensions')->ignore($fileExtension->id),
             ],
+            'icon' => 'nullable|string|max:100',
         ]);
 
         $fileExtension->update($validated);

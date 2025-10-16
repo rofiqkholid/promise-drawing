@@ -37,4 +37,10 @@ class Suppliers extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+  public function userLinkLists()
+{
+    return $this->hasMany(\App\Models\UserLinkList::class, 'supplier_id');
+}
+
 }

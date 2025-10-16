@@ -53,33 +53,33 @@
                 @csrf
                 <div class="mb-4">
                     <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Name</label>
-                    <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. ABC Corp" required>
+                    <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. ABC Corp" required>
                     <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Code</label>
-                    <input type="text" name="code" id="code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. ABC" required>
+                    <input type="text" name="code" id="code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. ABC" required>
                     <p id="add-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Email</label>
-                    <input type="email" name="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. contact@abccorp.com">
+                    <input type="email" name="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. contact@abccorp.com">
                     <p id="add-email-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="phone" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Phone</label>
-                    <input type="text" name="phone" id="phone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. +1234567890">
+                    <input type="text" name="phone" id="phone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. +1234567890">
                     <p id="add-phone-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="address" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Address</label>
-                    <textarea name="address" id="address" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. 123 Main St, City, Country"></textarea>
+                    <textarea name="address" id="address" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. 123 Main St, City, Country"></textarea>
                     <p id="add-address-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="is_active" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Status</label>
                     <div class="flex items-center">
-                        <input type="checkbox" name="is_active" id="is_active" value="1" class="bg-gray-50 border border-gray-300 text-primary-600 rounded focus:ring-primary-600 focus:border-primary-600 h-4 w-4 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600" checked>
+                        <input type="checkbox" name="is_active" id="is_active" value="1" class="bg-gray-50 border border-gray-300 text-primary-600 rounded focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 h-4 w-4 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600" checked>
                         <label for="is_active" class="ml-2 text-sm text-gray-900 dark:text-white">Active</label>
                     </div>
                     <p id="add-is_active-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
@@ -111,27 +111,27 @@
                 @method('PUT')
                 <div class="mb-4">
                     <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Name</label>
-                    <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                    <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="edit_code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Code</label>
-                    <input type="text" name="code" id="edit_code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                    <input type="text" name="code" id="edit_code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="edit_email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Email</label>
-                    <input type="email" name="email" id="edit_email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                    <input type="email" name="email" id="edit_email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
                     <p id="edit-email-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="edit_phone" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Phone</label>
-                    <input type="text" name="phone" id="edit_phone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                    <input type="text" name="phone" id="edit_phone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
                     <p id="edit-phone-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="edit_address" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Address</label>
-                    <textarea name="address" id="edit_address" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></textarea>
+                    <textarea name="address" id="edit_address" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></textarea>
                     <p id="edit-address-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
@@ -178,65 +178,160 @@
         </div>
     </div>
 </div>
+
+{{-- User Link List Modal (has Add & Action column) --}}
+<div id="userLinkListModal" tabindex="-1" aria-hidden="true"
+    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
+    <div class="relative p-4 w-full max-w-3xl h-full md:h-auto">
+        <div class="relative p-4 text-left bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+            <button type="button"
+                class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark w-5 h-5"></i>
+                <span class="sr-only">Close modal</span>
+            </button>
+
+            <div class="sm:flex sm:items-center sm:justify-between mb-4">
+                <h3 id="userLinkListTitle" class="text-xl font-medium text-gray-900 dark:text-white">
+                    User Link List
+                </h3>
+                <button type="button" id="add-link-button"
+                    class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition">
+                    <i class="fa-solid fa-plus"></i> Add New
+                </button>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
+                <div class="p-4 md:p-6 overflow-x-auto">
+                    <table id="userLinksTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th class="px-6 py-3 w-16">No</th>
+                                <th class="px-6 py-3">Name</th>
+                                <th class="px-6 py-3">Email</th>
+                                <th class="px-6 py-3 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{{-- Add User Link Modal --}}
+<div id="addUserLinkModal" tabindex="-1" aria-hidden="true"
+    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
+    <div class="relative p-4 w-full max-w-md h-full md:h-auto">
+        <div class="relative p-4 text-left bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+            <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark w-5 h-5"></i>
+                <span class="sr-only">Close modal</span>
+            </button>
+            <h3 class="mb-4 text-xl text-center font-medium text-gray-900 dark:text-white ">
+                Add User Link
+            </h3>
+
+            <form id="addUserLinkForm" method="POST">
+                @csrf
+                <div class="mb-4">
+                    <label for="ul_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Name</label>
+                    <input type="text" name="name" id="ul_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. John Doe" required>
+                    <p id="add-ul-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div class="mb-4">
+                    <label for="ul_email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Email</label>
+                    <input type="email" name="email" id="ul_email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. john@example.com">
+                    <p id="add-ul-email-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+
+                <div class="flex items-center space-x-4 mt-6">
+                    <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
+                        Cancel
+                    </button>
+                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Edit User Link Modal --}}
+<div id="editUserLinkModal" tabindex="-1" aria-hidden="true"
+    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
+    <div class="relative p-4 w-full max-w-md h-full md:h-auto">
+        <div class="relative p-4 text-left bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+            <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark w-5 h-5"></i>
+                <span class="sr-only">Close modal</span>
+            </button>
+            <h3 class="mb-4 text-xl text-center font-medium text-gray-900 dark:text-white">Edit User Link</h3>
+
+            <form id="editUserLinkForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="mb-4">
+                    <label for="ul_edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Name</label>
+                    <input type="text" name="name" id="ul_edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                    <p id="edit-ul-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div class="mb-4">
+                    <label for="ul_edit_email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Email</label>
+                    <input type="email" name="email" id="ul_edit_email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                    <p id="edit-ul-email-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div class="flex items-center space-x-4 mt-6">
+                    <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
+                        Cancel
+                    </button>
+                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Delete User Link Modal --}}
+<div id="deleteUserLinkModal" tabindex="-1" aria-hidden="true"
+    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
+    <div class="relative p-4 w-full max-w-md h-full md:h-auto">
+        <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+            <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark w-5 h-5"></i>
+                <span class="sr-only">Close modal</span>
+            </button>
+            <div class="flex items-center justify-center w-16 h-16 mx-auto mb-3.5">
+                <i class="fa-solid fa-trash-can text-gray-400 dark:text-gray-500 text-4xl"></i>
+            </div>
+            <p class="mb-4 text-gray-500 dark:text-gray-300">Are you sure you want to delete this user link?</p>
+            <div class="flex justify-center items-center space-x-4">
+                <button type="button" class="close-modal-button py-2 px-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">
+                    No, cancel
+                </button>
+                <button type="button" id="confirmDeleteLinkButton" class="py-2 px-3 text-sm font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900">
+                    Yes, I'm sure
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
-@push('style')
-<style>
-    div.dataTables_length label {
-        font-size: 0.75rem;
-    }
-
-    div.dataTables_length select {
-        font-size: 0.75rem;
-        line-height: 1rem;
-        padding: 0.25rem 1.25rem 0.25rem 0.5rem;
-        height: 1.875rem;
-        width: 4.5rem;
-    }
-
-    div.dataTables_filter label {
-        font-size: 0.75rem;
-    }
-
-    div.dataTables_filter input[type="search"],
-    input[type="search"][aria-controls="suppliersTable"] {
-        font-size: 0.75rem;
-        line-height: 1rem;
-        padding: 0.25rem 0.5rem;
-        height: 1.875rem;
-        width: 12rem;
-    }
-
-    div.dataTables_info {
-        font-size: 0.75rem;
-        padding-top: 0.8em;
-    }
-
-    div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar {
-        display: none !important;
-        width: 0 !important;
-        height: 0 !important;
-    }
-
-    div.dataTables_wrapper div.dataTables_scrollBody {
-        -ms-overflow-style: none !important;
-        scrollbar-width: none !important;
-    }
-
-    input::placeholder,
-    textarea::placeholder {
-        text-align: left;
-    }
-</style>
+@push('styles')
+<link href="{{ asset('assets/css/select2.css') }}" rel="stylesheet" />
 @endpush
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-        // Initialize DataTable
+        // Suppliers DataTable
         const table = $('#suppliersTable').DataTable({
             processing: true,
             serverSide: true,
@@ -256,7 +351,13 @@
                 },
                 {
                     data: 'name',
-                    name: 'name'
+                    name: 'name',
+                    render: function(data, type, row) {
+                        return `<button class="view-links"
+                                    data-id="${row.id}" data-sname="${data}" title="View User Link List">
+                                ${data}
+                            </button>`;
+                    }
                 },
                 {
                     data: 'code',
@@ -277,7 +378,7 @@
                 {
                     data: 'is_active',
                     name: 'is_active',
-                    render: function(data, type, row) {
+                    render: function(data) {
                         return data ?
                             '<span class="inline-block px-3 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Active</span>' :
                             '<span class="inline-block px-3 py-1 text-xs font-semibold text-gray-800 bg-gray-100 rounded-full">Inactive</span>';
@@ -290,13 +391,12 @@
                     className: 'text-center',
                     render: function(data, type, row) {
                         return `
-                            <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
-                                <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
-                            </button>
-                            <button class="delete-button text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete" data-id="${row.id}">
-                                <i class="fa-solid fa-trash-can fa-lg m-2"></i>
-                            </button>
-                        `;
+                  <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
+                    <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
+                  </button>
+                  <button class="delete-button text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete" data-id="${row.id}">
+                    <i class="fa-solid fa-trash-can fa-lg m-2"></i>
+                  </button>`;
                     }
                 }
             ],
@@ -312,14 +412,25 @@
             autoWidth: false,
         });
 
-        // Modal Handling
+        // Modals
         const addModal = $('#addSupplierModal');
         const editModal = $('#editSupplierModal');
         const deleteModal = $('#deleteSupplierModal');
+        const userLinkListModal = $('#userLinkListModal');
+        const addUserLinkModal = $('#addUserLinkModal');
+        const editUserLinkModal = $('#editUserLinkModal');
+        const deleteUserLinkModal = $('#deleteUserLinkModal');
+
         const addButton = $('#add-button');
         const closeButtons = $('.close-modal-button');
-        let supplierIdToDelete = null;
 
+        // State vars
+        let supplierIdToDelete = null;
+        let currentSupplierIdForLinks = null;
+        let currentLinkIdToDelete = null;
+        let userLinksDT = null;
+
+        // Helpers
         function showModal(modal) {
             modal.removeClass('hidden').addClass('flex');
         }
@@ -328,56 +439,34 @@
             modal.addClass('hidden').removeClass('flex');
         }
 
-        addButton.on('click', () => {
-            $('#addSupplierForm')[0].reset();
-            $('#is_active').prop('checked', true);
-            showModal(addModal);
-        });
-
-        closeButtons.on('click', () => {
-            hideModal(addModal);
-            hideModal(editModal);
-            hideModal(deleteModal);
-        });
-
-        // Helper: Button loading state
         function setButtonLoading($btn, isLoading, loadingText = 'Processing...') {
-            if (!$btn || $btn.length === 0) return;
+            if (!$btn || !$btn.length) return;
             if (isLoading) {
                 if (!$btn.data('orig-html')) $btn.data('orig-html', $btn.html());
-                $btn.prop('disabled', true);
-                $btn.addClass('opacity-70 cursor-not-allowed');
-                $btn.html(`
-                    <span class="inline-flex items-center gap-2">
-                    <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                    </svg>
-                    ${loadingText}
-                    </span>
-                `);
+                $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed')
+                    .html(`<span class="inline-flex items-center gap-2">
+                        <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                        </svg>${loadingText}</span>`);
             } else {
                 const orig = $btn.data('orig-html');
                 if (orig) $btn.html(orig);
-                $btn.prop('disabled', false);
-                $btn.removeClass('opacity-70 cursor-not-allowed');
+                $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed');
             }
         }
 
-        // Helper: Disable/enable form fields during request
         function setFormBusy($form, busy) {
-            $form.find('input, select, textarea, button').prop('disabled', busy);
+            $form.find('input,select,textarea,button').prop('disabled', busy);
         }
 
-        // Helper: SweetAlert notifications
         function detectTheme() {
             const isDark = document.documentElement.classList.contains('dark');
-
             return isDark ? {
                 mode: 'dark',
-                bg: 'rgba(30, 41, 59, 0.95)',
+                bg: 'rgba(30,41,59,.95)',
                 fg: '#E5E7EB',
-                border: 'rgba(71, 85, 105, 0.5)',
+                border: 'rgba(71,85,105,.5)',
                 progress: 'rgba(255,255,255,.9)',
                 icon: {
                     success: '#22c55e',
@@ -387,9 +476,9 @@
                 }
             } : {
                 mode: 'light',
-                bg: 'rgba(255, 255, 255, 0.98)',
+                bg: 'rgba(255,255,255,.98)',
                 fg: '#0f172a',
-                border: 'rgba(226, 232, 240, 1)',
+                border: 'rgba(226,232,240,1)',
                 progress: 'rgba(15,23,42,.8)',
                 icon: {
                     success: '#16a34a',
@@ -400,6 +489,7 @@
             };
         }
 
+        // -- HANYA DI MIXIN: hover + styling --
         const BaseToast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -412,19 +502,27 @@
             hideClass: {
                 popup: 'swal2-animate-toast-out'
             },
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer);
-                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            didOpen: (el) => {
+                // PAUSE saat hover
+                el.addEventListener('mouseenter', Swal.stopTimer);
+                el.addEventListener('mouseleave', Swal.resumeTimer);
+
+                // Styling progress & border
+                const t = detectTheme();
+                const bar = el.querySelector('.swal2-timer-progress-bar');
+                if (bar) bar.style.background = t.progress;
+                const popup = el.querySelector('.swal2-popup');
+                if (popup) popup.style.borderColor = t.border;
             }
         });
 
+        // -- TIDAK ADA didOpen DI SINI --
         function renderToast({
             icon = 'success',
             title = 'Success',
             text = ''
         } = {}) {
             const t = detectTheme();
-
             BaseToast.fire({
                 icon,
                 title,
@@ -436,14 +534,6 @@
                     popup: 'swal2-toast border',
                     title: '',
                     timerProgressBar: ''
-                },
-                didOpen: (toast) => {
-                    const bar = toast.querySelector('.swal2-timer-progress-bar');
-                    if (bar) bar.style.background = t.progress;
-                    const popup = toast.querySelector('.swal2-popup');
-                    if (popup) popup.style.borderColor = t.border;
-                    toast.addEventListener('mouseenter', Swal.stopTimer);
-                    toast.addEventListener('mouseleave', Swal.resumeTimer);
                 }
             });
         }
@@ -491,24 +581,28 @@
         window.toastWarning = toastWarning;
         window.toastInfo = toastInfo;
 
+
+        addButton.on('click', () => {
+            $('#addSupplierForm')[0].reset();
+            $('#is_active').prop('checked', true);
+            showModal(addModal);
+        });
+        closeButtons.on('click', () => {
+            hideModal(addModal);
+            hideModal(editModal);
+            hideModal(deleteModal);
+            hideModal(userLinkListModal);
+            hideModal(addUserLinkModal);
+            hideModal(editUserLinkModal);
+            hideModal(deleteUserLinkModal);
+        });
+
         // Add Supplier
         $('#addSupplierForm').on('submit', function(e) {
             e.preventDefault();
-            const $form = $(this);
-            const $btn = $form.find('[type="submit"]');
-            const nameError = $('#add-name-error');
-            const codeError = $('#add-code-error');
-            const emailError = $('#add-email-error');
-            const phoneError = $('#add-phone-error');
-            const addressError = $('#add-address-error');
-            const isActiveError = $('#add-is_active-error');
-            nameError.addClass('hidden');
-            codeError.addClass('hidden');
-            emailError.addClass('hidden');
-            phoneError.addClass('hidden');
-            addressError.addClass('hidden');
-            isActiveError.addClass('hidden');
-
+            const $form = $(this),
+                $btn = $form.find('[type="submit"]');
+            $('#add-name-error,#add-code-error,#add-email-error,#add-phone-error,#add-address-error,#add-is_active-error').addClass('hidden');
             const formData = new FormData(this);
             formData.set('is_active', $('#is_active').is(':checked') ? '1' : '0');
 
@@ -539,15 +633,14 @@
                 error: function(xhr) {
                     const errors = xhr.responseJSON?.errors;
                     if (errors) {
-                        if (errors.name) nameError.text(errors.name[0]).removeClass('hidden');
-                        if (errors.code) codeError.text(errors.code[0]).removeClass('hidden');
-                        if (errors.email) emailError.text(errors.email[0]).removeClass('hidden');
-                        if (errors.phone) phoneError.text(errors.phone[0]).removeClass('hidden');
-                        if (errors.address) addressError.text(errors.address[0]).removeClass('hidden');
-                        if (errors.is_active) isActiveError.text(errors.is_active[0]).removeClass('hidden');
+                        if (errors.name) $('#add-name-error').text(errors.name[0]).removeClass('hidden');
+                        if (errors.code) $('#add-code-error').text(errors.code[0]).removeClass('hidden');
+                        if (errors.email) $('#add-email-error').text(errors.email[0]).removeClass('hidden');
+                        if (errors.phone) $('#add-phone-error').text(errors.phone[0]).removeClass('hidden');
+                        if (errors.address) $('#add-address-error').text(errors.address[0]).removeClass('hidden');
+                        if (errors.is_active) $('#add-is_active-error').text(errors.is_active[0]).removeClass('hidden');
                     }
-                    const msg = xhr.responseJSON?.message || 'Failed to add supplier.';
-                    toastError('Error', msg);
+                    toastError('Error', xhr.responseJSON?.message || 'Failed to add supplier.');
                 },
                 complete: function() {
                     setButtonLoading($btn, false);
@@ -556,27 +649,15 @@
             });
         });
 
-        // Edit Supplier
+        // Edit Supplier (open)
         $(document).on('click', '.edit-button', function() {
             const id = $(this).data('id');
-            const nameError = $('#edit-name-error');
-            const codeError = $('#edit-code-error');
-            const emailError = $('#edit-email-error');
-            const phoneError = $('#edit-phone-error');
-            const addressError = $('#edit-address-error');
-            const isActiveError = $('#edit-is_active-error');
-            nameError.addClass('hidden');
-            codeError.addClass('hidden');
-            emailError.addClass('hidden');
-            phoneError.addClass('hidden');
-            addressError.addClass('hidden');
-            isActiveError.addClass('hidden');
-
+            $('#edit-name-error,#edit-code-error,#edit-email-error,#edit-phone-error,#edit-address-error,#edit-is_active-error').addClass('hidden');
             $.ajax({
                 url: `/master/suppliers/${id}`,
                 method: 'GET',
                 beforeSend: function() {
-                    setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, '');
+                    setButtonLoading($(`.edit-button[data-id="${id}"]`), true, '');
                 },
                 success: function(data) {
                     $('#edit_name').val(data.name);
@@ -589,32 +670,20 @@
                     showModal(editModal);
                 },
                 error: function(xhr) {
-                    const msg = xhr.responseJSON?.message || 'Failed to fetch supplier data.';
-                    toastError('Error', msg);
+                    toastError('Error', xhr.responseJSON?.message || 'Failed to fetch supplier data.');
                 },
                 complete: function() {
-                    setButtonLoading($('.edit-button[data-id="' + id + '"]'), false);
+                    setButtonLoading($(`.edit-button[data-id="${id}"]`), false);
                 }
             });
         });
 
+        // Edit Supplier (submit)
         $('#editSupplierForm').on('submit', function(e) {
             e.preventDefault();
-            const $form = $(this);
-            const $btn = $form.find('[type="submit"]');
-            const nameError = $('#edit-name-error');
-            const codeError = $('#edit-code-error');
-            const emailError = $('#edit-email-error');
-            const phoneError = $('#edit-phone-error');
-            const addressError = $('#edit-address-error');
-            const isActiveError = $('#edit-is_active-error');
-            nameError.addClass('hidden');
-            codeError.addClass('hidden');
-            emailError.addClass('hidden');
-            phoneError.addClass('hidden');
-            addressError.addClass('hidden');
-            isActiveError.addClass('hidden');
-
+            const $form = $(this),
+                $btn = $form.find('[type="submit"]');
+            $('#edit-name-error,#edit-code-error,#edit-email-error,#edit-phone-error,#edit-address-error,#edit-is_active-error').addClass('hidden');
             const formData = new FormData(this);
             formData.set('is_active', $('#edit_is_active').is(':checked') ? '1' : '0');
 
@@ -643,15 +712,14 @@
                 error: function(xhr) {
                     const errors = xhr.responseJSON?.errors;
                     if (errors) {
-                        if (errors.name) nameError.text(errors.name[0]).removeClass('hidden');
-                        if (errors.code) codeError.text(errors.code[0]).removeClass('hidden');
-                        if (errors.email) emailError.text(errors.email[0]).removeClass('hidden');
-                        if (errors.phone) phoneError.text(errors.phone[0]).removeClass('hidden');
-                        if (errors.address) addressError.text(errors.address[0]).removeClass('hidden');
-                        if (errors.is_active) isActiveError.text(errors.is_active[0]).removeClass('hidden');
+                        if (errors.name) $('#edit-name-error').text(errors.name[0]).removeClass('hidden');
+                        if (errors.code) $('#edit-code-error').text(errors.code[0]).removeClass('hidden');
+                        if (errors.email) $('#edit-email-error').text(errors.email[0]).removeClass('hidden');
+                        if (errors.phone) $('#edit-phone-error').text(errors.phone[0]).removeClass('hidden');
+                        if (errors.address) $('#edit-address-error').text(errors.address[0]).removeClass('hidden');
+                        if (errors.is_active) $('#edit-is_active-error').text(errors.is_active[0]).removeClass('hidden');
                     }
-                    const msg = xhr.responseJSON?.message || 'Failed to update supplier.';
-                    toastError('Error', msg);
+                    toastError('Error', xhr.responseJSON?.message || 'Failed to update supplier.');
                 },
                 complete: function() {
                     setButtonLoading($btn, false);
@@ -665,11 +733,9 @@
             supplierIdToDelete = $(this).data('id');
             showModal(deleteModal);
         });
-
         $('#confirmDeleteButton').on('click', function() {
             if (!supplierIdToDelete) return;
             const $btn = $(this);
-
             $.ajax({
                 url: `/master/suppliers/${supplierIdToDelete}`,
                 method: 'DELETE',
@@ -691,12 +757,249 @@
                     }
                 },
                 error: function(xhr) {
-                    const msg = xhr.responseJSON?.message || 'Failed to delete supplier.';
-                    toastError('Error', msg);
+                    toastError('Error', xhr.responseJSON?.message || 'Failed to delete supplier.');
                 },
                 complete: function() {
                     setButtonLoading($btn, false);
                     setFormBusy($('#deleteSupplierModal'), false);
+                }
+            });
+        });
+
+        // ===== User Link List =====
+        function initOrReloadUserLinksDT(supplierId) {
+            if (userLinksDT) {
+                userLinksDT.ajax.url(`/master/suppliers/${supplierId}/links/data`).load();
+                return;
+            }
+            userLinksDT = $('#userLinksTable').DataTable({
+                processing: true,
+                serverSide: true,
+                scrollX: true,
+                ajax: {
+                    url: `/master/suppliers/${supplierId}/links/data`,
+                    type: 'GET',
+                    data: function(d) {
+                        d.search = d.search.value;
+                    }
+                },
+                columns: [{
+                        data: null,
+                        render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1
+                    },
+                    {
+                        data: 'name',
+                        name: 'name'
+                    },
+                    {
+                        data: 'email',
+                        name: 'email'
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center',
+                        render: function(data, type, row) {
+                            return `
+                      <button class="edit-link-button text-gray-400 hover:text-gray-700"
+                              title="Edit" data-id="${row.id}" data-supplier="${currentSupplierIdForLinks}">
+                        <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
+                      </button>
+                      <button class="delete-link-button text-red-600 hover:text-red-900"
+                              title="Delete" data-id="${row.id}" data-supplier="${currentSupplierIdForLinks}">
+                        <i class="fa-solid fa-trash-can fa-lg m-2"></i>
+                      </button>`;
+                        }
+                    },
+                ],
+                pageLength: 10,
+                lengthMenu: [10, 25, 50],
+                order: [
+                    [1, 'asc']
+                ], // sort by name
+                language: {
+                    emptyTable: '<div class="text-gray-500 dark:text-gray-400">No linked users.</div>'
+                },
+                responsive: true,
+                autoWidth: false,
+            });
+        }
+
+        // click supplier name -> open user links modal
+        $(document).on('click', '.view-links', function() {
+            currentSupplierIdForLinks = $(this).data('id');
+            const sname = $(this).data('sname');
+            $('#userLinkListTitle').text(`User Link List — ${sname}`);
+            initOrReloadUserLinksDT(currentSupplierIdForLinks);
+            showModal(userLinkListModal);
+        });
+
+        // Add Link button -> open add form
+        $('#add-link-button').on('click', function() {
+            if (!currentSupplierIdForLinks) return;
+            $('#addUserLinkForm')[0].reset();
+            $('#add-ul-name-error,#add-ul-email-error').addClass('hidden');
+            $('#addUserLinkForm').attr('action', `/master/suppliers/${currentSupplierIdForLinks}/links`);
+            showModal(addUserLinkModal);
+        });
+
+        // Submit Add User Link
+        $('#addUserLinkForm').on('submit', function(e) {
+            e.preventDefault();
+            const $form = $(this),
+                $btn = $form.find('[type="submit"]');
+            $('#add-ul-name-error,#add-ul-email-error').addClass('hidden');
+            const formData = new FormData(this);
+
+            $.ajax({
+                url: $form.attr('action'),
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function() {
+                    setButtonLoading($btn, true, 'Saving...');
+                    setFormBusy($form, true);
+                },
+                success: function(data) {
+                    if (data.success) {
+                        if (userLinksDT) userLinksDT.ajax.reload(null, false);
+                        hideModal(addUserLinkModal);
+                        toastSuccess('Success', 'User link added successfully.');
+                    } else {
+                        toastError('Error', data.message || 'Failed to add user link.');
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors) {
+                        if (errors.name) $('#add-ul-name-error').text(errors.name[0]).removeClass('hidden');
+                        if (errors.email) $('#add-ul-email-error').text(errors.email[0]).removeClass('hidden');
+                    }
+                    toastError('Error', xhr.responseJSON?.message || 'Failed to add user link.');
+                },
+                complete: function() {
+                    setButtonLoading($btn, false);
+                    setFormBusy($form, false);
+                }
+            });
+        });
+
+        // Edit Link (open)
+        $(document).on('click', '.edit-link-button', function() {
+            const linkId = $(this).data('id');
+            const supplierId = $(this).data('supplier');
+
+            $('#edit-ul-name-error,#edit-ul-email-error').addClass('hidden');
+
+            $.ajax({
+                url: `/master/suppliers/${supplierId}/links/${linkId}`,
+                method: 'GET',
+                beforeSend: function() {
+                    setButtonLoading($(`.edit-link-button[data-id="${linkId}"]`), true, '');
+                },
+                success: function(data) {
+                    $('#ul_edit_name').val(data.name || '');
+                    $('#ul_edit_email').val(data.email || '');
+                    $('#editUserLinkForm').attr('action', `/master/suppliers/${supplierId}/links/${linkId}`);
+                    showModal(editUserLinkModal);
+                },
+                error: function(xhr) {
+                    toastError('Error', xhr.responseJSON?.message || 'Failed to fetch user link.');
+                },
+                complete: function() {
+                    setButtonLoading($(`.edit-link-button[data-id="${linkId}"]`), false);
+                }
+            });
+        });
+
+        // Edit Link (submit)
+        $('#editUserLinkForm').on('submit', function(e) {
+            e.preventDefault();
+            const $form = $(this),
+                $btn = $form.find('[type="submit"]');
+            $('#edit-ul-name-error,#edit-ul-email-error').addClass('hidden');
+            const formData = new FormData(this); // @method('PUT') ada di form
+
+            $.ajax({
+                url: $form.attr('action'),
+                method: 'POST', // POST + _method=PUT
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function() {
+                    setButtonLoading($btn, true, 'Saving...');
+                    setFormBusy($form, true);
+                },
+                success: function(resp) {
+                    if (resp.success) {
+                        if (userLinksDT) userLinksDT.ajax.reload(null, false);
+                        hideModal(editUserLinkModal);
+                        toastSuccess('Success', 'User link updated successfully.');
+                    } else {
+                        toastError('Error', resp.message || 'Failed to update user link.');
+                    }
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors;
+                    if (errors) {
+                        if (errors.name) $('#edit-ul-name-error').text(errors.name[0]).removeClass('hidden');
+                        if (errors.email) $('#edit-ul-email-error').text(errors.email[0]).removeClass('hidden');
+                    }
+                    toastError('Error', xhr.responseJSON?.message || 'Failed to update user link.');
+                },
+                complete: function() {
+                    setButtonLoading($btn, false);
+                    setFormBusy($form, false);
+                }
+            });
+        });
+
+        // Delete Link
+        $(document).on('click', '.delete-link-button', function() {
+            currentLinkIdToDelete = $(this).data('id');
+            $('#confirmDeleteLinkButton').data('supplier', $(this).data('supplier'));
+            showModal(deleteUserLinkModal);
+        });
+
+        $('#confirmDeleteLinkButton').on('click', function() {
+            const supplierId = $(this).data('supplier');
+            const $btn = $(this);
+            if (!currentLinkIdToDelete || !supplierId) return;
+
+            $.ajax({
+                url: `/master/suppliers/${supplierId}/links/${currentLinkIdToDelete}`,
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                beforeSend: function() {
+                    setButtonLoading($btn, true, 'Deleting...');
+                    setFormBusy(deleteUserLinkModal, true);
+                },
+                success: function(resp) {
+                    if (resp.success) {
+                        if (userLinksDT) userLinksDT.ajax.reload(null, false);
+                        hideModal(deleteUserLinkModal);
+                        currentLinkIdToDelete = null;
+                        toastSuccess('Success', 'User link deleted successfully.');
+                    } else {
+                        toastError('Error', resp.message || 'Failed to delete user link.');
+                    }
+                },
+                error: function(xhr) {
+                    toastError('Error', xhr.responseJSON?.message || 'Failed to delete user link.');
+                },
+                complete: function() {
+                    setButtonLoading($btn, false);
+                    setFormBusy(deleteUserLinkModal, false);
                 }
             });
         });

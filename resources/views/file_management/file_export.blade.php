@@ -67,14 +67,13 @@
                 <thead class="bg-gray-50 dark:bg-gray-700/50">
                     <tr>
                         <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">No</th>
-
                         <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Customer</th>
                         <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Model</th>
                         <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Part No</th>
                         <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Doc Type</th>
                         <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Sub Category</th>
                         <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Revision</th>
-                        <th scope="col" class="py-3.5 px-4 text-center text-sm font-semibold text-gray-900 dark:text-gray-200">Actions</th>
+                        {{-- kolom Actions DIHAPUS sesuai permintaan --}}
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
@@ -88,51 +87,63 @@
 
 @push('scripts')
 <script>
-    $(document).ready(function() {
-        let table = $('#downloadableFilesTable').DataTable({
-            processing: true,
-            serverSide: false,
-            ajax: {
-                url: '{{ route("api.files.downloadable") }}',
-                type: 'GET',
-            },
-            columns: [
-                { data: null, name: 'No', orderable: false, searchable: false },
-                { data: 'customer', name: 'Customer' },
-                { data: 'model', name: 'Model' },
-                { data: 'part_no', name: 'Part No' },
-                { data: 'doc_type', name: 'Doc Type' },
-                { data: 'sub_category', name: 'Sub Category' },
-                { data: 'revision', name: 'Revision' },
-                {
-                    data: null,
-                    name: 'Actions',
-                    orderable: false,
-                    searchable: false,
-                    className: 'text-center',
-                    render: function(data, type, row) {
-                        return `
-                            <button class="inline-flex items-center gap-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-md shadow-sm" onclick="downloadFile(${row.id})">
-                                <i class="fa-solid fa-download fa-sm"></i> Download
-                            </button>
-                        `;
-                    }
-                }
-            ],
-            responsive: true,
-            dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
-        });
+const DETAIL_ROUTE_TEMPLATE = '{{ route("file-manager.export.detail", ["id" => "__ID__"]) }}';
 
-        table.on('draw.dt', function () {
-            var PageInfo = $('#downloadableFilesTable').DataTable().page.info();
-            table.column(0, { page: 'current' }).nodes().each(function (cell, i) {
-                cell.innerHTML = i + 1 + PageInfo.start;
-            });
+$(document).ready(function() {
+    let table = $('#downloadableFilesTable').DataTable({
+        processing: true,
+        serverSide: false,
+        ajax: {
+            url: '{{ route("api.files.downloadable") }}',
+            type: 'GET',
+        },
+        // === kolom Actions dihapus dari config
+        columns: [
+            { data: null, name: 'No', orderable: false, searchable: false },
+            { data: 'customer', name: 'Customer' },
+            { data: 'model', name: 'Model' },
+            { data: 'part_no', name: 'Part No' },
+            { data: 'doc_type', name: 'Doc Type' },
+            { data: 'sub_category', name: 'Sub Category' },
+            { data: 'revision', name: 'Revision' }
+        ],
+        responsive: true,
+        dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
+
+        createdRow: function(row) {
+            $(row)
+                .attr('role', 'button')
+                .attr('tabindex', '0')
+                .addClass('cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors');
+        }
+    });
+
+    table.on('draw.dt', function () {
+        const PageInfo = table.page.info();
+        table.column(0, { page: 'current' }).nodes().each(function (cell, i) {
+            cell.innerHTML = i + 1 + PageInfo.start;
         });
     });
 
-    function downloadFile(id) {
-        alert('Download functionality to be implemented for file ID: ' + id);
-    }
+    $('#downloadableFilesTable tbody').on('click', 'tr', function(e) {
+        if ($(e.target).closest('button, a, input, select, label, .dt-checkboxes').length) return;
+        const rowData = table.row(this).data();
+        if (!rowData) return;
+        goToDetail(rowData.id);
+    });
+
+    $('#downloadableFilesTable tbody').on('keydown', 'tr', function(e) {
+        if (e.key === 'Enter') {
+            const rowData = table.row(this).data();
+            if (!rowData) return;
+            goToDetail(rowData.id);
+        }
+    });
+});
+
+function goToDetail(id) {
+    const url = DETAIL_ROUTE_TEMPLATE.replace('__ID__', id);
+    window.location.href = url;
+}
 </script>
 @endpush

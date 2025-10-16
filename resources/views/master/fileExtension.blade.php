@@ -31,6 +31,8 @@
                         <th scope="col" class="px-6 py-3 sorting" data-column="code">
                             File Extension Code
                         </th>
+                        <th scope="col" class="px-6 py-3 text-center">Icon</th>
+
                         <th scope="col" class="px-6 py-3 text-center">Action</th>
                     </tr>
                 </thead>
@@ -53,13 +55,22 @@
                 @csrf
                 <div class="mb-4">
                     <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">File Extension Name</label>
-                    <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. Portable Document Format" required>
+                    <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. Portable Document Format" required>
                     <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">File Extension Code</label>
-                    <input type="text" name="code" id="code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. PDF" required>
+                    <input type="text" name="code" id="code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. PDF" required>
                     <p id="add-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div class="mb-4">
+                    <label for="icon" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">
+                        Icon
+                    </label>
+                    <input type="text" name="icon" id="icon"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                        placeholder="e.g. fa-solid fa-file-pdf">
+                    <p id="add-icon-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
@@ -88,14 +99,23 @@
                 @method('PUT')
                 <div class="mb-4">
                     <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">File Extension Name</label>
-                    <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                    <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
                     <label for="edit_code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">File Extension Code</label>
-                    <input type="text" name="code" id="edit_code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                    <input type="text" name="code" id="edit_code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
+                <div class="mb-4">
+                    <label for="edit_icon" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">
+                        Icon
+                    </label>
+                    <input type="text" name="icon" id="edit_icon"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                    <p id="edit-icon-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
                         Cancel
@@ -139,6 +159,7 @@
     div.dataTables_length label {
         font-size: 0.75rem;
     }
+
     div.dataTables_length select {
         font-size: 0.75rem;
         line-height: 1rem;
@@ -146,9 +167,11 @@
         height: 1.875rem;
         width: 4.5rem;
     }
+
     div.dataTables_filter label {
         font-size: 0.75rem;
     }
+
     div.dataTables_filter input[type="search"],
     input[type="search"][aria-controls="fileExtensionsTable"] {
         font-size: 0.75rem;
@@ -157,19 +180,23 @@
         height: 1.875rem;
         width: 12rem;
     }
+
     div.dataTables_info {
         font-size: 0.75rem;
         padding-top: 0.8em;
     }
+
     div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar {
         display: none !important;
         width: 0 !important;
         height: 0 !important;
     }
+
     div.dataTables_wrapper div.dataTables_scrollBody {
         -ms-overflow-style: none !important;
         scrollbar-width: none !important;
     }
+
     input::placeholder {
         text-align: left;
     }
@@ -200,8 +227,22 @@
                         return meta.row + meta.settings._iDisplayStart + 1;
                     }
                 },
-                { data: 'name', name: 'name' },
-                { data: 'code', name: 'code' },
+                {
+                    data: 'name',
+                    name: 'name'
+                },
+                {
+                    data: 'code',
+                    name: 'code'
+                },
+                {
+                    data: 'icon',
+                    name: 'icon',
+                    className: 'text-center',
+                    render: function(data) {
+                        return data ? `<i class="${data} text-lg"></i>` : '-';
+                    }
+                },
                 {
                     data: null,
                     orderable: false,
@@ -425,7 +466,9 @@
             $.ajax({
                 url: $form.attr('action'),
                 method: 'POST',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
                 data: formData,
                 processData: false,
                 contentType: false,
@@ -476,6 +519,7 @@
                 success: function(data) {
                     $('#edit_name').val(data.name);
                     $('#edit_code').val(data.code);
+                    $('#edit_icon').val(data.icon);
                     $('#editFileExtensionForm').attr('action', `/master/fileExtensions/${id}`);
                     showModal(editModal);
                 },
@@ -503,7 +547,9 @@
             $.ajax({
                 url: $form.attr('action'),
                 method: 'POST',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
                 data: formData,
                 processData: false,
                 contentType: false,
@@ -549,7 +595,9 @@
             $.ajax({
                 url: `/master/fileExtensions/${fileExtensionIdToDelete}`,
                 method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
                 beforeSend: function() {
                     setButtonLoading($btn, true, 'Deleting...');
                     setFormBusy($('#deleteFileExtensionModal'), true);

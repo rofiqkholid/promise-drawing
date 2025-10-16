@@ -24,6 +24,8 @@ use App\Http\Controllers\Api\RoleMenuController;
 use App\Http\Controllers\Api\ApprovalController;
 use App\Http\Controllers\Api\ExportController;
 use App\Http\Controllers\Api\DrawingUploadController;
+use App\Http\Controllers\Api\CustomerRevisionLabelController;
+use App\Http\Controllers\Api\PackageFormatController;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -54,6 +56,10 @@ Route::middleware(['auth'])->group(function () {
         return view('file_management.file_export');
     })->name('file-manager.export');
 
+    Route::get('/file-manager.export/{id}', function ($id) {
+        return view('file_management.file_export_detail', ['id' => $id]);
+    })->name('file-manager.export.detail');
+
     Route::get('/approval', function () {
         return view('approvals.approval');
     })->name('approval');
@@ -70,9 +76,7 @@ Route::middleware(['auth'])->group(function () {
         return view('user_maintenance.user_maintenance');
     })->name('user-maintenance');
 
-
     // Data Master Routes
-
 
     Route::get('/departments', function () {
         return view('master.departments');
@@ -150,6 +154,15 @@ Route::middleware(['auth'])->group(function () {
         return view('master.product');
     })->name('product');
 
+    Route::get('/pkg_format', function () {
+        return view('master.pkgFormat');
+    })->name('pkg_format');
+
+    Route::get('/rev-label', function () {
+        return view('master.revision_label');
+    })->name('rev-label');
+
+
 
     #Region Stamp Format
     Route::get('stampFormat/data', [StampFormatController::class, 'data'])->name('stampFormat.data');
@@ -164,6 +177,11 @@ Route::middleware(['auth'])->group(function () {
     #Region Suppliers
     Route::resource('master/suppliers', SuppliersController::class)->names('suppliers')->except(['create', 'edit']);
     Route::get('/suppliers/data', [SuppliersController::class, 'data'])->name('suppliers.data');
+    Route::get('/master/suppliers/{supplier}/links/data', [SuppliersController::class, 'linksData'])->name('suppliers.links.data');
+    Route::post('/master/suppliers/{supplier}/links', [SuppliersController::class, 'storeLink'])->name('suppliers.links.store');
+    Route::get('/master/suppliers/{supplier}/links/{link}', [SuppliersController::class, 'showLink'])->name('suppliers.links.show');
+    Route::put('/master/suppliers/{supplier}/links/{link}', [SuppliersController::class, 'updateLink'])->name('suppliers.links.update');
+    Route::delete('/master/suppliers/{supplier}/links/{link}', [SuppliersController::class, 'destroyLink'])->name('suppliers.links.destroy');
     #End region
 
     #Region Customers
@@ -215,7 +233,6 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('master/partGroups', PartGroupsController::class)->names('partGroups')->except(['create', 'edit']);
     Route::get('/partGroups/data', [PartGroupsController::class, 'data'])->name('partGroups.data');
     Route::get('/partGroups/getModelsByCustomer', [PartGroupsController::class, 'getModelsByCustomer'])->name('partGroups.getModelsByCustomer');
-
     #End region
 
     #Region User Maintenance
@@ -257,11 +274,30 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('master/products', ProductsController::class)->names('products')->except(['create', 'edit']);
     Route::get('/products/data', [ProductsController::class, 'data'])->name('products.data');
     Route::get('/products/get-models', [ProductsController::class, 'getModels'])->name('products.getModels');
+    Route::get('/products/get-customers', [ProductsController::class, 'getCustomers'])->name('products.getCustomers');
     #End region
 
     #Region upload
-    Route::post('upload.getCustomerData', [UploadController::class, 'getCustomerData'])->name('upload.getCustomerData');
-    Route::post('upload.getModelData', [UploadController::class, 'getModelData'])->name('upload.getModelData');
+    Route::post('upload.getCustomerData', [DrawingUploadController::class, 'getCustomerData'])->name('upload.getCustomerData');
+    Route::post('upload.getModelData', [DrawingUploadController::class, 'getModelData'])->name('upload.getModelData');
+    Route::post('upload.getProductData', [DrawingUploadController::class, 'getProductData'])->name('upload.getProductData');
+    Route::post('upload.getDocumentGroupData', [DrawingUploadController::class, 'getDocumentGroupData'])->name('upload.getDocumentGroupData');
+    Route::post('upload.getSubCategoryData', [DrawingUploadController::class, 'getSubCategoryData'])->name('upload.getSubCategoryData');
+    Route::post('upload.getPartGroupData', [DrawingUploadController::class, 'getPartGroupData'])->name('upload.getPartGroupData');
+    Route::post('upload.getProjectStatusData', [DrawingUploadController::class, 'getProjectStatusData'])->name('upload.getProjectStatusData');
+
+    Route::post('/upload/drawing/check', [DrawingUploadController::class, 'check'])->name('upload.drawing.check');
+    Route::post('/upload/drawing/sync', [DrawingUploadController::class, 'syncLegacyData'])->name('upload.drawing.sync-legacy');
+    Route::post('/upload/drawing/store', [DrawingUploadController::class, 'store'])->name('upload.drawing.store');
+    Route::post('/upload/drawing/activity-logs', [DrawingUploadController::class, 'activityLogs'])->name('upload.drawing.activity-logs');
+    Route::post('/upload/drawing/request-approval', [DrawingUploadController::class, 'requestApproval'])->name('upload.drawing.request-approval');
+
+    //dummy
+    Route::get('/files/list', [UploadController::class, 'listFiles'])->name('api.files.list');
+    Route::get('/files/{id}', [UploadController::class, 'getPackageDetails'])->name('api.files.detail');
+    Route::get('api.files.downloadable', [ExportController::class, 'listDownloadableFiles'])->name('api.files.downloadable');
+    Route::get('/approvals/list', [ApprovalController::class, 'listApprovals'])->name('api.approvals.list');
+    Route::get('/approval/{id}', [ApprovalController::class, 'showDetail'])->name('approval.detail');
     #End region
 
     #Region Role Menu
@@ -277,23 +313,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/role-menu/by-user/{user}', [RoleMenuController::class, 'syncByUser'])->name('role-menu.syncByUser');
     #End region
 
+    #Region CustomerRev
+    Route::resource('master/revisionLabels', CustomerRevisionLabelController::class)->parameters(['revisionLabels' => 'rev_label'])->names('rev-label')->except(['create', 'edit']);
+    Route::get('rev-label/data', [CustomerRevisionLabelController::class, 'data'])->name('rev-label.data');
+    Route::get('rev-label/dropdowns', [CustomerRevisionLabelController::class, 'dropdowns'])->name('rev-label.dropdowns');
+    #End region
 
-
-
-
-
-
-
-    
-    Route::post('upload.getCustomerData', [DrawingUploadController::class, 'getCustomerData'])->name('upload.getCustomerData');
-    Route::post('upload.getModelData', [DrawingUploadController::class, 'getModelData'])->name('upload.getModelData');
-    Route::post('upload.getProductData', [DrawingUploadController::class, 'getProductData'])->name('upload.getProductData');
-    Route::post('upload.getDocumentGroupData', [DrawingUploadController::class, 'getDocumentGroupData'])->name('upload.getDocumentGroupData');
-    Route::post('upload.getSubCategoryData', [DrawingUploadController::class, 'getSubCategoryData'])->name('upload.getSubCategoryData');
-
-    //dummy
-    Route::get('/files/list', [UploadController::class, 'listFiles'])->name('api.files.list');
-    Route::get('/files/downloadable', [ExportController::class, 'listDownloadableFiles'])->name('api.files.downloadable');
-    Route::get('/approvals/list', [ApprovalController::class, 'listApprovals'])->name('api.approvals.list');
-    Route::get('/approval/{id}', [ApprovalController::class, 'showDetail'])->name('approval.detail');
+    #Region PKG Format
+    Route::get('pkg_format/data', [PackageFormatController::class, 'data'])->name('pkg_format.data');
+    Route::resource('master/pkgFormat', PackageFormatController::class)->names('pkg_format')->except(['create', 'edit']);
+    #End region
 });

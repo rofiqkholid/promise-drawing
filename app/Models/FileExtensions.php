@@ -17,6 +17,7 @@ class FileExtensions extends Model
     protected $fillable = [
         'name',
         'code',
+        'icon',
     ];
 
     /**

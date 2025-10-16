@@ -1,26 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In - PROMISE Dashboard</title>
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <style>
         body {
             font-family: 'Poppins', sans-serif;
         }
+
         .theme-transition {
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
     </style>
 </head>
+
 <body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
 
     <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-lg border border-gray-200">
-        
+
         {{-- Tombol toggle dark mode sudah dihapus --}}
 
         <div class="text-center">
@@ -29,19 +32,19 @@
                 Sign In to Your Account
             </h2>
             <p class="mt-2 text-sm text-gray-600">
-                Engineering Document Management Dashboard
+                Project Management Integrated System Engineering
             </p>
         </div>
 
         @if ($errors->any())
-            <div class="bg-red-50 border-l-4 border-red-400 text-red-700 p-4 rounded-md" role="alert">
-                <p class="font-bold">Authentication Failed</p>
-                <ul class="mt-1 list-disc list-inside text-sm">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
+        <div class="bg-red-50 border-l-4 border-red-400 text-red-700 p-4 rounded-md" role="alert">
+            <p class="font-bold">Authentication Failed</p>
+            <ul class="mt-1 list-disc list-inside text-sm">
+                @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
         @endif
 
         <form class="space-y-6" action="{{ route('login_post') }}" method="POST">
@@ -51,29 +54,29 @@
                     <label for="nik" class="block text-sm font-medium text-gray-700">Employee ID</label>
                     <div class="relative mt-1">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                             <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M10 2a1.5 1.5 0 00-1.5 1.5V5.25a.75.75 0 001.5 0V3.5A1.5 1.5 0 0010 2zM5.25 5.25a.75.75 0 000 1.5h1.5a.75.75 0 000-1.5H5.25zM12 8a4 4 0 11-8 0 4 4 0 018 0zM15 11.25a.75.75 0 00-1.5 0v1.5a.75.75 0 001.5 0v-1.5z" clip-rule="evenodd" />
                                 <path d="M3 10a7 7 0 1114 0 7 7 0 01-14 0zM10 4a6 6 0 100 12 6 6 0 000-12z" />
-                             </svg>
+                            </svg>
                         </div>
                         <input id="nik" name="nik" type="text" autocomplete="username" required
-                               value="{{ old('nik') }}"
-                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 bg-white text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                               placeholder="e.g., 202577-001">
+                            value="{{ old('nik') }}"
+                            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 bg-white text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            placeholder="e.g., 202577-001">
                     </div>
                 </div>
 
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
                     <div class="relative mt-1">
-                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" />
                             </svg>
                         </div>
                         <input id="password" name="password" type="password" autocomplete="current-password" required
-                               class="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 bg-white text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                               placeholder="••••••••">
+                            class="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md placeholder-gray-400 bg-white text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            placeholder="••••••••">
                         <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
                             <button type="button" id="toggle-password" class="text-gray-400 hover:text-gray-500 focus:outline-none">
                                 <svg id="eye-icon" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -93,14 +96,14 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
                     <input id="remember" name="remember" type="checkbox"
-                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
                     <label for="remember" class="ml-2 block text-sm text-gray-900">Remember me</label>
                 </div>
             </div>
 
             <div>
                 <button type="submit"
-                        class="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-semibold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    class="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-semibold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     Sign In
                 </button>
             </div>
@@ -119,6 +122,42 @@
             eyeIcon.classList.toggle('hidden', isPassword);
             eyeSlashIcon.classList.toggle('hidden', !isPassword);
         });
+
+        const form = document.querySelector('form');
+        const submitBtn = document.querySelector('button[type="submit"]');
+        let isSubmitting = false;
+        const originalBtnHTML = submitBtn.innerHTML;
+
+
+        const spinnerSVG = `
+    <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+    </svg>
+  `;
+
+        form.addEventListener('submit', function(e) {
+            if (isSubmitting) {
+                e.preventDefault();
+                return;
+            }
+            isSubmitting = true;
+
+
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+            submitBtn.setAttribute('aria-busy', 'true');
+            submitBtn.setAttribute('aria-disabled', 'true');
+            submitBtn.innerHTML = `
+      <span class="flex items-center justify-center gap-2">
+        ${spinnerSVG}
+        <span>Signing in...</span>
+      </span>
+    `;
+            // Catatan: karena halaman akan reload ke response server,
+            // isi tombol otomatis kembali ke original saat render ulang Blade.
+        });
     </script>
 </body>
+
 </html>
