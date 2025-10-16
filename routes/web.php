@@ -126,7 +126,6 @@ Route::middleware(['auth'])->group(function () {
         return view('master.menu_management');
     })->name('menu-management');
 
-
     Route::get('/user-maintenance', function () {
         return view('user_management.user_maintenance');
     })->name('user-maintenance');
@@ -135,7 +134,6 @@ Route::middleware(['auth'])->group(function () {
         return view('user_management.role');
     })->name('role');
 
-
     Route::get('/drawing-upload', function () {
         return view('file_management.drawing_upload');
     })->name('drawing.upload');
@@ -143,11 +141,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/role-menu', function () {
         return view('user_management.role_menu');
     })->name('role-menu');
-
-
-
-
-
 
     Route::get('/user-role', function () {
         return view('user_management.user_role');
@@ -286,6 +279,12 @@ Route::middleware(['auth'])->group(function () {
 
 
 
+
+
+
+
+
+    
     Route::post('upload.getCustomerData', [DrawingUploadController::class, 'getCustomerData'])->name('upload.getCustomerData');
     Route::post('upload.getModelData', [DrawingUploadController::class, 'getModelData'])->name('upload.getModelData');
     Route::post('upload.getProductData', [DrawingUploadController::class, 'getProductData'])->name('upload.getProductData');

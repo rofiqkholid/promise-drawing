@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB; 
 
 class AuthController extends Controller
 {
@@ -34,11 +35,16 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-
             $user = Auth::user();
+            $allowed_menu = DB::table('role_menu')
+                ->where('user_id', $user->id)
+                ->where('can_view', 1)
+                ->pluck('menu_id')
+                ->toArray();
 
             $request->session()->put('name', $user->name);
             $request->session()->put('email', $user->email);
+            $request->session()->put('allowed_menus', $allowed_menu); 
 
             return redirect()->intended(route('dashboard'));
         }
@@ -50,7 +56,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->session()->forget(['name', 'email']);
+        $request->session()->forget(['name', 'email', 'allowed_menus']);
 
         Auth::logout();
 

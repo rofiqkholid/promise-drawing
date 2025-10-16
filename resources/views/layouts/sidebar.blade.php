@@ -1,12 +1,12 @@
 <style>
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
-}
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
 
-.no-scrollbar {
-    -ms-overflow-style: none; 
-    scrollbar-width: none; 
-}
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
 </style>
 <aside
     x-data="{ openMenu: '' }"
@@ -30,74 +30,81 @@
     @php
     $activeParentId = null;
     if (isset($menus)) {
-        foreach ($menus as $menu) {
-            if ($menu->children->isNotEmpty()) {
-                foreach ($menu->children as $child) {
-                    if (request()->routeIs($child->route)) {
-                        $activeParentId = $menu->id;
-                        break;
-                    }
-                }
-            }
-            if ($activeParentId) break;
-        }
+    foreach ($menus as $menu) {
+    if ($menu->children->isNotEmpty()) {
+    foreach ($menu->children as $child) {
+    if (request()->routeIs($child->route)) {
+    $activeParentId = $menu->id;
+    break;
+    }
+    }
+    }
+    if ($activeParentId) break;
+    }
     }
     @endphp
 
     <nav class="flex-grow" x-data="{ openMenu: {{ $activeParentId ?? 'null' }} }">
         <ul>
             @foreach ($menus as $menu)
-                @if ($menu->children->isNotEmpty())
-                    <li class="mb-2">
-                        <button type="button" @click.prevent="openMenu = (openMenu === {{ $menu->id }} ? null : {{ $menu->id }})"
-                                class="w-full flex items-center justify-between p-3 rounded-lg transition-colors duration-200 text-sm font-medium text-left
-                                hover:bg-blue-50 hover:text-blue-800 dark:hover:bg-gray-800 dark:hover:text-gray-200
-                                {{ ($activeParentId == $menu->id) ? 'bg-blue-50 text-blue-800 dark:bg-gray-800 dark:text-gray-200' : 'text-gray-600 dark:text-gray-400' }}">
+            {{-- PERBAIKAN 1: Tambahkan kondisi IF untuk cek hak akses menu --}}
+            @if (session()->has('allowed_menus') && in_array($menu->id, session('allowed_menus')))
 
-                            <div class="flex items-center">
-                                <span class="flex items-center justify-center w-5 mr-3 flex-shrink-0">
-                                    <i class="{{ $menu->icon }}"></i>
-                                </span>
-                                <span class="whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">{{ $menu->title }}</span>
-                            </div>
+            @if ($menu->children->isNotEmpty())
+            <li class="mb-2">
+                <button type="button" @click.prevent="openMenu = (openMenu === {{ $menu->id }} ? null : {{ $menu->id }})"
+                    class="w-full flex items-center justify-between p-3 rounded-lg transition-colors duration-200 text-sm font-medium text-left
+                                    hover:bg-blue-50 hover:text-blue-800 dark:hover:bg-gray-800 dark:hover:text-gray-200
+                                    {{ ($activeParentId == $menu->id) ? 'bg-blue-50 text-blue-800 dark:bg-gray-800 dark:text-gray-200' : 'text-gray-600 dark:text-gray-400' }}">
 
-                            <span class="whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">
-                                <i class="fa-solid fa-chevron-down h-4 w-4 transform transition-transform duration-200" :class="{'rotate-180': openMenu === {{ $menu->id }}}"></i>
-                            </span>
-                        </button>
+                    <div class="flex items-center">
+                        <span class="flex items-center justify-center w-5 mr-3 flex-shrink-0">
+                            <i class="{{ $menu->icon }}"></i>
+                        </span>
+                        <span class="whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">{{ $menu->title }}</span>
+                    </div>
 
-                        <ul x-show="openMenu === {{ $menu->id }}" x-transition class="mt-1 pl-4 space-y-1 hidden group-hover:block" style="display: none;">
-                            @foreach ($menu->children as $child)
-                                <li>
-                                    <a href="{{ route($child->route) }}" class="flex items-center p-3 rounded-lg transition-colors duration-200 text-xs font-medium
-                                        hover:bg-blue-50 hover:text-blue-800 dark:hover:bg-gray-800 dark:hover:text-gray-200
-                                        {{ request()->routeIs($child->route) ? 'font-bold text-blue-700 dark:text-white' : 'text-gray-600 dark:text-gray-400' }}">
-                                        <span class="flex items-center justify-center w-5 mr-3 flex-shrink-0">
-                                            <i class="{{ $child->icon }}"></i>
-                                        </span>
-                                        <span class="whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">{{ $child->title }}</span>
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </li>
-                @else
-                    <li class="mb-2">
-                        <a href="{{ route($menu->route) }}" class="flex items-center p-3 rounded-lg transition-colors duration-200 text-sm font-medium
-                            hover:bg-blue-50 hover:text-blue-800 dark:hover:bg-gray-800 dark:hover:text-gray-200
-                            {{ request()->routeIs($menu->route) ? 'bg-blue-50 text-blue-800 dark:bg-gray-800 dark:text-gray-200' : 'text-gray-600 dark:text-gray-400' }}">
+                    <span class="whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">
+                        <i class="fa-solid fa-chevron-down h-4 w-4 transform transition-transform duration-200" :class="{'rotate-180': openMenu === {{ $menu->id }}}"></i>
+                    </span>
+                </button>
+
+                <ul x-show="openMenu === {{ $menu->id }}" x-transition class="mt-1 pl-4 space-y-1 hidden group-hover:block" style="display: none;">
+                    @foreach ($menu->children as $child)
+                    {{-- PERBAIKAN 2: Tambahkan kondisi IF juga untuk sub-menu --}}
+                    @if (session()->has('allowed_menus') && in_array($child->id, session('allowed_menus')))
+                    <li>
+                        <a href="{{ route($child->route) }}" class="flex items-center p-3 rounded-lg transition-colors duration-200 text-xs font-medium
+                                                hover:bg-blue-50 hover:text-blue-800 dark:hover:bg-gray-800 dark:hover:text-gray-200
+                                                {{ request()->routeIs($child->route) ? 'font-bold text-blue-700 dark:text-white' : 'text-gray-600 dark:text-gray-400' }}">
                             <span class="flex items-center justify-center w-5 mr-3 flex-shrink-0">
-                                <i class="{{ $menu->icon }}"></i>
+                                <i class="{{ $child->icon }}"></i>
                             </span>
-                            <span class="whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">{{ $menu->title }}</span>
+                            <span class="whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">{{ $child->title }}</span>
                         </a>
                     </li>
-                @endif
+                    @endif
+                    @endforeach
+                </ul>
+            </li>
+            @else
+            <li class="mb-2">
+                <a href="{{ route($menu->route) }}" class="flex items-center p-3 rounded-lg transition-colors duration-200 text-sm font-medium
+                                hover:bg-blue-50 hover:text-blue-800 dark:hover:bg-gray-800 dark:hover:text-gray-200
+                                {{ request()->routeIs($menu->route) ? 'bg-blue-50 text-blue-800 dark:bg-gray-800 dark:text-gray-200' : 'text-gray-600 dark:text-gray-400' }}">
+                    <span class="flex items-center justify-center w-5 mr-3 flex-shrink-0">
+                        <i class="{{ $menu->icon }}"></i>
+                    </span>
+                    <span class="whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">{{ $menu->title }}</span>
+                </a>
+            </li>
+            @endif
+
+            @endif {{-- Penutup dari @if hak akses --}}
             @endforeach
         </ul>
     </nav>
 
-    {{-- Tombol Theme Switcher di Sidebar --}}
     <div class="flex-shrink-0 pt-4 border-t border-gray-200 dark:border-gray-700">
         <button @click="darkMode = !darkMode" type="button" class="w-full flex items-center p-3 rounded-lg transition-colors duration-200 text-sm font-medium
             text-gray-600 dark:text-gray-400 hover:bg-blue-700 hover:text-white dark:hover:bg-gray-700">
