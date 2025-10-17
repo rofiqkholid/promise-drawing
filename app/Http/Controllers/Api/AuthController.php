@@ -6,7 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -35,8 +36,10 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+
             $user = Auth::user();
-            $allowed_menu = DB::table('role_menu')
+
+            $allowed_menu_ids = DB::table('role_menu')
                 ->where('user_id', $user->id)
                 ->where('can_view', 1)
                 ->pluck('menu_id')
@@ -44,14 +47,37 @@ class AuthController extends Controller
 
             $request->session()->put('name', $user->name);
             $request->session()->put('email', $user->email);
-            $request->session()->put('allowed_menus', $allowed_menu); 
+            $request->session()->put('allowed_menus', $allowed_menu_ids);
 
-            return redirect()->intended(route('dashboard'));
+            if (empty($allowed_menu_ids)) {
+                Auth::logout();
+                return back()->withErrors(['nik' => 'Akun Anda tidak memiliki hak akses.'])->onlyInput('nik');
+            }
+
+            $allowed_menus = DB::table('menus')
+                ->whereIn('id', $allowed_menu_ids)
+                ->orderBy('id', 'asc')
+                ->get();
+
+            $redirectUrl = null;
+
+            foreach ($allowed_menus as $menu) {
+                if ($menu->route && Route::has($menu->route)) {
+                    $redirectUrl = route($menu->route);
+                    break; 
+                }
+            }
+
+            if (is_null($redirectUrl)) {
+                Auth::logout();
+                return back()->withErrors(['nik' => 'Akun Anda tidak memiliki akses ke halaman yang valid.'])->onlyInput('nik');
+            }
+
+            return redirect()->intended($redirectUrl);
+
         }
 
-        return back()->withErrors([
-            'nik' => 'NIK atau Password yang Anda masukkan salah.',
-        ])->onlyInput('nik');
+        return back()->withErrors(['nik' => 'NIK atau Password yang Anda masukkan salah.'])->onlyInput('nik');
     }
 
     public function logout(Request $request)

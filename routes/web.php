@@ -46,7 +46,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', function () {
         return view('dashboard');
-    })->name('dashboard');
+    })->middleware(['auth', 'check.menu:1'])->name('dashboard');
 
     Route::get('/file-manager.upload', function () {
         return view('file_management.file_upload');
