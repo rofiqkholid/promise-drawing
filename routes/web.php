@@ -63,105 +63,81 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/approval', function () {
         return view('approvals.approval');
-    })->name('approval');
-
-    Route::get('/settings', function () {
-        return view('master.setting');
-    })->name('settings');
-
-    Route::get('/stampFormat', function () {
-        return view('master.stampFormat');
-    })->name('stampFormat');
-
-    Route::get('/user-maintenance', function () {
-        return view('user_maintenance.user_maintenance');
-    })->name('user-maintenance');
+    })->middleware(['auth', 'check.menu:5'])->name('approval');
 
     // Data Master Routes
 
     Route::get('/departments', function () {
         return view('master.departments');
-    })->name('departments');
+    })->middleware(['auth', 'check.menu:9'])->name('departments');
 
     Route::get('/suppliers', function () {
         return view('master.supplier');
-    })->name('suppliers');
+    })->middleware(['auth', 'check.menu:10'])->name('suppliers');
 
     Route::get('/customers', function () {
         return view('master.customer');
-    })->name('customers');
+    })->middleware(['auth', 'check.menu:11'])->name('customers');
 
     Route::get('/models', function () {
         return view('master.model');
-    })->name('models');
+    })->middleware(['auth', 'check.menu:12'])->name('models');
 
     Route::get('/docTgroups', function () {
         return view('master.docTgroup');
-    })->name('docTgroups');
+    })->middleware(['auth', 'check.menu:13'])->name('docTgroups');
 
     Route::get('/docTsubCategories', function () {
         return view('master.docTsubCategory');
-    })->name('docTsubCategories');
+    })->middleware(['auth', 'check.menu:14'])->name('docTsubCategories');
 
     Route::get('/fileExtensions', function () {
         return view('master.fileExtension');
-    })->name('fileExtensions');
-
-    Route::get('/categoryActivities', function () {
-        return view('master.fileExtension');
-    })->name('categoryActivities');
+    })->middleware(['auth', 'check.menu:15'])->name('fileExtensions');
 
     Route::get('/categoryActivities', function () {
         return view('master.categoryActivity');
-    })->name('categoryActivities');
+    })->middleware(['auth', 'check.menu:19'])->name('categoryActivities');
 
     Route::get('/projectStatus', function () {
         return view('master.projectStatus');
-    })->name('projectStatus');
+    })->middleware(['auth', 'check.menu:17'])->name('projectStatus');
 
     Route::get('/partGroups', function () {
         return view('master.partGroup');
-    })->name('partGroups');
-
-    Route::get('/stampFormat', function () {
-        return view('master.stampFormat');
-    })->name('stampFormat');
+    })->middleware(['auth', 'check.menu:16'])->name('partGroups');
 
     Route::get('/menu-management', function () {
         return view('master.menu_management');
-    })->name('menu-management');
+    })->middleware(['auth', 'check.menu:20'])->name('menu-management');
 
     Route::get('/user-maintenance', function () {
         return view('user_management.user_maintenance');
-    })->name('user-maintenance');
+    })->middleware(['auth', 'check.menu:7'])->name('user-maintenance');
 
     Route::get('/role', function () {
         return view('user_management.role');
-    })->name('role');
+    })->middleware(['auth', 'check.menu:22'])->name('role');
 
     Route::get('/drawing-upload', function () {
         return view('file_management.drawing_upload');
-    })->name('drawing.upload');
-
-    Route::get('/role-menu', function () {
-        return view('user_management.role_menu');
-    })->name('role-menu');
-
-    Route::get('/user-role', function () {
-        return view('user_management.user_role');
-    })->name('user-role');
+    })->middleware(['auth', 'check.menu:3'])->name('drawing.upload');
 
     Route::get('/product', function () {
         return view('master.product');
-    })->name('product');
+    })->middleware(['auth', 'check.menu:24'])->name('product');
 
     Route::get('/pkg_format', function () {
         return view('master.pkgFormat');
-    })->name('pkg_format');
+    })->middleware(['auth', 'check.menu:27'])->name('pkg_format');
 
     Route::get('/rev-label', function () {
         return view('master.revision_label');
-    })->name('rev-label');
+    })->middleware(['auth', 'check.menu:25'])->name('rev-label');
+
+    Route::get('/stampFormat', function () {
+        return view('master.stampFormat');
+    })->middleware(['auth', 'check.menu:18'])->name('stampFormat');
 
 
 
