@@ -31,11 +31,12 @@ use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
     if (Auth::check()) {
-        return redirect()->route('dashboard');
+        return redirect()->route('home');
     }
     return app(AuthController::class)->showLoginForm();
 })->name('login');
 
+Route::get('/home', [AuthController::class, 'redirectToHomepage'])->middleware('auth')->name('home');
 
 Route::post('/login', [AuthController::class, 'login'])->name('login_post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -296,7 +297,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/files/list', [UploadController::class, 'listFiles'])->name('api.files.list');
     Route::get('/files/{id}', [UploadController::class, 'getPackageDetails'])->name('api.files.detail');
     Route::get('api.files.downloadable', [ExportController::class, 'listDownloadableFiles'])->name('api.files.downloadable');
-    
+
     Route::get('/approvals/filters', [ApprovalController::class, 'filters'])->name('api.approvals.filters');
     Route::get('/approvals/list', [ApprovalController::class, 'listApprovals'])->name('api.approvals.list');
     Route::get('/approval/{id}', [ApprovalController::class, 'showDetail'])->name('approval.detail');

@@ -14,7 +14,7 @@ class AuthController extends Controller
     public function showLoginForm()
     {
         if (Auth::check()) {
-            return redirect()->route('dashboard');
+            return redirect()->route('home');
         }
         return view('authentication.login_page');
     }
@@ -64,20 +64,39 @@ class AuthController extends Controller
             foreach ($allowed_menus as $menu) {
                 if ($menu->route && Route::has($menu->route)) {
                     $redirectUrl = route($menu->route);
-                    break; 
+                    break;
                 }
             }
-
             if (is_null($redirectUrl)) {
                 Auth::logout();
                 return back()->withErrors(['nik' => 'Akun Anda tidak memiliki akses ke halaman yang valid.'])->onlyInput('nik');
             }
-
             return redirect()->intended($redirectUrl);
+        }
+        return back()->withErrors(['nik' => 'NIK atau Password yang Anda masukkan salah.'])->onlyInput('nik');
+    }
 
+
+    public function redirectToHomepage()
+    {
+        $allowed_menu_ids = session('allowed_menus');
+        if (empty($allowed_menu_ids)) {
+            Auth::logout();
+            return redirect()->route('login')->withErrors(['nik' => 'Akun Anda tidak memiliki hak akses.']);
         }
 
-        return back()->withErrors(['nik' => 'NIK atau Password yang Anda masukkan salah.'])->onlyInput('nik');
+        $allowed_menus = DB::table('menus')
+            ->whereIn('id', $allowed_menu_ids)
+            ->orderBy('id', 'asc')
+            ->get();
+
+        foreach ($allowed_menus as $menu) {
+            if ($menu->route && Route::has($menu->route)) {
+                return redirect()->route($menu->route);
+            }
+        }
+        Auth::logout();
+        return redirect()->route('login')->withErrors(['nik' => 'Akun Anda tidak memiliki akses ke halaman yang valid.']);
     }
 
     public function logout(Request $request)
