@@ -230,41 +230,99 @@
                     dialog.setAttribute('role', 'dialog');
                     dialog.setAttribute('aria-modal', 'true');
                     dialog.innerHTML = `
-                        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Package Details</h3>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">Revision: <span class="font-medium">${revisionNo}</span> — <span class="px-2 py-0.5 text-xs rounded ${isObsolete ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">${revisionStatus}</span></div>
+                        <div class="p-5 border-b border-gray-200 dark:border-gray-700 flex items-start justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 text-blue-500 bg-blue-100 dark:bg-blue-900/50 rounded-full">
+                                    <i class="fa-solid fa-box-archive"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Package Details</h3>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Package No: <span class="font-semibold text-gray-700 dark:text-gray-200">${packageNo}</span></p>
+                                </div>
                             </div>
-                            <button id="pkg-close-btn" class="text-gray-500 hover:text-gray-700 dark:text-gray-300"><i class="fa-solid fa-xmark fa-lg"></i></button>
+                            <button id="pkg-close-btn" class="text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 transition-colors">
+                                <i class="fa-solid fa-xmark fa-xl"></i>
+                            </button>
                         </div>
-                        <div class="p-4 space-y-3 text-sm text-gray-700 dark:text-gray-300">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><strong>Package No</strong><div id="pkg-no">${packageNo}</div></div>
-                                <div><strong>Revision No</strong><div id="pkg-revno">${revisionNo}</div></div>
-                                <div><strong>Customer</strong><div id="pkg-customer">${customerName}</div></div>
-                                <div><strong>Model</strong><div id="pkg-model">${modelName}</div></div>
-                                <div><strong>Part No</strong><div id="pkg-partno">${partNo}</div></div>
-                                <div><strong>Document Group</strong><div id="pkg-docgroup">${docgroupName}</div></div>
-                                <div><strong>Sub Category</strong><div id="pkg-subcat">${subcatName}</div></div>
-                                <div><strong>Part Group</strong><div id="pkg-partgroup">${partGroup}</div></div>
-                                <div><strong>Created At</strong><div id="pkg-created">${createdAt}</div></div>
-                                <div><strong>Updated At</strong><div id="pkg-updated">${updatedAt}</div></div>
+
+                        <div class="p-5 max-h-[70vh] overflow-y-auto space-y-6">
+                            <!-- Revision & Status -->
+                            <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700">
+                                <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">Revision & Status</h4>
+                                <dl class="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-2 text-sm">
+                                    <div class="sm:col-span-1">
+                                        <dt class="text-gray-500">Revision No.</dt>
+                                        <dd class="font-semibold text-gray-900 dark:text-gray-100">${revisionNo}</dd>
+                                    </div>
+                                    <div class="sm:col-span-1">
+                                        <dt class="text-gray-500">Status</dt>
+                                        <dd class="font-semibold">
+                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${revisionStatus === 'Approved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : (revisionStatus === 'Rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300')}">${revisionStatus}</span>
+                                        </dd>
+                                    </div>
+                                    <div class="sm:col-span-1">
+                                        <dt class="text-gray-500">Obsolete</dt>
+                                        <dd class="font-semibold text-gray-900 dark:text-gray-100">${isObsolete ? '<span class="text-red-500">Yes</span>' : 'No'}</dd>
+                                    </div>
+                                </dl>
                             </div>
 
+                            <!-- Details Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Product Info -->
+                                <div class="space-y-3">
+                                    <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Product Information</h4>
+                                    <dl class="text-sm space-y-2">
+                                        <div class="flex justify-between"><dt class="text-gray-500">Customer</dt><dd class="font-medium text-gray-800 dark:text-gray-200 text-right">${customerName}</dd></div>
+                                        <div class="flex justify-between"><dt class="text-gray-500">Model</dt><dd class="font-medium text-gray-800 dark:text-gray-200 text-right">${modelName}</dd></div>
+                                        <div class="flex justify-between"><dt class="text-gray-500">Part No.</dt><dd class="font-medium text-gray-800 dark:text-gray-200 text-right">${partNo}</dd></div>
+                                    </dl>
+                                </div>
+                                <!-- Document Info -->
+                                <div class="space-y-3">
+                                    <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Document Classification</h4>
+                                    <dl class="text-sm space-y-2">
+                                        <div class="flex justify-between"><dt class="text-gray-500">Document Group</dt><dd class="font-medium text-gray-800 dark:text-gray-200 text-right">${docgroupName}</dd></div>
+                                        <div class="flex justify-between"><dt class="text-gray-500">Sub Category</dt><dd class="font-medium text-gray-800 dark:text-gray-200 text-right">${subcatName}</dd></div>
+                                        <div class="flex justify-between"><dt class="text-gray-500">Part Group</dt><dd class="font-medium text-gray-800 dark:text-gray-200 text-right">${partGroup}</dd></div>
+                                    </dl>
+                                </div>
+                            </div>
+
+                            <!-- Revision Note -->
                             <div>
-                                <strong>Revision Note</strong>
-                                <div class="whitespace-pre-wrap text-sm text-gray-600 dark:text-gray-300">${revisionNote || '-'}</div>
+                                <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">Revision Note</h4>
+                                <div class="p-3 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">${revisionNote || '<span class="italic text-gray-400">No note provided.</span>'}</div>
                             </div>
 
-                            <hr class="my-2" />
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><strong>Total Files</strong><div id="pkg-files-count">${files.count}</div></div>
-                                <div><strong>Total Size</strong><div id="pkg-files-size">${bytesToSize(files.size_bytes)}</div></div>
+                            <!-- File & Date Info -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                 <div class="space-y-3">
+                                    <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">File Summary</h4>
+                                    <dl class="text-sm space-y-2">
+                                        <div class="flex justify-between"><dt class="text-gray-500">Total Files</dt><dd class="font-medium text-gray-800 dark:text-gray-200">${files.count}</dd></div>
+                                        <div class="flex justify-between"><dt class="text-gray-500">Total Size</dt><dd class="font-medium text-gray-800 dark:text-gray-200">${bytesToSize(files.size_bytes)}</dd></div>
+                                    </dl>
+                                </div>
+                                 <div class="space-y-3">
+                                    <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Timestamps</h4>
+                                    <dl class="text-sm space-y-2">
+                                        <div class="flex justify-between"><dt class="text-gray-500">Created At</dt><dd class="font-medium text-gray-800 dark:text-gray-200">${createdAt}</dd></div>
+                                        <div class="flex justify-between"><dt class="text-gray-500">Last Updated</dt><dd class="font-medium text-gray-800 dark:text-gray-200">${updatedAt}</dd></div>
+                                    </dl>
+                                </div>
                             </div>
                         </div>
-                        <div class="p-3 border-t border-gray-200 dark:border-gray-700 text-right">
-                            <button id="pkg-close-btn-2" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md">Close</button>
+
+                        <div class="p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                            <button id="pkg-download-btn" class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
+                                <i class="fa-solid fa-download"></i>
+                                Download Package
+                            </button>
+                            <button id="pkg-close-btn-2" class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600">
+                                <i class="fa-solid fa-xmark"></i>
+                                Close
+                            </button>
                         </div>
                     `;
 

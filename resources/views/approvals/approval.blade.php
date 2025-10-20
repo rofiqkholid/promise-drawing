@@ -102,68 +102,87 @@
 
 @push('scripts')
 <script>
-    $(document).ready(function() {
-        let table = $('#approvalTable').DataTable({
-            processing: true,
-            serverSide: false,
-            ajax: {
-                url: '{{ route("api.approvals.list") }}',
-                type: 'GET'
-            },
-            columns: [
-                { data: null, name: 'No', orderable: false, searchable: false },
-                { data: 'customer', name: 'Customer' },
-                { data: 'model', name: 'Model' },
-                { data: 'doc_type', name: 'Doc Type' },
-                { data: 'category', name: 'Category' },
-                { data: 'part_no', name: 'Part No' },
-                { data: 'revision', name: 'Revision' },
-                {
-                    data: 'status',
-                    name: 'Status',
-                    render: function(data, type, row) {
-                        let colorClass = '';
-                        switch(data) {
-                            case 'Reject':
-                                colorClass = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
-                                break;
-                            case 'Waiting':
-                                colorClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
-                                break;
-                            case 'Complete':
-                                colorClass = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
-                                break;
-                        }
-                        return `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClass}">${data}</span>`;
-                    }
-                },
-            ],
-            responsive: true,
-            dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
-        });
+$(function () {
+  let table;
 
-        table.on('draw.dt', function () {
-            var PageInfo = $('#approvalTable').DataTable().page.info();
-            table.column(0, { page: 'current' }).nodes().each(function (cell, i) {
-                cell.innerHTML = i + 1 + PageInfo.start;
-            });
-        });
+  function fill(sel, items, useNameAsValue = false) {
+    const $s = $(sel);
+    $s.empty().append('<option value="All">All</option>');
+    (items || []).forEach(it => $s.append(new Option(it.name, useNameAsValue ? it.name : it.id)));
+  }
+
+  $.getJSON('{{ route("api.approvals.filters") }}', function (res) {
+    fill('#customer',  res.customers,  true);
+    fill('#model',     res.models,     true);
+    fill('#document-type',  res.doc_types,  true);
+    fill('#category',  res.categories, true);
+    fill('#status',    res.statuses,   true);
+
+    initTable();
+    bindHandlers();
+  });
+
+  function initTable() {
+    table = $('#approvalTable').DataTable({
+      processing: true,
+      serverSide: true,
+      ajax: {
+        url: '{{ route("api.approvals.list") }}',
+        type: 'GET',
+        data: function (d) {
+          d.customer  = $('#customer').val();
+          d.model     = $('#model').val();
+          d.doc_type  = $('#doc-type').val();
+          d.category  = $('#category').val();
+          d.status    = $('#status').val();
+        }
+      },
+
+      order: [[ 1, 'asc' ]],
+      columns: [
+        { data: null, orderable: false, searchable: false },
+        { data: 'customer', name: 'c.code' },
+        { data: 'model', name: 'm.name' },
+        { data: 'doc_type', name: 'dtg.name' },
+        { data: 'category', name: 'category' },
+        { data: 'part_no', name: 'p.part_no' },
+        { data: 'revision', name: 'dpr.revision_no' },
+        {
+          data: 'status',
+          name: 'dpr.revision_status',
+          render: function (data) {
+            let cls = '';
+            if (data === 'Reject')   cls = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
+            if (data === 'Waiting')  cls = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
+            if (data === 'Complete') cls = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
+            return `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${cls}">${data ?? ''}</span>`;
+          }
+        },
+      ],
+      responsive: true,
+      dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
+    });
+
+    table.on('draw.dt', function () {
+      const info = table.page.info();
+      table.column(0, { page: 'current' }).nodes().each(function (cell, i) {
+        cell.innerHTML = i + 1 + info.start;
+      });
+    });
+}
+
+  function bindHandlers() {
+    $('#customer, #model, #document-type, #category, #status').on('change', function () {
+      table.ajax.reload();
     });
 
     $('#approvalTable tbody').on('click', 'tr', function () {
-            // Ambil instance DataTable lagi di dalam scope ini
-            let tableInstance = $('#approvalTable').DataTable();
-            // Dapatkan data baris menggunakan instance yang baru diambil
-            let rowData = tableInstance.row(this).data();
-
-            if (rowData && rowData.id) {
-                // Arahkan ke halaman detail dengan ID data
-                window.location.href = `/approval/${rowData.id}`;
-            }
-        });
-
-        $('#approvalTable tbody').on('mouseenter', 'tr', function () {
-            $(this).css('cursor', 'pointer');
-        });
+      const row = table.row(this).data();
+      if (row && row.id) window.location.href = `/approval/${row.id}`;
+    }).on('mouseenter', 'tr', function () {
+      $(this).css('cursor', 'pointer');
+    });
+  }
+});
 </script>
 @endpush

@@ -50,15 +50,15 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/file-manager.upload', function () {
         return view('file_management.file_upload');
-    })->name('file-manager.upload');
+    })->middleware(['auth', 'check.menu:3'])->name('file-manager.upload');
 
     Route::get('/file-manager.export', function () {
         return view('file_management.file_export');
-    })->name('file-manager.export');
+    })->middleware(['auth', 'check.menu:4'])->name('file-manager.export');
 
     Route::get('/file-manager.export/{id}', function ($id) {
         return view('file_management.file_export_detail', ['id' => $id]);
-    })->name('file-manager.export.detail');
+    })->middleware(['auth', 'check.menu:4'])->name('file-manager.export.detail');
 
     Route::get('/approval', function () {
         return view('approvals.approval');
@@ -296,9 +296,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/files/list', [UploadController::class, 'listFiles'])->name('api.files.list');
     Route::get('/files/{id}', [UploadController::class, 'getPackageDetails'])->name('api.files.detail');
     Route::get('api.files.downloadable', [ExportController::class, 'listDownloadableFiles'])->name('api.files.downloadable');
+    
+    Route::get('/approvals/filters', [ApprovalController::class, 'filters'])->name('api.approvals.filters');
     Route::get('/approvals/list', [ApprovalController::class, 'listApprovals'])->name('api.approvals.list');
     Route::get('/approval/{id}', [ApprovalController::class, 'showDetail'])->name('approval.detail');
+    Route::post('/approvals/{id}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
+    Route::post('/approvals/{id}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
     #End region
+
 
     #Region Role Menu
     Route::get('/role-menu/pair', [RoleMenuController::class, 'pairShow'])->name('role-menu.pairShow');

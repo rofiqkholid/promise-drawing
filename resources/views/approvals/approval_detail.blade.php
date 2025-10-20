@@ -34,12 +34,7 @@
         </div>
         <div>
           <dt class="text-xs text-gray-500 dark:text-gray-400 font-medium">Revision</dt>
-          <dd class="mt-0.5 text-gray-900 dark:text-gray-100">
-            <span x-text="pkg.metadata.revision"></span>
-            <template x-if="currentRevision">
-              <span class="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-800" x-text="currentRevision.label"></span>
-            </template>
-          </dd>
+          <dd class="mt-0.5 text-gray-900 dark:text-gray-100" x-text="pkg.metadata.revision"></dd>
         </div>
         <div>
           <dt class="text-xs text-gray-500 dark:text-gray-400 font-medium">Status</dt>
@@ -110,40 +105,8 @@
 
   <!-- MAIN GRID BELOW -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Sidebar: Revision + File Groups -->
+    <!-- Sidebar: File Groups -->
     <div class="lg:col-span-1 space-y-6">
-      <!-- Revision History -->
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <button @click="toggleSection('rev')" class="w-full p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between focus:outline-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200" :aria-expanded="openSections.includes('rev')">
-          <div class="flex items-center">
-            <i class="fa-solid fa-code-branch mr-3 text-gray-500 dark:text-gray-400"></i>
-            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">Revision History</span>
-          </div>
-          <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full" x-text="`${pkg.revisions?.length || 0} revs`"></span>
-          <i class="fa-solid fa-chevron-down text-gray-400 dark:text-gray-500 transition-transform" :class="{'rotate-180': openSections.includes('rev')}"></i>
-        </button>
-        <div x-show="openSections.includes('rev')" x-collapse class="p-2 max-h-72 overflow-y-auto">
-          <template x-for="rev in pkg.revisions" :key="rev.id">
-            <div
-              @click="setRevision(rev)"
-              :class="{
-                'bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-medium border-blue-200 dark:border-blue-800': currentRevision && currentRevision.id === rev.id,
-                'text-gray-900 dark:text-gray-100': !(currentRevision && currentRevision.id === rev.id)
-              }"
-              class="flex items-center justify-between p-3 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 border border-transparent">
-              <div class="min-w-0">
-                <p class="text-sm truncate" x-text="rev.label"></p>
-                <p class="text-[11px] text-gray-500 dark:text-gray-400 truncate" x-text="rev.time"></p>
-              </div>
-              <span class="text-[11px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full" x-text="`${(rev.files['2d']?.length||0)+(rev.files['3d']?.length||0)+(rev.files['ecn']?.length||0)} files`"></span>
-            </div>
-          </template>
-          <template x-if="(pkg.revisions || []).length === 0">
-            <p class="p-3 text-center text-xs text-gray-500 dark:text-gray-400">No revisions yet.</p>
-          </template>
-        </div>
-      </div>
-
       @php
         function renderFileGroup($title, $icon, $category) {
       @endphp
@@ -153,17 +116,17 @@
               <i class="fa-solid {{$icon}} mr-3 text-gray-500 dark:text-gray-400"></i>
               <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $title }}</span>
             </div>
-            <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full" x-text="`${(currentFiles['{{$category}}']?.length || 0)} files`"></span>
+            <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full" x-text="`${(pkg.files['{{$category}}']?.length || 0)} files`"></span>
             <i class="fa-solid fa-chevron-down text-gray-400 dark:text-gray-500 transition-transform" :class="{'rotate-180': openSections.includes('{{$category}}')}"></i>
           </button>
           <div x-show="openSections.includes('{{$category}}')" x-collapse class="p-2 max-h-72 overflow-y-auto">
-            <template x-for="file in (currentFiles['{{$category}}'] || [])" :key="file.name">
+            <template x-for="file in (pkg.files['{{$category}}'] || [])" :key="file.name">
               <div @click="selectFile(file)" :class="{'bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-medium': selectedFile && selectedFile.name === file.name}" class="flex items-center p-3 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200" role="button" tabindex="0" @keydown.enter="selectFile(file)">
                 <i class="fa-solid fa-file text-gray-500 dark:text-gray-400 mr-3 transition-colors group-hover:text-blue-500"></i>
                 <span class="text-sm text-gray-900 dark:text-gray-100 truncate" x-text="file.name"></span>
               </div>
             </template>
-            <template x-if="(currentFiles['{{$category}}'] || []).length === 0">
+            <template x-if="(pkg.files['{{$category}}'] || []).length === 0">
               <p class="p-3 text-center text-xs text-gray-500 dark:text-gray-400">No files available.</p>
             </template>
           </div>
@@ -218,10 +181,8 @@
        x-transition.opacity
        class="fixed inset-0 z-50 flex items-center justify-center"
        aria-modal="true" role="dialog">
-    <!-- overlay -->
     <div class="absolute inset-0 bg-black/40" @click="closeApproveModal()"></div>
 
-    <!-- dialog -->
     <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Confirm Approve</h3>
@@ -248,15 +209,13 @@
     </div>
   </div>
 
-  <!-- REJECT MODAL (dengan note wajib) -->
+  <!-- REJECT MODAL -->
   <div x-show="showRejectModal"
        x-transition.opacity
        class="fixed inset-0 z-50 flex items-center justify-center"
        aria-modal="true" role="dialog">
-    <!-- overlay -->
     <div class="absolute inset-0 bg-black/40" @click="closeRejectModal()"></div>
 
-    <!-- dialog -->
     <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg mx-4 overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Confirm Reject</h3>
@@ -266,7 +225,7 @@
       </div>
 
       <div class="px-5 pt-4 text-sm text-gray-700 dark:text-gray-200">
-        Please provide a reason for rejecting this packaage.
+        Please provide a reason for rejecting this package.
       </div>
 
       <div class="px-5 pb-2">
@@ -300,23 +259,83 @@
 @endsection
 
 @push('scripts')
+{{-- SweetAlert2 + Toast helper (sama seperti halaman Customer) --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  function detectTheme() {
+    const isDark = document.documentElement.classList.contains('dark');
+    return isDark ? {
+      mode: 'dark',
+      bg: 'rgba(30, 41, 59, 0.95)',
+      fg: '#E5E7EB',
+      border: 'rgba(71, 85, 105, 0.5)',
+      progress: 'rgba(255,255,255,.9)',
+      icon: { success:'#22c55e', error:'#ef4444', warning:'#f59e0b', info:'#3b82f6' }
+    } : {
+      mode: 'light',
+      bg: 'rgba(255, 255, 255, 0.98)',
+      fg: '#0f172a',
+      border: 'rgba(226, 232, 240, 1)',
+      progress: 'rgba(15,23,42,.8)',
+      icon: { success:'#16a34a', error:'#dc2626', warning:'#d97706', info:'#2563eb' }
+    };
+  }
+
+  const BaseToast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 2600,
+    timerProgressBar: true,
+    showClass: { popup: 'swal2-animate-toast-in' },
+    hideClass: { popup: 'swal2-animate-toast-out' },
+    didOpen: (toast) => {
+      toast.addEventListener('mouseenter', Swal.stopTimer);
+      toast.addEventListener('mouseleave', Swal.resumeTimer);
+    }
+  });
+
+  function renderToast({ icon='success', title='Success', text='' } = {}) {
+    const t = detectTheme();
+    BaseToast.fire({
+      icon, title, text,
+      iconColor: t.icon[icon] || t.icon.success,
+      background: t.bg,
+      color: t.fg,
+      customClass: { popup: 'swal2-toast border', title:'', timerProgressBar:'' },
+      didOpen: (toast) => {
+        const bar = toast.querySelector('.swal2-timer-progress-bar');
+        if (bar) bar.style.background = t.progress;
+        const popup = toast.querySelector('.swal2-popup');
+        if (popup) popup.style.borderColor = t.border;
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
+      }
+    });
+  }
+
+  function toastSuccess(title='Berhasil', text='Operasi berhasil dijalankan.') { renderToast({icon:'success', title, text}); }
+  function toastError(title='Gagal', text='Terjadi kesalahan.') {
+    BaseToast.update({ timer: 3400 });
+    renderToast({icon:'error', title, text});
+    BaseToast.update({ timer: 2600 });
+  }
+  function toastWarning(title='Peringatan', text='Periksa kembali data Anda.') { renderToast({icon:'warning', title, text}); }
+  function toastInfo(title='Informasi', text='') { renderToast({icon:'info', title, text}); }
+
+  window.toastSuccess = toastSuccess;
+  window.toastError   = toastError;
+  window.toastWarning = toastWarning;
+  window.toastInfo    = toastInfo;
+</script>
+
 <script>
 function approvalDetail() {
   return {
-    approvalId: {{ $approvalId }},
+    approvalId: @json($approvalId),
 
     // ---- state ----
-    pkg: {
-      status: 'Waiting',
-      metadata: {},
-      files: { '2d': [], '3d': [], 'ecn': [] },
-      revisions: [],
-      activityLogs: []
-    },
-
-    selectedRevisionId: null,
-    get currentRevision() { return this.pkg.revisions.find(r => r.id === this.selectedRevisionId) || null; },
-    get currentFiles() { return this.pkg.files; },
+    pkg: @json($detail), // langsung dari controller
 
     selectedFile: null,
     openSections: [],
@@ -333,27 +352,11 @@ function approvalDetail() {
     rejectNote: '',
     rejectNoteError: false,
 
-    // --- Toast helper (pakai SweetAlert2 kalau tersedia; fallback alert) ---
-    toast(title = 'Done', icon = 'success') {
-      if (window.Swal) {
-        const T = Swal.mixin({
-          toast: true, position: 'top-end', showConfirmButton: false,
-          timer: 2000, timerProgressBar: true,
-          didOpen: (t) => { t.addEventListener('mouseenter', Swal.stopTimer); t.addEventListener('mouseleave', Swal.resumeTimer); }
-        });
-        T.fire({ icon, title });
-      } else {
-        // fallback sederhana
-        console.log(`[${icon}] ${title}`);
-      }
-    },
-
     // lock heights to metadata
     syncHeights() {
       this.$nextTick(() => {
-        const metaH   = this.$refs.metaCard?.getBoundingClientRect().height || 0;
-        const headH   = this.$refs.actHeader?.getBoundingClientRect().height || 0;
-        // lock activity card to EXACT metadata height
+        const metaH = this.$refs.metaCard?.getBoundingClientRect().height || 0;
+        const headH = this.$refs.actHeader?.getBoundingClientRect().height || 0;
         this.actCardH = Math.max(Math.floor(metaH), 200);
         this.actListH = Math.max(Math.floor(metaH - headH - 1), 120);
       });
@@ -368,80 +371,52 @@ function approvalDetail() {
 
     // ---- lifecycle ----
     init() {
-      this.loadData();
-      if (this.pkg.revisions.length > 0) this.setRevision(this.pkg.revisions[0]);
       this.syncHeights();
       this.setupObservers();
     },
 
-    // ---- data ----
-    loadData() {
-      // dummy metadata
-      this.pkg.metadata = { customer: 'MMKI', model: '4L45W', part_no: '5251D644', revision: 'Rev Base' };
-      this.pkg.status = 'Waiting';
-      // dummy revisions + files
-      this.pkg.revisions = [
-        { id: 2, label: 'Rev-2', time: '2025-10-12 13:47',
-          files: {
-            '2d': [{ name: '5251D644_drawing_assy_rev2.pdf', url: 'https://wiratech.co.id/wp-content/uploads/2014/12/1.gif' },
-                   { name: '5251D644_component_01_rev2.dwg', url: '#' }],
-            '3d': [{ name: '5251D644_assy_rev2.step', url: '#' }],
-            'ecn': [{ name: 'ECN-2025-018.pdf', url: 'https://via.placeholder.com/800x600.png?text=ECN+018' }]
-          }
-        },
-        { id: 1, label: 'Rev-1', time: '2025-10-10 09:20',
-          files: {
-            '2d': [{ name: '5251D644_drawing_assy.pdf', url: 'https://via.placeholder.com/800x600.png?text=Assy+PDF' },
-                   { name: '5251D644_component_01.dwg', url: '#' },
-                   { name: '5251D644_component_02.dwg', url: '#' }],
-            '3d': [{ name: '5251D644_assy.step', url: '#' }, { name: '5251D644_solid.x_t', url: '#' }],
-            'ecn': [{ name: 'ECN-2025-001.pdf', url: 'https://via.placeholder.com/800x600.png?text=ECN+001' },
-                    { name: 'material_spec.xlsx', url: '#' },
-                    { name: 'inspection_report.pdf', url: 'https://via.placeholder.com/800x600.png?text=Report+PDF' }]
-          }
-        }
-      ];
-      const now = new Date().toLocaleString();
-      this.pkg.activityLogs = [{ action: 'uploaded', user: 'Kusno', time: now, note: 'Initial package upload' }];
-
-      this.syncHeights();
-    },
-
     // ---- modal triggers ----
-    approvePackage() { // buka modal approve
-      this.showApproveModal = true;
-    },
-    rejectPackage() {  // buka modal reject
-      this.rejectNote = '';
-      this.rejectNoteError = false;
-      this.showRejectModal = true;
-    },
-    closeApproveModal() {
-      if (this.processing) return;
-      this.showApproveModal = false;
-    },
-    closeRejectModal() {
-      if (this.processing) return;
-      this.showRejectModal = false;
-    },
+    approvePackage() { this.showApproveModal = true; },
+    rejectPackage()  { this.rejectNote = ''; this.rejectNoteError = false; this.showRejectModal = true; },
+    closeApproveModal() { if (!this.processing) this.showApproveModal = false; },
+    closeRejectModal()  { if (!this.processing) this.showRejectModal = false; },
 
     // ---- confirm actions ----
     async confirmApprove() {
       try {
         this.processing = true;
 
-        // TODO: panggil API server (opsional)
-        // await axios.post(`/approvals/${this.approvalId}/approve`);
+        // Gunakan Blade untuk membuat URL yang benar
+        const url = `{{ route('approvals.approve', ['id' => $approvalId]) }}`;
 
-        // update state
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                // Ambil CSRF token dari meta tag
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+
+        // Cek jika response BUKAN JSON, ini untuk debugging
+        const responseText = await response.text();
+        const result = JSON.parse(responseText);
+
+        if (!response.ok) throw new Error(result.message || 'Server returned an error.');
+
         this.pkg.status = 'Approved';
         this.addPkgActivity('approved', '{{ auth()->user()->name ?? "Reviewer" }}');
-
         this.showApproveModal = false;
-        this.toast('Package approved', 'success');
+        toastSuccess('Success', result.message);
+
       } catch (err) {
-        console.error(err);
-        alert((err && (err.response?.data?.message || err.message)) || 'Approve failed');
+        console.error('Fetch Error:', err);
+        if (err instanceof SyntaxError) {
+             toastError('Error', 'Received an invalid response from server. Check console.');
+        } else {
+             toastError('Error', err.message || 'Approve failed');
+        }
       } finally {
         this.processing = false;
         this.syncHeights();
@@ -451,54 +426,61 @@ function approvalDetail() {
     async confirmReject() {
       if (!this.rejectNote || this.rejectNote.trim().length === 0) {
         this.rejectNoteError = true;
+        toastWarning('Warning', 'Rejection note is required.');
         return;
       }
       this.rejectNoteError = false;
 
       try {
         this.processing = true;
+        // Gunakan Blade untuk membuat URL yang benar
+        const url = `{{ route('approvals.reject', ['id' => $approvalId]) }}`;
 
-        // TODO: panggil API server (opsional)
-        // await axios.post(`/approvals/${this.approvalId}/reject`, { note: this.rejectNote });
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                // Ambil CSRF token dari meta tag
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ note: this.rejectNote })
+        });
 
-        // update state
+        const responseText = await response.text();
+        const result = JSON.parse(responseText);
+
+        if (!response.ok) throw new Error(result.message || 'Server returned an error.');
+
         this.pkg.status = 'Rejected';
         this.addPkgActivity('rejected', '{{ auth()->user()->name ?? "Reviewer" }}', this.rejectNote);
-
         this.showRejectModal = false;
-        this.toast('Package rejected', 'error');
+        toastSuccess('Rejected', result.message);
+
       } catch (err) {
-        console.error(err);
-        alert((err && (err.response?.data?.message || err.message)) || 'Reject failed');
+        console.error('Fetch Error:', err);
+        if (err instanceof SyntaxError) {
+             toastError('Error', 'Received an invalid response from server. Check console.');
+        } else {
+             toastError('Error', err.message || 'Reject failed');
+        }
       } finally {
         this.processing = false;
         this.syncHeights();
       }
     },
 
-    // ---- other actions ----
-    setRevision(rev) {
-      if (!rev) return;
-      this.selectedRevisionId = rev.id;
-      this.pkg.files = JSON.parse(JSON.stringify(rev.files || { '2d':[], '3d':[], 'ecn':[] }));
-      this.pkg.metadata.revision = rev.label;
-      this.selectedFile = null;
-      this.syncHeights();
-    },
-
+    // ---- helpers ----
     toggleSection(category) {
       const i = this.openSections.indexOf(category);
       if (i > -1) this.openSections.splice(i, 1);
       else this.openSections.push(category);
     },
-
     selectFile(file) { this.selectedFile = { ...file }; },
-
     addPkgActivity(action, user, note = '') {
       this.pkg.activityLogs.unshift({ action, user, note: note || '', time: new Date().toLocaleString() });
       this.syncHeights();
     },
-
     isImage(fileName) {
       return fileName && ['png','jpg','jpeg','gif','pdf'].includes(fileName.split('.').pop().toLowerCase());
     }
