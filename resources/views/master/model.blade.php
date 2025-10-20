@@ -31,6 +31,9 @@
                         <th scope="col" class="px-6 py-3 sorting" data-column="name">
                             Model Name
                         </th>
+                        <th scope="col" class="px-6 py-3 sorting" data-column="status">
+                            Status
+                        </th>
                         <th scope="col" class="px-6 py-3 text-center">Action</th>
                     </tr>
                 </thead>
@@ -64,6 +67,13 @@
                     <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. Product X" required>
                     <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
+                <div class="mb-4">
+  <label for="status_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Status</label>
+  <select name="status_id" id="status_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+    <option value="">Select Status</option>
+  </select>
+  <p id="add-status_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+</div>
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
                         Cancel
@@ -102,6 +112,13 @@
                     <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
+                <div class="mb-4">
+  <label for="edit_status_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Status</label>
+  <select name="status_id" id="edit_status_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+    <option value="">Select Status</option>
+  </select>
+  <p id="edit-status_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+</div>
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
                         Cancel
@@ -212,6 +229,17 @@
             placeholder: 'Select Customer'
         });
 
+        $('#status_id').select2({
+  dropdownParent: $('#addModelModal'),
+  width: '100%',
+  placeholder: 'Select Status'
+});
+$('#edit_status_id').select2({
+  dropdownParent: $('#editModelModal'),
+  width: '100%',
+  placeholder: 'Select Status'
+});
+
         // Initialize DataTable
         const table = $('#modelsTable').DataTable({
             processing: true,
@@ -237,6 +265,10 @@
                 {
                     data: 'name',
                     name: 'name'
+                },
+                {
+                    data: 'status.name',
+                    name: 'status'
                 },
                 {
                     data: null,
@@ -464,10 +496,39 @@
             });
         }
 
+        function populateStatusDropdown($select, selectedId = null) {
+  $.ajax({
+    url: '{{ route("models.getStatus") }}',
+    method: 'GET',
+    beforeSend: function() {
+      $select.prop('disabled', true);
+      $select.html('<option value="">Loading...</option>').trigger('change');
+    },
+    success: function(list) {
+      $select.empty();
+      $select.append('<option value="">Select Status</option>');
+      list.forEach(function(s) {
+        $select.append(`<option value="${s.id}"${selectedId == s.id ? ' selected' : ''}>${s.name}</option>`);
+      });
+      $select.trigger('change');
+    },
+    error: function(xhr) {
+      const msg = xhr.responseJSON?.message || 'Failed to load statuses.';
+      toastError('Error', msg);
+    },
+    complete: function() {
+      $select.prop('disabled', false);
+    }
+  });
+}
+
+
         addButton.on('click', () => {
             $('#addModelForm')[0].reset();
             populateCustomerDropdown($('#customer_id'));
+             populateStatusDropdown($('#status_id'));
             $('#customer_id').val(null).trigger('change');
+             $('#status_id').val(null).trigger('change');
             showModal(addModal);
         });
 
@@ -484,8 +545,10 @@
             const $btn = $form.find('[type="submit"]');
             const customerIdError = $('#add-customer_id-error');
             const nameError = $('#add-name-error');
+            const statusIdError = $('#add-status_id-error');
             customerIdError.addClass('hidden');
             nameError.addClass('hidden');
+            statusIdError.addClass('hidden');
 
             const formData = new FormData(this);
 
@@ -516,6 +579,7 @@
                     if (errors) {
                         if (errors.customer_id) customerIdError.text(errors.customer_id[0]).removeClass('hidden');
                         if (errors.name) nameError.text(errors.name[0]).removeClass('hidden');
+                        if (errors.status_id)   statusIdError.text(errors.status_id[0]).removeClass('hidden');
                     }
                     const msg = xhr.responseJSON?.message || 'Failed to add model.';
                     toastError('Error', msg);
@@ -532,8 +596,10 @@
             const id = $(this).data('id');
             const customerIdError = $('#edit-customer_id-error');
             const nameError = $('#edit-name-error');
+            const statusIdError = $('#edit-status_id-error');
             customerIdError.addClass('hidden');
             nameError.addClass('hidden');
+            statusIdError.addClass('hidden');
 
             $.ajax({
                 url: `/master/models/${id}`,
@@ -543,6 +609,7 @@
                 },
                 success: function(data) {
                     populateCustomerDropdown($('#edit_customer_id'), data.customer_id);
+                    populateStatusDropdown($('#edit_status_id'), data.status_id);
                     $('#edit_name').val(data.name);
                     $('#editModelForm').attr('action', `/master/models/${id}`);
                     showModal(editModal);
@@ -563,8 +630,10 @@
             const $btn = $form.find('[type="submit"]');
             const customerIdError = $('#edit-customer_id-error');
             const nameError = $('#edit-name-error');
+             const statusIdError = $('#edit-status_id-error');
             customerIdError.addClass('hidden');
             nameError.addClass('hidden');
+            statusIdError.addClass('hidden');
 
             const formData = new FormData(this);
 
@@ -593,6 +662,7 @@
                     if (errors) {
                         if (errors.customer_id) customerIdError.text(errors.customer_id[0]).removeClass('hidden');
                         if (errors.name) nameError.text(errors.name[0]).removeClass('hidden');
+                        if (errors.status_id)   statusIdError.text(errors.status_id[0]).removeClass('hidden');
                     }
                     const msg = xhr.responseJSON?.message || 'Failed to update model.';
                     toastError('Error', msg);

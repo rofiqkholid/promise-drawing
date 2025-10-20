@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Customers;
+use App\Models\ProjectStatus;
 
 class Models extends Model
 {
@@ -18,7 +19,7 @@ class Models extends Model
     protected $fillable = [
         'customer_id',
         'name',
-        'code',
+        'status_id',
     ];
 
     /**
@@ -27,5 +28,9 @@ class Models extends Model
     public function customer()
     {
         return $this->belongsTo(Customers::class, 'customer_id');
+    }
+    public function status()
+    {
+        return $this->belongsTo(ProjectStatus::class, 'status_id');
     }
 }

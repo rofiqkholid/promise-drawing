@@ -4,142 +4,131 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customers;
+use App\Models\ProjectStatus;
 use App\Models\Models;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class ModelsController extends Controller
 {
-    /**
-     * Display a listing of the resource for DataTables.
-     */
     public function data(Request $request)
     {
-        $query = Models::with('customer');
+        // base query + eager load
+        $query = Models::with(['customer','status']);
 
-        // Handle Search
+        // ===== Search =====
         if ($request->has('search') && !empty($request->search)) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                    
-                    ->orWhereHas('customer', function ($q) use ($request) {
-                        $q->where('name', 'like', '%' . $request->search . '%');
-                    });
+            $term = $request->search;
+            $query->where(function ($q) use ($term) {
+                $q->where('models.name', 'like', "%{$term}%")
+                  ->orWhereHas('customer', function ($q) use ($term) {
+                      $q->where('customers.name', 'like', "%{$term}%")
+                        ->orWhere('customers.code', 'like', "%{$term}%");
+                  })
+                  ->orWhereHas('status', function ($q) use ($term) {
+                      $q->where('project_status.name', 'like', "%{$term}%");
+                  });
             });
         }
 
-        // Handle Sorting
-        $sortBy   = $request->input('order.0.column', 1);
+        // (Opsional) filter status_id langsung dari dropdown
+        if ($request->filled('status_id')) {
+            $query->where('models.status_id', $request->status_id);
+        }
+
+        // ===== Sorting =====
+        $sortBy   = (int) $request->input('order.0.column', 0);
         $sortDir  = $request->input('order.0.dir', 'asc');
         $columns  = $request->input('columns', []);
 
         $sortData = $columns[$sortBy]['data'] ?? 'name';
         $sortName = $columns[$sortBy]['name'] ?? null;
+        $sortKey  = $sortName === 'customer' ? 'customer' : $sortData;
 
-
-        $sortKey = $sortData;
-
-        if ($sortName === 'customer') {
-            $sortKey = 'customer';
-        }
-
-
+        // allowlist mapping supaya aman
         $sortMap = [
+            'name'          => 'models.name',
             'customer'      => 'customers.code',
             'customer.code' => 'customers.code',
-            'name'          => 'models.name',
+            'status'        => 'project_status.name',
         ];
-
         $sortColumn = $sortMap[$sortKey] ?? 'models.name';
 
+        // join dinamis hanya bila perlu
         if (str_starts_with($sortColumn, 'customers.')) {
             $query->leftJoin('customers', 'models.customer_id', '=', 'customers.id')
-                ->select('models.*');
+                  ->select('models.*');
+        }
+        if (str_starts_with($sortColumn, 'project_status.')) {
+            $query->leftJoin('project_status', 'models.status_id', '=', 'project_status.id')
+                  ->select('models.*');
         }
 
         $query->orderBy($sortColumn, $sortDir);
 
-        // Handle Pagination
-        $perPage = $request->get('length', 10);
-        $start = $request->get('start', 0);
-        $draw = $request->get('draw', 1);
+        // ===== Paging =====
+        $perPage = (int) $request->get('length', 10);
+        $start   = (int) $request->get('start', 0);
+        $draw    = (int) $request->get('draw', 1);
 
-        $totalRecords = Models::count();
-        $filteredRecords = $query->count();
-        $models = $query->skip($start)->take($perPage)->get();
+        $totalRecords    = Models::count();
+        $filteredRecords = (clone $query)->count();
+        $models          = $query->skip($start)->take($perPage)->get();
 
         return response()->json([
-            'draw' => $draw,
-            'recordsTotal' => $totalRecords,
+            'draw'            => $draw,
+            'recordsTotal'    => $totalRecords,
             'recordsFiltered' => $filteredRecords,
-            'data' => $models
+            'data'            => $models,
         ]);
     }
 
-    /**
-     * Get all customers for dropdown.
-     */
     public function getCustomers()
     {
-        $customers = Customers::select('id', 'code', 'name')->get()->map(function ($customer) {
-            return [
-                'id' => $customer->id,
-                'name' => $customer->code . ' - ' . $customer->name,
-            ];
-        });
+        $customers = Customers::select('id','code','name')->get()->map(fn($c) => [
+            'id'   => $c->id,
+            'name' => $c->code.' - '.$c->name,
+        ]);
         return response()->json($customers);
     }
 
-    /**
-     * Display a listing of the resource.
-     */
+    public function getStatus()
+    {
+        return response()->json(
+            ProjectStatus::select('id','name')->orderBy('name')->get()
+        );
+    }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
             'customer_id' => 'required|integer|exists:customers,id',
-            'name' => 'required|string|max:50',
+            'name'        => 'required|string|max:50',
+            'status_id'   => 'required|integer|exists:project_status,id',
         ]);
 
         Models::create($validated);
-
         return response()->json(['success' => true, 'message' => 'Model created successfully.']);
     }
 
-    /**
-     * Display the specified resource for editing.
-     */
     public function show(Models $model)
     {
+        // kalau mau kirim relasi juga:
+        $model->load(['customer','status']);
         return response()->json($model);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Models $model)
     {
         $validated = $request->validate([
             'customer_id' => 'required|integer|exists:customers,id',
-            'name' => [
-                'required',
-                'string',
-                'max:50',
-            ],
-
+            'name'        => 'required|string|max:50',
+            'status_id'   => 'required|integer|exists:project_status,id', // konsisten dg store
         ]);
 
         $model->update($validated);
-
         return response()->json(['success' => true, 'message' => 'Model updated successfully.']);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Models $model)
     {
         $model->delete();

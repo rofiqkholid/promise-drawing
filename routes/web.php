@@ -170,6 +170,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('master/models', ModelsController::class)->names('models')->except(['create', 'edit']);
     Route::get('/models/data', [ModelsController::class, 'data'])->name('models.data');
     Route::get('/models/get-customers', [ModelsController::class, 'getCustomers'])->name('models.getCustomers');
+    Route::get('/models/getStatus', [ModelsController::class, 'getStatus'])->name('models.getStatus');
     #End region
 
     #Region Doc Type Group
