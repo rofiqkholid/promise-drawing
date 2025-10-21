@@ -11,30 +11,113 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Customers;
 use App\Models\Models;
 use App\Models\DoctypeGroups;
+use App\Models\DoctypeSubcategory;
 use App\Models\DocPackageRevisionFile;
+use App\Models\DocTypeSubCategories;
 
 class ApprovalController extends Controller
 {
-    public function filters(Request $request): JsonResponse
-    {
-        $customerId = $request->get('customer_id');
+    
 
-        $models = $customerId
-            ? Models::where('customer_id', $customerId)->get(['id', 'code as code'])
-            : collect();
+public function kpi(Request $req)
+{
+    $q = DB::table('doc_package_revisions as dpr')
+        ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+        ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+        ->join('models as m', 'dp.model_id', '=', 'm.id')
+        ->join('products as p', 'dp.product_id', '=', 'p.id')
+        ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+        ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+        ->where('dpr.revision_status', '<>', 'draft');
 
-        return response()->json([
-            'customers'  => Customers::get(['id', 'code as code']),
-            'models'     => $models,
-            'doc_types'  => DoctypeGroups::get(['id', 'name as name']),
-            'categories' => DocPackageRevisionFile::distinct()->get(['category as name']),
-            'statuses'   => collect([
-                ['name' => 'Waiting'],
-                ['name' => 'Complete'],
-                ['name' => 'Reject'],
-            ]),
-        ]);
+    // === FILTER (samakan dengan listApprovals) ===
+    if ($req->filled('customer') && $req->customer !== 'All') {
+        $q->where('c.code', $req->customer);
     }
+    if ($req->filled('model') && $req->model !== 'All') {
+        $q->where('m.name', $req->model);
+    }
+    if ($req->filled('doc_type') && $req->doc_type !== 'All') {
+        $q->where('dtg.name', $req->doc_type);
+    }
+    if ($req->filled('category') && $req->category !== 'All') {
+        // catatan: list memakai dsc.name (doctype_subcategories)
+        $q->where('dsc.name', $req->category);
+    }
+    if ($req->filled('status') && $req->status !== 'All') {
+        $statusMapping = ['Waiting' => 'pending', 'Complete' => 'approved', 'Reject' => 'rejected'];
+        if (isset($statusMapping[$req->status])) {
+            $q->where('dpr.revision_status', $statusMapping[$req->status]);
+        }
+    }
+
+    // === AGREGASI ===
+    $row = $q->selectRaw("
+        COUNT(*) AS total,
+        SUM(CASE WHEN dpr.revision_status = 'pending'  THEN 1 ELSE 0 END) AS waiting,
+        SUM(CASE WHEN dpr.revision_status = 'approved' THEN 1 ELSE 0 END) AS approved,
+        SUM(CASE WHEN dpr.revision_status = 'rejected' THEN 1 ELSE 0 END) AS rejected
+    ")->first();
+
+    $total    = (int)($row->total ?? 0);
+    $waiting  = (int)($row->waiting ?? 0);
+    $approved = (int)($row->approved ?? 0);
+    $rejected = (int)($row->rejected ?? 0);
+
+    return response()->json([
+        'cards' => compact('total','waiting','approved','rejected'),
+        'metrics' => [
+            'approval_rate'  => $total ? round($approved * 100 / $total, 2) : 0.0,
+            'rejection_rate' => $total ? round($rejected * 100 / $total, 2) : 0.0,
+            'wip_rate'       => $total ? round($waiting  * 100 / $total, 2) : 0.0,
+        ],
+    ]);
+}
+
+
+   public function filters(Request $request): JsonResponse
+{
+    // === resolve customer ===
+    $customerId = $request->integer('customer_id') ?: null;
+    if (!$customerId && $request->filled('customer_code')) {
+        $customerId = Customers::where('code', $request->get('customer_code'))->value('id');
+    }
+
+    // === models ===
+    $models = $customerId
+        ? Models::where('customer_id', $customerId)->orderBy('name')->get(['id','name'])
+        : Models::orderBy('name')->get(['id','name']);
+
+    // === doc types ===
+    $docTypes = DoctypeGroups::orderBy('name')->get(['id','name']);
+
+    // === resolve doc type (by name) → id, lalu ambil subcategories ===
+    $docTypeName = $request->get('doc_type'); // frontend kirim value=nama
+    $docTypeId   = null;
+    if ($docTypeName && $docTypeName !== 'All') {
+        $docTypeId = DoctypeGroups::where('name', $docTypeName)->value('id');
+    }
+
+    $categories = DocTypeSubCategories::when($docTypeId, function($q) use ($docTypeId) {
+                        $q->where('doctype_group_id', $docTypeId);
+                    })
+                    ->orderBy('name')
+                    ->get(['name']); // penting: kolom 'name'
+
+    return response()->json([
+        'customers'  => Customers::orderBy('code')->get(['id','code']),
+        'models'     => $models,        // {id, name}
+        'doc_types'  => $docTypes,      // {id, name}
+        'categories' => $categories,    // {name} dari doctypesubcategories
+        'statuses'   => collect([
+            ['name' => 'Waiting'],
+            ['name' => 'Complete'],
+            ['name' => 'Reject'],
+        ]),
+    ]);
+}
+
+
 
     public function listApprovals(Request $request): JsonResponse
     {
@@ -128,7 +211,7 @@ class ApprovalController extends Controller
         ->join('products as p', 'dp.product_id', '=', 'p.id')
         ->where('dp.id', $revision->package_id)
         ->select(
-            'c.name as customer',
+            'c.code as customer',
             'm.name as model',
             'p.part_no'
         )
@@ -206,7 +289,6 @@ class ApprovalController extends Controller
                 ->update(['is_obsolete' => 1]);
 
             DB::table('package_approvals')->where('revision_id', $revision_id)->update([
-                // PERUBAHAN UTAMA: Menggunakan auth()->user()->id untuk mengambil integer ID
                 'decided_by' => auth()->user()->id ?? 1,
                 'decided_at' => Carbon::now(),
                 'decision' => 'approved',
