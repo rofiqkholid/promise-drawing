@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Dashboard - PROMISE')
-@section('header-title', 'Dashboard')
+@section('header-title', 'Monitoring')
 @section('content')
 
 <div x-data="dashboardController()" x-init="init()">
