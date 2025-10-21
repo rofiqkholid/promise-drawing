@@ -45,12 +45,16 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth'])->group(function () {
 
 
+    Route::get('/monitoring', function () {
+        return view('monitoring');
+    })->middleware(['auth', 'check.menu:1'])->name('monitoring');
+
     Route::get('/dashboard', function () {
         return view('dashboard');
-    })->middleware(['auth', 'check.menu:1'])->name('dashboard');
+    })->middleware(['auth', 'check.menu:28'])->name('dashboard');
 
     Route::get('/file-manager.upload', function () {
-        return view('file_management.file_upload');
+        return view('dashboard');
     })->middleware(['auth', 'check.menu:3'])->name('file-manager.upload');
 
     Route::get('/file-manager.export', function () {
