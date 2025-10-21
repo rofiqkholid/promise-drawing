@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>@yield('header-title', 'PROMISE')</title>
-
+    <link rel="icon" type="image/x-icon" href="{{ asset('assets/image/favicon.ico') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -70,45 +70,67 @@
         .swal2-container {
             z-index: 99999 !important;
         }
+
         .swal2-toast {
             font-size: 0.85rem;
             padding: 0.625rem 0.75rem;
             border-radius: 0.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,.15), 0 4px 8px rgba(0,0,0,.08);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, .15), 0 4px 8px rgba(0, 0, 0, .08);
             backdrop-filter: saturate(140%) blur(6px);
         }
+
         .swal2-title {
             font-weight: 600;
             letter-spacing: .1px;
         }
+
         .swal2-html-container {
             font-size: 0.8rem;
             opacity: .9;
         }
+
         .swal2-timer-progress-bar {
             height: 2px;
             opacity: .6;
         }
 
         @keyframes toast-in {
-            from { transform: translateX(18px) translateY(0); opacity: 0; }
-            to   { transform: translateX(0) translateY(0);   opacity: 1; }
+            from {
+                transform: translateX(18px) translateY(0);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0) translateY(0);
+                opacity: 1;
+            }
         }
+
         @keyframes toast-out {
-            from { transform: translateX(0) translateY(0);   opacity: 1; }
-            to   { transform: translateX(18px) translateY(0); opacity: 0; }
+            from {
+                transform: translateX(0) translateY(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(18px) translateY(0);
+                opacity: 0;
+            }
         }
+
         .swal2-animate-toast-in {
-            animation: toast-in .36s cubic-bezier(.22,.61,.36,1) both;
+            animation: toast-in .36s cubic-bezier(.22, .61, .36, 1) both;
         }
+
         .swal2-animate-toast-out {
-            animation: toast-out .28s cubic-bezier(.4,0,.2,1) both;
+            animation: toast-out .28s cubic-bezier(.4, 0, .2, 1) both;
         }
 
         @media (prefers-reduced-motion: reduce) {
+
             .swal2-animate-toast-in,
             .swal2-animate-toast-out {
-            animation: none !important;
+                animation: none !important;
             }
         }
     </style>

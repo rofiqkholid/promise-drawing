@@ -13,18 +13,15 @@
     @mouseleave="openMenu = ''"
     class="no-scrollbar fixed top-0 left-0 h-screen z-30 group w-20 hover:w-64 p-4 bg-white dark:bg-gray-900 flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden shadow-lg border-r border-gray-200 dark:border-gray-700">
 
-    {{-- Header/Logo Section --}}
-    <div class="relative flex items-center justify-center h-16 mb-10 flex-shrink-0">
-        <div class="absolute transition-opacity duration-200 opacity-100 group-hover:opacity-0">
-            <svg class="h-8 w-8 text-blue-700 dark:text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
-            </svg>
-        </div>
-        <div class="absolute whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">
-            <span class="text-2xl font-bold text-blue-700 dark:text-blue-500">PROMISE</span>
-            <p class="text-[0.7rem] text-gray-400 dark:text-gray-500">Engineering Document Management</p>
-        </div>
+    <div class="flex items-center ml-[3px] h-16 mb-10 flex-shrink-0">
+        <img src="{{ asset('assets/image/favicon.ico') }}" alt="Logo" class="h-10 w-10 object-contain flex-shrink-0">
+        <span class="ml-4 text-[1.5rem] font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">
+            PROMISE
+        </span>
     </div>
+
+
+
 
     @php
     $activeParentId = null;
@@ -96,7 +93,7 @@
             </li>
             @endif
 
-            @endif 
+            @endif
             @endforeach
         </ul>
     </nav>
