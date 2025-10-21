@@ -54,7 +54,7 @@ Route::middleware(['auth'])->group(function () {
     })->middleware(['auth', 'check.menu:28'])->name('dashboard');
 
     Route::get('/file-manager.upload', function () {
-        return view('dashboard');
+        return view('file_management.file_upload');
     })->middleware(['auth', 'check.menu:3'])->name('file-manager.upload');
 
     Route::get('/file-manager.export', function () {
