@@ -284,6 +284,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/approval/{id}', [ApprovalController::class, 'showDetail'])->name('approval.detail');
     Route::post('/approvals/{id}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
     Route::post('/approvals/{id}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
+    Route::get('/approvals/kpi', [ApprovalController::class, 'kpi'])->name('api.approvals.kpi');
     #End region
 
 
