@@ -32,7 +32,7 @@
                             File Extension Code
                         </th>
                         <th scope="col" class="px-6 py-3 text-center">Icon</th>
-
+                        <th scope="col" class="px-6 py-3 text-center">Is Viewer</th>
                         <th scope="col" class="px-6 py-3 text-center">Action</th>
                     </tr>
                 </thead>
@@ -64,6 +64,23 @@
                     <p id="add-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Categories</label>
+                    <div class="flex flex-wrap gap-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="categories[]" value="2D" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">2D</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="categories[]" value="3D" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">3D</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="categories[]" value="ECN" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">ECN</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-4">
                     <label for="icon" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">
                         Icon
                     </label>
@@ -71,6 +88,12 @@
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
                         placeholder="e.g. fa-solid fa-file-pdf">
                     <p id="add-icon-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_viewer" id="is_viewer" value="1" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800">
+                        <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Is Viewer?</span>
+                    </label>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
@@ -108,12 +131,35 @@
                     <p id="edit-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Categories</label>
+                    <div class="flex flex-wrap gap-4">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="categories[]" value="2D" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">2D</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="categories[]" value="3D" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">3D</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" name="categories[]" value="ECN" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+                            <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">ECN</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-4">
                     <label for="edit_icon" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">
                         Icon
                     </label>
                     <input type="text" name="icon" id="edit_icon"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
                     <p id="edit-icon-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_viewer" id="edit_is_viewer" value="1" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800">
+                        <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Is Viewer?</span>
+                    </label>
                 </div>
 
                 <div class="flex items-center space-x-4 mt-6">
@@ -241,6 +287,14 @@
                     className: 'text-center',
                     render: function(data) {
                         return data ? `<i class="${data} text-lg"></i>` : '-';
+                    }
+                },
+                {
+                    data: 'is_viewer',
+                    name: 'is_viewer',
+                    className: 'text-center',
+                    render: function(data) {
+                        return data ? '<i class="fa-solid fa-check text-green-500"></i>' : '<i class="fa-solid fa-times text-red-500"></i>';
                     }
                 },
                 {
@@ -520,7 +574,14 @@
                     $('#edit_name').val(data.name);
                     $('#edit_code').val(data.code);
                     $('#edit_icon').val(data.icon);
+                    $('#edit_is_viewer').prop('checked', data.is_viewer);
                     $('#editFileExtensionForm').attr('action', `/master/fileExtensions/${id}`);
+                    $('input[name="categories[]"]').prop('checked', false);
+                    if (data.categories && data.categories.length > 0) {
+                        data.categories.forEach(function(category) {
+                            $(`input[name="categories[]"][value="${category}"]`).prop('checked', true);
+                        });
+                    }
                     showModal(editModal);
                 },
                 error: function(xhr) {

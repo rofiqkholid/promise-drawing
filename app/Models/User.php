@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -8,8 +9,8 @@ class User extends Authenticatable
 {
     use Notifiable;
 
-    protected $table = 'users'; 
-    protected $primaryKey = 'id'; 
+    protected $table = 'users';
+    protected $primaryKey = 'id';
     protected $casts = ['is_active' => 'integer'];
 
 
@@ -28,17 +29,16 @@ class User extends Authenticatable
 
     public function getAuthPassword()
     {
-        return $this->password; 
+        return $this->password;
     }
 
     public function getAuthIdentifierName()
     {
-        return 'nik'; 
+        return 'nik';
     }
-   public function roles()
-{
-    return $this->belongsToMany(\App\Models\Role::class, 'user_roles', 'user_id', 'role_id')
-                ->withTimestamps(); // created_at & updated_at di pivot otomatis
-}
-
+    public function roles()
+    {
+        return $this->belongsToMany(\App\Models\Role::class, 'user_roles', 'user_id', 'role_id')
+            ->withTimestamps(); // created_at & updated_at di pivot otomatis
+    }
 }

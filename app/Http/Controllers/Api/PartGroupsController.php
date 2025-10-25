@@ -12,82 +12,89 @@ use Illuminate\Validation\Rule;
 class PartGroupsController extends Controller
 {
     /**
-     * Display a listing of the resource for DataTables.
+     * DataTables server-side.
      */
     public function data(Request $request)
     {
-        $query = PartGroups::query()
-            ->with(['customer', 'model'])
+        // Base query (tanpa join), aman untuk hitung filtered count
+        $base = PartGroups::query()
+            ->with(['customer:id,code,name', 'model:id,name'])
             ->select('part_groups.*');
 
-        // Handle Search
-        if ($request->has('search') && !empty($request->search)) {
-            $query->where(function($q) use ($request) {
-                $q->where('code_part_group', 'like', '%' . $request->search . '%')
-                  ->orWhere('code_part_group_desc', 'like', '%' . $request->search . '%')
-                  ->orWhereHas('customer', function($q) use ($request) {
-                      $q->where('name', 'like', '%' . $request->search . '%');
+        // Global search
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $base->where(function ($q) use ($search) {
+                $q->where('code_part_group', 'like', "%{$search}%")
+                  ->orWhere('code_part_group_desc', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('code', 'like', "%{$search}%")
+                         ->orWhere('name', 'like', "%{$search}%");
                   })
-                  ->orWhereHas('model', function($q) use ($request) {
-                      $q->where('name', 'like', '%' . $request->search . '%');
+                  ->orWhereHas('model', function ($mq) use ($search) {
+                      $mq->where('name', 'like', "%{$search}%");
                   });
             });
         }
 
-        // Handle Sorting
-        $sortBy = $request->get('order')[0]['column'] ?? 1;
-        $sortDir = $request->get('order')[0]['dir'] ?? 'asc';
-        $sortColumn = $request->get('columns')[$sortBy]['data'] ?? 'code_part_group';
-        if ($sortColumn == 'customer_code') {
-            $query->join('customers', 'part_groups.customer_id', '=', 'customers.id')
-                  ->orderBy('customers.code', $sortDir);
-        } elseif ($sortColumn == 'model_name') {
-            $query->join('models', 'part_groups.model_id', '=', 'models.id')
-                  ->orderBy('models.name', $sortDir);
+        // Simpan clone untuk hitung filtered count sebelum join/order
+        $filteredQuery = clone $base;
+
+        // Sorting
+        $sortBy    = $request->get('order')[0]['column'] ?? 1;
+        $sortDir   = $request->get('order')[0]['dir'] ?? 'asc';
+        $sortCol   = $request->get('columns')[$sortBy]['data'] ?? 'code_part_group';
+
+        // Query yang dipakai ambil data (boleh kita modify: join + order + paginate)
+        $dataQuery = clone $base;
+
+        if ($sortCol === 'customer_code') {
+            $dataQuery->leftJoin('customers', 'part_groups.customer_id', '=', 'customers.id')
+                      ->orderBy('customers.code', $sortDir)
+                      ->select('part_groups.*'); // pastikan kolom utama tetap part_groups.*
+        } elseif ($sortCol === 'model_name') {
+            $dataQuery->leftJoin('models', 'part_groups.model_id', '=', 'models.id')
+                      ->orderBy('models.name', $sortDir)
+                      ->select('part_groups.*');
         } else {
-            $query->orderBy($sortColumn, $sortDir);
+            $dataQuery->orderBy($sortCol, $sortDir);
         }
 
-        // Handle Pagination
-        $perPage = $request->get('length', 10);
-        $start = $request->get('start', 0);
-        $draw = $request->get('draw', 1);
+        // Pagination
+        $perPage = (int) $request->get('length', 10);
+        $start   = (int) $request->get('start', 0);
+        $draw    = (int) $request->get('draw', 1);
 
-        $totalRecords = PartGroups::count();
-        $filteredRecords = $query->count();
-        $partGroups = $query->skip($start)->take($perPage)->get();
+        $totalRecords     = PartGroups::count();
+        $recordsFiltered  = (clone $filteredQuery)->count(); // tanpa join: aman tidak dobel
+        $rows             = $dataQuery->skip($start)->take($perPage)->get();
 
         return response()->json([
-            'draw' => $draw,
-            'recordsTotal' => $totalRecords,
-            'recordsFiltered' => $filteredRecords,
-            'data' => $partGroups->map(function ($partGroup) {
+            'draw'            => $draw,
+            'recordsTotal'    => $totalRecords,
+            'recordsFiltered' => $recordsFiltered,
+            'data'            => $rows->map(function ($pg) {
                 return [
-                    'id' => $partGroup->id,
-                    'customer_code' => $partGroup->customer ? $partGroup->customer->code : '-',
-                    'model_name' => $partGroup->model ? $partGroup->model->name : '-',
-                    'code_part_group' => $partGroup->code_part_group,
-                    'code_part_group_desc' => $partGroup->code_part_group_desc,
+                    'id'                  => $pg->id,
+                    'customer_code'       => optional($pg->customer)->code ?? '-',
+                    'model_name'          => optional($pg->model)->name ?? '-',
+                    'code_part_group'     => $pg->code_part_group,
+                    'code_part_group_desc'=> $pg->code_part_group_desc,
                 ];
-            })
+            }),
         ]);
     }
 
     /**
-     * Display a listing of the resource.
-     */
-
-
-    /**
-     * Store a newly created resource in storage.
+     * Store.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'model_id' => 'required|exists:models,id',
-            'code_part_group' => 'required|string|max:10|unique:part_groups,code_part_group',
-            'code_part_group_desc' => 'required|string|max:50',
+            'customer_id'        => 'required|exists:customers,id',
+            'model_id'           => 'required|exists:models,id',
+            'code_part_group'    => 'required|string|max:10|unique:part_groups,code_part_group',
+            'code_part_group_desc'=> 'required|string|max:50',
         ]);
 
         PartGroups::create($validated);
@@ -96,35 +103,33 @@ class PartGroupsController extends Controller
     }
 
     /**
-     * Display the specified resource for editing.
+     * Show (untuk modal edit) — kirim juga label supaya Select2 langsung tampilkan text.
      */
     public function show(PartGroups $partGroup)
     {
-        $partGroup->load(['customer', 'model']);
+        $partGroup->load(['customer:id,code,name', 'model:id,name']);
+
         return response()->json([
-            'id' => $partGroup->id,
-            'customer_id' => $partGroup->customer_id,
-            'model_id' => $partGroup->model_id,
-            'code_part_group' => $partGroup->code_part_group,
+            'id'                   => $partGroup->id,
+            'customer_id'          => $partGroup->customer_id,
+            'model_id'             => $partGroup->model_id,
+            'customer_label'       => optional($partGroup->customer) ? ($partGroup->customer->code) : '',
+            'model_label'          => optional($partGroup->model)->name ?? '',
+            'code_part_group'      => $partGroup->code_part_group,
             'code_part_group_desc' => $partGroup->code_part_group_desc,
         ]);
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update.
      */
     public function update(Request $request, PartGroups $partGroup)
     {
         $validated = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'model_id' => 'required|exists:models,id',
-            'code_part_group' => [
-                'required',
-                'string',
-                'max:10',
-                Rule::unique('part_groups')->ignore($partGroup->id),
-            ],
-            'code_part_group_desc' => 'required|string|max:50',
+            'customer_id'        => 'required|exists:customers,id',
+            'model_id'           => 'required|exists:models,id',
+            'code_part_group'    => ['required','string','max:50', Rule::unique('part_groups')->ignore($partGroup->id)],
+            'code_part_group_desc'=> 'required|string|max:50',
         ]);
 
         $partGroup->update($validated);
@@ -133,7 +138,7 @@ class PartGroupsController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Destroy.
      */
     public function destroy(PartGroups $partGroup)
     {
@@ -142,12 +147,78 @@ class PartGroupsController extends Controller
     }
 
     /**
-     * Get models by customer ID for dynamic dropdown.
+     * (Opsional lama) dropdown dependent.
      */
     public function getModelsByCustomer(Request $request)
     {
         $customerId = $request->get('customer_id');
-        $models = Models::where('customer_id', $customerId)->select('id', 'name')->get();
+        $models = Models::where('customer_id', $customerId)
+                        ->select('id', 'name')->orderBy('name')->get();
+
         return response()->json($models);
+    }
+
+    /**
+     * Select2 server-side: Customers
+     */
+    public function select2Customers(Request $request)
+    {
+        $q     = trim((string) $request->get('q', ''));
+        $page  = max(1, (int) $request->get('page', 1));
+        $per   = 10;
+        $skip  = ($page - 1) * $per;
+
+        $builder = Customers::query()->select('id','code');
+        if ($q !== '') {
+            $builder->where(function ($w) use ($q) {
+                $w->where('code','like',"%{$q}%")
+                 ;
+            });
+        }
+
+        $total = (clone $builder)->count();
+        $rows  = $builder->orderBy('code')->skip($skip)->take($per)->get();
+
+        return response()->json([
+            'results'    => $rows->map(fn($c)=>[
+                'id'   => $c->id,
+                'text' => "{$c->code}",
+            ]),
+            'pagination' => ['more' => ($skip + $per) < $total],
+        ]);
+    }
+
+    /**
+     * Select2 server-side: Models (filter by customer_id)
+     */
+    public function select2Models(Request $request)
+    {
+        $request->validate([
+            'customer_id' => ['required','integer','exists:customers,id'],
+        ]);
+
+        $customerId = (int) $request->customer_id;
+        $q     = trim((string) $request->get('q', ''));
+        $page  = max(1, (int) $request->get('page', 1));
+        $per   = 10;
+        $skip  = ($page - 1) * $per;
+
+        $builder = Models::query()->where('customer_id',$customerId)
+                    ->select('id','name');
+
+        if ($q !== '') {
+            $builder->where('name','like',"%{$q}%");
+        }
+
+        $total = (clone $builder)->count();
+        $rows  = $builder->orderBy('name')->skip($skip)->take($per)->get();
+
+        return response()->json([
+            'results'    => $rows->map(fn($m)=>[
+                'id'   => $m->id,
+                'text' => $m->name,
+            ]),
+            'pagination' => ['more' => ($skip + $per) < $total],
+        ]);
     }
 }

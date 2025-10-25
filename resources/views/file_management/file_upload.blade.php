@@ -69,10 +69,9 @@
                 <thead class="bg-gray-50 dark:bg-gray-700/50">
                     <tr>
                         <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customer</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Model</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Part No</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Package Info</th>
                         <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Revision</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ECN No</th>
                         <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Uploaded At</th>
                         <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                         <th class="py-3 px-4 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Info</th>
@@ -100,19 +99,40 @@
                 },
                 columns: [
                     { data: null, name: 'No', orderable: false, searchable: false },
-                    { data: 'customer', name: 'Customer' },
-                    { data: 'model', name: 'Model' },
-                    { data: 'part_no', name: 'Part No' },
-                    { data: 'revision', name: 'Revision' },
-                    { data: 'uploaded_at', name: 'Uploaded At' },
+                    {
+                        data: null,
+                        name: 'Package Info',
+                        searchable: true,
+                        render: function(data, type, row) {
+                            return `${row.customer} - ${row.model} - ${row.part_no}`;
+                        }
+                    },
+                    {
+                        data: null,
+                        name: 'Revision',
+                        searchable: true,
+                        render: function(data, type, row) {
+                            let revStr = `Rev${row.revision_no}`;
+                            if (row.revision_label_name) {
+                                return `${row.revision_label_name} - ${revStr}`;
+                            }
+                            return revStr;
+                        }
+                    },
+                    {data: 'ecn_no', name: 'ECN No', searchable: true},
+                    {data: 'uploaded_at', name: 'Uploaded At', searchable: true},
                     {
                         data: 'status',
                         name: 'Status',
                         render: function(data, type, row) {
-                            let colorClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
-                            if (data === 'Rejected') {
+                            let colorClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-300';
+                            if (data === 'draft') {
+                                colorClass = 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300';
+                            } else if (data === 'pending') {
+                                colorClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
+                            } else if (data === 'rejected') {
                                 colorClass = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
-                            } else if (data === 'Approved') {
+                            } else if (data === 'approved') {
                                 colorClass = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
                             }
                             return `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClass}">${data}</span>`;
@@ -131,6 +151,11 @@
                 ],
                 responsive: true,
                 dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
+                createdRow: function(row, data, dataIndex) {
+                    $(row).addClass(
+                        'transition-colors duration-150 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700'
+                    );
+                }
             });
 
             table.on('draw.dt', function () {
@@ -140,20 +165,55 @@
                 });
             });
 
-            // make rows clickable to open details modal
+
             $('#fileTable tbody').on('click', 'tr', function (e) {
-                // avoid triggering when clicking the info button itself
                 if ($(e.target).closest('button').length) return;
+
                 const data = table.row(this).data();
-                if (data && data.id) {
-                    openPackageDetails(data.id);
+                if (!data || !data.id) return;
+
+                let targetUrl = `{{ route('drawing.upload') }}`;
+                targetUrl += '?revision_id=' + data.id;
+
+                if (data.status !== 'draft') {
+                    targetUrl += '&read_only=true';
                 }
+
+                const t = detectTheme();
+                const titleText = data.status === 'draft' ? 'Loading Draft...' : 'Opening Details...';
+                Swal.fire({
+                    title: titleText,
+                    text: 'Redirecting to details page, please wait.',
+                    // icon: 'info',
+                    timer: 1500,
+                    showConfirmButton: false,
+                    allowOutsideClick: false,
+                    iconColor: t.icon.info,
+                    background: t.bg,
+                    color: t.fg,
+                    customClass: {
+                        popup: 'border',
+                        loader: 'custom-loader-color'
+                    },
+                    didOpen: () => {
+                        Swal.showLoading();
+                        const popup = Swal.getPopup();
+                        if (popup) {
+                            popup.style.borderColor = t.border;
+                        }
+                        const loader = Swal.getLoader();
+                        if (loader) {
+                            // Mengatur warna border spinner
+                            loader.style.borderColor = `${t.icon.info} transparent transparent transparent`;
+                        }
+                        window.location.href = targetUrl;
+                    }
+                });
             });
         });
 
         function deleteFile(id) {
             if (confirm('Are you sure you want to delete this file?')) {
-                // Implement delete logic here (e.g., AJAX call to delete endpoint)
                 alert('Delete functionality to be implemented for ID: ' + id);
             }
         }
@@ -177,9 +237,167 @@
             } catch (e) { return dt; }
         }
 
+        function closePackageDetails() {
+            const modal = document.getElementById('package-details-modal');
+            if (modal) {
+                if (modal._cleanup) try { modal._cleanup(); } catch(e) {}
+                modal.remove();
+            }
+        }
+
+
+        function detectTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            return isDark ? {
+                mode: 'dark',
+                bg: 'rgba(30, 41, 59, 0.95)',
+                fg: '#E5E7EB',
+                border: 'rgba(71, 85, 105, 0.5)',
+                progress: 'rgba(255,255,255,.9)',
+                icon: {
+                    success: '#22c55e',
+                    error: '#ef4444',
+                    warning: '#f59e0b',
+                    info: '#3b82f6'
+                }
+            } : {
+                mode: 'light',
+                bg: 'rgba(255, 255, 255, 0.98)',
+                fg: '#0f172a',
+                border: 'rgba(226, 232, 240, 1)',
+                progress: 'rgba(15,23,42,.8)',
+                icon: {
+                    success: '#16a34a',
+                    error: '#dc2626',
+                    warning: '#d97706',
+                    info: '#2563eb'
+                }
+            };
+        }
+
+        // Tambahkan setelah fungsi detectTheme
+        function formatTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + "y ago";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + "mo ago";
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + "d ago";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + "h ago";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + "m ago";
+            return Math.floor(seconds) + "s ago";
+        }
+
+        function renderActivityLogs(logs) {
+            const container = $('#activity-log-content');
+            container.empty();
+            if (!logs || logs.length === 0) {
+                container.html(
+                    '<p class="italic text-center text-gray-500 dark:text-gray-400">No activity yet. This panel will display recent package activities and approvals.</p>'
+                );
+                return;
+            }
+            logs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            const createDetailRow = (key, val) => {
+                if (val === null || val === undefined || val === '') return '';
+                const formattedVal = (key === 'Note') ? `"${val}"` : val;
+                const valClass = (key === 'Note') ? 'italic' : '';
+                return `<div class="text-xs ${valClass}"><span class="font-semibold text-gray-600 dark:text-gray-400">${key}:</span> <span class="text-gray-800 dark:text-gray-200">${formattedVal}</span></div>`;
+            };
+
+            logs.forEach((l, index) => {
+                const m = l.meta || {};
+                const revisionNo = m.revision_no !== undefined ? `rev${m.revision_no}` : '';
+
+                const activity = {
+                    UPLOAD: {
+                        icon: 'fa-upload',
+                        color: 'bg-blue-500',
+                        title: 'Draft Saved'
+                    },
+                    SUBMIT_APPROVAL: {
+                        icon: 'fa-paper-plane',
+                        color: 'bg-yellow-500',
+                        title: 'Approval Submitted'
+                    },
+                    APPROVE: {
+                        icon: 'fa-check-double',
+                        color: 'bg-green-500',
+                        title: 'Package Approved'
+                    },
+                    REJECT: {
+                        icon: 'fa-times-circle',
+                        color: 'bg-red-500',
+                        title: 'Package Rejected'
+                    },
+                    default: {
+                        icon: 'fa-info-circle',
+                        color: 'bg-gray-500',
+                        title: l.activity_code
+                    }
+                };
+
+                const { icon, color, title } = activity[l.activity_code] || activity.default;
+
+                const timeAgo = l.created_at ? formatTimeAgo(new Date(l.created_at)) : '';
+                const userLabel = l.user_name ? `${l.user_name}` : (l.user_id ? `User #${l.user_id}` : 'System');
+
+                let detailsHtml = '';
+                let rows = [];
+
+                if (l.activity_code === 'UPLOAD') {
+                    rows = [
+                        createDetailRow("ECN", m.ecn_no),
+                        createDetailRow("Label", m.revision_label),
+                        createDetailRow("Part No", m.part_no),
+                        createDetailRow("Customer", m.customer_code),
+                        createDetailRow("Model", m.model_name),
+                        createDetailRow("Doc Group", m.doctype_group),
+                        createDetailRow("Sub-Category", m.doctype_subcategory),
+                        createDetailRow("Note", m.note)
+                    ];
+                } else if (l.activity_code === 'SUBMIT_APPROVAL') {
+                    rows = [
+                        createDetailRow("ECN", m.ecn_no),
+                        createDetailRow("Label", m.revision_label)
+                    ];
+                } else if (m.note) {
+                    rows = [createDetailRow("Note", m.note)];
+                }
+
+                detailsHtml = rows.filter(Boolean).join('');
+
+                const isLast = index === logs.length - 1;
+                const el = $(`
+                    <div class="relative">
+                        ${!isLast ? '<div class="absolute left-5 top-5 -ml-px h-full w-0.5 bg-gray-300 dark:bg-gray-700"></div>' : ''}
+                        <div class="relative flex items-start space-x-4 pb-8">
+                            <div class="flex-shrink-0">
+                                <span class="flex items-center justify-center h-10 w-10 rounded-full ${color} text-white shadow-md z-10"><i class="fa-solid ${icon}"></i></span>
+                            </div>
+                            <div class="min-w-0 flex-1 pt-1.5">
+                                <div class="flex justify-between items-center">
+                                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
+                                        ${title}
+                                        ${revisionNo ? `<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">${revisionNo}</span>` : ''}
+                                    </p>
+                                    <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">${timeAgo}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">by <strong>${userLabel}</strong></p>
+                                ${detailsHtml ? `<div class="mt-2 space-y-1 p-3 bg-gray-100 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700/50">${detailsHtml}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `);
+                container.append(el);
+            });
+        }
+
         function openPackageDetails(id) {
-            // fetch details from API endpoint and build modal dynamically
-            // show a transient loader while fetching
             const existing = document.getElementById('package-details-modal');
             if (existing) existing.remove();
 
@@ -189,7 +407,8 @@
             loaderOverlay.innerHTML = `<div class="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center gap-3"><div class="loader-border w-8 h-8 border-4 border-blue-400 rounded-full animate-spin"></div><div class="text-sm text-gray-700 dark:text-gray-300">Loading package details...</div></div>`;
             document.body.appendChild(loaderOverlay);
 
-            fetch('{{ url('/files') }}' + '/' + id)
+            // Fetch package details
+            fetch(`{{ url('/files') }}` + '/' + id)
                 .then(res => {
                     if (!res.ok) throw new Error('Failed to load details');
                     return res.json();
@@ -205,7 +424,7 @@
                     // normalize fields (support both package- and revision-based keys)
                     const packageNo = pkg.package_no ?? pkg.packageNo ?? 'N/A';
                     const revisionNo = pkg.revision_no ?? pkg.current_revision_no ?? pkg.revisionNo ?? 0;
-                    const customerName = pkg.customer_name ?? pkg.customerCode ?? pkg.customer_code ?? '-';
+                    const customerCode = pkg.customer_code ?? pkg.customerCode ?? pkg.customer_code ?? '-';
                     const modelName = pkg.model_name ?? pkg.modelName ?? '-';
                     const partNo = pkg.part_no ?? pkg.partNo ?? '-';
                     const docgroupName = pkg.docgroup_name ?? pkg.docgroupName ?? '-';
@@ -273,7 +492,7 @@
                                 <div class="space-y-3">
                                     <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Product Information</h4>
                                     <dl class="text-sm space-y-2">
-                                        <div class="flex justify-between"><dt class="text-gray-500">Customer</dt><dd class="font-medium text-gray-800 dark:text-gray-200 text-right">${customerName}</dd></div>
+                                        <div class="flex justify-between"><dt class="text-gray-500">Customer</dt><dd class="font-medium text-gray-800 dark:text-gray-200 text-right">${customerCode}</dd></div>
                                         <div class="flex justify-between"><dt class="text-gray-500">Model</dt><dd class="font-medium text-gray-800 dark:text-gray-200 text-right">${modelName}</dd></div>
                                         <div class="flex justify-between"><dt class="text-gray-500">Part No.</dt><dd class="font-medium text-gray-800 dark:text-gray-200 text-right">${partNo}</dd></div>
                                     </dl>
@@ -297,14 +516,14 @@
 
                             <!-- File & Date Info -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                 <div class="space-y-3">
+                                <div class="space-y-3">
                                     <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">File Summary</h4>
                                     <dl class="text-sm space-y-2">
                                         <div class="flex justify-between"><dt class="text-gray-500">Total Files</dt><dd class="font-medium text-gray-800 dark:text-gray-200">${files.count}</dd></div>
                                         <div class="flex justify-between"><dt class="text-gray-500">Total Size</dt><dd class="font-medium text-gray-800 dark:text-gray-200">${bytesToSize(files.size_bytes)}</dd></div>
                                     </dl>
                                 </div>
-                                 <div class="space-y-3">
+                                <div class="space-y-3">
                                     <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Timestamps</h4>
                                     <dl class="text-sm space-y-2">
                                         <div class="flex justify-between"><dt class="text-gray-500">Created At</dt><dd class="font-medium text-gray-800 dark:text-gray-200">${createdAt}</dd></div>
@@ -312,13 +531,20 @@
                                     </dl>
                                 </div>
                             </div>
+
+                            <!-- Activity Log -->
+                            <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700">
+                                <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
+                                    <i class="fa-solid fa-clipboard-list mr-2 text-blue-500"></i>
+                                    Activity Log
+                                </h4>
+                                <div id="activity-log-content" class="space-y-4 max-h-72 overflow-y-auto pr-2">
+                                    <p class="italic text-center text-gray-500 dark:text-gray-400 py-4">Loading activity logs...</p>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-                            <button id="pkg-download-btn" class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
-                                <i class="fa-solid fa-download"></i>
-                                Download Package
-                            </button>
                             <button id="pkg-close-btn-2" class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600">
                                 <i class="fa-solid fa-xmark"></i>
                                 Close
@@ -342,6 +568,35 @@
 
                     // remove listener when modal removed
                     overlay._cleanup = function() { document.removeEventListener('keydown', escHandler); };
+
+                    // Fetch activity logs for the selected package
+                    fetch(`{{ route('upload.drawing.activity-logs') }}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            customer: pkg.customer_id,
+                            model: pkg.model_id,
+                            partNo: pkg.product_id,
+                            docType: pkg.docgroup_id,
+                            category: pkg.subcategory_id || null,
+                            partGroup: pkg.part_group_id,
+                            revision_no: pkg.revision_no
+                        })
+                    })
+                        .then(res => {
+                            if (!res.ok) throw new Error('Failed to load activity logs');
+                            return res.json();
+                        })
+                        .then(data => {
+                            renderActivityLogs(data.logs || []);
+                        })
+                        .catch(err => {
+                            console.error('Error fetching activity logs:', err);
+                            $('#activity-log-content').html('<p class="italic text-center text-gray-500 dark:text-gray-400">Failed to load activity logs.</p>');
+                        });
                 })
                 .catch(err => {
                     const loader = document.getElementById('package-details-modal');
@@ -349,14 +604,39 @@
                     alert('Unable to load package details: ' + err.message);
                 });
         }
-
-        function closePackageDetails() {
-            const modal = document.getElementById('package-details-modal');
-            if (modal) {
-                if (modal._cleanup) try { modal._cleanup(); } catch(e) {}
-                modal.remove();
-            }
-        }
     </script>
 @endpush
 
+@push('styles')
+    <style>
+        #activity-log-content::-webkit-scrollbar {
+            width: 5px;
+        }
+        #activity-log-content::-webkit-scrollbar-track {
+            background: transparent;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        #activity-log-content::-webkit-scrollbar-thumb {
+            background-color: #d1d5db;
+            border-radius: 20px;
+            border: 1px solid transparent;
+            background-clip: content-box;
+        }
+        .dark #activity-log-content::-webkit-scrollbar-thumb {
+            background-color: #4b5563;
+        }
+        #activity-log-content:hover::-webkit-scrollbar-thumb {
+            background-color: #9ca3af;
+        }
+        .dark #activity-log-content:hover::-webkit-scrollbar-thumb {
+            background-color: #6b7280;
+        }
+        #activity-log-content:hover::-webkit-scrollbar-track {
+             background: rgba(0, 0, 0, 0.03); 
+        }
+        .dark #activity-log-content:hover::-webkit-scrollbar-track {
+             background: rgba(255, 255, 255, 0.05);
+        }
+    </style>
+@endpush

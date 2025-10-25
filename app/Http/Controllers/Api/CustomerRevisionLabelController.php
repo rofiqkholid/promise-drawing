@@ -147,6 +147,21 @@ class CustomerRevisionLabelController extends Controller
         return response()->json(['success' => true, 'message' => 'Deleted']);
     }
 
+    public function getLabelsForCustomer(Request $request, $customerId)
+    {
+        $labels = CustomerRevisionLabel::where('customer_id', $customerId)
+            ->where('is_active', 1)
+            ->orderBy('sort_order', 'asc')
+            ->get(['id', 'label as text']);
+
+        if ($labels->isEmpty()) {
+            return response()->json(['has_labels' => false, 'labels' => []]);
+        }
+
+        return response()->json(['has_labels' => true, 'labels' => $labels]);
+    }
+
+
 
     private function validated(Request $request, $ignoreId = null): array
     {

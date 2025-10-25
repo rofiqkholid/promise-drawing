@@ -18,7 +18,6 @@ class DrawingUploadController extends Controller
 {
     protected string $disk = 'datacenter';
 
-    /** Util: ambil label master untuk segmen folder */
     protected function getFolderLabels(array $ids): array
     {
         $customer = DB::table('customers')
@@ -52,269 +51,365 @@ class DrawingUploadController extends Controller
         ];
     }
 
-    /** CHECK: deteksi existing + suggest */
-    public function check(Request $r): JsonResponse
+    public function checkRevisionStatus(Request $request): JsonResponse
     {
-        $r->validate([
+        $validated = $request->validate([
+            'customer_id' => 'required|integer|exists:customers,id',
+            'model_id' => 'required|integer|exists:models,id',
+            'partNo' => 'required|integer|exists:products,id',
+            'docType' => 'required|integer|exists:doctype_groups,id',
+            'partGroup' => 'required|integer|exists:part_groups,id',
+            'category' => 'nullable|integer|exists:doctype_subcategories,id',
+            'ecn_no' => 'required|string|max:50',
+            'revision_label_id' => 'nullable|integer|exists:customer_revision_labels,id',
+        ]);
+
+        $packageId = $this->findPackageId($validated);
+        $requestLabelId = $request->revision_label_id ?: null;
+
+        if ($packageId) {
+            $existingRevision = DB::table('doc_package_revisions')
+                ->where('package_id', $packageId)
+                ->where('ecn_no', $request->ecn_no)
+                ->first(); //
+
+            if ($existingRevision) {
+                $draftLabelId = $existingRevision->revision_label_id ?: null;
+
+
+                if ($draftLabelId == $requestLabelId) {
+
+                    if ($existingRevision->revision_status === 'draft') {
+                        $files = DB::table('doc_package_revision_files')->where('revision_id', $existingRevision->id)
+                            ->get(['id', 'filename as name', 'category', 'file_size as size'])
+                            ->groupBy('category')->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
+                        return response()->json([
+                            'mode' => 'edit_draft',
+                            'revision' => [
+                                'id' => $existingRevision->id,
+                                'package_id' => $existingRevision->package_id,
+                                'revision_no' => $existingRevision->revision_no,
+                                'ecn_no' => $existingRevision->ecn_no,
+                                'revision_label_id' => $existingRevision->revision_label_id,
+                                'revision_status' => $existingRevision->revision_status,
+                                'note' => $existingRevision->note,
+                                'receipt_date' => $existingRevision->receipt_date,
+                            ],
+                            'files' => $files
+                        ]);
+                    } else {
+                        return response()->json([
+                            'mode' => 'locked',
+                            'message' => 'ECN No. ' . htmlspecialchars($request->ecn_no) . ' already exists on this label and is locked with status: ' . ucfirst($existingRevision->revision_status)
+                        ], 409); //
+                    }
+
+                } else {
+                    $labelName = $draftLabelId
+                        ? DB::table('customer_revision_labels')->where('id', $draftLabelId)->value('label')
+                        : '-- No Label --';
+
+                    return response()->json([
+                        'mode' => 'locked',
+                        'message' => 'ECN No. ' . htmlspecialchars($request->ecn_no) . ' is already used by a draft on a different label: ' . htmlspecialchars($labelName)
+                    ], 409);
+                }
+            }
+        }
+
+        $nextRev = 0;
+        if ($packageId) {
+            $query = DB::table('doc_package_revisions')->where('package_id', $packageId);
+
+            if ($request->filled('revision_label_id')) {
+                $query->where('revision_label_id', $request->revision_label_id);
+            } else {
+                $query->whereNull('revision_label_id');
+            }
+
+            $maxRevision = $query->max('revision_no');
+            $nextRev = is_null($maxRevision) ? 0 : $maxRevision + 1;
+        }
+
+        return response()->json([
+            'mode' => 'create_new',
+            'next_rev' => $nextRev
+        ]);
+    }
+
+    public function store(Request $r): JsonResponse
+    {
+        $validated = $r->validate([
             'customer' => 'required|integer|exists:customers,id',
             'model' => 'required|integer|exists:models,id',
             'partNo' => 'required|integer|exists:products,id',
             'docType' => 'required|integer|exists:doctype_groups,id',
             'category' => 'nullable|integer|exists:doctype_subcategories,id',
             'partGroup' => 'required|integer|exists:part_groups,id',
+            'ecn_no' => 'required|string|max:50',
+            'revision_label_id' => 'nullable|integer|exists:customer_revision_labels,id',
+            'existing_revision_id' => 'nullable|integer|exists:doc_package_revisions,id',
+            'receipt_date' => 'nullable|date_format:Y-m-d',
+            'files_to_delete' => 'nullable|array',
+            'files_to_delete.*' => 'integer|exists:doc_package_revision_files,id',
+            'files_2d.*' => 'nullable|file',
+            'files_3d.*' => 'nullable|file',
+            'files_ecn.*' => 'nullable|file',
         ]);
 
-        $ids = [
-            'customer_id' => $r->customer,
-            'model_id' => $r->model,
-            'product_id' => $r->partNo,
-            'doctype_group_id' => $r->docType,
-            'doctype_subcategory_id' => $r->category,
-        ];
+        $savedFilePaths = [];
 
-        $labels = $this->getFolderLabels($ids);
-
-        // Ambil code_part_group langsung
-        $partGroup = DB::table('part_groups')->where('id', (int) $r->partGroup)->where('customer_id', (int) $r->customer)->where('model_id', (int) $r->model)->value('code_part_group');
-
-        if (!$partGroup) {
-            Log::error('Part Group tidak ditemukan', [
-                'part_group_id' => $r->partGroup,
-                'customer_id' => $r->customer,
-                'model_id' => $r->model,
-            ]);
-            abort(422, 'Part Group tidak ditemukan untuk customer dan model yang dipilih');
-        }
-
-        $meta = $labels + ['part_group' => $partGroup];
-
-        $revs = PathBuilder::listRevisions($this->disk, $meta);
-        $exists = !empty($revs);
-        $latest = $exists ? max($revs) : null;
-        $suggested = $exists ? $latest + 1 : 0;
-
-        $lastFiles = [];
-        $orphanFiles = [];
-        if ($latest !== null) {
-            foreach (['2d', '3d', 'ecn'] as $f) {
-                $dir = PathBuilder::root($meta) . "/rev{$latest}/{$f}";
-                $lastFiles[$f] = Storage::disk($this->disk)->exists($dir) ? array_map('basename', Storage::disk($this->disk)->files($dir)) : [];
-                // detect orphan files (present in storage but not in DB)
-                $files = Storage::disk($this->disk)->exists($dir) ? Storage::disk($this->disk)->files($dir) : [];
-                foreach ($files as $fp) {
-                    $existsInDb = DB::table('doc_package_revision_files')->where('storage_path', $fp)->exists();
-                    if (!$existsInDb) {
-                        $orphanFiles[] = $fp;
-                    }
-                }
-            }
-        }
-
-        return response()->json([
-            'exists' => $exists,
-            'revisions' => $revs,
-            'latest_rev' => $latest,
-            'suggested_rev' => $suggested,
-            'last_rev_files' => $lastFiles,
-            'orphan_files' => $orphanFiles,
-        ]);
-    }
-
-    public function store(Request $r): JsonResponse
-    {
+        DB::beginTransaction();
         try {
-            $r->validate([
-                'customer' => 'required|integer|exists:customers,id',
-                'model' => 'required|integer|exists:models,id',
-                'partNo' => 'required|integer|exists:products,id',
-                'docType' => 'required|integer|exists:doctype_groups,id',
-                'category' => 'nullable|integer|exists:doctype_subcategories,id',
-                'partGroup' => 'required|integer|exists:part_groups,id',
-                'revision' => 'nullable|integer|min:0',
-                'files_2d.*' => 'nullable|file|max:102400',
-                'files_3d.*' => 'nullable|file|max:102400',
-                'files_ecn.*' => 'nullable|file|max:102400',
-                'mode' => 'required|in:auto,existing,new-rev',
-                'target_rev' => 'nullable|integer|min:0',
-                'conflict' => 'nullable|in:replace,append',
-                'enabled_categories' => 'nullable|array',
-                'enabled_categories.*' => 'in:2d,3d,ecn',
-            ]);
-
-            Log::info('Processing upload', ['request' => $r->except(['files_2d', 'files_3d', 'files_ecn'])]);
-
-            $ids = [
-                'customer_id' => $r->customer, 'model_id' => $r->model, 'product_id' => $r->partNo,
-                'doctype_group_id' => $r->docType, 'doctype_subcategory_id' => $r->category, 'part_group_id' => $r->partGroup,
+            $packageIds = [
+                'customer_id' => $validated['customer'],
+                'model_id' => $validated['model'],
+                'product_id' => $validated['partNo'],
+                'doctype_group_id' => $validated['docType'],
+                'doctype_subcategory_id' => $validated['category'] ?? null,
+                'part_group_id' => $validated['partGroup'],
             ];
-            $labels = $this->getFolderLabels($ids);
-            $partGroup = DB::table('part_groups')->where('id', (int)$r->partGroup)->where('customer_id', (int)$r->customer)->where('model_id', (int)$r->model)->value('code_part_group');
-            if (!$partGroup) {
-                abort(422, 'Part Group tidak ditemukan untuk customer dan model yang dipilih');
-            }
-            $metaBase = $labels + ['part_group' => $partGroup];
-            $mode = $r->mode;
+            $packageLabels = $this->getFolderLabels($packageIds);
 
-            $projectStatusId = $r->input('project_status');
-            if (empty($projectStatusId)) {
-                $projectStatusId = DB::table('project_status')->value('id') ?: DB::table('project_status')->insertGetId(['name' => 'Default', 'description' => 'Default project status', 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()]);
-            }
-            $packageId = $this->ensurePackage($ids, $labels, $projectStatusId);
+            $packageId = $this->ensurePackage($packageIds, $packageLabels);
+            $revisionId = $validated['existing_revision_id'] ?? null;
 
-            $savedFilePaths = [];
+            $currentRevisionNo = 0; // Default
+            $isEditMode = (bool) $revisionId; // Lacak status untuk logging
 
-            DB::beginTransaction();
-            try {
-                $package = DB::table('doc_packages')->where('id', $packageId)->lockForUpdate()->first();
-                if (!$package) {
-                    throw new \Exception("Package dengan ID {$packageId} tidak ditemukan atau tidak bisa dikunci.");
+            if ($revisionId) {
+                // EDIT MODE
+                $revToEdit = DB::table('doc_package_revisions')->where('id', $revisionId)->lockForUpdate()->first();
+
+                if (!$revToEdit) {
+                    throw new \Exception("Draft revision with ID {$revisionId} not found.");
                 }
 
-                $rev = 0;
-                if ($mode === 'auto' || $mode === 'new-rev') {
-                    $revs = PathBuilder::listRevisions($this->disk, $metaBase);
-                    if ($mode === 'auto') {
-                        $rev = empty($revs) ? 0 : max($revs) + 1;
-                    } else { // mode 'new-rev'
-                        $suggested = empty($revs) ? 0 : max($revs) + 1;
-                        $rev = $r->filled('revision') ? (int)$r->revision : $suggested;
-                    }
-                } elseif ($mode === 'existing') {
-                    $r->validate(['target_rev' => 'required|integer|min:0']);
-                    $revs = PathBuilder::listRevisions($this->disk, $metaBase);
-                    if (!in_array((int)$r->target_rev, $revs)) {
-                        abort(422, 'Revisi target tidak ada');
-                    }
-                    $rev = (int)$r->target_rev;
-                }
-                if ($rev < 0) $rev = 0;
-
-                $enabledCats = $r->input('enabled_categories') ?? ['2d','3d','ecn'];
-                foreach ($enabledCats as $folder) {
-                    Storage::disk($this->disk)->makeDirectory(PathBuilder::root($metaBase) . "/rev{$rev}/{$folder}");
-                }
-                $conflict = $r->input('conflict', 'append');
-                $saved = ['2d' => [], '3d' => [], 'ecn' => []];
-
-                $saveOne = function ($file, string $docFolder) use ($metaBase, $rev, $conflict, &$saved, &$savedFilePaths) {
-                    $path = null;
-                    $filename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                    $filename = preg_replace('/[<>:"?*|\x00-\x1F]/', '', $filename);
-                    $meta = $metaBase + ['rev' => $rev, 'doc_folder' => $docFolder, 'filename' => $filename, 'ext' => strtolower($file->getClientOriginalExtension())];
-                    $path = PathBuilder::build($meta);
-
-                    if (Storage::disk($this->disk)->exists($path)) {
-                        if ($conflict === 'replace') {
-                            Storage::disk($this->disk)->delete($path);
-                        } else {
-                            $pi = pathinfo($path);
-                            $suffix = '-' . date('YmdHis') . '-' . Str::random(5);
-                            $path = $pi['dirname'] . '/' . $pi['filename'] . $suffix . '.' . $pi['extension'];
-                        }
-                    }
-                    Storage::disk($this->disk)->putFileAs(dirname($path), $file, basename($path));
-
-                    $savedFilePaths[] = $path;
-                    $saved[$docFolder][] = $path;
-                };
-
-                foreach (['2d' => 'files_2d', '3d' => 'files_3d', 'ecn' => 'files_ecn'] as $folder => $key) {
-                    if ($r->hasFile($key)) {
-                        foreach (Arr::wrap($r->file($key)) as $f) {
-                            if ($f) $saveOne($f, $folder);
-                        }
-                    }
+                if ($revToEdit->package_id != $packageId) {
+                    Log::error('Package ID mismatch during draft edit', [
+                        'form_package_id' => $packageId,
+                        'draft_package_id' => $revToEdit->package_id,
+                        'revision_id' => $revisionId,
+                        'form_package_type' => gettype($packageId),
+                        'draft_package_type' => gettype($revToEdit->package_id)
+                    ]);
+                    throw new \Exception("Metadata mismatch. The form data does not match the draft you are editing. Please refresh the page and try again.");
                 }
 
-                $revision = DB::table('doc_package_revisions')->where('package_id', $packageId)->where('revision_no', $rev)->first();
-                $revisionId = $revision->id ?? null;
-                $revisionStatus = null;
+                if ($revToEdit->revision_status !== 'draft') throw new \Exception("Revision is locked and cannot be edited.");
 
-                if ($revision && $r->filled('as_draft') && $r->as_draft == '1') {
-                    DB::table('doc_package_revisions')->where('id', $revision->id)->update(['revision_status' => 'draft', 'updated_at' => Carbon::now()]);
-                    DB::table('package_approvals')->where('revision_id', $revision->id)->where('is_active', 1)->update(['is_active' => 0, 'updated_at' => Carbon::now()]);
-                    $revision->revision_status = 'draft';
+                $updateData = [];
+                if ($r->filled('note') && $revToEdit->note !== $r->input('note')) {
+                    $updateData['note'] = $r->input('note');
+                }
+                $newReceiptDate = $validated['receipt_date'] ?: null;
+                if ($revToEdit->receipt_date != $newReceiptDate) { 
+                    $updateData['receipt_date'] = $newReceiptDate;
                 }
 
-                if ($revision) {
-                    if ($mode === 'existing' && $conflict === 'replace' && $revision->revision_status !== 'pending') {
-                        abort(422, 'Tidak bisa replace revisi yang bukan pending');
-                    }
-                    if (!empty($r->input('note'))) {
-                        DB::table('doc_package_revisions')->where('id', $revisionId)->update(['note' => $r->input('note'), 'updated_at' => Carbon::now()]);
-                    }
+                if (!empty($updateData)) {
+                    $updateData['updated_at'] = now();
+                    DB::table('doc_package_revisions')->where('id', $revisionId)->update($updateData);
+                }
+
+                $currentRevisionNo = $revToEdit->revision_no;
+
+            } else {
+                // CREATE NEW MODE
+                $revQuery = DB::table('doc_package_revisions')->where('package_id', $packageId);
+                if (!empty($validated['revision_label_id'])) {
+                    $revQuery->where('revision_label_id', $validated['revision_label_id']);
                 } else {
-                    $labelId = $this->pickRevisionLabel((int)$ids['customer_id'], $rev);
-                    $revisionStatus = $r->filled('as_draft') && $r->as_draft == '1' ? 'draft' : 'pending';
-                    $revisionId = DB::table('doc_package_revisions')->insertGetId(['package_id' => $packageId, 'revision_no' => $rev, 'revision_label_id' => $labelId, 'revision_status' => $revisionStatus, 'note' => $r->input('note'), 'is_obsolete' => 0, 'created_by' => $this->getAuthUserInt(), 'created_at' => Carbon::now(), 'updated_at' => Carbon::now(), 'is_active' => 1]);
+                    $revQuery->whereNull('revision_label_id');
                 }
+                $maxRevision = $revQuery->max('revision_no');
+                $nextRevisionNo = is_null($maxRevision) ? 0 : $maxRevision + 1;
 
-                foreach ($saved as $cat => $paths) {
-                    foreach ($paths as $p) {
-                        $diskPath = Storage::disk($this->disk)->path($p);
-                        DB::table('doc_package_revision_files')->insert(['revision_id' => $revisionId, 'category' => strtoupper($cat), 'file_extension_id' => $this->ensureFileExtension(pathinfo($p, PATHINFO_EXTENSION)), 'filename' => basename($p), 'storage_path' => $p, 'file_size' => filesize($diskPath), 'checksum_sha256' => hash_file('sha256', $diskPath), 'uploaded_by' => $this->getAuthUserInt(), 'created_at' => Carbon::now(), 'updated_at' => Carbon::now(), 'is_active' => 1]);
-                    }
-                }
+                $currentRevisionNo = $nextRevisionNo;
 
-                $currentRevisionStatus = $revision->revision_status ?? $revisionStatus;
-                $approvalId = null;
-                if ($currentRevisionStatus !== 'draft') {
-                    $existingApproval = DB::table('package_approvals')->where('revision_id', $revisionId)->where('package_id', $packageId)->where('is_active', 1)->first(['id']);
-                    if ($existingApproval) {
-                        $approvalId = $existingApproval->id;
-                    } else {
-                        $approvalId = DB::table('package_approvals')->insertGetId(['package_id' => $packageId, 'revision_id' => $revisionId, 'requested_by' => $this->getAuthUserInt(), 'requested_at' => Carbon::now(), 'is_active' => 1, 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()]);
-                    }
-                }
+                $existing = DB::table('doc_package_revisions')->where('package_id', $packageId)->where('ecn_no', $validated['ecn_no'])->lockForUpdate()->exists();
+                if ($existing) throw new \Exception("ECN No. has just been created. Please refresh.");
 
-                DB::commit();
-
-                try {
-                    $subcatName = !empty($ids['doctype_subcategory_id']) ? DB::table('doctype_subcategories')->where('id', $ids['doctype_subcategory_id'])->value('name') : null;
-                    $packageNo = DB::table('doc_packages')->where('id', $packageId)->value('package_no');
-                    $metaLog = json_encode(['part_no' => $labels['part_no'] ?? null, 'doctype_group' => $labels['doctype_group_name'] ?? null, 'customer_code' => $labels['customer_code'] ?? null, 'model_name' => $labels['model_name'] ?? null, 'doctype_subcategory' => $subcatName, 'note' => $r->input('note') ?? null, 'package_no' => $packageNo, 'revision_no' => $rev]);
-                    $existingLog = DB::table('activity_logs')->where('activity_code', 'UPLOAD')->where('scope_type', 'package')->where('scope_id', $packageId)->where('revision_id', $revisionId)->first();
-                    if ($existingLog) {
-                        DB::table('activity_logs')->where('id', $existingLog->id)->update(['user_id' => $this->getAuthUserInt(), 'meta' => $metaLog, 'updated_at' => Carbon::now()]);
-                    } else {
-                        DB::table('activity_logs')->insert(['user_id' => $this->getAuthUserInt(), 'activity_code' => 'UPLOAD', 'scope_type' => 'package', 'scope_id' => $packageId, 'revision_id' => $revisionId, 'meta' => $metaLog, 'created_at' => Carbon::now()]);
-                    }
-                } catch (\Exception $e) {
-                    Log::warning('Failed to write activity log for upload', ['error' => $e->getMessage()]);
-                }
-
-            } catch (\Exception $e) {
-                DB::rollBack();
-
-                Log::error('Transaksi gagal, membersihkan file yang terupload.', ['files_to_delete' => $savedFilePaths]);
-                foreach ($savedFilePaths as $path) {
-                    try {
-                        if (Storage::disk($this->disk)->exists($path)) {
-                            Storage::disk($this->disk)->delete($path);
-                        }
-                    } catch (\Exception $storageEx) {
-                        Log::critical('GAGAL MENGHAPUS ORPHAN FILE!', ['path' => $path, 'error' => $storageEx->getMessage()]);
-                    }
-                }
-
-                throw $e;
+                $revisionId = DB::table('doc_package_revisions')->insertGetId([
+                    'package_id' => $packageId,
+                    'revision_no' => $nextRevisionNo,
+                    'ecn_no' => $validated['ecn_no'],
+                    'revision_label_id' => $validated['revision_label_id'] ?: null,
+                    'revision_status' => 'draft',
+                    'note' => $r->input('note'),
+                    'receipt_date' => $validated['receipt_date'] ?: null,
+                    'is_obsolete' => 0,
+                    'created_by' => $this->getAuthUserInt(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                    'is_active' => 1,
+                ]);
             }
 
-            return response()->json([
-                'success' => true, 'mode' => $mode, 'rev' => $rev,
-                'conflict' => $conflict, 'saved_paths' => $saved,
-                'package_id' => $packageId ?? null, 'revision_id' => $revisionId ?? null,
-                'approval_id' => $approvalId ?? null,
+            $metaBase = $this->buildMetaBase($r, $currentRevisionNo);
+
+            if (!empty($validated['files_to_delete'])) {
+                $filesToDelete = DB::table('doc_package_revision_files')->whereIn('id', $validated['files_to_delete'])->get();
+                foreach($filesToDelete as $file) { Storage::disk($this->disk)->delete($file->storage_path); }
+                DB::table('doc_package_revision_files')->whereIn('id', $validated['files_to_delete'])->delete();
+            }
+
+            $allowedExtensions = $this->getAllowedExtensions();
+            $fileOptions = $r->input('options', []);
+            foreach (['2d', '3d', 'ecn'] as $docFolder) {
+                if ($r->hasFile("files_{$docFolder}")) {
+                    foreach ($r->file("files_{$docFolder}") as $file) {
+                        $originalExt = strtolower($file->getClientOriginalExtension());
+                        if (!in_array($originalExt, $allowedExtensions->get($docFolder, []))) {
+                            throw \Illuminate\Validation\ValidationException::withMessages(["files_{$docFolder}" => "Tipe file '{$originalExt}' tidak diizinkan."]);
+                        }
+
+                        $originalClientName = $file->getClientOriginalName();
+                        $sanitizedOriginalName = PathBuilder::sanitizeFilename($originalClientName);
+
+                        if (empty($sanitizedOriginalName)) {
+                            $sanitizedOriginalName = Str::random(10) . '.' . $originalExt;
+                        }
+
+                        $rootPath = PathBuilder::root($metaBase);
+                        $revFolder = PathBuilder::revisionFolderName($metaBase);
+                        $baseDir = $rootPath . '/' . $revFolder . '/' . strtolower($docFolder);
+
+                        $fullStoragePath = $baseDir . '/' . $sanitizedOriginalName;
+
+                        $action = $fileOptions[$docFolder][$originalClientName] ?? 'add';
+
+                        $existingFileRecord = null;
+                        if ($action === 'replace') {
+                            $existingFileRecord = DB::table('doc_package_revision_files')
+                                ->where('revision_id', $revisionId)
+                                ->where('storage_path', $fullStoragePath)
+                                ->first();
+                        }
+
+
+                        if ($action === 'replace' && $existingFileRecord) {
+
+                            Storage::disk($this->disk)->putFileAs($baseDir, $file, $sanitizedOriginalName);
+                            $diskPath = Storage::disk($this->disk)->path($fullStoragePath);
+
+                            DB::table('doc_package_revision_files')
+                                ->where('id', $existingFileRecord->id)
+                                ->update([
+                                    'file_size' => filesize($diskPath),
+                                    'checksum_sha256' => hash_file('sha256', $diskPath),
+                                    'uploaded_by' => $this->getAuthUserInt(),
+                                    'updated_at' => now(),
+                                ]);
+
+                        } else {
+
+                            if ($action === 'suffix') {
+                                $filenameWithoutExt = pathinfo($sanitizedOriginalName, PATHINFO_FILENAME);
+                                $fileExt = pathinfo($sanitizedOriginalName, PATHINFO_EXTENSION);
+                                $uniqueSuffix = '_' . uniqid();
+
+                                $sanitizedOriginalName = $filenameWithoutExt . $uniqueSuffix . '.' . $fileExt;
+                                $fullStoragePath = $baseDir . '/' . $sanitizedOriginalName;
+                            }
+
+                            Storage::disk($this->disk)->putFileAs($baseDir, $file, $sanitizedOriginalName);
+                            $savedFilePaths[] = $fullStoragePath;
+                            $diskPath = Storage::disk($this->disk)->path($fullStoragePath);
+
+                            DB::table('doc_package_revision_files')->insert([
+                                'revision_id' => $revisionId,
+                                'category' => strtoupper($docFolder),
+                                'file_extension_id' => $this->ensureFileExtension($originalExt),
+                                'filename' => $sanitizedOriginalName,
+                                'storage_path' => $fullStoragePath,
+                                'file_size' => filesize($diskPath),
+                                'checksum_sha256' => hash_file('sha256', $diskPath),
+                                'uploaded_by' => $this->getAuthUserInt(), 'created_at' => now(), 'updated_at' => now(), 'is_active' => 1,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            //  Activity Logging ---
+            $package = DB::table('doc_packages')->where('id', $packageId)->first(['package_no']);
+            $subCatName = null;
+            if (!empty($packageIds['doctype_subcategory_id'])) {
+                $subCatName = DB::table('doctype_subcategories')
+                                ->where('id', $packageIds['doctype_subcategory_id'])
+                                ->value('name');
+            }
+
+            $labelName = null;
+            if (!empty($validated['revision_label_id'])) {
+                $labelName = DB::table('customer_revision_labels')
+                                ->where('id', $validated['revision_label_id'])
+                                ->value('label');
+            }
+
+            $metaLogData = [
+                'part_no' => $packageLabels['part_no'] ?? null,
+                'doctype_group' => $packageLabels['doctype_group_name'] ?? null,
+                'customer_code' => $packageLabels['customer_code'] ?? null,
+                'model_name' => $packageLabels['model_name'] ?? null,
+                'doctype_subcategory' => $subCatName,
+                'note' => $r->input('note'),
+                'package_no' => $package ? $package->package_no : null,
+                'revision_no' => $currentRevisionNo,
+                'ecn_no' => $validated['ecn_no'], // <-- DATA BARU
+                'revision_label' => $labelName    // <-- DATA BARU
+            ];
+
+            $metaLog = json_encode($metaLogData);
+
+            $activityCode = 'UPLOAD'; // Sesuai 'CK_al_activity_code'
+
+            DB::table('activity_logs')->insert([
+                'user_id' => $this->getAuthUserInt(),
+                'activity_code' => $activityCode,
+                'scope_type' => 'revision',
+                'scope_id' => $packageId,
+                'revision_id' => $revisionId,
+                'meta' => $metaLog,
+                'created_at' => Carbon::now(),
             ]);
 
-        } catch (\Exception $e) {
-            Log::error('Upload gagal total', ['error' => $e->getMessage(), 'request' => $r->except(['files_2d', 'files_3d', 'files_ecn'])]);
-            $statusCode = $e instanceof AuthenticationException ? 401 : 500;
-            return response()->json(['message' => $e->getMessage()], $statusCode);
-        }
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Draft has been saved successfully.', 'revision_id' => $revisionId, 'package_id' => $packageId]);
+
+        } 
+        catch (\Exception $e) {
+    DB::rollBack();
+
+    foreach ($savedFilePaths as $path) {
+        Storage::disk($this->disk)->delete($path);
     }
 
-    // Other methods tetap sama
+    $errors = [];
+    if ($e instanceof \Illuminate\Validation\ValidationException) {
+        $errors = $e->errors();
+        $message = $e->getMessage();
+        $statusCode = 422;
+    } else {
+        $message = 'An unexpected error occurred on the server.';
+        $statusCode = 500;
+    }
+
+    Log::error('Upload failed and rolled back', [
+        'error' => $e->getMessage(),
+        'errors' => $errors,
+    ]);
+
+    return response()->json([
+        'message' => $message,
+        'errors' => $errors,
+    ], $statusCode);
+}
+
+    }
+
     public function getCustomerData(Request $request): JsonResponse
     {
         $searchTerm = $request->q;
@@ -501,36 +596,14 @@ class DrawingUploadController extends Controller
         ]);
     }
 
-    public function getProjectStatusData(Request $request): JsonResponse
+    private function ensurePackage(array $ids, array $labels): int
     {
-        $searchTerm = $request->q;
-        $page = $request->page ?: 1;
-        $resultsPerPage = 10;
-        $offset = ($page - 1) * $resultsPerPage;
-
-        $query = DB::table('project_status')->select('id', 'name');
-        if ($searchTerm) {
-            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
-        }
-
-        $totalCount = $query->count();
-        $groups = $query->orderBy('name', 'asc')->offset($offset)->limit($resultsPerPage)->get();
-
-        $formattedGroups = $groups->map(function ($g) {
-            return ['id' => $g->id, 'text' => $g->name];
-        });
-
-        return response()->json(['results' => $formattedGroups, 'total_count' => $totalCount]);
-    }
-
-    /**
-     * Ensure doc_package exists, otherwise create one.
-     * Returns package id.
-     */
-    private function ensurePackage(array $ids, array $labels, $projectStatusId = null): int
-    {
-        // try to find existing package by unique keys
-        $q = DB::table('doc_packages')->where('customer_id', $ids['customer_id'])->where('model_id', $ids['model_id'])->where('product_id', $ids['product_id'])->where('doctype_group_id', $ids['doctype_group_id'])->where('part_group_id', $ids['part_group_id']);
+        $q = DB::table('doc_packages')
+            ->where('customer_id', $ids['customer_id'])
+            ->where('model_id', $ids['model_id'])
+            ->where('product_id', $ids['product_id'])
+            ->where('doctype_group_id', $ids['doctype_group_id'])
+            ->where('part_group_id', $ids['part_group_id']);
 
         if (!empty($ids['doctype_subcategory_id'])) {
             $q->where('doctype_subcategory_id', $ids['doctype_subcategory_id']);
@@ -558,7 +631,6 @@ class DrawingUploadController extends Controller
             'doctype_group_id' => $ids['doctype_group_id'],
             'doctype_subcategory_id' => $ids['doctype_subcategory_id'] ?? null,
             'part_group_id' => $ids['part_group_id'],
-            'project_status_id' => $projectStatusId ?: null,
             'current_revision_no' => 0,
             'current_revision_id' => null,
             'created_by' => $this->getAuthUserInt(),
@@ -570,18 +642,17 @@ class DrawingUploadController extends Controller
         return DB::table('doc_packages')->insertGetId($insert);
     }
 
-    /** Return integer user id or null */
-    private function getAuthUserInt(): ?int
+    private function getAuthUserInt(): int
     {
-        $uid = Auth::id();
-        if (is_numeric($uid)) {
-            return (int) $uid;
+        $user = Auth::user();
+
+        if (!$user) {
+            abort(403, 'User is not authenticated for this action.');
         }
-        // Fallback to system user id 1 if no authenticated numeric user is available
-        return 1;
+
+        return (int) $user->id;
     }
 
-    /** Ensure file extension exists; return id */
     private function ensureFileExtension(string $ext): int
     {
         $code = strtolower($ext);
@@ -602,7 +673,6 @@ class DrawingUploadController extends Controller
         ]);
     }
 
-    /** Pick revision label id by customer and revision_no (match sort_order). Return null if not found. */
     private function pickRevisionLabel(int $customerId, int $revisionNo): ?int
     {
         $row = DB::table('customer_revision_labels')
@@ -613,28 +683,81 @@ class DrawingUploadController extends Controller
         return $row ? $row->id : null;
     }
 
-    /**
-     * Request approval for an existing package revision (set to pending).
-     * Expects package_id and revision_no in request.
-     */
+    public function getPublicAllowedExtensions(): JsonResponse
+    {
+        return response()->json($this->getAllowedExtensions());
+    }
+
+    protected function getAllowedExtensions()
+    {
+        return DB::table('file_extensions as fe')
+            ->join('category_file_extension as cfe', 'fe.id', '=', 'cfe.file_extension_id')
+            ->select('fe.code', 'cfe.category_name')
+            ->get()
+            ->groupBy('category_name')
+            ->map(fn ($items) => $items->pluck('code')->map('strtolower')->all())
+            ->mapWithKeys(fn ($items, $key) => [strtolower($key) => $items]);
+    }
+
+    private function buildMetaBase(Request $r): array
+    {
+        $ids = [
+            'customer_id' => $r->input('customer_id', $r->input('customer')),
+            'model_id' => $r->input('model_id', $r->input('model')),
+            'product_id' => $r->input('partNo'),
+            'doctype_group_id' => $r->input('docType'),
+        ];
+        $labels = $this->getFolderLabels($ids);
+        $partGroup = DB::table('part_groups')->where('id', (int)($r->input('partGroup')))->value('code_part_group');
+        $revisionLabelName = $r->input('revision_label_id')
+            ? DB::table('customer_revision_labels')->where('id', $r->input('revision_label_id'))->value('label')
+            : $r->input('label_name');
+
+        return $labels + [
+            'part_group' => $partGroup,
+            'revision_label_name' => $revisionLabelName,
+            'rev' => (int)($r->input('revision_no', $r->input('next_rev', 0))),
+            'ecn_no' => $r->input('ecn_no'),
+        ];
+    }
+
+    private function findPackageId(array $requestData): ?int
+    {
+        $q = DB::table('doc_packages')->where([
+            'customer_id' => $requestData['customer_id'],
+            'model_id' => $requestData['model_id'],
+            'product_id' => $requestData['partNo'],
+            'doctype_group_id' => $requestData['docType'],
+            'part_group_id' => $requestData['partGroup'],
+        ]);
+
+        if (!empty($requestData['category'])) {
+            $q->where('doctype_subcategory_id', $requestData['category']);
+        } else {
+            $q->whereNull('doctype_subcategory_id');
+        }
+
+        $result = $q->value('id');
+        return $result ? (int)$result : null;
+    }
+
     public function requestApproval(Request $r): JsonResponse
     {
         $r->validate([
             'package_id' => 'required|integer|exists:doc_packages,id',
-            'revision_no' => 'required|integer|min:0',
+            'revision_id' => 'required|integer|exists:doc_package_revisions,id',
         ]);
 
         $packageId = (int) $r->package_id;
-        $revNo = (int) $r->revision_no;
+        $revisionId = (int) $r->revision_id;
 
         // find revision
-        $revision = DB::table('doc_package_revisions')->where('package_id', $packageId)->where('revision_no', $revNo)->first();
+        $revision = DB::table('doc_package_revisions')->where('id', $revisionId)->first();
 
-        if (!$revision) {
-            return response()->json(['message' => 'Revision not found for given package and revision number.'], 422);
+        if (!$revision || $revision->package_id != $packageId) {
+            return response()->json(['message' => 'Revision not found for the given package.'], 422);
         }
 
-        // if already pending or approved, return info
         if ($revision->revision_status === 'pending') {
             return response()->json(['success' => true, 'message' => 'Revision already pending.']);
         }
@@ -664,38 +787,43 @@ class DrawingUploadController extends Controller
                 ]);
             }
 
-            DB::commit();
-            // write activity log for approval request
-            try {
-                $metaLog = json_encode([
-                    'package_id' => $packageId,
-                    'revision_no' => $revNo,
-                ]);
-                DB::table('activity_logs')->insert([
-                    'user_id' => $this->getAuthUserInt(),
-                    'activity_code' => 'REQUEST_APPROVAL',
-                    'scope_type' => 'revision',
-                    'scope_id' => $packageId,
-                    'revision_id' => $revision->id,
-                    'meta' => $metaLog,
-                    'created_at' => Carbon::now(),
-                ]);
-            } catch (\Exception $e) {
-                Log::warning('Failed to write activity log for requestApproval', ['error' => $e->getMessage()]);
+            // Activity Logging ---
+            $labelName = null;
+            if (!empty($revision->revision_label_id)) {
+                $labelName = DB::table('customer_revision_labels')
+                                ->where('id', $revision->revision_label_id)
+                                ->value('label');
             }
+
+            $metaLog = json_encode([
+                'package_id' => $packageId,
+                'revision_no' => $revision->revision_no,
+                'ecn_no' => $revision->ecn_no,
+                'revision_label' => $labelName
+            ]);
+
+            $activityCode = 'SUBMIT_APPROVAL';
+
+            DB::table('activity_logs')->insert([
+                'user_id' => $this->getAuthUserInt(),
+                'activity_code' => $activityCode,
+                'scope_type' => 'revision',
+                'scope_id' => $packageId,
+                'revision_id' => $revision->id,
+                'meta' => $metaLog,
+                'created_at' => Carbon::now(),
+            ]);
+
+            DB::commit();
 
             return response()->json(['success' => true, 'message' => 'Revision set to pending and approval requested.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to request approval', ['error' => $e->getMessage(), 'package_id' => $packageId, 'revision_no' => $revNo]);
+            Log::error('Failed to request approval', ['error' => $e->getMessage(), 'package_id' => $packageId, 'revision_no' => $revision->revision_no]);
             return response()->json(['message' => 'Failed to request approval.'], 500);
         }
     }
 
-    /**
-     * Return activity logs. If metadata identifying a package is provided, filter to that package/revision.
-     * Accepts POST params: customer, model, partNo, docType, category, partGroup, revision_no (optional)
-     */
     public function activityLogs(Request $r): JsonResponse
     {
         $customer = $r->input('customer');
@@ -779,5 +907,58 @@ class DrawingUploadController extends Controller
             ];
         });
         return response()->json(['logs' => $global]);
+    }
+
+    public function checkConflicts(Request $r): JsonResponse
+    {
+        $validated = $r->validate([
+            'customer' => 'required|integer',
+            'model' => 'required|integer',
+            'partNo' => 'required|integer',
+            'docType' => 'required|integer',
+            'category' => 'nullable|integer',
+            'partGroup' => 'required|integer',
+            'ecn_no' => 'required|string',
+            'revision_label_id' => 'nullable|integer',
+            'revision_no' => 'nullable|integer',
+
+            'files_2d' => 'nullable|array',
+            'files_3d' => 'nullable|array',
+            'files_ecn' => 'nullable|array',
+        ]);
+
+        try {
+
+            $revNo = $r->input('revision_no', 0);
+            $metaBase = $this->buildMetaBase($r, $revNo);
+            $rootPath = PathBuilder::root($metaBase);
+            $revFolder = PathBuilder::revisionFolderName($metaBase);
+
+            $conflicts = [
+                '2d' => [],
+                '3d' => [],
+                'ecn' => [],
+            ];
+
+            foreach (['2d', '3d', 'ecn'] as $docFolder) {
+                if (!$r->has("files_{$docFolder}")) continue;
+
+                $baseDir = $rootPath . '/' . $revFolder . '/' . strtolower($docFolder);
+
+                foreach ($r->input("files_{$docFolder}") as $filename) {
+                    $sanitizedName = PathBuilder::sanitizeFilename($filename);
+                    $fullStoragePath = $baseDir . '/' . $sanitizedName;
+
+                    if (Storage::disk($this->disk)->exists($fullStoragePath)) {
+                        $conflicts[$docFolder][] = $filename;
+                    }
+                }
+            }
+
+            return response()->json(['conflicts' => $conflicts]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
     }
 }

@@ -24,10 +24,11 @@
 
     <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-lg border border-gray-200">
 
-        {{-- Tombol toggle dark mode sudah dihapus --}}
-
         <div class="text-center">
-            <h1 class="text-3xl font-bold text-gray-900">PROMISE</h1>
+
+            <img src="{{ asset('assets/image/favicon.ico') }}" alt="PROMISE Logo" class="mx-auto h-24 w-auto mb-4">
+
+            <h1 class="text-3xl font-semibold text-gray-900">PROMISE</h1>
             <h2 class="mt-2 text-xl font-semibold text-gray-800">
                 Sign In to Your Account
             </h2>
@@ -154,8 +155,7 @@
         <span>Signing in...</span>
       </span>
     `;
-            // Catatan: karena halaman akan reload ke response server,
-            // isi tombol otomatis kembali ke original saat render ulang Blade.
+
         });
     </script>
 </body>

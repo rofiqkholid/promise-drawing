@@ -20,6 +20,7 @@ class Models extends Model
         'customer_id',
         'name',
         'status_id',
+        'planning',
     ];
 
     /**

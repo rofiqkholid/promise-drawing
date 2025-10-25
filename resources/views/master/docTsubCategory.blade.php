@@ -25,15 +25,9 @@
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                         <th scope="col" class="px-6 py-3 w-16">No</th>
-                        <th scope="col" class="px-6 py-3 sorting" data-column="docTypeGroup">
-                            Document Type Group
-                        </th>
-                        <th scope="col" class="px-6 py-3 sorting" data-column="name">
-                            Subcategory Name
-                        </th>
-                        <th scope="col" class="px-6 py-3 sorting" data-column="description">
-                            Description
-                        </th>
+                        <th scope="col" class="px-6 py-3 sorting" data-column="docTypeGroup">Document Type Group</th>
+                        <th scope="col" class="px-6 py-3 sorting" data-column="name">Subcategory Name</th>
+                        <th scope="col" class="px-6 py-3 sorting" data-column="description">Description</th>
                         <th scope="col" class="px-6 py-3 text-center">Action</th>
                     </tr>
                 </thead>
@@ -43,7 +37,7 @@
     </div>
 </div>
 
-{{-- Add Document Type Subcategory Modal --}}
+{{-- Add Modal --}}
 <div id="addDocTypeSubCategoryModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
     <div class="relative p-4 w-full max-w-md h-full md:h-auto">
         <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
@@ -72,19 +66,15 @@
                     <p id="add-description-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
-                    <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
-                        Cancel
-                    </button>
-                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full">
-                        Save
-                    </button>
+                    <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">Cancel</button>
+                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full">Save</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-{{-- Edit Document Type Subcategory Modal --}}
+{{-- Edit Modal --}}
 <div id="editDocTypeSubCategoryModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
     <div class="relative p-4 w-full max-w-md h-full md:h-auto">
         <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
@@ -110,16 +100,12 @@
                 </div>
                 <div class="mb-4">
                     <label for="edit_description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Description</label>
-                    <textarea name="description" id="edit_description" rows="4" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Enter a description"></textarea>
+                    <textarea name="description" id="edit_description" rows="4" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Enter a description"></textarea>
                     <p id="edit-description-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
-                    <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
-                        Cancel
-                    </button>
-                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full">
-                        Save Changes
-                    </button>
+                    <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">Cancel</button>
+                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -260,88 +246,30 @@
 @push('style')
 <style>
     div.dataTables_wrapper div.dataTables_filter input:focus,
-    div.dataTables_wrapper div.dataTables_length select:focus {
-        outline: none;
-        box-shadow: none;
-        border-color: #6b7280;
-    }
-
-    html.dark #addAliasModal input,
-    html.dark #addAliasModal select,
-    html.dark #editAliasModal input,
-    html.dark #editAliasModal select {
-        color: #f3f4f6;
-        background-color: #374151;
-        border-color: #4b5563;
-    }
-
+    div.dataTables_wrapper div.dataTables_length select:focus { outline: none; box-shadow: none; border-color: #6b7280; }
+    html.dark #addAliasModal input, html.dark #addAliasModal select,
+    html.dark #editAliasModal input, html.dark #editAliasModal select { color:#f3f4f6; background-color:#374151; border-color:#4b5563; }
     html.dark div.dataTables_wrapper div.dataTables_filter input,
-    html.dark div.dataTables_wrapper div.dataTables_length select {
-        background-color: #374151;
-        border-color: #4b5563;
-        color: #f3f4f6;
-    }
-
-    html.dark div.dataTables_wrapper div.dataTables_filter input::placeholder {
-        color: #9ca3af;
-    }
-
+    html.dark div.dataTables_wrapper div.dataTables_length select { background-color:#374151; border-color:#4b5563; color:#f3f4f6; }
+    html.dark div.dataTables_wrapper div.dataTables_filter input::placeholder { color:#9ca3af; }
     html.dark div.dataTables_wrapper div.dataTables_length label,
     html.dark div.dataTables_wrapper div.dataTables_filter label,
     html.dark div.dataTables_wrapper div.dataTables_info,
     html.dark #aliasManagementModal .dataTables_length label,
     html.dark #aliasManagementModal .dataTables_filter label,
-    html.dark #aliasManagementModal .dataTables_info {
-        color: #d1d5db;
-    }
-
-    html.dark div.dataTables_wrapper div.dataTables_paginate .paginate_button {
-        color: #d1d5db !important;
-    }
-    html.dark div.dataTables_wrapper div.dataTables_paginate .paginate_button.disabled {
-        color: #6b7280 !important;
-    }
+    html.dark #aliasManagementModal .dataTables_info { color:#d1d5db; }
+    html.dark div.dataTables_wrapper div.dataTables_paginate .paginate_button { color:#d1d5db !important; }
+    html.dark div.dataTables_wrapper div.dataTables_paginate .paginate_button.disabled { color:#6b7280 !important; }
     html.dark div.dataTables_wrapper div.dataTables_paginate .paginate_button.current,
-    html.dark div.dataTables_wrapper div.dataTables_paginate .paginate_button.current:hover {
-        background: #3b82f6 !important;
-        color: white !important;
-        border-color: #3b82f6 !important;
-    }
-    html.dark div.dataTables_wrapper div.dataTables_paginate .paginate_button:hover {
-        background: #374151 !important;
-        border-color: #4b5563 !important;
-    }
-
-    html.dark .dataTable tbody tr {
-        border-bottom-color: #374151;
-    }
-
-    .select2-container--default .select2-selection--single {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start !important;
-        text-align: left !important;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        text-align: left !important;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        right: 10px !important;
-    }
-
-    div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar {
-        display: none !important;
-        width: 0 !important;
-        height: 0 !important;
-    }
-    div.dataTables_wrapper div.dataTables_scrollBody {
-        -ms-overflow-style: none !important;
-        scrollbar-width: none !important;
-    }
-
-    input::placeholder {
-        text-align: left;
-    }
+    html.dark div.dataTables_wrapper div.dataTables_paginate .paginate_button.current:hover { background:#3b82f6 !important; color:#fff !important; border-color:#3b82f6 !important; }
+    html.dark div.dataTables_wrapper div.dataTables_paginate .paginate_button:hover { background:#374151 !important; border-color:#4b5563 !important; }
+    html.dark .dataTable tbody tr { border-bottom-color:#374151; }
+    .select2-container--default .select2-selection--single { display:flex; align-items:center; justify-content:flex-start!important; text-align:left!important; }
+    .select2-container--default .select2-selection--single .select2-selection__rendered { text-align:left!important; }
+    .select2-container--default .select2-selection--single .select2-selection__arrow { right:10px!important; }
+    div.dataTables_wrapper div.dataTables_scrollBody::-webkit-scrollbar { display:none!important; width:0!important; height:0!important; }
+    div.dataTables_wrapper div.dataTables_scrollBody { -ms-overflow-style:none!important; scrollbar-width:none!important; }
+    input::placeholder { text-align:left; }
 </style>
 @endpush
 
@@ -351,15 +279,65 @@
 $(document).ready(function () {
     const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-    $('#doctype_group_id').select2({
-        dropdownParent: $('#addDocTypeSubCategoryModal'),
-        width: '100%'
-    });
-    $('#edit_doctype_group_id').select2({
-        dropdownParent: $('#editDocTypeSubCategoryModal'),
-        width: '100%'
-    });
+    // ====== ENDPOINTS ======
+    const SELECT2_GROUPS_URL    = '{{ route("docTypeSubCategories.select2.groups") }}';
+    const SELECT2_CUSTOMERS_URL = '{{ route("docTypeSubCategories.select2.customers") }}';
 
+    // ====== Select2 INIT (server-side) ======
+    function initGroupSelect2($el, parentModal) {
+        $el.select2({
+            dropdownParent: parentModal,
+            width: '100%',
+            placeholder: 'Select a group',
+            ajax: {
+                url: SELECT2_GROUPS_URL,
+                dataType: 'json',
+                delay: 250,
+                cache: true,
+                data: params => ({ q: params.term || '', page: params.page || 1 }),
+                processResults: (data) => ({
+                    results: data.results || [],
+                    pagination: { more: data.pagination ? data.pagination.more : false }
+                })
+            },
+            templateResult: it => it.loading ? it.text : $('<span class="text-sm">' + (it.text || it.id) + '</span>'),
+            templateSelection: it => it.text || it.id || ''
+        });
+    }
+    function initCustomerSelect2($el, parentModal) {
+        $el.select2({
+            dropdownParent: parentModal,
+            width: '100%',
+            placeholder: 'Select a customer',
+            ajax: {
+                url: SELECT2_CUSTOMERS_URL,
+                dataType: 'json',
+                delay: 250,
+                cache: true,
+                data: params => ({ q: params.term || '', page: params.page || 1 }),
+                processResults: (data) => ({
+                    results: data.results || [],
+                    pagination: { more: data.pagination ? data.pagination.more : false }
+                })
+            },
+            templateResult: it => it.loading ? it.text : $('<span class="text-sm">' + (it.text || it.id) + '</span>'),
+            templateSelection: it => it.text || it.id || ''
+        });
+    }
+
+    initGroupSelect2($('#doctype_group_id'),       $('#addDocTypeSubCategoryModal'));
+    initGroupSelect2($('#edit_doctype_group_id'),  $('#editDocTypeSubCategoryModal'));
+    initCustomerSelect2($('#add_alias_customer_id'),  $('#addAliasModal'));
+    initCustomerSelect2($('#edit_alias_customer_id'), $('#editAliasModal'));
+
+    // Helper: set Select2 value by inserting an <option> (prefill Edit)
+    function setSelect2Value($select, id, label) {
+        if (!id) { $select.val(null).trigger('change'); return; }
+        const opt = new Option(label, id, true, true);
+        $select.append(opt).trigger('change');
+    }
+
+    // ====== DataTable ======
     const table = $('#docTypeSubCategoriesTable').DataTable({
         processing: true,
         serverSide: true,
@@ -367,37 +345,19 @@ $(document).ready(function () {
         ajax: {
             url: '{{ route("docTypeSubCategories.data") }}',
             type: 'GET',
-            data: function (d) {
-                d.search = d.search.value;
-            }
+            data: function (d) { d.search = d.search.value; }
         },
         columns: [
-            {
-                data: null,
-                render: function (data, type, row, meta) {
-                    return meta.row + meta.settings._iDisplayStart + 1;
-                }
-            },
+            { data: null, render: (data, type, row, meta) => meta.row + meta.settings._iDisplayStart + 1 },
             {
                 data: 'doc_type_group',
                 name: 'doc_type_group',
-                render: function (data, type, row) {
-                    return data ? data.name : '-';
-                }
+                render: function (data) { return data ? data.name : '-'; }
             },
             { data: 'name', name: 'name' },
+            { data: 'description', name: 'description', render: (data) => data || '-' },
             {
-                data: 'description',
-                name: 'description',
-                render: function (data) {
-                    return data || '-';
-                }
-            },
-            {
-                data: null,
-                orderable: false,
-                searchable: false,
-                className: 'text-center',
+                data: null, orderable: false, searchable: false, className: 'text-center',
                 render: function (data, type, row) {
                     return `
                         <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
@@ -416,478 +376,266 @@ $(document).ready(function () {
         pageLength: 10,
         lengthMenu: [10, 25, 50],
         order: [[2, 'asc']],
-        language: {
-            emptyTable: '<div class="text-gray-500 dark:text-gray-400">No document type subcategories found.</div>'
-        },
+        language: { emptyTable: '<div class="text-gray-500 dark:text-gray-400">No document type subcategories found.</div>' },
         responsive: true,
         autoWidth: false,
     });
 
-    const overrideFocusStyles = function() {
-        $(this).css({
-            'outline': 'none',
-            'box-shadow': 'none',
-            'border-color': 'gray'
-        });
-    };
-    const restoreBlurStyles = function() {
-        $(this).css('border-color', '');
-    };
+    // ====== UX minor (DT focus) ======
+    const overrideFocusStyles = function(){ $(this).css({'outline':'none','box-shadow':'none','border-color':'gray'}); };
+    const restoreBlurStyles   = function(){ $(this).css('border-color',''); };
     const elementsToFix = $('.dataTables_filter input, .dataTables_length select');
     elementsToFix.on('focus keyup', overrideFocusStyles);
     elementsToFix.on('blur', restoreBlurStyles);
     elementsToFix.filter(':focus').each(overrideFocusStyles);
 
+    // ====== Modals/helpers ======
     const addModal = $('#addDocTypeSubCategoryModal');
     const editModal = $('#editDocTypeSubCategoryModal');
     const deleteModal = $('#deleteDocTypeSubCategoryModal');
     const addButton = $('#add-button');
-    const closeButtons = $('.close-modal-button');
     let docTypeSubCategoryIdToDelete = null;
 
-    function showModal(modal) {
-        modal.removeClass('hidden').addClass('flex');
-    }
-
-    function hideModal(modal) {
-        modal.addClass('hidden').removeClass('flex');
-    }
+    function showModal(modal) { modal.removeClass('hidden').addClass('flex'); }
+    function hideModal(modal) { modal.addClass('hidden').removeClass('flex'); }
 
     function setButtonLoading($btn, isLoading, loadingText = 'Processing...') {
         if (!$btn || $btn.length === 0) return;
         if (isLoading) {
             if (!$btn.data('orig-html')) $btn.data('orig-html', $btn.html());
-            $btn.prop('disabled', true);
-            $btn.addClass('opacity-70 cursor-not-allowed');
+            $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed');
             $btn.html(`
                 <span class="inline-flex items-center gap-2">
-                <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor"
-                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                </svg>
-                ${loadingText}
+                  <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                  </svg>
+                  ${loadingText}
                 </span>
             `);
         } else {
             const orig = $btn.data('orig-html');
             if (orig) $btn.html(orig);
-            $btn.prop('disabled', false);
-            $btn.removeClass('opacity-70 cursor-not-allowed');
+            $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed');
         }
     }
+    function setFormBusy($form, busy) { $form.find('input, select, textarea, button').prop('disabled', busy); }
 
-    function setFormBusy($form, busy) {
-        $form.find('input, select, textarea, button').prop('disabled', busy);
+    // ====== Toast helpers (SAMAKAN DENGAN SAMPLE) ======
+    function detectTheme(){
+      const isDark = document.documentElement.classList.contains('dark');
+      return isDark ? {
+        bg:'rgba(30,41,59,.95)', fg:'#E5E7EB', border:'rgba(71,85,105,.5)', progress:'rgba(255,255,255,.9)',
+        icon:{success:'#22c55e', error:'#ef4444', warning:'#f59e0b', info:'#3b82f6'}
+      } : {
+        bg:'rgba(255,255,255,.98)', fg:'#0f172a', border:'rgba(226,232,240,1)', progress:'rgba(15,23,42,.8)',
+        icon:{success:'#16a34a', error:'#dc2626', warning:'#d97706', info:'#2563eb'}
+      };
+    }
+    const BaseToast = Swal.mixin({
+      toast:true,
+      position:'top-end',
+      showConfirmButton:false,
+      timer:2600,
+      timerProgressBar:true,
+      showClass:{ popup:'swal2-animate-toast-in' },
+      hideClass:{ popup:'swal2-animate-toast-out' },
+      didOpen:(el)=>{
+        el.addEventListener('mouseenter', Swal.stopTimer);
+        el.addEventListener('mouseleave', Swal.resumeTimer);
+        const t = detectTheme();
+        const bar = el.querySelector('.swal2-timer-progress-bar'); if(bar) bar.style.background = t.progress;
+        const popup = el.querySelector('.swal2-popup'); if(popup) popup.style.borderColor = t.border;
+      }
+    });
+    function renderToast({icon='success', title='Success', text=''} = {}){
+      const t = detectTheme();
+      BaseToast.fire({
+        icon, title, text,
+        iconColor: t.icon[icon] || t.icon.success,
+        background: t.bg,
+        color: t.fg,
+        customClass: { popup:'swal2-toast border' }
+      });
+    }
+    function toastSuccess(title='Success', text='Operation success'){
+      renderToast({icon:'success', title, text});
+    }
+    function toastError(title='Error', text='Something went wrong'){
+      BaseToast.update({timer:3400});
+      renderToast({icon:'error', title, text});
+      BaseToast.update({timer:2600});
     }
 
-    // Helper: SweetAlert notifications
-        function detectTheme() {
-            const isDark = document.documentElement.classList.contains('dark');
-
-            return isDark ? {
-                mode: 'dark',
-                bg: 'rgba(30, 41, 59, 0.95)',
-                fg: '#E5E7EB',
-                border: 'rgba(71, 85, 105, 0.5)',
-                progress: 'rgba(255,255,255,.9)',
-                icon: {
-                    success: '#22c55e',
-                    error: '#ef4444',
-                    warning: '#f59e0b',
-                    info: '#3b82f6'
-                }
-            } : {
-                mode: 'light',
-                bg: 'rgba(255, 255, 255, 0.98)',
-                fg: '#0f172a',
-                border: 'rgba(226, 232, 240, 1)',
-                progress: 'rgba(15,23,42,.8)',
-                icon: {
-                    success: '#16a34a',
-                    error: '#dc2626',
-                    warning: '#d97706',
-                    info: '#2563eb'
-                }
-            };
-        }
-
-        const BaseToast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 2600,
-            timerProgressBar: true,
-            showClass: {
-                popup: 'swal2-animate-toast-in'
-            },
-            hideClass: {
-                popup: 'swal2-animate-toast-out'
-            },
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer);
-                toast.addEventListener('mouseleave', Swal.resumeTimer);
-            }
-        });
-
-        function renderToast({
-            icon = 'success',
-            title = 'Success',
-            text = ''
-        } = {}) {
-            const t = detectTheme();
-
-            BaseToast.fire({
-                icon,
-                title,
-                text,
-                iconColor: t.icon[icon] || t.icon.success,
-                background: t.bg,
-                color: t.fg,
-                customClass: {
-                    popup: 'swal2-toast border',
-                    title: '',
-                    timerProgressBar: ''
-                },
-                didOpen: (toast) => {
-                    const bar = toast.querySelector('.swal2-timer-progress-bar');
-                    if (bar) bar.style.background = t.progress;
-                    const popup = toast.querySelector('.swal2-popup');
-                    if (popup) popup.style.borderColor = t.border;
-                    toast.addEventListener('mouseenter', Swal.stopTimer);
-                    toast.addEventListener('mouseleave', Swal.resumeTimer);
-                }
-            });
-        }
-
-        function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') {
-            renderToast({
-                icon: 'success',
-                title,
-                text
-            });
-        }
-
-        function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') {
-            BaseToast.update({
-                timer: 3400
-            });
-            renderToast({
-                icon: 'error',
-                title,
-                text
-            });
-            BaseToast.update({
-                timer: 2600
-            });
-        }
-
-        function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') {
-            renderToast({
-                icon: 'warning',
-                title,
-                text
-            });
-        }
-
-        function toastInfo(title = 'Informasi', text = '') {
-            renderToast({
-                icon: 'info',
-                title,
-                text
-            });
-        }
-
-        window.toastSuccess = toastSuccess;
-        window.toastError = toastError;
-        window.toastWarning = toastWarning;
-        window.toastInfo = toastInfo;
-
-    function populateDocTypeGroupDropdown(selectElement, selectedId = null) {
-        $.ajax({
-            url: '{{ route("docTypeSubCategories.getDocTypeGroups") }}',
-            method: 'GET',
-            beforeSend: function() {
-                selectElement.prop('disabled', true);
-            },
-            success: function (data) {
-                selectElement.empty().append('<option value="">Select a group</option>');
-                data.forEach(function (group) {
-                    const selected = group.id == selectedId ? 'selected' : '';
-                    selectElement.append(`<option value="${group.id}" ${selected}>${group.name}</option>`);
-                });
-                selectElement.trigger('change');
-            },
-            error: function (xhr) {
-                toastError('Error', xhr.responseJSON?.message || 'Failed to load document type groups.');
-            },
-            complete: function() {
-                selectElement.prop('disabled', false);
-            }
-        });
-    }
-
-    // Add Button Click
+    // ====== Add Button ======
     addButton.on('click', () => {
         $('#addDocTypeSubCategoryForm')[0].reset();
-        $('#add-doctype_group_id-error').addClass('hidden');
-        $('#add-name-error').addClass('hidden');
-        $('#add-description-error').addClass('hidden');
-        populateDocTypeGroupDropdown($('#doctype_group_id'));
+        $('#add-doctype_group_id-error, #add-name-error, #add-description-error').addClass('hidden');
         $('#doctype_group_id').val(null).trigger('change');
         showModal(addModal);
     });
 
-    // Close Modal Buttons
-    closeButtons.on('click', () => {
-        hideModal(addModal);
-        hideModal(editModal);
-        hideModal(deleteModal);
+    // Close (all)
+    $(document).on('click', '.close-modal-button', function(){
+        const modalToClose = $(this).closest('[tabindex="-1"]');
+        hideModal(modalToClose);
     });
 
-    // Add Document Type Subcategory
+    // ====== Create ======
     $('#addDocTypeSubCategoryForm').on('submit', function (e) {
         e.preventDefault();
         const $form = $(this);
-        const $btn = $form.find('[type="submit"]');
+        const $btn  = $form.find('[type="submit"]');
         const doctypeGroupIdError = $('#add-doctype_group_id-error');
         const nameError = $('#add-name-error');
         const descriptionError = $('#add-description-error');
-        doctypeGroupIdError.addClass('hidden');
-        nameError.addClass('hidden');
-        descriptionError.addClass('hidden');
+        doctypeGroupIdError.addClass('hidden'); nameError.addClass('hidden'); descriptionError.addClass('hidden');
 
         const formData = new FormData(this);
-
         $.ajax({
             url: $form.attr('action'),
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false,
-            contentType: false,
-            beforeSend: function() {
-                setButtonLoading($btn, true, 'Saving...');
-                setFormBusy($form, true);
-            },
-            success: function (data) {
+            data: formData, processData: false, contentType: false,
+            beforeSend: () => { setButtonLoading($btn, true, 'Saving...'); setFormBusy($form, true); },
+            success: (data) => {
                 if (data.success) {
                     table.ajax.reload();
                     hideModal(addModal);
                     $form[0].reset();
-                    $('#doctype_group_id').val('').trigger('change');
+                    $('#doctype_group_id').val(null).trigger('change');
                     toastSuccess('Success', 'Document type subcategory added successfully.');
-                } else {
-                    toastError('Error', data.message || 'Failed to add document type subcategory.');
-                }
+                } else { toastError('Error', data.message || 'Failed to add document type subcategory.'); }
             },
-            error: function (xhr) {
+            error: (xhr) => {
                 const errors = xhr.responseJSON?.errors;
                 if (errors) {
-                    if (errors.doctype_group_id) {
-                        doctypeGroupIdError.text(errors.doctype_group_id[0]).removeClass('hidden');
-                    }
-                    if (errors.name) {
-                        nameError.text(errors.name[0]).removeClass('hidden');
-                    }
-                    if (errors.description) {
-                        descriptionError.text(errors.description[0]).removeClass('hidden');
-                    }
+                    if (errors.doctype_group_id) doctypeGroupIdError.text(errors.doctype_group_id[0]).removeClass('hidden');
+                    if (errors.name) nameError.text(errors.name[0]).removeClass('hidden');
+                    if (errors.description) descriptionError.text(errors.description[0]).removeClass('hidden');
                 }
-                const msg = xhr.responseJSON?.message || 'Failed to add document type subcategory.';
-                toastError('Error', msg);
+                toastError('Error', xhr.responseJSON?.message || 'Failed to add document type subcategory.');
             },
-            complete: function() {
-                setButtonLoading($btn, false);
-                setFormBusy($form, false);
-            }
+            complete: () => { setButtonLoading($btn, false); setFormBusy($form, false); }
         });
     });
 
-    // Edit Document Type Subcategory
+    // ====== Edit open ======
     $(document).on('click', '.edit-button', function () {
         const id = $(this).data('id');
-        const doctypeGroupIdError = $('#edit-doctype_group_id-error');
-        const nameError = $('#edit-name-error');
-        const descriptionError = $('#edit-description-error');
-        doctypeGroupIdError.addClass('hidden');
-        nameError.addClass('hidden');
-        descriptionError.addClass('hidden');
+        $('#edit-doctype_group_id-error, #edit-name-error, #edit-description-error').addClass('hidden');
 
         $.ajax({
             url: `/master/docTypeSubCategories/${id}`,
             method: 'GET',
-            beforeSend: function() {
-                setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, '');
-            },
-            success: function (data) {
+            beforeSend: () => { setButtonLoading($(`.edit-button[data-id="${id}"]`), true, ''); },
+            success: (data) => {
                 $('#edit_name').val(data.name);
                 $('#edit_description').val(data.description || '');
-                populateDocTypeGroupDropdown($('#edit_doctype_group_id'), data.doctype_group_id);
+                // Pre-fill Select2 group
+                const label = data.doc_type_group_name || 'Group';
+                setSelect2Value($('#edit_doctype_group_id'), data.doctype_group_id, label);
                 $('#editDocTypeSubCategoryForm').attr('action', `/master/docTypeSubCategories/${id}`);
                 showModal(editModal);
             },
-            error: function (xhr) {
-                const msg = xhr.responseJSON?.message || 'Failed to fetch document type subcategory data.';
-                toastError('Error', msg);
-            },
-            complete: function() {
-                setButtonLoading($('.edit-button[data-id="' + id + '"]'), false);
-            }
+            error: (xhr) => { toastError('Error', xhr.responseJSON?.message || 'Failed to fetch data.'); },
+            complete: () => { setButtonLoading($(`.edit-button[data-id="${id}"]`), false); }
         });
     });
 
-    // Submit Edit Form
+    // ====== Edit submit ======
     $('#editDocTypeSubCategoryForm').on('submit', function (e) {
         e.preventDefault();
         const $form = $(this);
-        const $btn = $form.find('[type="submit"]');
+        const $btn  = $form.find('[type="submit"]');
         const doctypeGroupIdError = $('#edit-doctype_group_id-error');
         const nameError = $('#edit-name-error');
         const descriptionError = $('#edit-description-error');
-        doctypeGroupIdError.addClass('hidden');
-        nameError.addClass('hidden');
-        descriptionError.addClass('hidden');
+        doctypeGroupIdError.addClass('hidden'); nameError.addClass('hidden'); descriptionError.addClass('hidden');
 
         const formData = new FormData(this);
-
         $.ajax({
             url: $form.attr('action'),
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': csrfToken },
-            data: formData,
-            processData: false,
-            contentType: false,
-            beforeSend: function() {
-                setButtonLoading($btn, true, 'Saving...');
-                setFormBusy($form, true);
-            },
-            success: function (data) {
+            data: formData, processData: false, contentType: false,
+            beforeSend: () => { setButtonLoading($btn, true, 'Saving...'); setFormBusy($form, true); },
+            success: (data) => {
                 if (data.success) {
                     table.ajax.reload();
                     hideModal(editModal);
                     toastSuccess('Success', 'Document type subcategory updated successfully.');
-                } else {
-                    toastError('Error', data.message || 'Failed to update document type subcategory.');
-                }
+                } else { toastError('Error', data.message || 'Failed to update document type subcategory.'); }
             },
-            error: function (xhr) {
+            error: (xhr) => {
                 const errors = xhr.responseJSON?.errors;
                 if (errors) {
-                    if (errors.doctype_group_id) {
-                        doctypeGroupIdError.text(errors.doctype_group_id[0]).removeClass('hidden');
-                    }
-                    if (errors.name) {
-                        nameError.text(errors.name[0]).removeClass('hidden');
-                    }
-                    if (errors.description) {
-                        descriptionError.text(errors.description[0]).removeClass('hidden');
-                    }
+                    if (errors.doctype_group_id) doctypeGroupIdError.text(errors.doctype_group_id[0]).removeClass('hidden');
+                    if (errors.name) nameError.text(errors.name[0]).removeClass('hidden');
+                    if (errors.description) descriptionError.text(errors.description[0]).removeClass('hidden');
                 }
-                const msg = xhr.responseJSON?.message || 'Failed to update document type subcategory.';
-                toastError('Error', msg);
+                toastError('Error', xhr.responseJSON?.message || 'Failed to update document type subcategory.');
             },
-            complete: function() {
-                setButtonLoading($btn, false);
-                setFormBusy($form, false);
-            }
+            complete: () => { setButtonLoading($btn, false); setFormBusy($form, false); }
         });
     });
 
-    // Delete Document Type Subcategory
+    // ====== Delete ======
     $(document).on('click', '.delete-button', function () {
         docTypeSubCategoryIdToDelete = $(this).data('id');
         showModal(deleteModal);
     });
-
     $('#confirmDeleteButton').on('click', function () {
         if (!docTypeSubCategoryIdToDelete) return;
         const $btn = $(this);
-
         $.ajax({
             url: `/master/docTypeSubCategories/${docTypeSubCategoryIdToDelete}`,
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': csrfToken },
-            beforeSend: function() {
-                setButtonLoading($btn, true, 'Deleting...');
-                setFormBusy($('#deleteDocTypeSubCategoryModal'), true);
-            },
-            success: function (data) {
+            beforeSend: () => { setButtonLoading($btn, true, 'Deleting...'); setFormBusy($('#deleteDocTypeSubCategoryModal'), true); },
+            success: (data) => {
                 if (data.success) {
                     table.ajax.reload();
                     hideModal(deleteModal);
                     docTypeSubCategoryIdToDelete = null;
                     toastSuccess('Success', 'Document type subcategory deleted successfully.');
-                } else {
-                    toastError('Error', data.message || 'Failed to delete document type subcategory.');
-                }
+                } else { toastError('Error', data.message || 'Failed to delete document type subcategory.'); }
             },
-            error: function (xhr) {
-                const msg = xhr.responseJSON?.message || 'Failed to delete document type subcategory.';
-                toastError('Error', msg);
-            },
-            complete: function() {
-                setButtonLoading($btn, false);
-                setFormBusy($('#deleteDocTypeSubCategoryModal'), false);
-            }
+            error: (xhr) => { toastError('Error', xhr.responseJSON?.message || 'Failed to delete document type subcategory.'); },
+            complete: () => { setButtonLoading($btn, false); setFormBusy($('#deleteDocTypeSubCategoryModal'), false); }
         });
     });
 
-    // Alias Management
+    // ====== Aliases ======
     const aliasManagementModal = $('#aliasManagementModal');
-    const addAliasModal = $('#addAliasModal');
+    const addAliasModal  = $('#addAliasModal');
     const editAliasModal = $('#editAliasModal');
     const deleteAliasModal = $('#deleteAliasModal');
     let aliasTable;
     let currentSubcategoryId = null;
     let aliasIdToDelete = null;
 
-    $('#add_alias_customer_id').select2({ dropdownParent: $('#addAliasModal'), width: '100%' });
-    $('#edit_alias_customer_id').select2({ dropdownParent: $('#editAliasModal'), width: '100%' });
-
-    function populateCustomersDropdown(selectElement, selectedId = null) {
-        $.ajax({
-            url: '{{ route("docTypeSubCategories.getCustomers") }}',
-            method: 'GET',
-            success: function (data) {
-                selectElement.empty().append('<option value="">Select a customer</option>');
-                data.forEach(function (customer) {
-                    const selected = customer.id == selectedId ? 'selected' : '';
-                    selectElement.append(`<option value="${customer.id}" ${selected}>${customer.name}</option>`);
-                });
-                selectElement.trigger('change');
-            },
-            error: function () { toastError('Error', 'Failed to load customers.'); }
-        });
-    }
-
+    // open alias manager
     $(document).on('click', '.alias-button', function () {
         currentSubcategoryId = $(this).data('id');
-        const subCategoryName = $(this).data('name');
-        $('#aliasSubCategoryName').text(subCategoryName);
+        $('#aliasSubCategoryName').text($(this).data('name'));
 
         if ($.fn.DataTable.isDataTable('#aliasesTable')) {
             aliasTable.ajax.url(`/master/docTypeSubCategories/${currentSubcategoryId}/aliases`).load();
         } else {
             aliasTable = $('#aliasesTable').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: `/master/docTypeSubCategories/${currentSubcategoryId}/aliases`,
-                    type: 'GET'
-                },
+                processing: true, serverSide: true,
+                ajax: { url: `/master/docTypeSubCategories/${currentSubcategoryId}/aliases`, type: 'GET' },
                 columns: [
-                    { data: null, searchable: false, orderable: false, render: (data, type, row, meta) => meta.row + meta.settings._iDisplayStart + 1 },
+                    { data: null, searchable:false, orderable:false, render:(d,t,r,m)=> m.row + m.settings._iDisplayStart + 1 },
                     { data: 'customer.name', name: 'customer' },
                     { data: 'name', name: 'name' },
                     {
-                        data: null, orderable: false, searchable: false, className: 'text-center',
-                        render: function (data, type, row) {
-                            return `
-                                <button class="edit-alias-button text-gray-400 hover:text-gray-700 mx-2" title="Edit Alias" data-id="${row.id}"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button class="delete-alias-button text-red-600 hover:text-red-900 mx-2" title="Delete Alias" data-id="${row.id}"><i class="fa-solid fa-trash-can"></i></button>
-                            `;
-                        }
+                        data: null, orderable:false, searchable:false, className:'text-center',
+                        render: (data, type, row) => `
+                            <button class="edit-alias-button text-gray-400 hover:text-gray-700 mx-2" title="Edit Alias" data-id="${row.id}"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="delete-alias-button text-red-600 hover:text-red-900 mx-2" title="Delete Alias" data-id="${row.id}"><i class="fa-solid fa-trash-can"></i></button>
+                        `
                     }
                 ],
                 order: [[1, 'asc']]
@@ -896,13 +644,21 @@ $(document).ready(function () {
         showModal(aliasManagementModal);
     });
 
+    // Helper set select2 programmatically
+    function setSelect2ValueAlias($select, id, label) {
+        const opt = new Option(label, id, true, true);
+        $select.append(opt).trigger('change');
+    }
+
+    // Add alias open
     $('#add-alias-button').on('click', function () {
         $('#addAliasForm')[0].reset();
         $('#add_alias_doctypesubcategory_id').val(currentSubcategoryId);
-        populateCustomersDropdown($('#add_alias_customer_id'));
+        $('#add_alias_customer_id').val(null).trigger('change');
         showModal(addAliasModal);
     });
 
+    // Add alias submit
     $('#addAliasForm').on('submit', function (e) {
         e.preventDefault();
         const $form = $(this);
@@ -917,10 +673,11 @@ $(document).ready(function () {
                     toastSuccess('Success', 'Alias added successfully.');
                 }
             },
-            error: function (xhr) { toastError('Error', xhr.responseJSON.message); }
+            error: function (xhr) { toastError('Error', xhr.responseJSON?.message || 'Failed to add alias'); }
         });
     });
 
+    // Edit alias open
     $(document).on('click', '.edit-alias-button', function () {
         const aliasId = $(this).data('id');
         $.ajax({
@@ -928,7 +685,8 @@ $(document).ready(function () {
             method: 'GET',
             success: function (data) {
                 $('#edit_alias_name').val(data.name);
-                populateCustomersDropdown($('#edit_alias_customer_id'), data.customer_id);
+                const label = data.customer_code || data.customer_name || 'Customer';
+                setSelect2ValueAlias($('#edit_alias_customer_id'), data.customer_id, label);
                 $('#editAliasForm').attr('action', `/master/aliases/${aliasId}`);
                 showModal(editAliasModal);
             },
@@ -936,6 +694,7 @@ $(document).ready(function () {
         });
     });
 
+    // Edit alias submit
     $('#editAliasForm').on('submit', function(e) {
         e.preventDefault();
         const $form = $(this);
@@ -950,15 +709,15 @@ $(document).ready(function () {
                     toastSuccess('Success', 'Alias updated successfully.');
                 }
             },
-            error: function (xhr) { toastError('Error', xhr.responseJSON.message); }
+            error: function (xhr) { toastError('Error', xhr.responseJSON?.message || 'Failed to update alias'); }
         });
     });
 
+    // Delete alias
     $(document).on('click', '.delete-alias-button', function () {
         aliasIdToDelete = $(this).data('id');
         showModal(deleteAliasModal);
     });
-
     $('#confirmDeleteAliasButton').on('click', function () {
         $.ajax({
             url: `/master/aliases/${aliasIdToDelete}`,
@@ -972,13 +731,8 @@ $(document).ready(function () {
                     toastSuccess('Success', 'Alias deleted successfully.');
                 }
             },
-            error: function (xhr) { toastError('Error', xhr.responseJSON.message); }
+            error: function (xhr) { toastError('Error', xhr.responseJSON?.message || 'Failed to delete alias'); }
         });
-    });
-
-    $(document).on('click', '.close-modal-button', function() {
-        const modalToClose = $(this).closest('[tabindex="-1"]');
-        hideModal(modalToClose);
     });
 });
 </script>

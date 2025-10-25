@@ -30,7 +30,6 @@ class PathBuilder
         ]);
     }
 
-    /** Validasi subfolder konten */
     protected static function assertDocFolder(string $folder): void
     {
         $f = strtolower($folder);
@@ -39,31 +38,26 @@ class PathBuilder
         }
     }
 
-    /** {root}/rev{rev}/{doc_folder}/{slug}.{ext} */
+    /** {root}/{rev_folder}/{doc_folder}/{slug}.{ext} */
     public static function build(array $m): string
     {
-        $rev = (int) ($m['rev'] ?? -1);
-        if ($rev < 0) {
-            throw new InvalidArgumentException('rev wajib >= 0');
-        }
         self::assertDocFolder((string) ($m['doc_folder'] ?? ''));
 
-        $base = self::root($m) . "/rev{$rev}/" . strtolower((string) $m['doc_folder']);
+        $revFolder = self::revisionFolderName($m);
+        $base = self::root($m) . '/' . $revFolder . '/' . strtolower((string) $m['doc_folder']);
         $name = Str::slug((string) ($m['filename'] ?? 'document'), '_');
         $ext  = strtolower((string) ($m['ext'] ?? 'dat'));
 
         return $base . '/' . $name . '.' . $ext;
     }
 
-    /** Daftar folder default untuk sebuah rev */
     public static function defaultFolders(array $m): array
     {
-        $rev  = max(0, (int) ($m['rev'] ?? 0));
-        $root = self::root($m) . "/rev{$rev}";
+        $revFolder = self::revisionFolderName($m);
+        $root = self::root($m) . '/' . $revFolder;
         return ["$root/2d", "$root/3d", "$root/ecn"];
     }
 
-    /** List semua revN di bawah root (return: array<int>) */
     public static function listRevisions(string $disk, array $meta): array
     {
         $root = self::root($meta);
@@ -72,34 +66,69 @@ class PathBuilder
         }
         $dirs = Storage::disk($disk)->directories($root);
         $revs = [];
+
+        $pattern = '/(?:^|-)(?:Rev)(\d+)-/i';
+
         foreach ($dirs as $d) {
             $seg = basename($d);
-            if (preg_match('/^rev(\d+)$/i', $seg, $m)) {
-                $revs[] = (int) $m[1];
+            if (preg_match($pattern, $seg, $matches)) {
+                $revs[] = (int) $matches[1];
             }
         }
         sort($revs, SORT_NUMERIC);
-        return $revs;
+        return array_unique($revs);
     }
 
-    /** Ambil rev berikutnya (>=1). Jika belum ada rev sama sekali → 1. */
     public static function nextRevision(string $disk, array $meta): int
     {
         $revs = self::listRevisions($disk, $meta);
-        if (empty($revs)) return 1;
+        if (empty($revs)) return 0;
         return max($revs) + 1;
     }
 
-    /** Ekstrak part_group dari path (generik) */
     public static function extractPartGroupFromPath(string $path): ?string
     {
-        // .../{doctype_group}/{part_group}/{part_no}/revN/...
         $p = explode('/', trim($path, '/'));
         $iRev = null;
         foreach ($p as $i => $seg) {
-            if (preg_match('/^rev\d+$/i', $seg)) { $iRev = $i; break; }
+            if (preg_match('/(?:^|\w+-)Rev\d+-/i', $seg)) {
+                $iRev = $i;
+                break;
+            }
         }
         if ($iRev === null || $iRev < 3) return null;
         return $p[$iRev - 3] ?? null;
+    }
+
+    public static function revisionFolderName(array $m): string
+    {
+        $rev = (int) ($m['rev'] ?? -1);
+        if ($rev < 0) {
+            throw new InvalidArgumentException('rev wajib >= 0');
+        }
+        if (empty($m['ecn_no'])) {
+            throw new InvalidArgumentException('ecn_no wajib diisi');
+        }
+
+        $ecn = self::seg($m['ecn_no']);
+        $revStr = "Rev{$rev}";
+
+        if (!empty($m['revision_label_name'])) {
+            $label = self::seg($m['revision_label_name']);
+            return "{$label}-{$revStr}-{$ecn}";
+        }
+
+        return "{$revStr}-{$ecn}";
+    }
+
+    public static function sanitizeFilename(string $filename): string
+    {
+        $filename = basename($filename);
+        $filename = preg_replace('/[<>:"?*|\x00-\x1F]/', '', $filename);
+        $filename = str_replace(['/', '\\'], '', $filename);
+        if (empty($filename) || $filename === '.' || $filename === '..') {
+            return 'invalid_filename';
+        }
+        return $filename;
     }
 }

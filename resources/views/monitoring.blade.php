@@ -1,210 +1,168 @@
 @extends('layouts.app')
 @section('title', 'Dashboard - PROMISE')
-@section('header-title', 'Monitoring')
+@section('header-title', 'Dashboard')
 @section('content')
 
 <div x-data="dashboardController()" x-init="init()">
 
-    {{-- Bagian Statistik Utama --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-[15%]">
         <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Monitoring</h2>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Analys File Management</p>
         </div>
-
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
-            {{-- Total Document --}}
-            <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+
+            <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="flex items-center">
-                    <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-500 dark:text-blue-400 rounded-lg p-2 mr-3 flex items-center justify-center h-9 w-9">
-                        <i class="fa-solid fa-file-lines fa-lg"></i>
+                    <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-500 dark:text-blue-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
+                        <i class="fa-solid fa-file-lines fa-xl"></i>
                     </div>
                     <div>
-                        <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">Total Document</h3>
-                        <p class="text-xl font-bold text-gray-800 dark:text-gray-100">1024</p>
+                        <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Total Document</h3>
+                        <p class="text-2xl font-bold text-gray-800 dark:text-gray-100">1024</p>
                     </div>
                 </div>
-                <div class="mt-2 h-8 w-full"><canvas id="totalDocsChart"></canvas></div>
+                <div class="absolute bottom-0 right-0">
+                    <svg class="w-28 text-blue-500/20 dark:text-blue-400/10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 30" stroke-width="2" stroke="currentColor">
+                        <path d="M0 25 L20 15 L40 20 L60 10 L80 15 L100 5" />
+                    </svg>
+                </div>
             </div>
-            {{-- Upload --}}
-            <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+
+            <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="flex items-center">
-                    <div class="bg-green-100 dark:bg-green-900/50 text-green-500 dark:text-green-400 rounded-lg p-2 mr-3 flex items-center justify-center h-9 w-9">
-                        <i class="fa-solid fa-cloud-arrow-up fa-lg"></i>
+                    <div class="bg-green-100 dark:bg-green-900/50 text-green-500 dark:text-green-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
+                        <i class="fa-solid fa-cloud-arrow-up fa-xl"></i>
                     </div>
                     <div>
-                        <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">Upload</h3>
-                        <p class="text-xl font-bold text-gray-800 dark:text-gray-100">512</p>
+                        <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Upload</h3>
+                        <p class="text-2xl font-bold text-gray-800 dark:text-gray-100">512</p>
                     </div>
                 </div>
-                <div class="mt-2 h-8 w-full"><canvas id="uploadsChart"></canvas></div>
+                <div class="absolute bottom-0 right-0">
+                    <svg class="w-28 text-green-500/20 dark:text-green-400/10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 30" stroke-width="2" stroke="currentColor">
+                        <path d="M0 10 L20 20 L40 15 L60 25 L80 10 L100 15" />
+                    </svg>
+                </div>
             </div>
-            {{-- Download --}}
-            <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+
+            <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="flex items-center">
-                    <div class="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-500 dark:text-yellow-400 rounded-lg p-2 mr-3 flex items-center justify-center h-9 w-9">
-                        <i class="fa-solid fa-cloud-arrow-down fa-lg"></i>
+                    <div class="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-500 dark:text-yellow-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
+                        <i class="fa-solid fa-cloud-arrow-down fa-xl"></i>
                     </div>
                     <div>
-                        <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">Download</h3>
-                        <p class="text-xl font-bold text-gray-800 dark:text-gray-100">403</p>
+                        <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Download</h3>
+                        <p class="text-2xl font-bold text-gray-800 dark:text-gray-100">403</p>
                     </div>
                 </div>
-                <div class="mt-2 h-8 w-full"><canvas id="downloadsChart"></canvas></div>
+                <div class="absolute bottom-0 right-0">
+                    <svg class="w-28 text-yellow-500/20 dark:text-yellow-400/10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 30" stroke-width="2" stroke="currentColor">
+                        <path d="M0 15 L20 25 L40 10 L60 20 L80 5 L100 20" />
+                    </svg>
+                </div>
             </div>
-            {{-- User Active --}}
-            <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+
+            <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="flex items-center">
-                    <div class="bg-red-100 dark:bg-red-900/50 text-red-500 dark:text-red-400 rounded-lg p-2 mr-3 flex items-center justify-center h-9 w-9">
-                        <i class="fa-solid fa-users fa-lg"></i>
+                    <div class="bg-red-100 dark:bg-red-900/50 text-red-500 dark:text-red-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
+                        <i class="fa-solid fa-users fa-xl"></i>
                     </div>
                     <div>
-                        <h3 class="text-gray-500 dark:text-gray-400 text-sm font-medium">User Active</h3>
-                        <p id="activeUserCount" class="text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                        <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">User Active</h3>
+                        <p id="activeUserCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
                     </div>
                 </div>
-                <div class="mt-2 h-8 w-full"><canvas id="activeUsersChart"></canvas></div>
+                <div class="absolute bottom-0 right-0">
+                    <svg class="w-28 text-red-500/20 dark:text-red-400/10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 30" stroke-width="2" stroke="currentColor">
+                        <path d="M0 20 L20 18 L40 22 L60 20 L80 17 L100 15" />
+                    </svg>
+                </div>
             </div>
+
         </div>
     </div>
 
-    {{-- Bagian Filter --}}
     <div class="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
-            <i class="fa-solid fa-filter mr-2 text-gray-500"></i>
-            Filter Data
+            <i class="fa-solid fa-filter mr-2 text-gray-500"></i> Filter Data
         </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
             <div>
-                <label for="key_word" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Key Word</label>
+                <label for="key_word" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Key Word (Part No)</label>
                 <div class="relative mt-1">
-                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
-                    </div>
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"> <i class="fa-solid fa-magnifying-glass text-gray-400"></i> </div>
                     <input type="text" name="key_word" id="key_word" class="block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:placeholder-gray-500 focus:ring-0 focus:outline-none sm:text-sm py-2 pl-10 pr-3" placeholder="e.g. 721005233 or MMKI - 5J45">
                 </div>
             </div>
             <div>
                 <label for="doc_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Document Group</label>
-                <div class="relative mt-1">
-                    <select id="doc_group" name="doc_group" class="w-full"></select>
-                </div>
+                <div class="relative mt-1"> <select id="doc_group" name="doc_group" class="w-full"></select> </div>
             </div>
             <div>
                 <label for="sub_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
-                <div class="relative mt-1">
-                    <select id="sub_type" name="sub_type" class="w-full"></select>
-                </div>
+                <div class="relative mt-1"> <select id="sub_type" name="sub_type" class="w-full"></select> </div>
             </div>
             <div>
-                <label for="date_range" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Range</label>
-                <input type="text" id="date_range" class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:ring-0 focus:outline-none sm:text-sm py-2 px-3">
-                <input type="hidden" name="from_date" id="from_date">
-                <input type="hidden" name="to_date" id="to_date">
+                <label for="month_input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Month (Upload)</label>
+                <input type="month" id="month_input" name="month_input" class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:ring-0 focus:outline-none sm:text-sm py-[0.35rem] px-3">
             </div>
             <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
                 <label for="customer" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
-                <div class="relative mt-1">
-                    <select id="customer" name="customer" class="w-full"></select>
-                </div>
+                <div class="relative mt-1"> <select id="customer" name="customer" class="w-full"></select> </div>
             </div>
             <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
                 <label for="model" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
-                <div class="relative mt-1">
-                    <select id="model" name="model" class="w-full"></select>
-                </div>
+                <div class="relative mt-1"> <select id="model" name="model" class="w-full"></select> </div>
             </div>
             <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
                 <label for="project_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                <div class="relative mt-1">
-                    <select id="project_status" name="project_status" class="w-full"></select>
-                </div>
+                <div class="relative mt-1"> <select id="project_status" name="project_status" class="w-full"></select> </div>
             </div>
             <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
                 <label for="part_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
-                <div class="relative mt-1">
-                    <select id="part_group" name="part_group" class="w-full"></select>
-                </div>
+                <div class="relative mt-1"> <select id="part_group" name="part_group" class="w-full"></select> </div>
             </div>
             <div class="lg:col-span-4 w-full flex justify-end items-center pt-4 border-t border-gray-200 dark:border-gray-700 mt-2">
                 <div class="flex space-x-3">
-                    <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
-                        Reset
-                    </button>
-                    <button type="submit" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700">
-                        <i class="fa-solid fa-check mr-2"></i>
-                        Terapkan Filter
+                    <button type="button" @click="resetFilters" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"> Reset </button>
+                    <button type="button" @click="applyFilters" :disabled="isLoading" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px]">
+                        <span x-show="!isLoading"> <i class="fa-solid fa-check mr-2"></i> Terapkan Filter </span>
+                        <span x-show="isLoading" style="display: none;"> <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg> Memuat... </span>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Baris Chart Utama (2 Chart) --}}
     <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
             <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-chart-column mr-2 text-blue-500"></i>Upload File Monitoring (ALL)</h3>
-            <div class="h-96"><canvas id="planVsActualChart"></canvas></div>
-        </div>
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-chart-column mr-2 text-purple-500"></i>Upload File Monitoring (Project)</h3>
-            <div class="h-96"><canvas id="planVsActualProjectChart"></canvas></div>
-        </div>
-    </div>
-
-    {{-- [MODIFIED] Baris Chart Trend & Newsfeed, diubah menjadi 2 kolom --}}
-    <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {{-- [MODIFIED] Menghapus lg:col-span-1 --}}
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
-            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-chart-line mr-2 text-green-500"></i>Upload vs Download Trend</h3>
-            <div class="flex-grow relative">
-                <canvas id="uploadDownloadChart"></canvas>
+            <div class="h-96">
+                <div id="planVsActualChart"></div>
             </div>
         </div>
-        {{-- [MODIFIED] Menghapus lg:col-span-2 --}}
+
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-chart-column mr-2 text-purple-500"></i>Upload File Monitoring (Project)</h3>
+            <div class="h-96">
+                <div id="planVsActualProjectChart"></div>
+            </div>
+        </div>
+    </div>
+    <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
+            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-chart-line mr-2 text-green-500"></i>Upload vs Download Trend</h3>
+            <div class="flex-grow relative h-96">
+                <div id="uploadDownloadChart"></div>
+            </div>
+        </div>
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
             <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-newspaper mr-2 text-gray-500"></i>Newsfeed / Activity Log</h3>
-            <div class="divide-y divide-gray-200 dark:divide-gray-700">
-                <div class="grid grid-cols-[auto,1fr,auto,auto] items-center gap-x-6 py-4">
-                    <div class="w-8 text-center"><i class="fa-solid fa-upload text-gray-500 text-lg"></i></div>
-                    <p class="font-medium text-gray-800 dark:text-gray-200 truncate">Upload Part Dwg Rev2 - MMKI - 5J45</p>
-                    <div class="text-right whitespace-nowrap">
-                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Andi Pratama</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">2025-09-25 14:10</p>
-                    </div>
-                    <div></div>
-                </div>
-                <div class="grid grid-cols-[auto,1fr,auto,auto] items-center gap-x-6 py-4">
-                    <div class="w-8 text-center"><i class="fa-solid fa-download text-blue-500 text-lg"></i></div>
-                    <p class="font-medium text-gray-800 dark:text-gray-200 truncate">Download Assy Dwg - SUZUKI - YHA</p>
-                    <div class="text-right whitespace-nowrap">
-                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Budi Santoso</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">2025-09-25 09:30</p>
-                    </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap"><span class="font-semibold">Tujuan:</span> Dikirim ke Customer SUZUKI</div>
-                </div>
-                <div class="grid grid-cols-[auto,1fr,auto,auto] items-center gap-x-6 py-4">
-                    <div class="w-8 text-center">
-                        <div class="bg-blue-500 text-white rounded-full h-6 w-6 flex items-center justify-center mx-auto"><i class="fa-solid fa-arrows-rotate fa-xs"></i></div>
-                    </div>
-                    <p class="font-medium text-gray-800 dark:text-gray-200 truncate">Revision Jig Design Rev1 - HPM - TG4R</p>
-                    <div class="text-right whitespace-nowrap">
-                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Citra Lestari</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">2025-09-24 11:15</p>
-                    </div>
-                    <div></div>
-                </div>
-                <div class="grid grid-cols-[auto,1fr,auto,auto] items-center gap-x-6 py-4">
-                    <div class="w-8 text-center">
-                        <div class="bg-green-500 text-white rounded-md h-6 w-6 flex items-center justify-center mx-auto"><i class="fa-solid fa-check"></i></div>
-                    </div>
-                    <p class="font-medium text-gray-800 dark:text-gray-200 truncate">Approval Std Part Bolt - TOYOTA - D03B</p>
-                    <div class="text-right whitespace-nowrap">
-                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">David Firmansyah</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">2025-09-23 16:45</p>
-                    </div>
-                    <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/70 dark:text-green-300">Approved</span></div>
-                </div>
+            <div id="activityLogContainer" class="divide-y divide-gray-200 dark:divide-gray-700 h-96 overflow-y-auto">
             </div>
         </div>
     </div>
@@ -212,53 +170,25 @@
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         fetchActiveUsers();
     });
 
-    const startDate = "{{ date('Y-m-d', strtotime('first day of this month')) }}";
-    const endDate = "{{ date('Y-m-d') }}";
-
-    const picker = new Litepicker({
-        element: document.getElementById('date_range'),
-        singleMode: false,
-        format: 'DD MMM YYYY',
-        tooltipText: {
-            one: 'day',
-            other: 'days'
-        },
-        setup: (picker) => {
-            picker.on('selected', (date1, date2) => {
-                const from = date1.format('YYYY-MM-DD');
-                const to = date2.format('YYYY-MM-DD');
-                document.getElementById('from_date').value = from;
-                document.getElementById('to_date').value = to;
-            });
-        }
-    });
-    picker.setDateRange(new Date(startDate), new Date(endDate));
-    document.getElementById('from_date').value = startDate;
-    document.getElementById('to_date').value = endDate;
-
     function fetchActiveUsers() {
         const apiUrl = '/api/active-users-count';
         const userCountElement = document.getElementById('activeUserCount');
+        if (!userCountElement) return;
         userCountElement.textContent = '...';
         fetch(apiUrl)
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                if (!response.ok) throw new Error('Network response was not ok');
                 return response.json();
             })
             .then(data => {
-                if (data && data.status === 'success') {
-                    userCountElement.textContent = data.count;
-                }
+                if (data && data.status === 'success') userCountElement.textContent = data.count;
             })
             .catch(error => {
                 console.error('Error fetching active users:', error);
@@ -269,45 +199,675 @@
     function dashboardController() {
         return {
             showExtraFilters: false,
-
-            planVsActualChart: null,
-            planVsActualProjectChart: null,
-            uploadDownloadChart: null,
-            totalDocsChart: null,
-            uploadsChart: null,
-            downloadsChart: null,
-            activeUsersChart: null,
-
-            chartsInitialized: false,
+            apexPlanVsActualChart: null,
+            apexPlanVsActualProjectChart: null,
+            apexUploadDownloadChart: null,
+            isLoading: false,
+            isDarkMode: document.documentElement.classList.contains('dark'),
 
             init() {
+                if (typeof ApexCharts === 'undefined') {
+                    console.log('Waiting for ApexCharts...');
+                    setTimeout(() => this.init(), 100);
+                    return;
+                }
+
+                this.detectThemeChanges();
+
                 if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', () => {
-                        this.initializeDashboard();
-                    });
+                    document.addEventListener('DOMContentLoaded', () => this.initializeDashboard());
                 } else {
                     this.initializeDashboard();
                 }
             },
 
+            detectThemeChanges() {
+                const component = this;
+
+                const updateTheme = () => {
+                    const newDarkMode = document.documentElement.classList.contains('dark');
+                    if (component.isDarkMode !== newDarkMode) {
+                        component.isDarkMode = newDarkMode;
+                        component.updateChartTheme();
+                    }
+                };
+
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.attributeName === 'class') {
+                            updateTheme();
+                        }
+                    });
+                });
+
+                observer.observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['class']
+                });
+
+                window.addEventListener('theme-changed', updateTheme);
+            },
+
             initializeDashboard() {
                 const component = this;
-                setTimeout(() => {
-                    component.$nextTick(() => {
-                        component.initCharts();
-                        component.initDocGroupSelect2();
-                        component.initSubTypeSelect2();
-                        component.initCustomerSelect2();
-                        component.initModelSelect2();
-                        component.initPartGroupSelect2();
-                        component.initStatusSelect2();
-                        component.chartsInitialized = true;
+                component.initCharts();
+                component.initDocGroupSelect2();
+                component.initSubTypeSelect2();
+                component.initCustomerSelect2();
+                component.initModelSelect2();
+                component.initPartGroupSelect2();
+                component.initStatusSelect2();
+                component.fetchActivityLog();
+
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                document.getElementById('month_input').value = `${year}-${month}`;
+
+                component.applyFilters();
+                component.updateUploadDownloadChart(year);
+            },
+
+            updateChartTheme() {
+                const newMode = this.isDarkMode ? 'dark' : 'light';
+                const gridColor = newMode === 'dark' ? '#4A5568' : '#E2E8F0';
+                const labelColor = newMode === 'dark' ? '#E2E8F0' : '#4A5568';
+                const background = newMode === 'dark' ? '#1F2937' : '#FFFFFF';
+
+                const themeOptions = {
+                    theme: {
+                        mode: newMode
+                    },
+                    chart: {
+                        foreColor: labelColor,
+                        background: background
+                    },
+                    xaxis: {
+                        labels: {
+                            style: {
+                                colors: labelColor
+                            }
+                        }
+                    },
+                    yaxis: {
+                        title: {
+                            style: {
+                                color: labelColor
+                            }
+                        },
+                        labels: {
+                            style: {
+                                colors: labelColor
+                            }
+                        }
+                    },
+                    grid: {
+                        borderColor: gridColor
+                    },
+                    tooltip: {
+                        theme: newMode
+                    }
+                };
+
+                const mainCharts = [
+                    this.apexPlanVsActualChart,
+                    this.apexPlanVsActualProjectChart,
+                    this.apexUploadDownloadChart
+                ];
+
+                mainCharts.forEach(chart => {
+                    if (chart) {
+                        chart.updateOptions(themeOptions);
+                    }
+                });
+
+            },
+
+            initCharts() {
+                const charts = [
+                    this.apexPlanVsActualChart,
+                    this.apexPlanVsActualProjectChart,
+                    this.apexUploadDownloadChart
+                ];
+
+                charts.forEach(chart => {
+                    if (chart) {
+                        chart.destroy();
+                    }
+                });
+
+                const isDarkMode = this.isDarkMode;
+                const gridColor = isDarkMode ? '#4A5568' : '#E2E8F0';
+                const labelColor = isDarkMode ? '#E2E8F0' : '#4A5568';
+                const background = isDarkMode ? '#1F2937' : '#FFFFFF';
+
+                const mainChartOptions = {
+                    series: [{
+                            name: 'Plan',
+                            type: 'bar',
+                            data: []
+                        },
+                        {
+                            name: 'Actual',
+                            type: 'bar',
+                            data: []
+                        },
+                        {
+                            name: 'Percentace',
+                            type: 'line',
+                            data: []
+                        }
+                    ],
+                    chart: {
+                        type: 'line',
+                        height: 350,
+                        toolbar: {
+                            show: false
+                        },
+                        zoom: {
+                            enabled: false
+                        },
+                        foreColor: labelColor,
+                        background: background
+                    },
+                    theme: {
+                        mode: isDarkMode ? 'dark' : 'light'
+                    },
+                    plotOptions: {
+                        bar: {
+                            horizontal: false,
+                            columnWidth: '55%',
+                            endingShape: 'rounded'
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        enabledOnSeries: [2],
+                        formatter: function(val) {
+                            return val.toFixed(1) + '%';
+                        },
+                        style: {
+                            fontWeight: 'semibold',
+                        },
+                        background: {
+                            enabled: true,
+                            borderRadius: 4,
+                            padding: 7,
+                            opacity: 0.9
+                        }
+                    },
+
+                    stroke: {
+                        show: true,
+                        width: [0, 0, 3],
+                        curve: 'smooth'
+                    },
+
+                    xaxis: {
+                        categories: [],
+                        labels: {
+                            style: {
+                                colors: labelColor
+                            }
+                        }
+                    },
+                    yaxis: {
+                        labels: {
+                            style: {
+                                colors: labelColor
+                            }
+                        }
+                    },
+                    grid: {
+                        borderColor: gridColor
+                    },
+                    fill: {
+                        opacity: 1
+                    },
+                    tooltip: {
+                        theme: isDarkMode ? 'dark' : 'light',
+                        y: {
+                            formatter: function(val) {
+                                return val
+                            }
+                        }
+                    },
+                    noData: {
+                        text: 'Loading chart data...',
+                        align: 'center',
+                        verticalAlign: 'middle',
+                        style: {
+                            color: labelColor,
+                            fontSize: '16px'
+                        }
+                    }
+                };
+
+                this.apexPlanVsActualChart = new ApexCharts(document.querySelector("#planVsActualChart"), mainChartOptions);
+                this.apexPlanVsActualChart.render();
+
+                this.apexPlanVsActualProjectChart = new ApexCharts(document.querySelector("#planVsActualProjectChart"), mainChartOptions);
+                this.apexPlanVsActualProjectChart.render();
+
+                // Trend chart options
+                const trendChartOptions = {
+                    series: [],
+                    chart: {
+                        height: 350,
+                        type: 'line',
+                        zoom: {
+                            enabled: false
+                        },
+                        toolbar: {
+                            show: false
+                        },
+                        foreColor: labelColor,
+                        background: background
+                    },
+                    theme: {
+                        mode: isDarkMode ? 'dark' : 'light'
+                    },
+                    dataLabels: {
+                        enabled: true
+                    },
+                    stroke: {
+                        curve: 'smooth',
+                        width: 3
+                    },
+                    markers: {
+                        size: 5
+                    },
+                    xaxis: {
+                        categories: [],
+                        labels: {
+                            style: {
+                                colors: labelColor
+                            }
+                        }
+                    },
+                    yaxis: {
+                        labels: {
+                            style: {
+                                colors: labelColor
+                            }
+                        }
+                    },
+                    grid: {
+                        borderColor: gridColor
+                    },
+                    legend: {
+                        position: 'bottom',
+                        horizontalAlign: 'center'
+                    },
+                    tooltip: {
+                        theme: isDarkMode ? 'dark' : 'light'
+                    },
+                    noData: {
+                        text: 'Loading trend data...',
+                        style: {
+                            color: labelColor,
+                            fontSize: '16px'
+                        }
+                    }
+                };
+
+                this.apexUploadDownloadChart = new ApexCharts(document.querySelector("#uploadDownloadChart"), trendChartOptions);
+                this.apexUploadDownloadChart.render();
+            },
+
+            async fetchActivityLog() {
+                const container = document.getElementById('activityLogContainer');
+                if (!container) return;
+                container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400">Loading activities...</div>`;
+                try {
+                    const response = await fetch("{{ route('api.getDataActivityLog') }}");
+                    if (!response.ok) throw new Error(`Network response was not ok`);
+                    const result = await response.json();
+                    if (result.status === 'success') {
+                        container.innerHTML = '';
+                        if (result.data && result.data.length > 0) {
+                            result.data.forEach(log => {
+                                const logHtml = this.formatLogEntry(log);
+                                container.insertAdjacentHTML('beforeend', logHtml);
+                            });
+                        } else {
+                            container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400">No recent activity found.</div>`;
+                        }
+                    } else {
+                        throw new Error(result.message || 'Failed to fetch data.');
+                    }
+                } catch (error) {
+                    console.error('Error fetching activity log:', error);
+                    container.innerHTML = `<div class="p-4 text-center text-red-500">Error loading activities.</div>`;
+                }
+            },
+
+            formatLogEntry(log) {
+                if (!log) return '';
+                const iconMap = {
+                    'UPLOAD': {
+                        icon: 'fa-cloud-arrow-up',
+                        color: 'text-green-500'
+                    },
+                    'DEFAULT': {
+                        icon: 'fa-circle-info',
+                        color: 'text-gray-500'
+                    }
+                };
+                const logInfo = iconMap[log.activity_code] || iconMap['DEFAULT'];
+                let message = '';
+                const userName = `<strong>${log.user_name || 'System'}</strong>`;
+                switch (log.activity_code) {
+                    case 'UPLOAD':
+                        message = `${userName} uploaded a new document.`;
+                        break;
+                    default:
+                        message = `${userName} performed action: <strong>${log.activity_code}</strong>.`;
+                }
+                const date = log.created_at ? new Date(log.created_at.replace(' ', 'T')) : new Date();
+                const fullTimestamp = date.toLocaleString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                }).replace(/\./g, ':');
+                const relativeTime = this.formatTimeAgo(log.created_at);
+                let metaDetails = '';
+                if (log.meta && typeof log.meta === 'object' && log.activity_code === 'UPLOAD') {
+                    const detailsArray = [log.meta.customer_code, log.meta.model_name, log.meta.part_no, log.meta.doctype_group, log.meta.doctype_subcategory].filter(Boolean);
+                    if (detailsArray.length > 0) {
+                        metaDetails = `<p class="mt-2 text-sm text-gray-600 dark:text-gray-400 font-mono">${detailsArray.join(' - ')}</p>`;
+                    }
+                }
+                return `
+                    <div class="py-3 px-2 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                        <div class="flex-shrink-0 pt-1"> <i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i> </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-start">
+                                <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-3 whitespace-nowrap">${fullTimestamp}</p>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${relativeTime}</p>
+                            ${metaDetails}
+                        </div>
+                    </div>`;
+            },
+
+            formatTimeAgo(dateString) {
+                if (!dateString) return "recently";
+                const date = new Date(dateString.replace(' ', 'T'));
+                const now = new Date();
+                const seconds = Math.floor((now - date) / 1000);
+                if (seconds < 5) return "just now";
+                let interval = seconds / 31536000;
+                if (interval > 1) return Math.floor(interval) + " years ago";
+                interval = seconds / 2592000;
+                if (interval > 1) return Math.floor(interval) + " months ago";
+                interval = seconds / 86400;
+                if (interval > 1) return Math.floor(interval) + " days ago";
+                interval = seconds / 3600;
+                if (interval > 1) return Math.floor(interval) + " hours ago";
+                interval = seconds / 60;
+                if (interval > 1) return Math.floor(interval) + " minutes ago";
+                return Math.max(0, Math.floor(seconds)) + " seconds ago";
+            },
+
+            async applyFilters() {
+                if (this.isLoading) return;
+                this.isLoading = true;
+
+                // Tampilkan status loading pada chart
+                const isDarkMode = this.isDarkMode;
+                const labelColor = isDarkMode ? '#E2E8F0' : '#4A5568';
+                const loadingOptions = {
+                    noData: {
+                        text: 'Loading data...',
+                        style: {
+                            color: labelColor,
+                            fontSize: '16px'
+                        }
+                    }
+                };
+                this.apexPlanVsActualChart?.updateOptions(loadingOptions);
+                this.apexPlanVsActualProjectChart?.updateOptions(loadingOptions);
+
+                try {
+                    const filters = {
+                        key_word: document.getElementById('key_word')?.value || '',
+                        doc_group: $('#doc_group').val() || '',
+                        sub_type: $('#sub_type').val() || '',
+                        month: document.getElementById('month_input')?.value || '',
+                        customer: $('#customer').val() || '',
+                        model: $('#model').val() || '',
+                        project_status: $('#project_status').val() || '',
+                        part_group: $('#part_group').val() || ''
+                    };
+
+                    const params = new URLSearchParams();
+                    for (const key in filters) {
+                        if (filters[key] && filters[key] !== 'ALL') params.append(key, filters[key]);
+                    }
+                    const paramsString = params.toString();
+
+                    const urlAll = `{{ route('api.upload-monitoring-data') }}?${paramsString}`;
+                    const urlProject = `{{ route('api.upload-monitoring-data-project') }}?${paramsString}`;
+
+                    const [responseAll, responseProject] = await Promise.all([
+                        fetch(urlAll),
+                        fetch(urlProject)
+                    ]);
+
+                    const errorOptionsAll = {
+                        noData: {
+                            text: 'Error loading data.',
+                            style: {
+                                color: '#EF4444',
+                                fontSize: '16px'
+                            }
+                        }
+                    };
+                    if (responseAll.ok) {
+                        const resultAll = await responseAll.json();
+                        if (resultAll.status === 'success') {
+                            this.updateBarChart(this.apexPlanVsActualChart, resultAll.data, 'ALL Chart');
+                        } else {
+                            console.error('Failed to fetch data for (ALL) chart:', resultAll.message);
+                            this.apexPlanVsActualChart?.updateOptions(errorOptionsAll);
+                        }
+                    } else {
+                        console.error('Network error for (ALL) chart:', responseAll.statusText);
+                        const networkErrorOptions = {
+                            ...errorOptionsAll,
+                            noData: {
+                                ...errorOptionsAll.noData,
+                                text: 'Network error.'
+                            }
+                        };
+                        this.apexPlanVsActualChart?.updateOptions(networkErrorOptions);
+                    }
+
+                    const errorOptionsProject = {
+                        noData: {
+                            text: 'Error loading data.',
+                            style: {
+                                color: '#EF4444',
+                                fontSize: '16px'
+                            }
+                        }
+                    };
+                    if (responseProject.ok) {
+                        const resultProject = await responseProject.json();
+                        if (resultProject.status === 'success') {
+                            this.updateBarChart(this.apexPlanVsActualProjectChart, resultProject.data, 'Project Chart');
+                        } else {
+                            console.error('Failed to fetch data for (Project) chart:', resultProject.message);
+                            this.apexPlanVsActualProjectChart?.updateOptions(errorOptionsProject);
+                        }
+                    } else {
+                        console.error('Network error for (Project) chart:', responseProject.statusText);
+                        const networkErrorOptions = {
+                            ...errorOptionsProject,
+                            noData: {
+                                ...errorOptionsProject.noData,
+                                text: 'Network error.'
+                            }
+                        };
+                        this.apexPlanVsActualProjectChart?.updateOptions(networkErrorOptions);
+                    }
+
+                } catch (error) {
+                    console.error('Error applying filters:', error);
+                    const errorOptions = {
+                        noData: {
+                            text: 'An error occurred.',
+                            style: {
+                                color: '#EF4444',
+                                fontSize: '16px'
+                            }
+                        }
+                    };
+                    this.apexPlanVsActualChart?.updateOptions(errorOptions);
+                    this.apexPlanVsActualProjectChart?.updateOptions(errorOptions);
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            resetFilters() {
+                document.getElementById('key_word').value = '';
+                $('#doc_group').val('ALL').trigger('change');
+                $('#sub_type').val('ALL').trigger('change');
+                $('#customer').val('ALL').trigger('change');
+                $('#model').val('ALL').trigger('change');
+                $('#project_status').val('ALL').trigger('change');
+                $('#part_group').val('ALL').trigger('change');
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                document.getElementById('month_input').value = `${year}-${month}`;
+                this.applyFilters();
+            },
+
+            updateBarChart(chart, apiData, chartName = 'Chart') {
+                if (!chart) return;
+
+                const isDarkMode = this.isDarkMode;
+                const labelColor = isDarkMode ? '#E2E8F0' : '#4A5568';
+
+                if (!apiData || !Array.isArray(apiData) || apiData.length === 0) {
+                    console.warn(`No valid data received for ${chartName}`);
+                    chart.updateOptions({
+                        series: [{
+                                name: 'Plan',
+                                data: []
+                            },
+                            {
+                                name: 'Actual',
+                                data: []
+                            },
+                            {
+                                name: 'Percentace',
+                                data: []
+                            }
+                        ],
+                        xaxis: {
+                            categories: []
+                        },
+                        noData: {
+                            text: '',
+                            style: {
+                                color: labelColor,
+                                fontSize: '16px'
+                            }
+                        }
                     });
-                }, 100);
+                    return;
+                }
+
+                const categories = apiData.map(item => `${item.customer_name || '?'} - ${item.model_name || '?'}`);
+                const actualSeriesData = apiData.map(item => parseInt(item.actual_count) || 0);
+                const planSeriesData = apiData.map(item => parseInt(item.plan_count) || 0);
+                const percentaceData = apiData.map(item => parseFloat(item.percentage).toFixed(2) || 0);
+
+                chart.updateOptions({
+                    series: [{
+                            name: 'Plan',
+                            data: planSeriesData
+                        },
+                        {
+                            name: 'Actual',
+                            data: actualSeriesData
+                        },
+                        {
+                            name: 'Percentace',
+                            data: percentaceData
+                        }
+                    ],
+                    xaxis: {
+                        categories: categories
+                    },
+                    noData: {
+                        text: 'Loading chart data...',
+                        style: {
+                            color: labelColor,
+                            fontSize: '16px'
+                        }
+                    }
+                });
+            },
+
+            async updateUploadDownloadChart(year) {
+                if (!this.apexUploadDownloadChart || !year) return;
+                const apiUrl = `{{ route('api.getDataLog') }}?year=${year}`;
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const result = await response.json();
+                    let uploadData = Array(12).fill(0);
+                    let downloadData = Array(12).fill(0);
+                    const categories = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    if (result.status === 'success' && result.data) {
+                        result.data.forEach(item => {
+                            const index = parseInt(item.month) - 1;
+                            if (index >= 0 && index < 12) {
+                                uploadData[index] = parseInt(item.upload_count) || 0;
+                                downloadData[index] = parseInt(item.download_count) || 0;
+                            }
+                        });
+                    }
+                    this.apexUploadDownloadChart.updateOptions({
+                        series: [{
+                            name: 'Download',
+                            data: downloadData
+                        }, {
+                            name: 'Upload',
+                            data: uploadData
+                        }],
+                        xaxis: {
+                            categories: categories
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error fetching/rendering upload/download chart:', error);
+                    this.apexUploadDownloadChart.updateOptions({
+                        series: [{
+                            name: 'Download',
+                            data: []
+                        }, {
+                            name: 'Upload',
+                            data: []
+                        }],
+                        xaxis: {
+                            categories: []
+                        }
+                    });
+                }
             },
 
             initDocGroupSelect2() {
-                let component = this;
+                const component = this;
                 $('#doc_group').select2({
                     dropdownParent: $('#doc_group').parent(),
                     width: '100%',
@@ -326,7 +886,7 @@
                         },
                         processResults: function(data, params) {
                             params.page = params.page || 1;
-                            let results = data.results;
+                            let results = data.results || [];
                             if (params.page === 1 && !params.term) {
                                 results.unshift({
                                     id: 'ALL',
@@ -336,7 +896,7 @@
                             return {
                                 results: results,
                                 pagination: {
-                                    more: (params.page * 10) < data.total_count
+                                    more: (params.page * 10) < (data.total_count || 0)
                                 }
                             };
                         },
@@ -357,7 +917,6 @@
                     }
                 });
             },
-
             initSubTypeSelect2(docGroupId = null) {
                 let subTypeSelect = $('#sub_type');
                 let options = {
@@ -382,7 +941,7 @@
                         },
                         processResults: function(data, params) {
                             params.page = params.page || 1;
-                            let results = data.results;
+                            let results = data.results || [];
                             if (params.page === 1 && !params.term) {
                                 results.unshift({
                                     id: 'ALL',
@@ -392,7 +951,7 @@
                             return {
                                 results: results,
                                 pagination: {
-                                    more: (params.page * 10) < data.total_count
+                                    more: (params.page * 10) < (data.total_count || 0)
                                 }
                             };
                         },
@@ -404,9 +963,8 @@
                     subTypeSelect.prop('disabled', true);
                 }
             },
-
             initCustomerSelect2() {
-                let component = this;
+                const component = this;
                 $('#customer').select2({
                     dropdownParent: $('#customer').parent(),
                     width: '100%',
@@ -425,7 +983,7 @@
                         },
                         processResults: function(data, params) {
                             params.page = params.page || 1;
-                            let results = data.results;
+                            let results = data.results || [];
                             if (params.page === 1 && !params.term) {
                                 results.unshift({
                                     id: 'ALL',
@@ -435,7 +993,7 @@
                             return {
                                 results: results,
                                 pagination: {
-                                    more: (params.page * 10) < data.total_count
+                                    more: (params.page * 10) < (data.total_count || 0)
                                 }
                             };
                         },
@@ -455,7 +1013,6 @@
                     }
                 });
             },
-
             initModelSelect2(customerId = null) {
                 let modelSelect = $('#model');
                 let options = {
@@ -480,7 +1037,7 @@
                         },
                         processResults: function(data, params) {
                             params.page = params.page || 1;
-                            let results = data.results;
+                            let results = data.results || [];
                             if (params.page === 1 && !params.term) {
                                 results.unshift({
                                     id: 'ALL',
@@ -490,7 +1047,7 @@
                             return {
                                 results: results,
                                 pagination: {
-                                    more: (params.page * 10) < data.total_count
+                                    more: (params.page * 10) < (data.total_count || 0)
                                 }
                             };
                         },
@@ -502,7 +1059,6 @@
                     modelSelect.prop('disabled', true);
                 }
             },
-
             initPartGroupSelect2() {
                 $('#part_group').select2({
                     dropdownParent: $('#part_group').parent(),
@@ -522,7 +1078,7 @@
                         },
                         processResults: function(data, params) {
                             params.page = params.page || 1;
-                            let results = data.results;
+                            let results = data.results || [];
                             if (params.page === 1 && !params.term) {
                                 results.unshift({
                                     id: 'ALL',
@@ -532,7 +1088,7 @@
                             return {
                                 results: results,
                                 pagination: {
-                                    more: (params.page * 10) < data.total_count
+                                    more: (params.page * 10) < (data.total_count || 0)
                                 }
                             };
                         },
@@ -540,7 +1096,6 @@
                     }
                 });
             },
-
             initStatusSelect2() {
                 $('#project_status').select2({
                     dropdownParent: $('#project_status').parent(),
@@ -560,7 +1115,7 @@
                         },
                         processResults: function(data, params) {
                             params.page = params.page || 1;
-                            let results = data.results;
+                            let results = data.results || [];
                             if (params.page === 1 && !params.term) {
                                 results.unshift({
                                     id: 'ALL',
@@ -570,7 +1125,7 @@
                             return {
                                 results: results,
                                 pagination: {
-                                    more: (params.page * 10) < data.total_count
+                                    more: (params.page * 10) < (data.total_count || 0)
                                 }
                             };
                         },
@@ -578,430 +1133,12 @@
                     }
                 });
             },
-
-            canvasExists(canvasId) {
-                const canvas = document.getElementById(canvasId);
-                return canvas !== null && canvas instanceof HTMLCanvasElement;
-            },
-
-            getCanvasContext(canvasId) {
-                if (!this.canvasExists(canvasId)) {
-                    console.warn(`Canvas element with id '${canvasId}' not found`);
-                    return null;
-                }
-                const canvas = document.getElementById(canvasId);
-                const context = canvas.getContext('2d');
-                if (!context) {
-                    console.error(`Unable to get 2D context for canvas '${canvasId}'`);
-                    return null;
-                }
-                return context;
-            },
-
-            destroyChart(chartInstance) {
-                if (chartInstance && typeof chartInstance.destroy === 'function') {
-                    try {
-                        chartInstance.destroy();
-                    } catch (error) {
-                        console.warn('Error destroying chart:', error);
-                    }
-                }
-            },
-
-            initCharts() {
-                if (this.chartsInitialized) {
-                    return;
-                }
-                if (typeof Chart === 'undefined') {
-                    console.error('Chart.js is not loaded!');
-                    setTimeout(() => this.initCharts(), 100);
-                    return;
-                }
-
-                this.destroyChart(this.totalDocsChart);
-                this.destroyChart(this.uploadsChart);
-                this.destroyChart(this.downloadsChart);
-                this.destroyChart(this.activeUsersChart);
-                this.destroyChart(this.planVsActualChart);
-                this.destroyChart(this.planVsActualProjectChart);
-                this.destroyChart(this.uploadDownloadChart);
-
-                const textColor = document.documentElement.classList.contains('dark') ? '#d1d5db' : '#6b7280';
-                const gridColor = document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-
-                const sparklineOptions = {
-                    maintainAspectRatio: false,
-                    responsive: true,
-                    scales: {
-                        x: {
-                            display: false
-                        },
-                        y: {
-                            display: false
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            enabled: false
-                        }
-                    },
-                    elements: {
-                        point: {
-                            radius: 0
-                        },
-                        line: {
-                            borderWidth: 2,
-                            tension: 0.4
-                        }
-                    }
-                };
-
-                if (this.canvasExists('totalDocsChart')) {
-                    try {
-                        this.totalDocsChart = new Chart('totalDocsChart', {
-                            type: 'line',
-                            data: {
-                                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                                datasets: [{
-                                    label: 'Total Documents',
-                                    data: [980, 995, 1005, 1010, 1025, 1030, 1040],
-                                    borderColor: 'rgba(59, 130, 246, 1)',
-                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                    fill: true
-                                }]
-                            },
-                            options: sparklineOptions
-                        });
-                    } catch (error) {
-                        console.error('Error creating totalDocsChart:', error);
-                    }
-                }
-
-                if (this.canvasExists('uploadsChart')) {
-                    try {
-                        this.uploadsChart = new Chart('uploadsChart', {
-                            type: 'line',
-                            data: {
-                                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                                datasets: [{
-                                    label: 'Uploads',
-                                    data: [60, 75, 70, 85, 95, 80, 105],
-                                    borderColor: 'rgba(34, 197, 94, 1)',
-                                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                                    fill: true
-                                }]
-                            },
-                            options: sparklineOptions
-                        });
-                    } catch (error) {
-                        console.error('Error creating uploadsChart:', error);
-                    }
-                }
-
-                if (this.canvasExists('downloadsChart')) {
-                    try {
-                        this.downloadsChart = new Chart('downloadsChart', {
-                            type: 'line',
-                            data: {
-                                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                                datasets: [{
-                                    label: 'Downloads',
-                                    data: [80, 70, 90, 85, 100, 110, 85],
-                                    borderColor: 'rgba(245, 158, 11, 1)',
-                                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                                    fill: true
-                                }]
-                            },
-                            options: sparklineOptions
-                        });
-                    } catch (error) {
-                        console.error('Error creating downloadsChart:', error);
-                    }
-                }
-
-                if (this.canvasExists('activeUsersChart')) {
-                    try {
-                        this.activeUsersChart = new Chart('activeUsersChart', {
-                            type: 'line',
-                            data: {
-                                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                                datasets: [{
-                                    label: 'Active Users',
-                                    data: [10, 12, 11, 14, 15, 13, 15],
-                                    borderColor: 'rgba(239, 68, 68, 1)',
-                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                    fill: true
-                                }]
-                            },
-                            options: sparklineOptions
-                        });
-                    } catch (error) {
-                        console.error('Error creating activeUsersChart:', error);
-                    }
-                }
-
-                const mainChartOptions = {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    scales: {
-                        x: {
-                            ticks: {
-                                color: textColor
-                            },
-                            grid: {
-                                display: false
-                            }
-                        },
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Quantity',
-                                color: textColor
-                            },
-                            suggestedMax: 220,
-                            ticks: {
-                                color: textColor
-                            },
-                            grid: {
-                                color: gridColor
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Progress %',
-                                color: textColor
-                            },
-                            grid: {
-                                drawOnChartArea: false
-                            },
-                            ticks: {
-                                callback: (value) => value + '%',
-                                color: textColor
-                            },
-                            suggestedMax: 100
-                        }
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'Bars = Quantity | Line = Progress %',
-                            position: 'top',
-                            align: 'end',
-                            color: textColor,
-                            font: {
-                                weight: 'normal',
-                                size: 12
-                            }
-                        },
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: textColor,
-                                usePointStyle: true,
-                                padding: 15
-                            }
-                        }
-                    }
-                };
-
-                if (this.canvasExists('planVsActualChart')) {
-                    try {
-                        this.planVsActualChart = new Chart('planVsActualChart', {
-                            data: {
-                                labels: ['TOYOTA - D03B', 'SUZUKI - YHA', 'HPM - 3K6A', 'MMKI - 4L45W', 'HPM - TG4R'],
-                                datasets: [{
-                                    type: 'bar',
-                                    label: 'Actual',
-                                    data: [150, 148, 120, 90, 115],
-                                    backgroundColor: 'rgba(22, 163, 74, 0.8)',
-                                    yAxisID: 'y',
-                                    order: 2
-                                }, {
-                                    type: 'bar',
-                                    label: 'Plan',
-                                    data: [205, 205, 170, 140, 135],
-                                    backgroundColor: 'rgba(37, 99, 235, 0.8)',
-                                    yAxisID: 'y',
-                                    order: 2
-                                }, {
-                                    type: 'line',
-                                    label: 'Progress %',
-                                    data: [73, 72, 71, 64, 85],
-                                    borderColor: 'rgba(249, 115, 22, 1)',
-                                    backgroundColor: 'rgba(249, 115, 22, 0.2)',
-                                    yAxisID: 'y1',
-                                    tension: 0.1,
-                                    borderWidth: 2,
-                                    pointRadius: 4,
-                                    pointBackgroundColor: 'rgba(249, 115, 22, 1)',
-                                    order: 1
-                                }]
-                            },
-                            options: mainChartOptions
-                        });
-                    } catch (error) {
-                        console.error('Error creating planVsActualChart:', error);
-                    }
-                }
-
-                if (this.canvasExists('planVsActualProjectChart')) {
-                    try {
-                        this.planVsActualProjectChart = new Chart('planVsActualProjectChart', {
-                            data: {
-                                labels: ['TOYOTA - D03B', 'SUZUKI - YHA', 'HPM - 3K6A', 'MMKI - 4L45W', 'HPM - TG4R'],
-                                datasets: [{
-                                    type: 'bar',
-                                    label: 'Actual',
-                                    data: [210, 180, 95, 140, 75],
-                                    backgroundColor: 'rgba(107, 33, 168, 0.8)',
-                                    yAxisID: 'y',
-                                    order: 2
-                                }, {
-                                    type: 'bar',
-                                    label: 'Plan',
-                                    data: [250, 200, 150, 150, 100],
-                                    backgroundColor: 'rgba(129, 140, 248, 0.8)',
-                                    yAxisID: 'y',
-                                    order: 2
-                                }, {
-                                    type: 'line',
-                                    label: 'Progress %',
-                                    data: [84, 90, 63, 93, 75],
-                                    borderColor: 'rgba(217, 70, 239, 1)',
-                                    backgroundColor: 'rgba(217, 70, 239, 0.2)',
-                                    yAxisID: 'y1',
-                                    tension: 0.1,
-                                    borderWidth: 2,
-                                    pointRadius: 4,
-                                    pointBackgroundColor: 'rgba(217, 70, 239, 1)',
-                                    order: 1
-                                }]
-                            },
-                            options: mainChartOptions
-                        });
-                    } catch (error) {
-                        console.error('Error creating planVsActualProjectChart:', error);
-                    }
-                }
-
-                if (this.canvasExists('uploadDownloadChart')) {
-                    try {
-                        this.uploadDownloadChart = new Chart('uploadDownloadChart', {
-                            type: 'line',
-                            data: {
-                                labels: ['W1', 'W2', 'W3', 'W4'],
-                                datasets: [{
-                                    label: 'Download',
-                                    data: [100, 130, 155, 145],
-                                    borderColor: 'rgba(22, 163, 74, 1)',
-                                    backgroundColor: 'rgba(22, 163, 74, 0.1)',
-                                    tension: 0.3,
-                                    fill: true,
-                                    pointBackgroundColor: 'rgba(22, 163, 74, 1)',
-                                    pointBorderColor: '#fff',
-                                    pointBorderWidth: 2,
-                                    pointRadius: 5
-                                }, {
-                                    label: 'Upload',
-                                    data: [120, 145, 165, 158],
-                                    borderColor: 'rgba(37, 99, 235, 1)',
-                                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                                    tension: 0.3,
-                                    fill: true,
-                                    pointBackgroundColor: 'rgba(37, 99, 235, 1)',
-                                    pointBorderColor: '#fff',
-                                    pointBorderWidth: 2,
-                                    pointRadius: 5
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                interaction: {
-                                    mode: 'index',
-                                    intersect: false,
-                                },
-                                scales: {
-                                    x: {
-                                        ticks: {
-                                            color: textColor
-                                        },
-                                        grid: {
-                                            color: gridColor
-                                        }
-                                    },
-                                    y: {
-                                        beginAtZero: true,
-                                        ticks: {
-                                            color: textColor
-                                        },
-                                        grid: {
-                                            color: gridColor
-                                        },
-                                        title: {
-                                            display: true,
-                                            text: 'Documents',
-                                            color: textColor
-                                        },
-                                    }
-                                },
-                                plugins: {
-                                    legend: {
-                                        position: 'bottom',
-                                        labels: {
-                                            color: textColor,
-                                            usePointStyle: true,
-                                            padding: 15
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    } catch (error) {
-                        console.error('Error creating uploadDownloadChart:', error);
-                    }
-                }
-            }
         }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.attributeName === 'class') {
-                    const dashboardElement = document.querySelector('[x-data="dashboardController()"]');
-                    if (dashboardElement && dashboardElement.__x) {
-                        const component = dashboardElement.__x.$data;
-                        if (component && typeof component.initCharts === 'function') {
-                            setTimeout(() => {
-                                component.chartsInitialized = false;
-                                component.initCharts();
-                                component.chartsInitialized = true;
-                            }, 300);
-                        }
-                    }
-                }
-            });
-        });
-
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['class']
-        });
+    // Inisialisasi Alpine.js
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('dashboardController', dashboardController);
     });
 </script>
 @endsection

@@ -18,6 +18,7 @@ class FileExtensions extends Model
         'name',
         'code',
         'icon',
+        'is_viewer',
     ];
 
     /**

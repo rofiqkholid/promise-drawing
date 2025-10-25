@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\ExportController;
 use App\Http\Controllers\Api\DrawingUploadController;
 use App\Http\Controllers\Api\CustomerRevisionLabelController;
 use App\Http\Controllers\Api\PackageFormatController;
+use App\Http\Controllers\Api\FilePreviewController;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -173,8 +174,10 @@ Route::middleware(['auth'])->group(function () {
     #Region Model
     Route::resource('master/models', ModelsController::class)->names('models')->except(['create', 'edit']);
     Route::get('/models/data', [ModelsController::class, 'data'])->name('models.data');
+    Route::get('/models/customers/select2', [ModelsController::class, 'customersSelect2'])->name('models.customers.select2');
+    Route::get('/models/statuses/select2',  [ModelsController::class, 'statusesSelect2'])->name('models.statuses.select2');
     Route::get('/models/get-customers', [ModelsController::class, 'getCustomers'])->name('models.getCustomers');
-    Route::get('/models/getStatus', [ModelsController::class, 'getStatus'])->name('models.getStatus');
+    Route::get('/models/getStatus',     [ModelsController::class, 'getStatus'])->name('models.getStatus');
     #End region
 
     #Region Doc Type Group
@@ -186,7 +189,8 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('master/docTypeSubCategories', DocTypeSubCategoriesController::class)->names('docTypeSubCategories')->except(['create', 'edit']);
     Route::get('/docTypeSubCategories/data', [DocTypeSubCategoriesController::class, 'data'])->name('docTypeSubCategories.data');
     Route::get('/docTypeSubCategories/getDocTypeGroups', [DocTypeSubCategoriesController::class, 'getDocTypeGroups'])->name('docTypeSubCategories.getDocTypeGroups');
-
+    Route::get('/docTypeSubCategories/select2/groups', [DocTypeSubCategoriesController::class, 'select2Groups'])->name('docTypeSubCategories.select2.groups');
+    Route::get('/docTypeSubCategories/select2/customers', [DocTypeSubCategoriesController::class, 'select2Customers'])->name('docTypeSubCategories.select2.customers');
     #New
     Route::get('/docTypeSubCategories/get-customers', [DocTypeSubCategoriesController::class, 'getCustomers'])->name('docTypeSubCategories.getCustomers');
     Route::get('/master/docTypeSubCategories/{subcategoryId}/aliases', [DocTypeSubCategoriesController::class, 'aliases'])->name('docTypeSubCategories.aliases.data');
@@ -215,6 +219,11 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('master/partGroups', PartGroupsController::class)->names('partGroups')->except(['create', 'edit']);
     Route::get('/partGroups/data', [PartGroupsController::class, 'data'])->name('partGroups.data');
     Route::get('/partGroups/getModelsByCustomer', [PartGroupsController::class, 'getModelsByCustomer'])->name('partGroups.getModelsByCustomer');
+
+    Route::get('/partGroups/select2/customers', [PartGroupsController::class, 'select2Customers'])
+        ->name('partGroups.select2.customers');
+    Route::get('/partGroups/select2/models', [PartGroupsController::class, 'select2Models'])
+        ->name('partGroups.select2.models');
     #End region
 
     #Region User Maintenance
@@ -252,7 +261,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/role/get-models', [RoleController::class, 'getModels'])->name('role.getModels');
     #End region
 
-    #Region master
+    #Region products
     Route::resource('master/products', ProductsController::class)->names('products')->except(['create', 'edit']);
     Route::get('/products/data', [ProductsController::class, 'data'])->name('products.data');
     Route::get('/products/get-models', [ProductsController::class, 'getModels'])->name('products.getModels');
@@ -268,7 +277,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('upload.getPartGroupData', [DrawingUploadController::class, 'getPartGroupData'])->name('upload.getPartGroupData');
     Route::post('upload.getProjectStatusData', [DrawingUploadController::class, 'getProjectStatusData'])->name('upload.getProjectStatusData');
 
-    Route::post('/upload/drawing/check', [DrawingUploadController::class, 'check'])->name('upload.drawing.check');
+    Route::get('/upload/drawing/allowed-extensions', [DrawingUploadController::class, 'getPublicAllowedExtensions'])->name('upload.drawing.allowed-extensions');
+    Route::get('/upload/drawing/get-revision-labels/{customerId}', [CustomerRevisionLabelController::class, 'getLabelsForCustomer'])->name('upload.drawing.get-labels');
+    Route::post('/upload/drawing/check-revision-status', [DrawingUploadController::class, 'checkRevisionStatus'])->name('upload.drawing.check-status');
+    Route::post('/upload/drawing/check-conflicts', [DrawingUploadController::class, 'checkConflicts'])
+    ->name('upload.drawing.check-conflicts');
+
     Route::post('/upload/drawing/sync', [DrawingUploadController::class, 'syncLegacyData'])->name('upload.drawing.sync-legacy');
     Route::post('/upload/drawing/store', [DrawingUploadController::class, 'store'])->name('upload.drawing.store');
     Route::post('/upload/drawing/activity-logs', [DrawingUploadController::class, 'activityLogs'])->name('upload.drawing.activity-logs');
@@ -305,10 +319,16 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('master/revisionLabels', CustomerRevisionLabelController::class)->parameters(['revisionLabels' => 'rev_label'])->names('rev-label')->except(['create', 'edit']);
     Route::get('rev-label/data', [CustomerRevisionLabelController::class, 'data'])->name('rev-label.data');
     Route::get('rev-label/dropdowns', [CustomerRevisionLabelController::class, 'dropdowns'])->name('rev-label.dropdowns');
+    Route::post('rev-label/dropdowns', [CustomerRevisionLabelController::class, 'dropdowns']);
     #End region
 
     #Region PKG Format
     Route::get('pkg_format/data', [PackageFormatController::class, 'data'])->name('pkg_format.data');
     Route::resource('master/pkgFormat', PackageFormatController::class)->names('pkg_format')->except(['create', 'edit']);
     #End region
+
+    #region File Preview
+    Route::get('/preview/file/{id}', [FilePreviewController::class, 'show'])->middleware(['signed']) ->name('preview.file');
+    #end region
+
 });

@@ -34,8 +34,6 @@
           <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             <span id="cardWaiting">0</span>
           </p>
-          {{-- opsional tampilkan % WIP --}}
-          {{-- <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">WIP Rate: <span id="kpiWipRate">0%</span></p> --}}
         </div>
       </div>
       {{-- Card Approved --}}
@@ -48,8 +46,6 @@
           <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             <span id="cardApproved">0</span>
           </p>
-          {{-- opsional tampilkan % approval --}}
-          {{-- <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Approval Rate: <span id="kpiApprovalRate">0%</span></p> --}}
         </div>
       </div>
       {{-- Card Rejected --}}
@@ -62,8 +58,6 @@
           <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             <span id="cardRejected">0</span>
           </p>
-          {{-- opsional tampilkan % rejection --}}
-          {{-- <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Rejection Rate: <span id="kpiRejectRate">0%</span></p> --}}
         </div>
       </div>
     </div>
@@ -71,6 +65,17 @@
 
   {{-- Filter section --}}
   <div class="mt-8 bg-white dark:bg-gray-800 p-7 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">Filters</h3>
+      <button id="btnResetFilters"
+        type="button"
+        class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600
+               bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+        <i class="fa-solid fa-rotate-left"></i>
+        Reset Filters
+      </button>
+    </div>
+
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-5">
       @foreach(['Customer', 'Model', 'Document Type', 'Category', 'Status'] as $label)
       <div>
@@ -78,9 +83,8 @@
         <div class="relative mt-1">
           <select id="{{ Str::slug($label) }}"
             class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-            <option value="All">All</option>
+            <option value="All" selected>All</option>
           </select>
-          
         </div>
       </div>
       @endforeach
@@ -117,83 +121,86 @@
 <script>
 $(function () {
   let table;
+  const ENDPOINT = '{{ route("api.approvals.filters") }}';
 
-  function initSelect2() {
-    $('.js-filter').each(function() {
-      const $s = $(this);
-      $s.select2({
-        width: '100%',
-        placeholder: 'All',
-      });
+  // --- helper: reset Select2 ke "All" (pasti sukses untuk AJAX mode) ---
+  function resetSelect2ToAll($el) {
+    $el.empty(); // bersihkan option agar cache Select2 tak bentrok
+    const opt = new Option('All', 'All', true, true);
+    $el.append(opt);
+    $el.trigger('change');         // update nilai ke Select2
+    $el.trigger('select2:select'); // jaga-jaga untuk beberapa versi Select2
+  }
+
+  // --- Select2 AJAX (server-side) helper ---
+  function makeSelect2($el, field, extraParamsFn) {
+    $el.select2({
+      width: '100%',
+      placeholder: 'All',
+      allowClear: false,
+      minimumResultsForSearch: 0,
+      ajax: {
+        url: ENDPOINT,
+        dataType: 'json',
+        delay: 250,
+        cache: true,
+        data: function (params) {
+          const p = {
+            select2: field,             // mode select2 di controller
+            q: params.term || '',
+            page: params.page || 1
+          };
+          if (typeof extraParamsFn === 'function') {
+            Object.assign(p, extraParamsFn());
+          }
+          return p;
+        },
+        processResults: function (data, params) {
+          params.page = params.page || 1;
+          // Pastikan "All" selalu ada di hasil (paling atas)
+          const results = Array.isArray(data.results) ? data.results.slice() : [];
+          if (!results.some(r => r.id === 'All')) {
+            results.unshift({ id: 'All', text: 'All' });
+          }
+          return {
+            results,
+            pagination: { more: data.pagination ? data.pagination.more : false }
+          };
+        }
+      },
+      templateResult: function (item) {
+        if (item.loading) return item.text;
+        return $('<div class="text-sm">' + (item.text || item.id) + '</div>');
+      },
+      templateSelection: function (item) {
+        return item.text || item.id || 'All';
+      }
     });
   }
 
-  function fill(sel, items, useNameAsValue = false) {
-  const $s = $(sel);
-  const valBefore = $s.val();
-  $s.empty().append('<option value="All">All</option>');
-  (items || []).forEach(it => {
-    const value = useNameAsValue ? (it.name ?? it.code ?? it.id) : (it.id ?? it.code ?? it.name);
-    const label = it.label 
-      ?? (it.code && it.name ? `${it.code} — ${it.name}` : (it.name ?? it.code ?? value));
-    $s.append(new Option(label, value));
+  // Inisialisasi Select2 server-side + dependent params
+  makeSelect2($('#customer'),      'customer');
+  makeSelect2($('#model'),         'model',      () => ({ customer_code: $('#customer').val() || '' }));
+  makeSelect2($('#document-type'), 'doc_type');
+  makeSelect2($('#category'),      'category',   () => ({ doc_type: $('#document-type').val() || '' }));
+  makeSelect2($('#status'),        'status');
+
+  // Dependent behavior -> set anak ke "All" (bukan null)
+  $('#customer').on('change', function () {
+    resetSelect2ToAll($('#model'));
   });
-  $s.val(
-  valBefore && $s.find(`option[value="${valBefore}"]`).length ? valBefore : 'All'
-).trigger('change.select2').trigger('change');
-}
-
-  $.getJSON('{{ route("api.approvals.filters") }}', function (res) {
-
-    fill('#customer',  normalize(res.customers),  true);
-    fill('#model',     normalize(res.models),     true);
-    fill('#document-type',  normalize(res.doc_types),  true);
-    fill('#category',  normalize(res.categories), true);
-    fill('#status',    normalize(res.statuses),   true);
-
-    initSelect2();
-
-    initTable();
-    loadKPI();
-    bindHandlers();
+  $('#document-type').on('change', function () {
+    resetSelect2ToAll($('#category'));
   });
-
-  function normalize(list) {
-    return (list || []).map(it => {
-      if (!('name' in it) && 'code' in it) return { id: it.id, name: it.code };
-      return it;
-    });
-  }
-
- function reloadModelsByCustomer() {
-  const custCode = $('#customer').val();
-  const params = custCode && custCode !== 'All' ? { customer_code: custCode } : {};
-  $.getJSON('{{ route("api.approvals.filters") }}', params, function (res) {
-    fill('#model', normalize(res.models), true); // value = name
-    if (!res.models || res.models.length === 0) {
-      $('#model').val('All').trigger('change.select2').trigger('change');
-    }
-  });
-}
-
-function reloadCategoriesByDocType() {
-  const docType = $('#document-type').val(); // value = name (karena useNameAsValue=true)
-  const params = (docType && docType !== 'All') ? { doc_type: docType } : {};
-  $.getJSON('{{ route("api.approvals.filters") }}', params, function (res) {
-    fill('#category', normalize(res.categories), true); // value = name
-    if (!res.categories || res.categories.length === 0) {
-      $('#category').val('All').trigger('change.select2').trigger('change');
-    }
-  });
-}
 
   function getCurrentFilters() {
+    const valOrAll = v => (v && v.length ? v : 'All');
     return {
-      customer:  $('#customer').val() || 'All',
-      model:     $('#model').val() || 'All',
-      doc_type:  $('#document-type').val() || 'All',
-      category:  $('#category').val() || 'All',
-      status:    $('#status').val() || 'All',
+      customer:  valOrAll($('#customer').val()),
+      model:     valOrAll($('#model').val()),
+      doc_type:  valOrAll($('#document-type').val()),
+      category:  valOrAll($('#category').val()),
+      status:    valOrAll($('#status').val()),
     };
   }
 
@@ -239,10 +246,10 @@ function reloadCategoriesByDocType() {
       columns: [
         { data: null, orderable: false, searchable: false },
         { data: 'customer', name: 'c.code' },
-        { data: 'model', name: 'm.name' },
+        { data: 'model',    name: 'm.name' },
         { data: 'doc_type', name: 'dtg.name' },
         { data: 'category', name: 'category' },
-        { data: 'part_no', name: 'p.part_no' },
+        { data: 'part_no',  name: 'p.part_no' },
         { data: 'revision', name: 'dpr.revision_no' },
         {
           data: 'status',
@@ -269,25 +276,37 @@ function reloadCategoriesByDocType() {
   }
 
   function bindHandlers() {
-    $('#customer').on('change', function() {
-      reloadModelsByCustomer();
-    });
-   $('#document-type').on('change', function () {
-  reloadCategoriesByDocType();
-});
+    // perubahan filter -> reload & refresh KPI
     $('#customer, #model, #document-type, #category, #status').on('change', function () {
-      table.ajax.reload();
+      if (table) table.ajax.reload(null, true);
       loadKPI();
     });
 
+    // tombol reset -> set semua ke "All", reload table & KPI
+    $('#btnResetFilters').on('click', function () {
+      resetSelect2ToAll($('#customer'));
+      resetSelect2ToAll($('#model'));
+      resetSelect2ToAll($('#document-type'));
+      resetSelect2ToAll($('#category'));
+      resetSelect2ToAll($('#status'));
+
+      if (table) table.ajax.reload(null, true);
+      loadKPI();
+    });
+
+    // klik row -> detail
     $('#approvalTable tbody').on('click', 'tr', function () {
       const row = table.row(this).data();
       if (row && row.id) window.location.href = `/approval/${row.id}`;
     }).on('mouseenter', 'tr', function () {
       $(this).css('cursor', 'pointer');
     });
-    
   }
+
+  // start
+  initTable();
+  loadKPI();
+  bindHandlers();
 });
 </script>
 @endpush

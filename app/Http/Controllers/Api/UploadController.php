@@ -16,6 +16,7 @@ class UploadController extends Controller
             ->leftJoin('customers as c', 'p.customer_id', '=', 'c.id')
             ->leftJoin('models as m', 'p.model_id', '=', 'm.id')
             ->leftJoin('products as pr', 'p.product_id', '=', 'pr.id')
+            ->leftJoin('customer_revision_labels as crl', 'r.revision_label_id', '=', 'crl.id')
             ->select([
                 'r.id as id',
                 'p.package_no as package_no',
@@ -24,22 +25,27 @@ class UploadController extends Controller
                 'pr.part_no as part_no',
                 'r.revision_no as revision_no',
                 'r.updated_at as uploaded_at',
-                'r.revision_status as status'
+                'r.revision_status as status',
+                'r.ecn_no as ecn_no',
+                'crl.label as revision_label_name'
             ])
             ->orderBy('r.updated_at', 'desc');
 
-        $perPage = $request->get('length') ?: 25;
+        // $perPage = $request->get('length') ?: 25;
+
         // DataTables expects { data: [...] }
-        $rows = $query->limit($perPage)->get()->map(function($row) {
+        $rows = $query->get()->map(function($row) {
             return [
                 'id' => $row->id,
                 'package_no' => $row->package_no,
                 'customer' => $row->customer ?? '-',
                 'model' => $row->model ?? '-',
                 'part_no' => $row->part_no ?? '-',
-                'revision' => is_null($row->revision_no) ? '0' : (string)$row->revision_no,
+                'revision_no' => is_null($row->revision_no) ? '0' : (string)$row->revision_no,
                 'uploaded_at' => $row->uploaded_at ? date('Y-m-d H:i:s', strtotime($row->uploaded_at)) : null,
-                'status' => $row->status ?? 'draft'
+                'status' => $row->status ?? 'draft',
+                'ecn_no' => $row->ecn_no ?? '-',
+                'revision_label_name' => $row->revision_label_name // Bisa null
             ];
         });
 
@@ -48,12 +54,8 @@ class UploadController extends Controller
         ]);
     }
 
-    /**
-     * Return package details: metadata, files count and total size per package id
-     */
     public function getPackageDetails(Request $request, $id): JsonResponse
     {
-        // Treat $id as a revision id and return revision-level details + package header metadata
         $revisionId = (int) $id;
 
         $rev = DB::table('doc_package_revisions as r')
@@ -67,6 +69,8 @@ class UploadController extends Controller
             ->select(
                 'r.id as id', 'r.package_id as package_id', 'p.package_no as package_no',
                 'r.revision_no as revision_no', 'r.revision_status as revision_status', 'r.note as revision_note',
+                'r.ecn_no as ecn_no',
+                'r.revision_label_id as revision_label_id',
                 'r.is_obsolete as is_obsolete', 'r.created_by as revision_created_by', 'r.created_at as created_at', 'r.updated_at as updated_at',
                 'p.project_status_id', 'p.created_by as package_created_by',
                 'c.id as customer_id','c.name as customer_name','c.code as customer_code',
@@ -89,12 +93,18 @@ class UploadController extends Controller
             ->select(DB::raw('count(*) as total_files, sum(file_size) as total_bytes'))
             ->first();
 
+        $file_list = DB::table('doc_package_revision_files')
+            ->where('revision_id', $revisionId)
+            ->get(['id', 'filename as name', 'category', 'file_size as size'])
+            ->groupBy('category')->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
+
         return response()->json([
             'package' => $rev,
             'files' => [
                 'count' => (int) ($agg->total_files ?? 0),
                 'size_bytes' => (int) ($agg->total_bytes ?? 0),
-            ]
+            ],
+            'file_list' => $file_list
         ]);
     }
 }

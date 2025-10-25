@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Customers;
 use App\Models\Models;
@@ -14,118 +15,212 @@ use App\Models\DoctypeGroups;
 use App\Models\DoctypeSubcategory;
 use App\Models\DocPackageRevisionFile;
 use App\Models\DocTypeSubCategories;
+use App\Models\ActivityLog;
+use App\Models\User;
 
 class ApprovalController extends Controller
 {
-    
+    public function kpi(Request $req)
+    {
+        $q = DB::table('doc_package_revisions as dpr')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->where('dpr.revision_status', '<>', 'draft');
 
-public function kpi(Request $req)
-{
-    $q = DB::table('doc_package_revisions as dpr')
-        ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
-        ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-        ->join('models as m', 'dp.model_id', '=', 'm.id')
-        ->join('products as p', 'dp.product_id', '=', 'p.id')
-        ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-        ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-        ->where('dpr.revision_status', '<>', 'draft');
-
-    // === FILTER (samakan dengan listApprovals) ===
-    if ($req->filled('customer') && $req->customer !== 'All') {
-        $q->where('c.code', $req->customer);
-    }
-    if ($req->filled('model') && $req->model !== 'All') {
-        $q->where('m.name', $req->model);
-    }
-    if ($req->filled('doc_type') && $req->doc_type !== 'All') {
-        $q->where('dtg.name', $req->doc_type);
-    }
-    if ($req->filled('category') && $req->category !== 'All') {
-        // catatan: list memakai dsc.name (doctype_subcategories)
-        $q->where('dsc.name', $req->category);
-    }
-    if ($req->filled('status') && $req->status !== 'All') {
-        $statusMapping = ['Waiting' => 'pending', 'Complete' => 'approved', 'Reject' => 'rejected'];
-        if (isset($statusMapping[$req->status])) {
-            $q->where('dpr.revision_status', $statusMapping[$req->status]);
+        // FILTER
+        if ($req->filled('customer') && $req->customer !== 'All') {
+            $q->where('c.code', $req->customer);
         }
+        if ($req->filled('model') && $req->model !== 'All') {
+            $q->where('m.name', $req->model);
+        }
+        if ($req->filled('doc_type') && $req->doc_type !== 'All') {
+            $q->where('dtg.name', $req->doc_type);
+        }
+        if ($req->filled('category') && $req->category !== 'All') {
+            $q->where('dsc.name', $req->category);
+        }
+        if ($req->filled('status') && $req->status !== 'All') {
+            $statusMapping = ['Waiting' => 'pending', 'Complete' => 'approved', 'Reject' => 'rejected'];
+            if (isset($statusMapping[$req->status])) {
+                $q->where('dpr.revision_status', $statusMapping[$req->status]);
+            }
+        }
+
+        // AGREGASI
+        $row = $q->selectRaw("
+            COUNT(*) AS total,
+            SUM(CASE WHEN dpr.revision_status = 'pending'  THEN 1 ELSE 0 END) AS waiting,
+            SUM(CASE WHEN dpr.revision_status = 'approved' THEN 1 ELSE 0 END) AS approved,
+            SUM(CASE WHEN dpr.revision_status = 'rejected' THEN 1 ELSE 0 END) AS rejected
+        ")->first();
+
+        $total    = (int)($row->total ?? 0);
+        $waiting  = (int)($row->waiting ?? 0);
+        $approved = (int)($row->approved ?? 0);
+        $rejected = (int)($row->rejected ?? 0);
+
+        return response()->json([
+            'cards' => compact('total', 'waiting', 'approved', 'rejected'),
+            'metrics' => [
+                'approval_rate'  => $total ? round($approved * 100 / $total, 2) : 0.0,
+                'rejection_rate' => $total ? round($rejected * 100 / $total, 2) : 0.0,
+                'wip_rate'       => $total ? round($waiting  * 100 / $total, 2) : 0.0,
+            ],
+        ]);
     }
 
-    // === AGREGASI ===
-    $row = $q->selectRaw("
-        COUNT(*) AS total,
-        SUM(CASE WHEN dpr.revision_status = 'pending'  THEN 1 ELSE 0 END) AS waiting,
-        SUM(CASE WHEN dpr.revision_status = 'approved' THEN 1 ELSE 0 END) AS approved,
-        SUM(CASE WHEN dpr.revision_status = 'rejected' THEN 1 ELSE 0 END) AS rejected
-    ")->first();
+    public function filters(Request $request): JsonResponse
+    {
+        // ====== MODE SELECT2 (server-side) ======
+        if ($request->filled('select2')) {
+            $field   = $request->get('select2');   // 'customer' | 'model' | 'doc_type' | 'category' | 'status'
+            $q       = trim($request->get('q', ''));
+            $page    = max(1, (int)$request->get('page', 1));
+            $perPage = 20;
 
-    $total    = (int)($row->total ?? 0);
-    $waiting  = (int)($row->waiting ?? 0);
-    $approved = (int)($row->approved ?? 0);
-    $rejected = (int)($row->rejected ?? 0);
+            // dependent params
+            $customerCode = $request->get('customer_code'); // untuk model
+            $docTypeName  = $request->get('doc_type');      // untuk category
 
-    return response()->json([
-        'cards' => compact('total','waiting','approved','rejected'),
-        'metrics' => [
-            'approval_rate'  => $total ? round($approved * 100 / $total, 2) : 0.0,
-            'rejection_rate' => $total ? round($rejected * 100 / $total, 2) : 0.0,
-            'wip_rate'       => $total ? round($waiting  * 100 / $total, 2) : 0.0,
-        ],
-    ]);
-}
+            $total = 0;
+            $items = collect();
 
+            switch ($field) {
+                case 'customer':
+                    // id = code, text = code
+                    $builder = DB::table('customers as c')
+                        ->selectRaw('c.code AS id, c.code AS text')
+                        ->when($q, fn($x) => $x->where(function ($w) use ($q) {
+                            $w->where('c.code', 'like', "%{$q}%")
+                                ->orWhere('c.name', 'like', "%{$q}%");
+                        }))
+                        ->orderBy('c.code');
 
-   public function filters(Request $request): JsonResponse
-{
-    // === resolve customer ===
-    $customerId = $request->integer('customer_id') ?: null;
-    if (!$customerId && $request->filled('customer_code')) {
-        $customerId = Customers::where('code', $request->get('customer_code'))->value('id');
+                    $total = (clone $builder)->count();
+                    $items = $builder->forPage($page, $perPage)->get();
+                    break;
+
+                case 'model':
+                    $builder = DB::table('models as m')
+                        ->join('customers as c', 'm.customer_id', '=', 'c.id')
+                        ->selectRaw('m.name AS id, m.name AS text')
+                        // Abaikan filter customer kalau 'All' atau kosong
+                        ->when($customerCode && $customerCode !== 'All', fn($x) => $x->where('c.code', $customerCode))
+                        ->when($q, fn($x) => $x->where('m.name', 'like', "%{$q}%"))
+                        ->orderBy('m.name');
+
+                    $total = (clone $builder)->count();
+                    $items = $builder->forPage($page, $perPage)->get();
+                    break;
+
+                case 'doc_type':
+                    $builder = DB::table('doctype_groups as dtg')
+                        ->selectRaw('dtg.name AS id, dtg.name AS text')
+                        ->when($q, fn($x) => $x->where('dtg.name', 'like', "%{$q}%"))
+                        ->orderBy('dtg.name');
+
+                    $total = (clone $builder)->count();
+                    $items = $builder->forPage($page, $perPage)->get();
+                    break;
+
+                case 'category':
+                    $builder = DB::table('doctype_subcategories as dsc')
+                        ->join('doctype_groups as dtg', 'dsc.doctype_group_id', '=', 'dtg.id')
+                        ->selectRaw('dsc.name AS id, dsc.name AS text')
+                        // Abaikan filter doc type kalau 'All' atau kosong
+                        ->when($docTypeName && $docTypeName !== 'All', fn($x) => $x->where('dtg.name', $docTypeName))
+                        ->when($q, fn($x) => $x->where('dsc.name', 'like', "%{$q}%"))
+                        ->orderBy('dsc.name');
+
+                    $total = (clone $builder)->count();
+                    $items = $builder->forPage($page, $perPage)->get();
+                    break;
+
+                case 'status':
+                    $all = collect([
+                        ['id' => 'Waiting',  'text' => 'Waiting'],
+                        ['id' => 'Complete', 'text' => 'Complete'],
+                        ['id' => 'Reject',   'text' => 'Reject'],
+                    ]);
+                    $filtered = $q
+                        ? $all->filter(fn($r) => str_contains(strtolower($r['text']), strtolower($q)))
+                        : $all;
+                    $total = $filtered->count();
+                    $items = $filtered->slice(($page - 1) * $perPage, $perPage)->values();
+                    break;
+
+                default:
+                    return response()->json(['results' => [], 'pagination' => ['more' => false]]);
+            }
+
+            // === Selalu prepend "All" pada halaman pertama ===
+            // (supaya "All" selalu tersedia di dropdown tanpa harus diketik)
+            if ($page === 1) {
+                $items = collect([['id' => 'All', 'text' => 'All']])->merge($items);
+            }
+
+            // Hitung flag "more" untuk pagination (perhatikan item "All" di page 1)
+            $effectiveTotal = $total + ($page === 1 ? 1 : 0); // tambahkan 1 untuk "All" di halaman 1
+            $more = ($effectiveTotal > $page * $perPage);
+
+            return response()->json([
+                'results'    => array_values($items->toArray()),
+                'pagination' => ['more' => $more]
+            ]);
+        }
+
+        // ====== MODE LAMA (non-Sp
+        // resolve customer
+        $customerId = $request->integer('customer_id') ?: null;
+        if (!$customerId && $request->filled('customer_code')) {
+            $customerId = Customers::where('code', $request->get('customer_code'))->value('id');
+        }
+
+        // models
+        $models = $customerId
+            ? Models::where('customer_id', $customerId)->orderBy('name')->get(['id', 'name'])
+            : Models::orderBy('name')->get(['id', 'name']);
+
+        // doc types
+        $docTypes = DoctypeGroups::orderBy('name')->get(['id', 'name']);
+
+        // resolve doc_type (by name) -> id
+        $docTypeName = $request->get('doc_type');
+        $docTypeId   = null;
+        if ($docTypeName && $docTypeName !== 'All') {
+            $docTypeId = DoctypeGroups::where('name', $docTypeName)->value('id');
+        }
+
+        $categories = DocTypeSubCategories::when($docTypeId, function ($q) use ($docTypeId) {
+            $q->where('doctype_group_id', $docTypeId);
+        })
+            ->orderBy('name')
+            ->get(['name']);
+
+        return response()->json([
+            'customers'  => Customers::orderBy('code')->get(['id', 'code']),
+            'models'     => $models,        // {id, name}
+            'doc_types'  => $docTypes,      // {id, name}
+            'categories' => $categories,    // {name}
+            'statuses'   => collect([
+                ['name' => 'Waiting'],
+                ['name' => 'Complete'],
+                ['name' => 'Reject'],
+            ]),
+        ]);
     }
-
-    // === models ===
-    $models = $customerId
-        ? Models::where('customer_id', $customerId)->orderBy('name')->get(['id','name'])
-        : Models::orderBy('name')->get(['id','name']);
-
-    // === doc types ===
-    $docTypes = DoctypeGroups::orderBy('name')->get(['id','name']);
-
-    // === resolve doc type (by name) → id, lalu ambil subcategories ===
-    $docTypeName = $request->get('doc_type'); // frontend kirim value=nama
-    $docTypeId   = null;
-    if ($docTypeName && $docTypeName !== 'All') {
-        $docTypeId = DoctypeGroups::where('name', $docTypeName)->value('id');
-    }
-
-    $categories = DocTypeSubCategories::when($docTypeId, function($q) use ($docTypeId) {
-                        $q->where('doctype_group_id', $docTypeId);
-                    })
-                    ->orderBy('name')
-                    ->get(['name']); // penting: kolom 'name'
-
-    return response()->json([
-        'customers'  => Customers::orderBy('code')->get(['id','code']),
-        'models'     => $models,        // {id, name}
-        'doc_types'  => $docTypes,      // {id, name}
-        'categories' => $categories,    // {name} dari doctypesubcategories
-        'statuses'   => collect([
-            ['name' => 'Waiting'],
-            ['name' => 'Complete'],
-            ['name' => 'Reject'],
-        ]),
-    ]);
-}
-
-
-
     public function listApprovals(Request $request): JsonResponse
     {
         $start = $request->get('start', 0);
         $length = $request->get('length', 10);
         $searchValue = $request->get('search')['value'] ?? '';
         $orderColumnIndex = $request->get('order')[0]['column'] ?? 0;
-        $orderColumnName = $request->get('columns')[$orderColumnIndex]['name'] ?? 'dpr.id';
+        $orderColumnName = $request->get('columns')[$orderColumnIndex]['name'] ?? 'dpr.created_at';
         $orderDir = $request->get('order')[0]['dir'] ?? 'desc';
 
         $query = DB::table('doc_package_revisions as dpr')
@@ -153,33 +248,34 @@ public function kpi(Request $req)
         }
         if ($request->filled('status') && $request->status !== 'All') {
             $statusMapping = ['Waiting' => 'pending', 'Complete' => 'approved', 'Reject' => 'rejected'];
-            if(isset($statusMapping[$request->status])) {
+            if (isset($statusMapping[$request->status])) {
                 $query->where('dpr.revision_status', $statusMapping[$request->status]);
             }
         }
 
         if (!empty($searchValue)) {
-            $query->where(function($q) use ($searchValue) {
+            $query->where(function ($q) use ($searchValue) {
                 $q->where('c.code', 'like', "%{$searchValue}%")
-                ->orWhere('m.name', 'like', "%{$searchValue}%")
-                ->orWhere('p.part_no', 'like', "%{$searchValue}%")
-                ->orWhere('dsc.name', 'like', "%{$searchValue}%");
+                    ->orWhere('m.name', 'like', "%{$searchValue}%")
+                    ->orWhere('p.part_no', 'like', "%{$searchValue}%")
+                    ->orWhere('dsc.name', 'like', "%{$searchValue}%");
             });
         }
 
         $recordsFiltered = $query->count();
 
         $data = $query->select(
-                'dpr.id',
-                'c.code as customer',
-                'm.name as model',
-                'dtg.name as doc_type',
-                'dsc.name as category',
-                'p.part_no',
-                'dpr.revision_no as revision',
-                DB::raw("CASE dpr.revision_status WHEN 'pending' THEN 'Waiting' WHEN 'approved' THEN 'Complete' WHEN 'rejected' THEN 'Reject' ELSE dpr.revision_status END as status")
-            )
-            ->orderBy($orderColumnName, $orderDir)
+            'dpr.id',
+            'c.code as customer',
+            'm.name as model',
+            'dtg.name as doc_type',
+            'dsc.name as category',
+            'p.part_no',
+            'dpr.revision_no as revision',
+            DB::raw("CASE dpr.revision_status WHEN 'pending' THEN 'Waiting' WHEN 'approved' THEN 'Complete' WHEN 'rejected' THEN 'Reject' ELSE dpr.revision_status END as status"),
+            'dpr.created_at'
+        )
+            ->orderBy('dpr.created_at', 'desc')
             ->skip($start)
             ->take($length)
             ->get();
@@ -194,93 +290,97 @@ public function kpi(Request $req)
 
 
     public function showDetail($id)
-{
-    // $id di sini adalah revision_id
-    $revision = DB::table('doc_package_revisions as dpr')
-        ->where('dpr.id', $id)
-        ->first();
+    {
+        // $id = revision_id
+        $revision = DB::table('doc_package_revisions as dpr')
+            ->where('dpr.id', $id)
+            ->first();
 
-    if (!$revision) {
-        abort(404, 'Approval request not found.');
-    }
+        if (!$revision) {
+            abort(404, 'Approval request not found.');
+        }
 
-    // 1. Ambil Metadata Paket
-    $package = DB::table('doc_packages as dp')
-        ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-        ->join('models as m', 'dp.model_id', '=', 'm.id')
-        ->join('products as p', 'dp.product_id', '=', 'p.id')
-        ->where('dp.id', $revision->package_id)
-        ->select(
-            'c.code as customer',
-            'm.name as model',
-            'p.part_no'
-        )
-        ->first();
+        // Metadata Paket
+        $package = DB::table('doc_packages as dp')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->where('dp.id', $revision->package_id)
+            ->select('c.code as customer', 'm.name as model', 'p.part_no')
+            ->first();
 
-    // 2. Ambil semua file untuk revisi ini
-    $files = DB::table('doc_package_revision_files')
-        ->where('revision_id', $id)
-        ->select('filename as name', 'category', 'storage_path as url')
-        ->get()
-        ->groupBy('category')
-        ->map(function ($items) {
-            return $items->map(function ($item) {
-                return ['name' => $item->name, 'url' => $item->url];
-            });
-        })
-        // =========================================================================
-        // PERBAIKAN UTAMA: Ganti changeKeyCase dengan mapWithKeys
-        // =========================================================================
-        ->mapWithKeys(function ($items, $key) {
-            return [strtolower($key) => $items];
+        // Files per category (lowercase key) -> URL lewat preview controller (signed)
+        $files = DB::table('doc_package_revision_files')
+            ->where('revision_id', $id)
+            ->select('id', 'filename as name', 'category', 'storage_path')
+            ->get()
+            ->groupBy('category')
+            ->map(function ($items) {
+                return $items->map(function ($item) {
+                    $url = URL::signedRoute('preview.file', ['id' => $item->id]);
+                    return ['name' => $item->name, 'url' => $url];
+                });
+            })
+            ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
+
+        // Activity Log: hanya UPLOAD untuk package ini (opsional filter per revisi)
+        $uploadLogs = ActivityLog::with('user:id,name')
+            ->forPackage($revision->package_id)
+            ->forRevision($id) // <- komentari kalau mau semua revisi
+            ->actions(ActivityLog::UPLOAD)
+            ->latest('id')
+            ->get();
+
+        $activityLogs = $uploadLogs->map(function ($r) {
+            return [
+                'action' => $r->ui_action,                  // 'uploaded'
+                'user'   => $r->user->name ?? 'System',
+                'note'   => $r->meta['note'] ?? '',
+                'time'   => optional($r->created_at)->format('Y-m-d H:i'),
+            ];
         });
 
-    // 3. Ambil Log Aktivitas
-    $activityLogs = collect([
-        ['action' => 'uploaded', 'user' => 'Uploader', 'note' => 'Initial upload for review', 'time' => '2025-10-20 08:41 AM'],
-    ]);
+        $detail = [
+            'metadata' => [
+                'customer' => $package->customer,
+                'model'    => $package->model,
+                'part_no'  => $package->part_no,
+                'revision' => 'Rev-' . $revision->revision_no,
+            ],
+            'status'       => ucfirst($revision->revision_status),
+            'files'        => $files,
+            'activityLogs' => $activityLogs,
+        ];
 
-    // 4. Susun semua data ke dalam satu array/objek `$detail`
-    $detail = [
-        'metadata' => [
-            'customer' => $package->customer,
-            'model' => $package->model,
-            'part_no' => $package->part_no,
-            'revision' => 'Rev-' . $revision->revision_no,
-        ],
-        'status' => ucfirst($revision->revision_status),
-        'files' => $files,
-        'activityLogs' => $activityLogs,
-    ];
+        return view('approvals.approval_detail', [
+            'approvalId' => $id,
+            'detail'     => $detail,
+        ]);
+    }
 
-    // 5. Kirim data ke view
-    return view('approvals.approval_detail', [
-        'approvalId' => $id,
-        'detail' => $detail,
-    ]);
-}
 
-    /**
-     * Proses menyetujui (approve) sebuah revisi.
-     */
     public function approve(Request $request, $revision_id)
     {
+        $userId = Auth::user()->id;
+
         DB::beginTransaction();
         try {
-            $revision = DB::table('doc_package_revisions')->where('id', $revision_id)->lockForUpdate()->first();
+            $revision = DB::table('doc_package_revisions')
+                ->where('id', $revision_id)->lockForUpdate()->first();
+
             if (!$revision || $revision->revision_status !== 'pending') {
                 return response()->json(['message' => 'Revision cannot be approved.'], 422);
             }
 
             DB::table('doc_package_revisions')->where('id', $revision_id)->update([
                 'revision_status' => 'approved',
-                'updated_at' => Carbon::now(),
+                'updated_at'      => Carbon::now(),
             ]);
 
             DB::table('doc_packages')->where('id', $revision->package_id)->update([
                 'current_revision_id' => $revision->id,
                 'current_revision_no' => $revision->revision_no,
-                'updated_at' => Carbon::now(),
+                'updated_at'          => Carbon::now(),
             ]);
 
             DB::table('doc_package_revisions')
@@ -289,9 +389,18 @@ public function kpi(Request $req)
                 ->update(['is_obsolete' => 1]);
 
             DB::table('package_approvals')->where('revision_id', $revision_id)->update([
-                'decided_by' => auth()->user()->id ?? 1,
+                'decided_by' => $userId ?? 1,
                 'decided_at' => Carbon::now(),
-                'decision' => 'approved',
+                'decision'   => 'approved',
+            ]);
+
+            ActivityLog::create([
+                'scope_type'    => 'package',
+                'scope_id'      => $revision->package_id,
+                'revision_id'   => $revision_id,
+                'activity_code' => ActivityLog::APPROVE,
+                'user_id'       => $userId,
+                'meta'          => ['note' => 'Revision approved'],
             ]);
 
             DB::commit();
@@ -302,30 +411,40 @@ public function kpi(Request $req)
         }
     }
 
-    /**
-     * Proses menolak (reject) sebuah revisi.
-     */
     public function reject(Request $request, $revision_id)
     {
+        $userId = Auth::user()->id;
+
         $request->validate(['note' => 'required|string|max:500']);
+
         DB::beginTransaction();
         try {
-            $revision = DB::table('doc_package_revisions')->where('id', $revision_id)->lockForUpdate()->first();
+            $revision = DB::table('doc_package_revisions')
+                ->where('id', $revision_id)->lockForUpdate()->first();
+
             if (!$revision || $revision->revision_status !== 'pending') {
                 return response()->json(['message' => 'Revision cannot be rejected.'], 422);
             }
 
             DB::table('doc_package_revisions')->where('id', $revision_id)->update([
                 'revision_status' => 'rejected',
-                'updated_at' => Carbon::now(),
+                'updated_at'      => Carbon::now(),
             ]);
 
             DB::table('package_approvals')->where('revision_id', $revision_id)->update([
-                // PERUBAHAN UTAMA: Menggunakan auth()->user()->id untuk mengambil integer ID
-                'decided_by' => auth()->user()->id ?? 1,
+                'decided_by' => $userId ?? 1,
                 'decided_at' => Carbon::now(),
-                'decision' => 'rejected',
-                'reason' => $request->note,
+                'decision'   => 'rejected',
+                'reason'     => $request->note,
+            ]);
+
+            ActivityLog::create([
+                'scope_type'    => 'package',
+                'scope_id'      => $revision->package_id,
+                'revision_id'   => $revision_id,
+                'activity_code' => ActivityLog::REJECT,
+                'user_id'       => $userId,
+                'meta'          => ['note' => $request->note],
             ]);
 
             DB::commit();

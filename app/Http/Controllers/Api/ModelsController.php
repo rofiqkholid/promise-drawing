@@ -50,6 +50,7 @@ class ModelsController extends Controller
             'customer'      => 'customers.code',
             'customer.code' => 'customers.code',
             'status'        => 'project_status.name',
+            'planning'      => 'models.planning',
         ];
         $sortColumn = $sortMap[$sortKey] ?? 'models.name';
 
@@ -71,7 +72,8 @@ class ModelsController extends Controller
         $draw    = (int) $request->get('draw', 1);
 
         $totalRecords    = Models::count();
-        $filteredRecords = (clone $query)->count();
+        // penting: distinct untuk menghindari duplikasi dari join
+        $filteredRecords = (clone $query)->distinct('models.id')->count('models.id');
         $models          = $query->skip($start)->take($perPage)->get();
 
         return response()->json([
@@ -82,11 +84,66 @@ class ModelsController extends Controller
         ]);
     }
 
+    /*** =========================
+     *  Select2 server-side (AJAX)
+     *  ========================= */
+
+    // Customer: label = code saja, value = id
+    public function customersSelect2(Request $request)
+    {
+        $q       = trim($request->get('q', ''));
+        $page    = max(1, (int)$request->get('page', 1));
+        $perPage = 20;
+
+        $builder = Customers::query()
+            ->selectRaw('id, code AS text')
+            ->when($q, function ($x) use ($q) {
+                $x->where(function ($w) use ($q) {
+                    $w->where('code', 'like', "%{$q}%")
+                      ->orWhere('name', 'like', "%{$q}%");
+                });
+            })
+            ->orderBy('code');
+
+        $total = (clone $builder)->count();
+        $items = $builder->forPage($page, $perPage)->get();
+
+        return response()->json([
+            'results'    => $items,
+            'pagination' => ['more' => ($total > $page * $perPage)],
+        ]);
+    }
+
+    // Status: label = name, value = id
+    public function statusesSelect2(Request $request)
+    {
+        $q       = trim($request->get('q', ''));
+        $page    = max(1, (int)$request->get('page', 1));
+        $perPage = 20;
+
+        $builder = ProjectStatus::query()
+            ->selectRaw('id, name AS text')
+            ->when($q, fn($x) => $x->where('name', 'like', "%{$q}%"))
+            ->orderBy('name');
+
+        $total = (clone $builder)->count();
+        $items = $builder->forPage($page, $perPage)->get();
+
+        return response()->json([
+            'results'    => $items,
+            'pagination' => ['more' => ($total > $page * $perPage)],
+        ]);
+    }
+
+    /*** =========================
+     *  Endpoint lama (opsional)
+     *  ========================= */
+
     public function getCustomers()
     {
-        $customers = Customers::select('id','code','name')->get()->map(fn($c) => [
+        $customers = Customers::select('id','code')->get()->map(fn($c) => [
             'id'   => $c->id,
-            'name' => $c->code.' - '.$c->name,
+            'name' => $c->code, // tampilkan code saja
         ]);
         return response()->json($customers);
     }
@@ -98,23 +155,37 @@ class ModelsController extends Controller
         );
     }
 
+    /*** =========================
+     *  CRUD
+     *  ========================= */
+
     public function store(Request $request)
     {
         $validated = $request->validate([
             'customer_id' => 'required|integer|exists:customers,id',
             'name'        => 'required|string|max:50',
             'status_id'   => 'required|integer|exists:project_status,id',
+            'planning'    => 'required|integer|min:0',
         ]);
 
         Models::create($validated);
         return response()->json(['success' => true, 'message' => 'Model created successfully.']);
     }
 
+    // Kembalikan field tambahan untuk prefill modal edit
     public function show(Models $model)
     {
-        // kalau mau kirim relasi juga:
         $model->load(['customer','status']);
-        return response()->json($model);
+
+        return response()->json([
+            'id'            => $model->id,
+            'name'          => $model->name,
+            'customer_id'   => $model->customer_id,
+            'customer_code' => $model->customer?->code,   // label Select2 saat edit (code saja)
+            'status_id'     => $model->status_id,
+            'status_name'   => $model->status?->name,     // label Select2 status
+            'planning'      => $model->planning,          // integer
+        ]);
     }
 
     public function update(Request $request, Models $model)
@@ -122,7 +193,8 @@ class ModelsController extends Controller
         $validated = $request->validate([
             'customer_id' => 'required|integer|exists:customers,id',
             'name'        => 'required|string|max:50',
-            'status_id'   => 'required|integer|exists:project_status,id', // konsisten dg store
+            'status_id'   => 'required|integer|exists:project_status,id',
+            'planning'    => 'required|integer|min:0',
         ]);
 
         $model->update($validated);
