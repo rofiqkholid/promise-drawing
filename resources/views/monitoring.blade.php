@@ -20,7 +20,7 @@
                     </div>
                     <div>
                         <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Total Document</h3>
-                        <p class="text-2xl font-bold text-gray-800 dark:text-gray-100">1024</p>
+                        <p id="docCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
                     </div>
                 </div>
                 <div class="absolute bottom-0 right-0">
@@ -37,7 +37,7 @@
                     </div>
                     <div>
                         <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Upload</h3>
-                        <p class="text-2xl font-bold text-gray-800 dark:text-gray-100">512</p>
+                        <p id="uploadCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
                     </div>
                 </div>
                 <div class="absolute bottom-0 right-0">
@@ -54,7 +54,7 @@
                     </div>
                     <div>
                         <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Download</h3>
-                        <p class="text-2xl font-bold text-gray-800 dark:text-gray-100">403</p>
+                        <p id="downloadCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
                     </div>
                 </div>
                 <div class="absolute bottom-0 right-0">
@@ -186,6 +186,9 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         fetchActiveUsers();
+        fetchUploadCount();
+        fetchDocCount();
+        fetchUDownloadCount();
     });
 
     function fetchActiveUsers() {
@@ -203,6 +206,61 @@
             })
             .catch(error => {
                 console.error('Error fetching active users:', error);
+                userCountElement.textContent = 'Error';
+            });
+    }
+
+    function fetchUploadCount() {
+        const apiUrl = '/api/upload-count';
+        const userCountElement = document.getElementById('uploadCount');
+        if (!userCountElement) return;
+        userCountElement.textContent = '...';
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.status === 'success') userCountElement.textContent = data.count;
+            })
+            .catch(error => {
+                console.error('Error fetching upload data:', error);
+                userCountElement.textContent = 'Error';
+            });
+    }
+    function fetchUDownloadCount() {
+        const apiUrl = '/api/download-count';
+        const userCountElement = document.getElementById('downloadCount');
+        if (!userCountElement) return;
+        userCountElement.textContent = '...';
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.status === 'success') userCountElement.textContent = data.count;
+            })
+            .catch(error => {
+                console.error('Error fetching download data:', error);
+                userCountElement.textContent = 'Error';
+            });
+    }
+    function fetchDocCount() {
+        const apiUrl = '/api/doc-count';
+        const userCountElement = document.getElementById('docCount');
+        if (!userCountElement) return;
+        userCountElement.textContent = '...';
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.status === 'success') userCountElement.textContent = data.count;
+            })
+            .catch(error => {
+                console.error('Error fetching document total:', error);
                 userCountElement.textContent = 'Error';
             });
     }
