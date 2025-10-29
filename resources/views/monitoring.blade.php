@@ -494,12 +494,12 @@
 
                 const allChartOptions = {
                     ...mainChartOptions,
-                    colors: ['#0063d5ff', '#3ea70dff', '#cfc100ff']
+                    colors: ['#0063d5ff', '#3ea70dff', '#bd8e00ff']
                 };
 
                 const projectChartOptions = {
                     ...mainChartOptions,
-                    colors: ['#0063d5ff', '#3ea70dff', '#cfc100ff']
+                    colors: ['#0063d5ff', '#3ea70dff', '#bd8e00ff']
                 };
 
                 this.apexPlanVsActualChart = new ApexCharts(document.querySelector("#planVsActualChart"), allChartOptions);
