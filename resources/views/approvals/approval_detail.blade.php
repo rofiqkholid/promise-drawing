@@ -214,15 +214,12 @@
               <div class="w-full">
                 <div x-ref="igesWrap" class="w-full h-[70vh] rounded border border-gray-200 dark:border-gray-700 bg-black/5"></div>
 
-                <!-- ====== TOOLBAR: Display styles, Measure, Section ====== -->
+                <!-- ====== TOOLBAR (Shaded, Shaded+Edges, Measure) ====== -->
                 <div class="mt-3 flex flex-wrap items-center gap-2">
                   <!-- Display styles -->
                   <div class="inline-flex rounded-md shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
                     <button class="px-2 py-1 text-xs hover:bg-gray-100 dark:hover:bg-gray-700" @click="setDisplayStyle('shaded')">Shaded</button>
                     <button class="px-2 py-1 text-xs hover:bg-gray-100 dark:hover:bg-gray-700" @click="setDisplayStyle('shaded-edges')">Shaded+Edges</button>
-                    <button class="px-2 py-1 text-xs hover:bg-gray-100 dark:hover:bg-gray-700" @click="setDisplayStyle('wireframe')">Wireframe</button>
-                    <button class="px-2 py-1 text-xs hover:bg-gray-100 dark:hover:bg-gray-700" @click="setDisplayStyle('hidden-line')">Hidden Line</button>
-                    <button class="px-2 py-1 text-xs hover:bg-gray-100 dark:hover:bg-gray-700" @click="setDisplayStyle('xray')">X-Ray</button>
                   </div>
 
                   <!-- Measure -->
@@ -235,24 +232,6 @@
                     <button class="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
                             @click="clearMeasurements()">
                       Clear
-                    </button>
-                  </div>
-
-                  <!-- Section (clipping) -->
-                  <div class="flex items-center gap-2 ml-4">
-                    <span class="text-[10px] uppercase tracking-wide text-gray-500">Section</span>
-                    <label class="text-[10px] text-gray-500">X
-                      <input type="range" min="-500" max="500" step="1" x-model.number="iges.section.x" @input="applySection()">
-                    </label>
-                    <label class="text-[10px] text-gray-500">Y
-                      <input type="range" min="-500" max="500" step="1" x-model.number="iges.section.y" @input="applySection()">
-                    </label>
-                    <label class="text-[10px] text-gray-500">Z
-                      <input type="range" min="-500" max="500" step="1" x-model.number="iges.section.z" @input="applySection()">
-                    </label>
-                    <button class="px-2 py-1 text-xs rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
-                            @click="resetSection()">
-                      Reset
                     </button>
                   </div>
                 </div>
@@ -392,17 +371,9 @@
 </div>
 
 <style>
-  [x-collapse] {
-    @apply overflow-hidden transition-all duration-300 ease-in-out;
-  }
-
-  .preview-area {
-    @apply bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center;
-  }
-
+  [x-collapse] { @apply overflow-hidden transition-all duration-300 ease-in-out; }
+  .preview-area { @apply bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center; }
   [x-cloak] { display: none !important; }
-
-  /* label untuk measurement */
   .measure-label { user-select: none; white-space: nowrap; }
 </style>
 
@@ -511,10 +482,8 @@
         loading: false, error: '',
         rootModel: null,
         THREE: null,
-        // measurement
-        measure: { enabled: false, group: null, p1: null, p2: null },
-        // section
-        section: { x: 0, y: 0, z: 0, planes: [] }
+        // measurement only
+        measure: { enabled: false, group: null, p1: null, p2: null }
       },
       _onIgesResize: null,
 
@@ -599,8 +568,7 @@
           renderer: null, scene: null, camera: null, controls: null, animId: 0,
           loading: false, error: '',
           rootModel: null, THREE: null,
-          measure: { enabled: false, group: null, p1: null, p2: null },
-          section: { x:0, y:0, z:0, planes: [] }
+          measure: { enabled: false, group: null, p1: null, p2: null }
         };
         this._onIgesResize = null;
       },
@@ -668,40 +636,12 @@
         const root = this.iges.rootModel; if (!root) return;
         this._restoreMaterials(root);
 
-        if (mode === 'shaded') return;
+        if (mode === 'shaded') {
+          return; // default
+        }
 
         if (mode === 'shaded-edges'){
           this._setPolygonOffset(root, true, 1, 1);
-          this._toggleEdges(root, true, 0x000000);
-          return;
-        }
-
-        if (mode === 'wireframe'){
-          this._setWireframe(root, true); return;
-        }
-
-        if (mode === 'hidden-line'){
-          root.traverse(o=>{
-            if (!o.isMesh) return;
-            (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{
-              m.color?.set(0xffffff); m.emissive?.set(0x000000);
-              if (m.metalness!==undefined) m.metalness = 0;
-              if (m.roughness!==undefined) m.roughness = 1;
-              m.transparent = false; m.opacity = 1;
-            });
-          });
-          this._setPolygonOffset(root, true, 1, 1);
-          this._toggleEdges(root, true, 0x000000);
-          return;
-        }
-
-        if (mode === 'xray'){
-          root.traverse(o=>{
-            if (!o.isMesh) return;
-            (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{
-              m.transparent = true; m.opacity = 0.25; m.depthWrite = false;
-            });
-          });
           this._toggleEdges(root, true, 0x000000);
           return;
         }
@@ -744,206 +684,69 @@
         }
       },
       _pickPoint(ev){
-        const { THREE, camera, rootModel } = this.iges;
-        const rect = this.iges.renderer.domElement.getBoundingClientRect();
-        const mouse = new THREE.Vector2(
-          ((ev.clientX - rect.left)/rect.width)*2 - 1,
-          -((ev.clientY - rect.top)/rect.height)*2 + 1
-        );
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(mouse, camera);
-        const hits = raycaster.intersectObjects(rootModel.children, true);
-        if (!hits.length) return null;
+  const { THREE, camera, rootModel } = this.iges;
+  const rect = this.iges.renderer.domElement.getBoundingClientRect();
+  const mouse = new THREE.Vector2(
+    ((ev.clientX - rect.left)/rect.width)*2 - 1,
+    -((ev.clientY - rect.top)/rect.height)*2 + 1
+  );
+  const raycaster = new THREE.Raycaster();
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(rootModel.children, true);
+  if (!hits.length) return null;
 
-        const hit = hits[0];
-        const g = hit.object.geometry;
-        if (hit.face && g.index){
-          const idx = [g.index.getX(hit.face.a), g.index.getX(hit.face.b), g.index.getX(hit.face.c)];
-          const pA = new THREE.Vector3().fromBufferAttribute(g.attributes.position, idx[0]).applyMatrix4(hit.object.matrixWorld);
-          const pB = new THREE.Vector3().fromBufferAttribute(g.attributes.position, idx[1]).applyMatrix4(hit.object.matrixWorld);
-          const pC = new THREE.Vector3().fromBufferAttribute(g.attributes.position, idx[2]).applyMatrix4(hit.object.matrixWorld);
-          const pts = [pA,pB,pC].sort((a,b)=>a.distanceTo(hit.point)-b.distanceTo(hit.point));
-          return pts[0].clone();
-        }
-        return hit.point.clone();
-      },
-      _drawMeasurement(a, b){
-        const THREE = this.iges.THREE;
-        const group = new THREE.Group();
+  // pakai titik hit persis, bukan snap ke vertex
+  return hits[0].point.clone();
+},
 
-        // line
-        const geom = new THREE.BufferGeometry().setFromPoints([a,b]);
-        const line = new THREE.Line(geom, new THREE.LineBasicMaterial({}));
-        group.add(line);
+     _drawMeasurement(a, b){
+  const THREE = this.iges.THREE;
+  const group = new THREE.Group();
 
-        // points
-        const s = Math.max(0.4, a.distanceTo(b)/160);
-        const sg = new THREE.SphereGeometry(s, 16, 16);
-        const sm = new THREE.MeshBasicMaterial({});
-        const s1 = new THREE.Mesh(sg, sm); s1.position.copy(a); group.add(s1);
-        const s2 = new THREE.Mesh(sg, sm); s2.position.copy(b); group.add(s2);
+  // garis
+  const geom = new THREE.BufferGeometry().setFromPoints([a,b]);
+  const line = new THREE.Line(geom, new THREE.LineBasicMaterial({}));
+  group.add(line);
 
-        // html label
-        const lbl = document.createElement('div');
-        lbl.className = 'measure-label';
-        lbl.style.position = 'absolute';
-        lbl.style.pointerEvents = 'none';
-        lbl.style.font = '12px/1.2 monospace';
-        lbl.style.padding = '2px 6px';
-        lbl.style.background = 'rgba(0,0,0,.65)';
-        lbl.style.color = '#fff';
-        lbl.style.borderRadius = '4px';
-        document.body.appendChild(lbl);
+  // titik
+  const s = Math.max(0.4, a.distanceTo(b)/160);
+  const sg = new THREE.SphereGeometry(s, 16, 16);
+  const sm = new THREE.MeshBasicMaterial({});
+  const s1 = new THREE.Mesh(sg, sm); s1.position.copy(a); group.add(s1);
+  const s2 = new THREE.Mesh(sg, sm); s2.position.copy(b); group.add(s2);
 
-        const updateLabel = ()=>{
-          const mid = a.clone().add(b).multiplyScalar(0.5).project(this.iges.camera);
-          const r = this.iges.renderer.domElement.getBoundingClientRect();
-          const x = (mid.x*0.5+0.5)*r.width + r.left;
-          const y = (-mid.y*0.5+0.5)*r.height + r.top;
-          lbl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
-          lbl.textContent = `${a.distanceTo(b).toFixed(2)} mm`;
-        };
-        group.userData.update = updateLabel;
-        group.userData.dispose = ()=>lbl.remove();
+  // ===== label di dalam igesWrap =====
+  const wrap = this.$refs.igesWrap;
+  const lbl = document.createElement('div');
+  lbl.className = 'measure-label';
+  lbl.style.position = 'absolute';
+  lbl.style.pointerEvents = 'none';
+  lbl.style.font = '12px/1.2 monospace';
+  lbl.style.padding = '2px 6px';
+  lbl.style.background = 'rgba(0,0,0,.75)';
+  lbl.style.color = '#fff';
+  lbl.style.borderRadius = '4px';
+  lbl.style.zIndex = '20';
+  wrap.appendChild(lbl);
 
-        this.iges.measure.group.add(group);
-      },
+  const updateLabel = ()=>{
+    // proyeksi ke NDC -> pixel relatif container
+    const mid = a.clone().add(b).multiplyScalar(0.5).project(this.iges.camera);
+    const w = wrap.clientWidth, h = wrap.clientHeight;
 
-      // ===== Section (clipping planes) =====
-      _applyClippingPlanes(){
-        const planes = this.iges.section.planes;
-        const root = this.iges.rootModel;
-        if (!root) return;
-        root.traverse(o=>{
-          if (!o.isMesh) return;
-          const mats = Array.isArray(o.material)?o.material:[o.material];
-          mats.forEach(m=> m.clippingPlanes = planes && planes.length ? planes : null);
-        });
-        this.iges.renderer.localClippingEnabled = !!(planes && planes.length);
-      },
-      applySection(){
-        const { THREE } = this.iges;
-        const { x,y,z } = this.iges.section;
-        const planes = [
-          new THREE.Plane(new THREE.Vector3( 1,0,0), -x),
-          new THREE.Plane(new THREE.Vector3( 0,1,0), -y),
-          new THREE.Plane(new THREE.Vector3( 0,0,1), -z),
-        ];
-        this.iges.section.planes = planes;
-        this._applyClippingPlanes();
-      },
-      resetSection(){
-        this.iges.section.x = this.iges.section.y = this.iges.section.z = 0;
-        this.iges.section.planes = [];
-        this._applyClippingPlanes();
-      },
+    const x = (mid.x * 0.5 + 0.5) * w;
+    const y = (-mid.y * 0.5 + 0.5) * h;
 
-      // ==== render CAD via occt-import-js ====
-      async renderCadOcct(url) {
-        if (!url) return;
-        this.disposeCad();
-        this.iges.loading = true; this.iges.error = '';
+    lbl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+    lbl.textContent = `${a.distanceTo(b).toFixed(2)} mm`;
+  };
 
-        try {
-          const THREE = await import('three');
-          const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
-          // BVH untuk raycast cepat & stabil
-          const bvh = await import('three-mesh-bvh');
-          THREE.Mesh.prototype.raycast = bvh.acceleratedRaycast;
-          THREE.BufferGeometry.prototype.computeBoundsTree = bvh.computeBoundsTree;
-          THREE.BufferGeometry.prototype.disposeBoundsTree  = bvh.disposeBoundsTree;
+  group.userData.update = updateLabel;
+  group.userData.dispose = ()=> lbl.remove();
+  updateLabel(); // tampil langsung
 
-          // scene & camera
-          const scene = new THREE.Scene();
-          scene.background = null;
-          const wrap = this.$refs.igesWrap;
-          const width = wrap?.clientWidth || 800, height = wrap?.clientHeight || 500;
-
-          const camera = new THREE.PerspectiveCamera(50, width/height, 0.1, 10000);
-          camera.position.set(250, 200, 250);
-
-          const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-          renderer.setPixelRatio(window.devicePixelRatio || 1);
-          renderer.setSize(width, height);
-          wrap.appendChild(renderer.domElement);
-
-          // lights
-          const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8); hemi.position.set(0, 200, 0); scene.add(hemi);
-          const dir  = new THREE.DirectionalLight(0xffffff, 0.9); dir.position.set(150, 200, 100); scene.add(dir);
-
-          // controls
-          const controls = new OrbitControls(camera, renderer.domElement);
-          controls.enableDamping = true;
-
-          // fetch file
-          const resp = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
-          if (!resp.ok) throw new Error('Gagal mengambil file CAD');
-          const buffer = await resp.arrayBuffer();
-          const file = new Uint8Array(buffer);
-
-          // parse dengan occt
-          const occt = await window.occtimportjs(); // dari <script> CDN
-          const ext = (url.split('?')[0].split('#')[0].split('.').pop() || '').toLowerCase();
-          const res = (ext === 'stp' || ext === 'step') ? occt.ReadStepFile(file, null) : occt.ReadIgesFile(file, null);
-          if (!res?.success) throw new Error('OCCT gagal mem-parsing file');
-
-          // build meshes -> scene
-          const group = this._buildThreeFromOcct(res, THREE);
-          scene.add(group);
-
-          // simpan refs
-          this.iges.rootModel = group;
-          this.iges.scene = scene;
-          this.iges.camera = camera;
-          this.iges.renderer = renderer;
-          this.iges.controls = controls;
-          this.iges.THREE = THREE;
-
-          // cache material asli untuk display styles
-          this._cacheOriginalMaterials(group, THREE);
-
-          // auto-fit kamera
-          const box = new THREE.Box3().setFromObject(group);
-          const size = new THREE.Vector3(); box.getSize(size);
-          const center = new THREE.Vector3(); box.getCenter(center);
-          const maxDim = Math.max(size.x, size.y, size.z) || 100;
-          const fitDist = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360));
-          camera.position.copy(center.clone().add(new THREE.Vector3(1,1,1).normalize().multiplyScalar(fitDist * 1.6)));
-          camera.near = Math.max(maxDim / 100, 0.1);
-          camera.far  = Math.max(maxDim * 100, 1000);
-          camera.updateProjectionMatrix();
-          controls.target.copy(center);
-          controls.update();
-
-          // render loop + update label measure
-          const animate = () => {
-            controls.update();
-            renderer.render(scene, camera);
-            const g = this.iges.measure.group;
-            if (g) g.children.forEach(ch => ch.userData?.update?.());
-            this.iges.animId = requestAnimationFrame(animate);
-          };
-          animate();
-
-          // resize
-          this._onIgesResize = () => {
-            const w = this.$refs.igesWrap?.clientWidth || 800;
-            const h = this.$refs.igesWrap?.clientHeight || 500;
-            camera.aspect = w / h; camera.updateProjectionMatrix();
-            renderer.setSize(w, h);
-          };
-          window.addEventListener('resize', this._onIgesResize);
-
-          // default style saat buka
-          this.setDisplayStyle('shaded-edges');
-
-        } catch (e) {
-          console.error(e);
-          this.iges.error = e?.message || 'Failed to render CAD file';
-        } finally {
-          this.iges.loading = false;
-        }
-      },
+  this.iges.measure.group.add(group);
+},
 
       // ==== tinggi panel sinkron ====
       syncHeights() {
@@ -1107,8 +910,116 @@
           this.syncHeights();
         }
       },
+
+      // ==== render CAD via occt-import-js ====
+      async renderCadOcct(url) {
+        if (!url) return;
+        this.disposeCad();
+        this.iges.loading = true; this.iges.error = '';
+
+        try {
+          const THREE = await import('three');
+          const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+          // BVH untuk raycast cepat & stabil
+          const bvh = await import('three-mesh-bvh');
+          THREE.Mesh.prototype.raycast = bvh.acceleratedRaycast;
+          THREE.BufferGeometry.prototype.computeBoundsTree = bvh.computeBoundsTree;
+          THREE.BufferGeometry.prototype.disposeBoundsTree  = bvh.disposeBoundsTree;
+
+          // scene & camera
+          const scene = new THREE.Scene();
+          scene.background = null;
+          const wrap = this.$refs.igesWrap;
+          const width = wrap?.clientWidth || 800, height = wrap?.clientHeight || 500;
+
+          const camera = new THREE.PerspectiveCamera(50, width/height, 0.1, 10000);
+          camera.position.set(250, 200, 250);
+
+          const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+          renderer.setPixelRatio(window.devicePixelRatio || 1);
+          renderer.setSize(width, height);
+          wrap.appendChild(renderer.domElement);
+          wrap.style.position = 'relative';
+wrap.style.overflow  = 'hidden';
+
+          // lights
+          const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8); hemi.position.set(0, 200, 0); scene.add(hemi);
+          const dir  = new THREE.DirectionalLight(0xffffff, 0.9); dir.position.set(150, 200, 100); scene.add(dir);
+
+          // controls
+          const controls = new OrbitControls(camera, renderer.domElement);
+          controls.enableDamping = true;
+
+          // fetch file
+          const resp = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+          if (!resp.ok) throw new Error('Gagal mengambil file CAD');
+          const buffer = await resp.arrayBuffer();
+          const file = new Uint8Array(buffer);
+
+          // parse dengan occt
+          const occt = await window.occtimportjs(); // dari <script> CDN
+          const ext = (url.split('?')[0].split('#')[0].split('.').pop() || '').toLowerCase();
+          const res = (ext === 'stp' || ext === 'step') ? occt.ReadStepFile(file, null) : occt.ReadIgesFile(file, null);
+          if (!res?.success) throw new Error('OCCT gagal mem-parsing file');
+
+          // build meshes -> scene
+          const group = this._buildThreeFromOcct(res, THREE);
+          scene.add(group);
+
+          // simpan refs
+          this.iges.rootModel = group;
+          this.iges.scene = scene;
+          this.iges.camera = camera;
+          this.iges.renderer = renderer;
+          this.iges.controls = controls;
+          this.iges.THREE = THREE;
+
+          // cache material asli untuk display styles
+          this._cacheOriginalMaterials(group, THREE);
+
+          // auto-fit kamera
+          const box = new THREE.Box3().setFromObject(group);
+          const size = new THREE.Vector3(); box.getSize(size);
+          const center = new THREE.Vector3(); box.getCenter(center);
+          const maxDim = Math.max(size.x, size.y, size.z) || 100;
+          const fitDist = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360));
+          camera.position.copy(center.clone().add(new THREE.Vector3(1,1,1).normalize().multiplyScalar(fitDist * 1.6)));
+          camera.near = Math.max(maxDim / 100, 0.1);
+          camera.far  = Math.max(maxDim * 100, 1000);
+          camera.updateProjectionMatrix();
+          controls.target.copy(center);
+          controls.update();
+
+          // render loop + update label measure
+          const animate = () => {
+            controls.update();
+            renderer.render(scene, camera);
+            const g = this.iges.measure.group;
+            if (g) g.children.forEach(ch => ch.userData?.update?.());
+            this.iges.animId = requestAnimationFrame(animate);
+          };
+          animate();
+
+          // resize
+          this._onIgesResize = () => {
+            const w = this.$refs.igesWrap?.clientWidth || 800;
+            const h = this.$refs.igesWrap?.clientHeight || 500;
+            camera.aspect = w / h; camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+          };
+          window.addEventListener('resize', this._onIgesResize);
+
+          // default style saat buka
+          this.setDisplayStyle('shaded-edges');
+
+        } catch (e) {
+          console.error(e);
+          this.iges.error = e?.message || 'Failed to render CAD file';
+        } finally {
+          this.iges.loading = false;
+        }
+      },
     }
   }
 </script>
 @endpush
-

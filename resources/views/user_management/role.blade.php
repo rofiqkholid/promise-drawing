@@ -126,13 +126,11 @@
 @endpush
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 $(function () {
     const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-    /* ========= Theme-aware SweetAlert2 ========= */
     const isDark = () => document.documentElement.classList.contains('dark');
     function themeToast(icon, title){
         const dark = isDark();
