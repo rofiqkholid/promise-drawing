@@ -5,130 +5,61 @@
 @section('content')
 
 <div class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen" x-data="approvalDetail()" x-init="init()">
-  <!-- TOP ROW: Metadata (8) + Activity Log (4) -->
-  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6 items-stretch">
-    <!-- Approval Metadata (8 cols) -->
-    <div x-ref="metaCard"
-      class="lg:col-span-8 min-h-0 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden h-full flex flex-col box-border">
-      <!-- Header -->
-      <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-        <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 md:justify-between">
-          <h2 class="text-lg lg:text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-            <i class="fa-solid fa-file-invoice mr-2 text-blue-600"></i>
-            Approval Metadata
-          </h2>
 
-          <a href="{{ url()->previous() }}"
-            class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
-            <i class="fa-solid fa-arrow-left"></i>
-            Back
-          </a>
-        </div>
-      </div>
+  <!-- ================= MAIN LAYOUT: LEFT STACK + RIGHT PREVIEW ================= -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6 items-start">
+    <!-- ================= LEFT COLUMN (lg:span 4) ================= -->
+    <div class="lg:col-span-4 space-y-6">
 
-      <!-- Body (compact) -->
-      <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 text-sm">
-        <div>
-          <dt class="text-xs text-gray-500 dark:text-gray-400 font-medium">Customer</dt>
-          <dd class="mt-0.5 text-gray-900 dark:text-gray-100" x-text="pkg.metadata.customer"></dd>
-        </div>
-        <div>
-          <dt class="text-xs text-gray-500 dark:text-gray-400 font-medium">Model</dt>
-          <dd class="mt-0.5 text-gray-900 dark:text-gray-100" x-text="pkg.metadata.model"></dd>
-        </div>
-        <div>
-          <dt class="text-xs text-gray-500 dark:text-gray-400 font-medium">Part No</dt>
-          <dd class="mt-0.5 text-gray-900 dark:text-gray-100" x-text="pkg.metadata.part_no"></dd>
-        </div>
-        <div>
-          <dt class="text-xs text-gray-500 dark:text-gray-400 font-medium">Revision</dt>
-          <dd class="mt-0.5 text-gray-900 dark:text-gray-100" x-text="pkg.metadata.revision"></dd>
-        </div>
-        <div>
-          <dt class="text-xs text-gray-500 dark:text-gray-400 font-medium">Status</dt>
-          <dd class="mt-0.5 text-gray-900 dark:text-gray-100" x-text="pkg.status"></dd>
-        </div>
-      </div>
+      <!-- ===== Meta Card ===== -->
+      <div x-ref="metaCard"
+           class="self-start bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <!-- Header -->
+        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 md:justify-between">
+            <h2 class="text-lg lg:text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+              <i class="fa-solid fa-file-invoice mr-2 text-blue-600"></i>
+              Approval Metadata
+            </h2>
 
-      <!-- Footer (Approve / Reject / Rollback) -->
-      <div class="mt-auto px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
-        <!-- Tampil saat WAITING -->
-        <template x-if="isWaiting()">
-          <div class="flex gap-2">
-            <button @click="rejectPackage()" class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm">
-              <i class="fa-solid fa-circle-xmark mr-2"></i> Reject
-            </button>
-            <button @click="approvePackage()" class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm">
-              <i class="fa-solid fa-circle-check mr-2"></i> Approve
-            </button>
+            <a href="{{ url()->previous() }}"
+               class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
+              <i class="fa-solid fa-arrow-left"></i>
+              Back
+            </a>
           </div>
-        </template>
-        <!-- Tampil saat status BUKAN WAITING (Approved/Rejected) -->
-        <template x-if="!isWaiting()">
-          <button @click="rollbackPackage()" class="inline-flex items-center px-3 py-1.5 bg-amber-600 text-white rounded-md hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 text-sm">
-            <i class="fa-solid fa-rotate-left mr-2"></i> Rollback
-          </button>
-        </template>
-      </div>
-    </div>
-
-    <!-- Activity Log (4 cols) -->
-    <div x-ref="actCard"
-      class="lg:col-span-4 min-h-0 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden h-full flex flex-col box-border"
-      :style="`height:${actCardH}px`">
-      <!-- Header -->
-      <div x-ref="actHeader"
-        class="p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between sticky top-0 z-10">
-        <div class="flex items-center">
-          <i class="fa-solid fa-clock-rotate-left mr-2 text-gray-500 dark:text-gray-400"></i>
-          <span class="text-sm font-medium text-gray-900 dark:text-gray-100">Activity Log</span>
         </div>
-        <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full"
-          x-text="`${pkg.activityLogs?.length || 0} events`"></span>
+
+        <!-- Body: single line with dashes -->
+        <div class="p-4">
+          <p class="text-sm text-gray-900 dark:text-gray-100 truncate"
+             x-text="metaLine()"
+             :title="metaLine()"></p>
+        </div>
+
+        <!-- Footer (Approve / Reject / Rollback) -->
+        <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
+          <template x-if="isWaiting()">
+            <div class="flex gap-2">
+              <button @click="rejectPackage()" class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm">
+                <i class="fa-solid fa-circle-xmark mr-2"></i> Reject
+              </button>
+              <button @click="approvePackage()" class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm">
+                <i class="fa-solid fa-circle-check mr-2"></i> Approve
+              </button>
+            </div>
+          </template>
+          <template x-if="!isWaiting()">
+            <button @click="rollbackPackage()" class="inline-flex items-center px-3 py-1.5 bg-amber-600 text-white rounded-md hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 text-sm">
+              <i class="fa-solid fa-rotate-left mr-2"></i> Rollback
+            </button>
+          </template>
+        </div>
       </div>
 
-      <!-- List -->
-      <div x-ref="actList"
-        class="overflow-y-auto p-2 space-y-2"
-        :style="`height:${actListH}px`"
-        role="log" aria-label="Activity Log">
-        <template x-for="(item, idx) in (pkg.activityLogs || [])" :key="idx">
-          <div class="flex items-start gap-3 p-3 rounded-md bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700">
-            <div class="mt-0.5">
-              <template x-if="item.action === 'uploaded'"><i class="fa-solid fa-upload text-blue-500"></i></template>
-              <template x-if="item.action === 'approved'"><i class="fa-solid fa-circle-check text-green-500"></i></template>
-              <template x-if="item.action === 'rejected'"><i class="fa-solid fa-circle-xmark text-red-500"></i></template>
-              <template x-if="item.action === 'rollbacked'"><i class="fa-solid fa-rotate-left text-amber-500"></i></template>
-              <template x-if="!['uploaded','approved','rejected','rollbacked'].includes(item.action)"><i class="fa-solid fa-circle-info text-gray-500"></i></template>
-            </div>
-            <div class="min-w-0">
-              <p class="text-sm text-gray-900 dark:text-gray-100">
-                <span class="font-medium capitalize" x-text="item.action"></span>
-                <span class="mx-1">by</span>
-                <span class="font-medium" x-text="item.user"></span>
-                <template x-if="item.note">
-                  <span class="text-gray-600 dark:text-gray-400">— <span x-text="item.note"></span></span>
-                </template>
-              </p>
-              <p class="text-xs text-gray-500 dark:text-gray-400" x-text="item.time"></p>
-            </div>
-          </div>
-        </template>
-
-        <template x-if="(pkg.activityLogs || []).length === 0">
-          <p class="p-3 text-center text-xs text-gray-500 dark:text-gray-400">No activity yet for this package.</p>
-        </template>
-      </div>
-    </div>
-  </div>
-  <!-- /TOP ROW -->
-
-  <!-- MAIN GRID BELOW -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- Sidebar: File Groups -->
-    <div class="lg:col-span-1 space-y-6">
+      <!-- ===== File Groups (2D / 3D / ECN) ===== -->
       @php
-      function renderFileGroup($title, $icon, $category) {
+        function renderFileGroup($title, $icon, $category) {
       @endphp
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
         <button @click="toggleSection('{{$category}}')" class="w-full p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between focus:outline-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200" :aria-expanded="openSections.includes('{{$category}}')">
@@ -151,17 +82,58 @@
           </template>
         </div>
       </div>
-      @php
-      }
-      @endphp
+      @php } @endphp
 
       {{ renderFileGroup('2D Drawings', 'fa-drafting-compass', '2d') }}
       {{ renderFileGroup('3D Models', 'fa-cubes', '3d') }}
       {{ renderFileGroup('ECN / Documents', 'fa-file-lines', 'ecn') }}
-    </div>
 
-    <!-- Main Panel: File Preview -->
-    <div class="lg:col-span-2">
+      <!-- ===== Activity Log (below ECN) ===== -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
+          <div class="flex items-center">
+            <i class="fa-solid fa-clock-rotate-left mr-2 text-gray-500 dark:text-gray-400"></i>
+            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">Activity Log</span>
+          </div>
+          <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full"
+            x-text="`${pkg.activityLogs?.length || 0} events`"></span>
+        </div>
+
+        <div class="p-2 space-y-2" role="log" aria-label="Activity Log">
+          <template x-for="(item, idx) in (pkg.activityLogs || [])" :key="idx">
+            <div class="flex items-start gap-3 p-3 rounded-md bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700">
+              <div class="mt-0.5">
+                <template x-if="item.action === 'uploaded'"><i class="fa-solid fa-upload text-blue-500"></i></template>
+                <template x-if="item.action === 'approved'"><i class="fa-solid fa-circle-check text-green-500"></i></template>
+                <template x-if="item.action === 'rejected'"><i class="fa-solid fa-circle-xmark text-red-500"></i></template>
+                <template x-if="item.action === 'rollbacked'"><i class="fa-solid fa-rotate-left text-amber-500"></i></template>
+                <template x-if="!['uploaded','approved','rejected','rollbacked'].includes(item.action)"><i class="fa-solid fa-circle-info text-gray-500"></i></template>
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm text-gray-900 dark:text-gray-100">
+                  <span class="font-medium capitalize" x-text="item.action"></span>
+                  <span class="mx-1">by</span>
+                  <span class="font-medium" x-text="item.user"></span>
+                  <template x-if="item.note">
+                    <span class="text-gray-600 dark:text-gray-400">— <span x-text="item.note"></span></span>
+                  </template>
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400" x-text="item.time"></p>
+              </div>
+            </div>
+          </template>
+
+          <template x-if="(pkg.activityLogs || []).length === 0">
+            <p class="p-3 text-center text-xs text-gray-500 dark:text-gray-400">No activity yet for this package.</p>
+          </template>
+        </div>
+      </div>
+
+    </div>
+    <!-- ================= /LEFT COLUMN ================= -->
+
+    <!-- ================= RIGHT COLUMN (lg:span 8) — Preview ================= -->
+    <div class="lg:col-span-8">
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
         <!-- No File Selected -->
         <div x-show="!selectedFile" x-cloak class="flex flex-col items-center justify-center h-96 p-6 bg-gray-50 dark:bg-gray-900/50 text-center">
@@ -179,12 +151,12 @@
               <p class="text-xs text-gray-500 dark:text-gray-400">Last updated: {{ now()->format('M d, Y H:i') }}</p>
             </div>
             <a x-show="selectedFile?.url" :href="selectedFile?.url" target="_blank"
-              class="inline-flex items-center px-3 py-1.5 text-xs rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
+               class="inline-flex items-center px-3 py-1.5 text-xs rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
               <i class="fa-solid fa-up-right-from-square mr-2"></i> Open
             </a>
           </div>
 
-          <!-- >>> PREVIEW AREA (image/pdf/tiff/cad) -->
+          <!-- PREVIEW AREA (image/pdf/tiff/cad) -->
           <div class="preview-area bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center w-full">
 
             <!-- IMAGE -->
@@ -214,7 +186,7 @@
               <div class="w-full">
                 <div x-ref="igesWrap" class="w-full h-[70vh] rounded border border-gray-200 dark:border-gray-700 bg-black/5"></div>
 
-                <!-- ====== TOOLBAR (Shaded, Shaded+Edges, Measure) ====== -->
+                <!-- TOOLBAR (Shaded, Shaded+Edges, Measure) -->
                 <div class="mt-3 flex flex-wrap items-center gap-2">
                   <!-- Display styles -->
                   <div class="inline-flex rounded-md shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
@@ -251,21 +223,22 @@
             </template>
 
           </div>
-          <!-- <<< END PREVIEW AREA -->
-
+          <!-- /PREVIEW AREA -->
         </div>
       </div>
     </div>
+    <!-- ================= /RIGHT COLUMN ================= -->
   </div>
+  <!-- ================= /MAIN LAYOUT ================= -->
 
   <!-- ========================== MODALS ========================== -->
 
   <!-- APPROVE MODAL -->
   <div x-show="showApproveModal"
-    x-transition.opacity
-    x-cloak
-    class="fixed inset-0 z-50 flex items-center justify-center"
-    aria-modal="true" role="dialog">
+       x-transition.opacity
+       x-cloak
+       class="fixed inset-0 z-50 flex items-center justify-center"
+       aria-modal="true" role="dialog">
     <div class="absolute inset-0 bg-black/40" @click="closeApproveModal()"></div>
 
     <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
@@ -286,7 +259,7 @@
           Cancel
         </button>
         <button @click="confirmApprove()" :disabled="processing"
-          class="px-3 py-1.5 rounded-md bg-green-600 text-white text-sm hover:bg-green-700 disabled:opacity-60">
+                class="px-3 py-1.5 rounded-md bg-green-600 text-white text-sm hover:bg-green-700 disabled:opacity-60">
           <span x-show="!processing">Yes, Approve</span>
           <span x-show="processing">Processing…</span>
         </button>
@@ -296,10 +269,10 @@
 
   <!-- REJECT MODAL -->
   <div x-show="showRejectModal"
-    x-transition.opacity
-    x-cloak
-    class="fixed inset-0 z-50 flex items-center justify-center"
-    aria-modal="true" role="dialog">
+       x-transition.opacity
+       x-cloak
+       class="fixed inset-0 z-50 flex items-center justify-center"
+       aria-modal="true" role="dialog">
     <div class="absolute inset-0 bg-black/40" @click="closeRejectModal()"></div>
 
     <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg mx-4 overflow-hidden">
@@ -316,7 +289,7 @@
 
       <div class="px-5 pb-2">
         <textarea x-model.trim="rejectNote" rows="4" placeholder="Enter rejection note here..."
-          class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm p-3 focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
+                  class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm p-3 focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
         <p class="mt-1 text-xs text-red-600" x-show="rejectNoteError">Note is required</p>
       </div>
 
@@ -325,8 +298,8 @@
           Cancel
         </button>
         <button @click="confirmReject()"
-          :disabled="processing || rejectNote.length === 0"
-          class="px-3 py-1.5 rounded-md bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-60">
+                :disabled="processing || rejectNote.length === 0"
+                class="px-3 py-1.5 rounded-md bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-60">
           <span x-show="!processing">Yes, Reject</span>
           <span x-show="processing">Processing…</span>
         </button>
@@ -405,7 +378,7 @@
 <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
 
 <script>
-  /* util toast — tetap punyamu */
+  /* ========== Toast Utilities (tetap) ========== */
   function detectTheme() {
     const isDark = document.documentElement.classList.contains('dark');
     return isDark ? {
@@ -434,7 +407,6 @@
       toast.addEventListener('mouseleave', Swal.resumeTimer);
     }
   });
-
   function renderToast({ icon = 'success', title = 'Success', text = '' } = {}) {
     const t = detectTheme();
     BaseToast.fire({
@@ -456,6 +428,7 @@
   function toastInfo(title='Informasi', text='') { renderToast({icon:'info', title, text}); }
   window.toastSuccess = toastSuccess; window.toastError = toastError; window.toastWarning = toastWarning; window.toastInfo = toastInfo;
 
+  /* ========== Alpine Component ========== */
   function approvalDetail() {
     return {
       approvalId: JSON.parse(`@json($approvalId)`),
@@ -464,30 +437,25 @@
       selectedFile: null,
       openSections: [],
 
-      // height
-      actCardH: 0, actListH: 0, _resizeObs: null,
-
       // modal
       showApproveModal: false, showRejectModal: false, processing: false,
       rejectNote: '', rejectNoteError: false,
-      // tambahan rollback
       showRollbackModal: false,
 
       // TIFF state
       tifLoading: false, tifError: '',
 
-      // CAD viewer state (pakai three.js + occt)
+      // CAD viewer state
       iges: {
         renderer: null, scene: null, camera: null, controls: null, animId: 0,
         loading: false, error: '',
         rootModel: null,
         THREE: null,
-        // measurement only
         measure: { enabled: false, group: null, p1: null, p2: null }
       },
       _onIgesResize: null,
 
-      // ==== helpers jenis file ====
+      /* ===== Helpers jenis file ===== */
       isImage(name) {
         const ext = (name || '').split('.').pop().toLowerCase();
         return ['png','jpg','jpeg','webp','gif','bmp'].includes(ext);
@@ -503,7 +471,7 @@
       },
       pdfSrc(u) { return u; },
 
-      // ==== TIFF renderer ====
+      /* ===== TIFF renderer ===== */
       async renderTiff(url) {
         if (!url || !window.UTIF) return;
         this.tifLoading = true; this.tifError = '';
@@ -526,7 +494,7 @@
         finally { this.tifLoading = false; }
       },
 
-      // ==== build THREE.Group dari hasil OCCT ====
+      /* ===== OCCT result -> THREE meshes ===== */
       _buildThreeFromOcct(result, THREE) {
         const group = new THREE.Group();
         const meshes = result.meshes || [];
@@ -546,7 +514,7 @@
         return group;
       },
 
-      // ==== cleanup viewer CAD ====
+      /* ===== Cleanup CAD ===== */
       disposeCad() {
         try {
           cancelAnimationFrame(this.iges.animId || 0);
@@ -573,7 +541,16 @@
         this._onIgesResize = null;
       },
 
-      // ===== Display Styles & Edges =====
+      /* ===== Meta line formatter ===== */
+      metaLine() {
+        const m = this.pkg?.metadata || {};
+        // urutan: Customer - Model - Part No - Revision - Status
+        return [m.customer, m.model, m.part_no, m.revision, this.pkg?.status]
+          .filter(v => v && String(v).trim().length > 0)
+          .join(' - ');
+      },
+
+      /* ===== Display Styles / Edges ===== */
       _oriMats: new Map(),
       _cacheOriginalMaterials(root, THREE){
         root.traverse(o=>{
@@ -635,11 +612,7 @@
       setDisplayStyle(mode){
         const root = this.iges.rootModel; if (!root) return;
         this._restoreMaterials(root);
-
-        if (mode === 'shaded') {
-          return; // default
-        }
-
+        if (mode === 'shaded') return;
         if (mode === 'shaded-edges'){
           this._setPolygonOffset(root, true, 1, 1);
           this._toggleEdges(root, true, 0x000000);
@@ -647,7 +620,7 @@
         }
       },
 
-      // ===== Measure (2-click) =====
+      /* ===== Measure (2-click) ===== */
       toggleMeasure(){
         const M = this.iges.measure;
         M.enabled = !M.enabled;
@@ -684,97 +657,71 @@
         }
       },
       _pickPoint(ev){
-  const { THREE, camera, rootModel } = this.iges;
-  const rect = this.iges.renderer.domElement.getBoundingClientRect();
-  const mouse = new THREE.Vector2(
-    ((ev.clientX - rect.left)/rect.width)*2 - 1,
-    -((ev.clientY - rect.top)/rect.height)*2 + 1
-  );
-  const raycaster = new THREE.Raycaster();
-  raycaster.setFromCamera(mouse, camera);
-  const hits = raycaster.intersectObjects(rootModel.children, true);
-  if (!hits.length) return null;
+        const { THREE, camera, rootModel } = this.iges;
+        const rect = this.iges.renderer.domElement.getBoundingClientRect();
+        const mouse = new THREE.Vector2(
+          ((ev.clientX - rect.left)/rect.width)*2 - 1,
+          -((ev.clientY - rect.top)/rect.height)*2 + 1
+        );
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mouse, camera);
+        const hits = raycaster.intersectObjects(rootModel.children, true);
+        if (!hits.length) return null;
+        return hits[0].point.clone();
+      },
+      _drawMeasurement(a, b){
+        const THREE = this.iges.THREE;
+        const group = new THREE.Group();
 
-  // pakai titik hit persis, bukan snap ke vertex
-  return hits[0].point.clone();
-},
+        // line
+        const geom = new THREE.BufferGeometry().setFromPoints([a,b]);
+        const line = new THREE.Line(geom, new THREE.LineBasicMaterial({}));
+        group.add(line);
 
-     _drawMeasurement(a, b){
-  const THREE = this.iges.THREE;
-  const group = new THREE.Group();
+        // end points
+        const s = Math.max(0.4, a.distanceTo(b)/160);
+        const sg = new THREE.SphereGeometry(s, 16, 16);
+        const sm = new THREE.MeshBasicMaterial({});
+        const s1 = new THREE.Mesh(sg, sm); s1.position.copy(a); group.add(s1);
+        const s2 = new THREE.Mesh(sg, sm); s2.position.copy(b); group.add(s2);
 
-  // garis
-  const geom = new THREE.BufferGeometry().setFromPoints([a,b]);
-  const line = new THREE.Line(geom, new THREE.LineBasicMaterial({}));
-  group.add(line);
+        // label (DOM) di dalam igesWrap
+        const wrap = this.$refs.igesWrap;
+        const lbl = document.createElement('div');
+        lbl.className = 'measure-label';
+        lbl.style.position = 'absolute';
+        lbl.style.pointerEvents = 'none';
+        lbl.style.font = '12px/1.2 monospace';
+        lbl.style.padding = '2px 6px';
+        lbl.style.background = 'rgba(0,0,0,.75)';
+        lbl.style.color = '#fff';
+        lbl.style.borderRadius = '4px';
+        lbl.style.zIndex = '20';
+        wrap.appendChild(lbl);
 
-  // titik
-  const s = Math.max(0.4, a.distanceTo(b)/160);
-  const sg = new THREE.SphereGeometry(s, 16, 16);
-  const sm = new THREE.MeshBasicMaterial({});
-  const s1 = new THREE.Mesh(sg, sm); s1.position.copy(a); group.add(s1);
-  const s2 = new THREE.Mesh(sg, sm); s2.position.copy(b); group.add(s2);
-
-  // ===== label di dalam igesWrap =====
-  const wrap = this.$refs.igesWrap;
-  const lbl = document.createElement('div');
-  lbl.className = 'measure-label';
-  lbl.style.position = 'absolute';
-  lbl.style.pointerEvents = 'none';
-  lbl.style.font = '12px/1.2 monospace';
-  lbl.style.padding = '2px 6px';
-  lbl.style.background = 'rgba(0,0,0,.75)';
-  lbl.style.color = '#fff';
-  lbl.style.borderRadius = '4px';
-  lbl.style.zIndex = '20';
-  wrap.appendChild(lbl);
-
-  const updateLabel = ()=>{
-    // proyeksi ke NDC -> pixel relatif container
-    const mid = a.clone().add(b).multiplyScalar(0.5).project(this.iges.camera);
-    const w = wrap.clientWidth, h = wrap.clientHeight;
-
-    const x = (mid.x * 0.5 + 0.5) * w;
-    const y = (-mid.y * 0.5 + 0.5) * h;
-
-    lbl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
-    lbl.textContent = `${a.distanceTo(b).toFixed(2)} mm`;
-  };
-
-  group.userData.update = updateLabel;
-  group.userData.dispose = ()=> lbl.remove();
-  updateLabel(); // tampil langsung
-
-  this.iges.measure.group.add(group);
-},
-
-      // ==== tinggi panel sinkron ====
-      syncHeights() {
-        const doSync = () => {
-          const metaH = this.$refs.metaCard?.getBoundingClientRect().height || 0;
-          const headH = this.$refs.actHeader?.getBoundingClientRect().height || 0;
-          this.actCardH = Math.max(Math.floor(metaH), 200);
-          this.actListH = Math.max(Math.floor(metaH - headH - 1), 120);
+        const updateLabel = ()=>{
+          const mid = a.clone().add(b).multiplyScalar(0.5).project(this.iges.camera);
+          const w = wrap.clientWidth, h = wrap.clientHeight;
+          const x = (mid.x * 0.5 + 0.5) * w;
+          const y = (-mid.y * 0.5 + 0.5) * h;
+          lbl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+          lbl.textContent = `${a.distanceTo(b).toFixed(2)} mm`;
         };
-        if (this.$nextTick && typeof this.$nextTick === 'function') this.$nextTick(doSync);
-        else setTimeout(doSync, 0);
-      },
-      setupObservers() {
-        if (window.ResizeObserver && this.$refs.metaCard) {
-          this._resizeObs = new ResizeObserver(() => this.syncHeights());
-          this._resizeObs.observe(this.$refs.metaCard);
-        }
-        window.addEventListener('resize', this.syncHeights);
+
+        group.userData.update = updateLabel;
+        group.userData.dispose = ()=> lbl.remove();
+        updateLabel();
+
+        this.iges.measure.group.add(group);
       },
 
-      // ==== lifecycle ====
+      /* ===== Lifecycle ===== */
       init() {
-        this.syncHeights();
-        this.setupObservers();
+        // tidak perlu sinkron tinggi lagi
         window.addEventListener('beforeunload', () => this.disposeCad());
       },
 
-      // ==== UI ====
+      /* ===== UI ===== */
       toggleSection(c) {
         const i = this.openSections.indexOf(c);
         if (i > -1) this.openSections.splice(i, 1);
@@ -782,11 +729,8 @@
       },
 
       selectFile(file) {
-        // cleanup preview stateful sebelumnya
         if (this.isCad(this.selectedFile?.name)) this.disposeCad();
-        if (this.isTiff(this.selectedFile?.name)) {
-          this.tifError = ''; this.tifLoading = false;
-        }
+        if (this.isTiff(this.selectedFile?.name)) { this.tifError = ''; this.tifLoading = false; }
 
         this.selectedFile = { ...file };
 
@@ -799,13 +743,12 @@
           action, user, note: note || '',
           time: new Date().toLocaleString()
         });
-        this.syncHeights();
       },
 
-      // ==== Helper status ====
+      /* ===== Helper status ===== */
       isWaiting() { return (this.pkg.status || '').toLowerCase() === 'waiting'; },
 
-      // ==== approve/reject/rollback ====
+      /* ===== approve / reject / rollback ===== */
       approvePackage() { this.showApproveModal = true; },
       rejectPackage() { this.rejectNote = ''; this.rejectNoteError = false; this.showRejectModal = true; },
       rollbackPackage() { this.showRollbackModal = true; },
@@ -840,7 +783,6 @@
           else toastError('Error', err.message || 'Approve failed');
         } finally {
           this.processing = false;
-          this.syncHeights();
         }
       },
 
@@ -877,7 +819,6 @@
           else toastError('Error', err.message || 'Reject failed');
         } finally {
           this.processing = false;
-          this.syncHeights();
         }
       },
 
@@ -907,11 +848,10 @@
           else toastError('Error', err.message || 'Rollback failed');
         } finally {
           this.processing = false;
-          this.syncHeights();
         }
       },
 
-      // ==== render CAD via occt-import-js ====
+      /* ===== render CAD via occt-import-js ===== */
       async renderCadOcct(url) {
         if (!url) return;
         this.disposeCad();
@@ -920,7 +860,6 @@
         try {
           const THREE = await import('three');
           const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
-          // BVH untuk raycast cepat & stabil
           const bvh = await import('three-mesh-bvh');
           THREE.Mesh.prototype.raycast = bvh.acceleratedRaycast;
           THREE.BufferGeometry.prototype.computeBoundsTree = bvh.computeBoundsTree;
@@ -940,7 +879,7 @@
           renderer.setSize(width, height);
           wrap.appendChild(renderer.domElement);
           wrap.style.position = 'relative';
-wrap.style.overflow  = 'hidden';
+          wrap.style.overflow  = 'hidden';
 
           // lights
           const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8); hemi.position.set(0, 200, 0); scene.add(hemi);
@@ -974,7 +913,7 @@ wrap.style.overflow  = 'hidden';
           this.iges.controls = controls;
           this.iges.THREE = THREE;
 
-          // cache material asli untuk display styles
+          // cache material asli
           this._cacheOriginalMaterials(group, THREE);
 
           // auto-fit kamera
@@ -1009,7 +948,7 @@ wrap.style.overflow  = 'hidden';
           };
           window.addEventListener('resize', this._onIgesResize);
 
-          // default style saat buka
+          // default style
           this.setDisplayStyle('shaded-edges');
 
         } catch (e) {
