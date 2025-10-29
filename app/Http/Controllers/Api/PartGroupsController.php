@@ -37,7 +37,6 @@ class PartGroupsController extends Controller
             });
         }
 
-        // Simpan clone untuk hitung filtered count sebelum join/order
         $filteredQuery = clone $base;
 
         // Sorting
@@ -45,7 +44,6 @@ class PartGroupsController extends Controller
         $sortDir   = $request->get('order')[0]['dir'] ?? 'asc';
         $sortCol   = $request->get('columns')[$sortBy]['data'] ?? 'code_part_group';
 
-        // Query yang dipakai ambil data (boleh kita modify: join + order + paginate)
         $dataQuery = clone $base;
 
         if ($sortCol === 'customer_code') {
@@ -79,6 +77,7 @@ class PartGroupsController extends Controller
                     'customer_code'       => optional($pg->customer)->code ?? '-',
                     'model_name'          => optional($pg->model)->name ?? '-',
                     'code_part_group'     => $pg->code_part_group,
+                    'planning'           => $pg->planning,
                     'code_part_group_desc'=> $pg->code_part_group_desc,
                 ];
             }),
@@ -93,8 +92,9 @@ class PartGroupsController extends Controller
         $validated = $request->validate([
             'customer_id'        => 'required|exists:customers,id',
             'model_id'           => 'required|exists:models,id',
-            'code_part_group'    => 'required|string|max:10|unique:part_groups,code_part_group',
-            'code_part_group_desc'=> 'required|string|max:50',
+            'planning'           => 'required|integer',
+            'code_part_group'    => 'required|string|max:10',
+            'code_part_group_desc'=> 'nullable|string|max:50',
         ]);
 
         PartGroups::create($validated);
@@ -128,8 +128,9 @@ class PartGroupsController extends Controller
         $validated = $request->validate([
             'customer_id'        => 'required|exists:customers,id',
             'model_id'           => 'required|exists:models,id',
-            'code_part_group'    => ['required','string','max:50', Rule::unique('part_groups')->ignore($partGroup->id)],
-            'code_part_group_desc'=> 'required|string|max:50',
+            'planning'           => 'required|integer',
+            'code_part_group'    => ['required','string','max:50'],
+            'code_part_group_desc'=> 'nullable|string|max:50',
         ]);
 
         $partGroup->update($validated);

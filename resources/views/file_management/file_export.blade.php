@@ -4,146 +4,277 @@
 @section('header-title', 'File Manager/Download')
 
 @section('content')
-<div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900">
-    <div class="mb-8">
-        <div class="flex items-center gap-3">
-            <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-3xl">Download Files</h1>
-        </div>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Find and download your files from the Data Center.</p>
+<div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900" x-data="{ modalOpen: false }">
+  <div class="sm:flex sm:items-center sm:justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Export Files</h2>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Find and download your files from the Data Center.</p>
     </div>
 
-    {{-- Filter Card --}}
-    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg border border-gray-200 dark:border-gray-700 mb-8">
-        <div class="p-6">
-            <div class="flex items-center gap-2 mb-4">
-                <i class="fa-solid fa-filter text-blue-500"></i>
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Filter Options</h3>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6">
-
-                <div>
-                    <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
-                    <div class="relative mt-1">
-                        <input type="text" id="search" name="search" placeholder="Search by Part No..." class="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 sm:text-sm py-2.5 px-4">
-                    </div>
-                </div>
-
-                @foreach(['Customer', 'Model', 'Document Type', 'Category'] as $label)
-                    @php $modelName = lcfirst(str_replace(' ', '', $label)); @endphp
-                    <div>
-                        <label for="{{ $modelName }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{{ $label }}</label>
-                        <div class="relative mt-1">
-                            <select id="{{ $modelName }}" name="{{ $modelName }}" class="appearance-none block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 sm:text-sm py-2.5 pl-4 pr-12">
-                                <option value="">All</option>
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 dark:text-gray-400">
-                                <i class="fa-solid fa-chevron-down fa-xs"></i>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-
-                <div>
-                    <label for="revision" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Revision</label>
-                    <div class="relative mt-1">
-                        <select id="revision" name="revision" class="appearance-none block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 sm:text-sm py-2.5 pl-4 pr-12">
-                            <option value="all">All Revisions</option>
-                            <option value="latest">Latest Revision</option>
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 dark:text-gray-400">
-                            <i class="fa-solid fa-chevron-down fa-xs"></i>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
+    <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4 sm:mt-0">
+      {{-- Card Total Document --}}
+      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-full">
+          <i class="fa-solid fa-box-archive fa-lg"></i>
         </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Package</p> {{-- Ganti jadi Package --}}
+          <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            <span id="cardTotal">0</span>
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-full">
+          <i class="fa-solid fa-circle-check fa-lg"></i>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Approved</p>
+          <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            <span id="cardApproved">0</span>
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-yellow-500 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/50 rounded-full">
+          <i class="fa-solid fa-clock fa-lg"></i>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Waiting</p>
+          <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            <span id="cardWaiting">0</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- Filter section --}}
+  <div class="mt-8 bg-white dark:bg-gray-800 p-7 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">Filters</h3>
+      <button id="btnResetFilters"
+        type="button"
+        class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600
+               bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+        <i class="fa-solid fa-rotate-left"></i>
+        Reset Filters
+      </button>
     </div>
 
-    {{-- Table Card --}}
-    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table id="downloadableFilesTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700/50">
-                    <tr>
-                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">No</th>
-                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Customer</th>
-                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Model</th>
-                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Part No</th>
-                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Doc Type</th>
-                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Sub Category</th>
-                        <th scope="col" class="py-3.5 px-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-200">Revision</th>
-                        {{-- kolom Actions DIHAPUS sesuai permintaan --}}
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
-                    {{-- DataTables will populate this area --}}
-                </tbody>
-            </table>
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
+      @foreach(['Customer', 'Model', 'Document Type', 'Category'] as $label)
+      <div>
+        <label for="{{ Str::slug($label) }}" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $label }}</label>
+        <div class="relative mt-1">
+          <select id="{{ Str::slug($label) }}"
+            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            <option value="All" selected>All</option>
+          </select>
         </div>
+      </div>
+      @endforeach
     </div>
+  </div>
+
+  {{-- Tabel section --}}
+  <div class="mt-8 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table id="exportTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-700/50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customer</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Model</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Doc Type</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Part No</th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Latest Revision</th> {{-- MODIFIKASI --}}
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </div>
 @endsection
 
 @push('scripts')
 <script>
-const DETAIL_ROUTE_TEMPLATE = '{{ route("file-manager.export.detail", ["id" => "__ID__"]) }}';
+$(function () {
+  let table;
+  const ENDPOINT = '{{ route("api.export.filters") }}';
 
-$(document).ready(function() {
-    let table = $('#downloadableFilesTable').DataTable({
-        processing: true,
-        serverSide: false,
-        ajax: {
-            url: '{{ route("api.files.downloadable") }}',
-            type: 'GET',
+  function resetSelect2ToAll($el) {
+    $el.empty();
+    const opt = new Option('All', 'All', true, true);
+    $el.append(opt);
+    $el.trigger('change');
+    $el.trigger('select2:select');
+  }
+
+  // --- Select2 AJAX (server-side) helper ---
+  function makeSelect2($el, field, extraParamsFn) {
+    $el.select2({
+      width: '100%',
+      placeholder: 'All',
+      allowClear: false,
+      minimumResultsForSearch: 0,
+      ajax: {
+        url: ENDPOINT,
+        dataType: 'json',
+        delay: 250,
+        cache: true,
+        data: function (params) {
+          const p = {
+            select2: field,
+            q: params.term || '',
+            page: params.page || 1
+          };
+          if (typeof extraParamsFn === 'function') {
+            Object.assign(p, extraParamsFn());
+          }
+          return p;
         },
-        // === kolom Actions dihapus dari config
-        columns: [
-            { data: null, name: 'No', orderable: false, searchable: false },
-            { data: 'customer', name: 'Customer' },
-            { data: 'model', name: 'Model' },
-            { data: 'part_no', name: 'Part No' },
-            { data: 'doc_type', name: 'Doc Type' },
-            { data: 'sub_category', name: 'Sub Category' },
-            { data: 'revision', name: 'Revision' }
-        ],
-        responsive: true,
-        dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
-
-        createdRow: function(row) {
-            $(row)
-                .attr('role', 'button')
-                .attr('tabindex', '0')
-                .addClass('cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors');
+        processResults: function (data, params) {
+          params.page = params.page || 1;
+          const results = Array.isArray(data.results) ? data.results.slice() : [];
+          if (!results.some(r => r.id === 'All')) {
+            results.unshift({ id: 'All', text: 'All' });
+          }
+          return {
+            results,
+            pagination: { more: data.pagination ? data.pagination.more : false }
+          };
         }
+      },
+      templateResult: function (item) {
+        if (item.loading) return item.text;
+        return $('<div class="text-sm">' + (item.text || item.id) + '</div>');
+      },
+      templateSelection: function (item) {
+        return item.text || item.id || 'All';
+      }
+    });
+  }
+
+  makeSelect2($('#customer'),      'customer');
+  makeSelect2($('#model'),         'model',      () => ({ customer_code: $('#customer').val() || '' }));
+  makeSelect2($('#document-type'), 'doc_type');
+  makeSelect2($('#category'),      'category',   () => ({ doc_type: $('#document-type').val() || '' }));
+
+  $('#customer').on('change', function () {
+    resetSelect2ToAll($('#model'));
+  });
+  $('#document-type').on('change', function () {
+    resetSelect2ToAll($('#category'));
+  });
+
+  function getCurrentFilters() {
+    const valOrAll = v => (v && v.length ? v : 'All');
+    return {
+      customer:  valOrAll($('#customer').val()),
+      model:     valOrAll($('#model').val()),
+      doc_type:  valOrAll($('#document-type').val()),
+      category:  valOrAll($('#category').val()),
+    };
+  }
+
+  function loadKPI() {
+    const params = getCurrentFilters();
+    $('#cardTotal, #cardWaiting, #cardApproved').text('…');
+
+    $.ajax({
+      url: '{{ route("api.export.kpi") }}',
+      data: params,
+      dataType: 'json',
+      success: function (res) {
+        const c = res.cards || {};
+        $('#cardTotal').text(c.total ?? 0);
+        $('#cardWaiting').text(c.waiting ?? 0);
+        $('#cardApproved').text(c.approved ?? 0);
+      },
+      error: function (xhr) {
+        console.error('KPI error', xhr.responseText);
+        $('#cardTotal, #cardWaiting, #cardApproved').text('0');
+      }
+    });
+  }
+
+  function initTable() {
+    table = $('#exportTable').DataTable({
+      processing: true,
+      serverSide: true,
+      ajax: {
+        url: '{{ route("api.export.list") }}',
+        type: 'GET',
+        data: function (d) {
+          const f = getCurrentFilters();
+          d.customer  = f.customer;
+          d.model     = f.model;
+          d.doc_type  = f.doc_type;
+          d.category  = f.category;
+        }
+      },
+      order: [[ 1, 'asc' ]],
+      columns: [
+        { data: null, orderable: false, searchable: false },
+        { data: 'customer', name: 'c.code' },
+        { data: 'model',    name: 'm.name' },
+        { data: 'doc_type', name: 'dtg.name' },
+        { data: 'category', name: 'dsc.name' },
+        { data: 'part_no',  name: 'p.part_no' },
+        {
+          data: 'latest_revision',
+          name: 'latest_revision',
+          orderable: false,
+          render: (data) => data ? `Rev-${data}` : '-' // Tampilkan 'Rev-'
+        },
+      ],
+      responsive: true,
+      dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
     });
 
     table.on('draw.dt', function () {
-        const PageInfo = table.page.info();
-        table.column(0, { page: 'current' }).nodes().each(function (cell, i) {
-            cell.innerHTML = i + 1 + PageInfo.start;
-        });
+      const info = table.page.info();
+      table.column(0, { page: 'current' }).nodes().each(function (cell, i) {
+        cell.innerHTML = i + 1 + info.start;
+      });
+    });
+  }
+
+  function bindHandlers() {
+    $('#customer, #model, #document-type, #category').on('change', function () {
+      if (table) table.ajax.reload(null, true);
+      loadKPI();
     });
 
-    $('#downloadableFilesTable tbody').on('click', 'tr', function(e) {
-        if ($(e.target).closest('button, a, input, select, label, .dt-checkboxes').length) return;
-        const rowData = table.row(this).data();
-        if (!rowData) return;
-        goToDetail(rowData.id);
+    $('#btnResetFilters').on('click', function () {
+      resetSelect2ToAll($('#customer'));
+      resetSelect2ToAll($('#model'));
+      resetSelect2ToAll($('#document-type'));
+      resetSelect2ToAll($('#category'));
+
+      if (table) table.ajax.reload(null, true);
+      loadKPI();
     });
 
-    $('#downloadableFilesTable tbody').on('keydown', 'tr', function(e) {
-        if (e.key === 'Enter') {
-            const rowData = table.row(this).data();
-            if (!rowData) return;
-            goToDetail(rowData.id);
-        }
+    $('#exportTable tbody').on('click', 'tr', function () {
+      const row = table.row(this).data();
+      if (row && row.package_id) {
+        window.location.href = `/file-manager.export/${row.package_id}/history`;
+      }
+    }).on('mouseenter', 'tr', function () {
+      $(this).css('cursor', 'pointer');
     });
+  }
+
+  // start
+  initTable();
+  loadKPI();
+  bindHandlers();
 });
-
-function goToDetail(id) {
-    const url = DETAIL_ROUTE_TEMPLATE.replace('__ID__', id);
-    window.location.href = url;
-}
 </script>
 @endpush

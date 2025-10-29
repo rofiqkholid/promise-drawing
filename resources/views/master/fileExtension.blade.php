@@ -51,15 +51,15 @@
                 <span class="sr-only">Close modal</span>
             </button>
             <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Add New File Extension</h3>
-            <form id="addFileExtensionForm" action="{{ route('fileExtensions.store') }}" method="POST">
+            <form id="addFileExtensionForm" action="{{ route('fileExtensions.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="mb-4">
-                    <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">File Extension Name</label>
+                    <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">File Extension Name <span class="text-red-600">*</span></label>
                     <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. Portable Document Format" required>
                     <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
-                    <label for="code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">File Extension Code</label>
+                    <label for="code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">File Extension Code <span class="text-red-600">*</span></label>
                     <input type="text" name="code" id="code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. PDF" required>
                     <p id="add-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
@@ -84,7 +84,7 @@
                     <label for="icon" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">
                         Icon
                     </label>
-                    <input type="text" name="icon" id="icon"
+                    <input type="file" name="icon" id="icon"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
                         placeholder="e.g. fa-solid fa-file-pdf">
                     <p id="add-icon-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
@@ -117,16 +117,16 @@
                 <span class="sr-only">Close modal</span>
             </button>
             <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Edit File Extension</h3>
-            <form id="editFileExtensionForm" method="POST">
+            <form id="editFileExtensionForm" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <div class="mb-4">
-                    <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">File Extension Name</label>
+                    <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">File Extension Name <span class="text-red-600">*</span></label>
                     <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
-                    <label for="edit_code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">File Extension Code</label>
+                    <label for="edit_code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">File Extension Code <span class="text-red-600">*</span></label>
                     <input type="text" name="code" id="edit_code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
@@ -151,7 +151,7 @@
                     <label for="edit_icon" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">
                         Icon
                     </label>
-                    <input type="text" name="icon" id="edit_icon"
+                    <input type="file" name="icon" id="edit_icon"
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
                     <p id="edit-icon-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
@@ -255,143 +255,13 @@
     $(document).ready(function() {
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-        // Initialize DataTable
-        const table = $('#fileExtensionsTable').DataTable({
-            processing: true,
-            serverSide: true,
-            scrollX: true,
-            ajax: {
-                url: '{{ route("fileExtensions.data") }}',
-                type: 'GET',
-                data: function(d) {
-                    d.search = d.search.value;
-                }
-            },
-            columns: [{
-                    data: null,
-                    render: function(data, type, row, meta) {
-                        return meta.row + meta.settings._iDisplayStart + 1;
-                    }
-                },
-                {
-                    data: 'name',
-                    name: 'name'
-                },
-                {
-                    data: 'code',
-                    name: 'code'
-                },
-                {
-                    data: 'icon',
-                    name: 'icon',
-                    className: 'text-center',
-                    render: function(data) {
-                        return data ? `<i class="${data} text-lg"></i>` : '-';
-                    }
-                },
-                {
-                    data: 'is_viewer',
-                    name: 'is_viewer',
-                    className: 'text-center',
-                    render: function(data) {
-                        return data ? '<i class="fa-solid fa-check text-green-500"></i>' : '<i class="fa-solid fa-times text-red-500"></i>';
-                    }
-                },
-                {
-                    data: null,
-                    orderable: false,
-                    searchable: false,
-                    className: 'text-center',
-                    render: function(data, type, row) {
-                        return `
-                        <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
-                            <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
-                        </button>
-                        <button class="delete-button text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete" data-id="${row.id}">
-                            <i class="fa-solid fa-trash-can fa-lg m-2"></i>
-                        </button>
-                    `;
-                    }
-                }
-            ],
-            pageLength: 10,
-            lengthMenu: [10, 25, 50],
-            order: [
-                [1, 'asc']
-            ],
-            language: {
-                emptyTable: '<div class="text-gray-500 dark:text-gray-400">No file extensions found.</div>'
-            },
-            responsive: true,
-            autoWidth: false,
-        });
-
-        // Modal Handling
-        const addModal = $('#addFileExtensionModal');
-        const editModal = $('#editFileExtensionModal');
-        const deleteModal = $('#deleteFileExtensionModal');
-        const addButton = $('#add-button');
-        const closeButtons = $('.close-modal-button');
-        let fileExtensionIdToDelete = null;
-
-        function showModal(modal) {
-            modal.removeClass('hidden').addClass('flex');
-        }
-
-        function hideModal(modal) {
-            modal.addClass('hidden').removeClass('flex');
-        }
-
-        addButton.on('click', () => {
-            $('#addFileExtensionForm')[0].reset();
-            showModal(addModal);
-        });
-
-        closeButtons.on('click', () => {
-            hideModal(addModal);
-            hideModal(editModal);
-            hideModal(deleteModal);
-        });
-
-        // Helper: Button loading state
-        function setButtonLoading($btn, isLoading, loadingText = 'Processing...') {
-            if (!$btn || $btn.length === 0) return;
-            if (isLoading) {
-                if (!$btn.data('orig-html')) $btn.data('orig-html', $btn.html());
-                $btn.prop('disabled', true);
-                $btn.addClass('opacity-70 cursor-not-allowed');
-                $btn.html(`
-                    <span class="inline-flex items-center gap-2">
-                    <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor"
-                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                    </svg>
-                    ${loadingText}
-                    </span>
-                `);
-            } else {
-                const orig = $btn.data('orig-html');
-                if (orig) $btn.html(orig);
-                $btn.prop('disabled', false);
-                $btn.removeClass('opacity-70 cursor-not-allowed');
-            }
-        }
-
-        // Helper: Disable/enable form fields during request
-        function setFormBusy($form, busy) {
-            $form.find('input, select, textarea, button').prop('disabled', busy);
-        }
-
-        // Helper: SweetAlert notifications
+        // ========= Toast utils =========
         function detectTheme() {
             const isDark = document.documentElement.classList.contains('dark');
-
             return isDark ? {
-                mode: 'dark',
-                bg: 'rgba(30, 41, 59, 0.95)',
+                bg: 'rgba(30,41,59,0.95)',
                 fg: '#E5E7EB',
-                border: 'rgba(71, 85, 105, 0.5)',
+                border: 'rgba(71,85,105,.5)',
                 progress: 'rgba(255,255,255,.9)',
                 icon: {
                     success: '#22c55e',
@@ -400,10 +270,9 @@
                     info: '#3b82f6'
                 }
             } : {
-                mode: 'light',
-                bg: 'rgba(255, 255, 255, 0.98)',
+                bg: 'rgba(255,255,255,.98)',
                 fg: '#0f172a',
-                border: 'rgba(226, 232, 240, 1)',
+                border: 'rgba(226,232,240,1)',
                 progress: 'rgba(15,23,42,.8)',
                 icon: {
                     success: '#16a34a',
@@ -413,7 +282,6 @@
                 }
             };
         }
-
         const BaseToast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -426,9 +294,9 @@
             hideClass: {
                 popup: 'swal2-animate-toast-out'
             },
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer);
-                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            didOpen: (t) => {
+                t.addEventListener('mouseenter', Swal.stopTimer);
+                t.addEventListener('mouseleave', Swal.resumeTimer);
             }
         });
 
@@ -438,7 +306,6 @@
             text = ''
         } = {}) {
             const t = detectTheme();
-
             BaseToast.fire({
                 icon,
                 title,
@@ -447,76 +314,225 @@
                 background: t.bg,
                 color: t.fg,
                 customClass: {
-                    popup: 'swal2-toast border',
-                    title: '',
-                    timerProgressBar: ''
+                    popup: 'swal2-toast border'
                 },
                 didOpen: (toast) => {
                     const bar = toast.querySelector('.swal2-timer-progress-bar');
                     if (bar) bar.style.background = t.progress;
                     const popup = toast.querySelector('.swal2-popup');
                     if (popup) popup.style.borderColor = t.border;
-                    toast.addEventListener('mouseenter', Swal.stopTimer);
-                    toast.addEventListener('mouseleave', Swal.resumeTimer);
                 }
             });
         }
 
-        function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') {
+        function toastSuccess(t = 'Berhasil', m = 'Operasi berhasil dijalankan.') {
             renderToast({
                 icon: 'success',
-                title,
-                text
+                title: t,
+                text: m
             });
         }
 
-        function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') {
+        function toastError(t = 'Gagal', m = 'Terjadi kesalahan.') {
             BaseToast.update({
                 timer: 3400
             });
             renderToast({
                 icon: 'error',
-                title,
-                text
+                title: t,
+                text: m
             });
             BaseToast.update({
                 timer: 2600
             });
         }
 
-        function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') {
-            renderToast({
-                icon: 'warning',
-                title,
-                text
+        // ========= Buttons & forms state =========
+        function setButtonLoading($btn, isLoading, loadingText = 'Processing...') {
+            if (!$btn || $btn.length === 0) return;
+            if (isLoading) {
+                if (!$btn.data('orig-html')) $btn.data('orig-html', $btn.html());
+                $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed').html(`
+        <span class="inline-flex items-center gap-2">
+          <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>${loadingText}
+        </span>`);
+            } else {
+                const orig = $btn.data('orig-html');
+                if (orig) $btn.html(orig);
+                $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed');
+            }
+        }
+
+        function setFormBusy($form, busy) {
+            $form.find('input,select,textarea,button').prop('disabled', busy);
+        }
+
+        // ========= Modals =========
+        const addModal = $('#addFileExtensionModal');
+        const editModal = $('#editFileExtensionModal');
+        const deleteModal = $('#deleteFileExtensionModal');
+        const addButton = $('#add-button');
+        let fileExtensionIdToDelete = null;
+
+        function showModal(m) {
+            m.removeClass('hidden').addClass('flex');
+        }
+
+        function hideModal(m) {
+            m.addClass('hidden').removeClass('flex');
+        }
+
+        $('.close-modal-button').on('click', () => {
+            hideModal(addModal);
+            hideModal(editModal);
+            hideModal(deleteModal);
+        });
+        addButton.on('click', () => {
+            $('#addFileExtensionForm')[0].reset();
+            $('#add_icon_preview_wrap').remove();
+            showModal(addModal);
+        });
+
+        // ========= DataTables (guard agar tidak reinit) =========
+        let table;
+        if ($.fn.DataTable.isDataTable('#fileExtensionsTable')) {
+            table = $('#fileExtensionsTable').DataTable(); // reuse
+        } else {
+            table = $('#fileExtensionsTable').DataTable({
+                processing: true,
+                serverSide: true,
+                scrollX: true,
+                ajax: {
+                    url: '{{ route("fileExtensions.data") }}',
+                    type: 'GET',
+                },
+                columns: [{
+                        data: null,
+                        render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1
+                    },
+                    {
+                        data: 'name',
+                        name: 'name'
+                    },
+                    {
+                        data: 'code',
+                        name: 'code'
+                    },
+                    {
+                        data: 'icon_src',
+                        name: 'icon_src', // nama apa saja, tidak dipakai sorting server
+                        className: 'text-center',
+                        orderable: false,
+                        searchable: false,
+                        render: function(src) {
+                            return src ? `<img src="${src}" alt="icon" class="inline-block w-6 h-6">` : '-';
+                        }
+                    },
+
+                    {
+                        data: 'is_viewer',
+                        name: 'is_viewer',
+                        className: 'text-center',
+                        render: (v) => v ? '<i class="fa-solid fa-check text-green-500"></i>' : '<i class="fa-solid fa-times text-red-500"></i>'
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        className: 'text-center',
+                        render: (d, t, row) => `
+            <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
+              <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
+            </button>
+            <button class="delete-button text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete" data-id="${row.id}">
+              <i class="fa-solid fa-trash-can fa-lg m-2"></i>
+            </button>`
+                    }
+                ],
+                pageLength: 10,
+                lengthMenu: [10, 25, 50],
+                order: [
+                    [1, 'asc']
+                ],
+                language: {
+                    emptyTable: '<div class="text-gray-500 dark:text-gray-400">No file extensions found.</div>'
+                },
+                responsive: true,
+                autoWidth: false,
             });
         }
 
-        function toastInfo(title = 'Informasi', text = '') {
-            renderToast({
-                icon: 'info',
-                title,
-                text
-            });
-        }
+        // ========= Preview ADD =========
+        $(document).on('change', '#icon', function(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) {
+                $('#add_icon_preview_wrap').remove();
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                if ($('#add_icon_preview_wrap').length === 0) {
+                    $('#icon').after(`
+          <div id="add_icon_preview_wrap" class="mt-2">
+            <span class="text-xs text-gray-500 dark:text-gray-400">Preview:</span>
+            <img id="add_icon_preview_img" class="inline-block w-8 h-8 align-middle rounded border border-gray-200 dark:border-gray-700 ml-2" />
+          </div>`);
+                }
+                $('#add_icon_preview_img').attr('src', ev.target.result);
+            };
+            reader.readAsDataURL(file);
+        });
 
-        window.toastSuccess = toastSuccess;
-        window.toastError = toastError;
-        window.toastWarning = toastWarning;
-        window.toastInfo = toastInfo;
+        // ========= Preview EDIT (current & on change) =========
+       function setEditIconPreview(data) {
+  if ($('#edit_icon_preview_wrap').length === 0) {
+    $('#edit_icon').after(`
+      <div id="edit_icon_preview_wrap" class="mt-2" style="display:none;">
+        <span class="text-xs text-gray-500 dark:text-gray-400">Current:</span>
+        <img id="edit_icon_preview_img" class="inline-block w-8 h-8 align-middle rounded border border-gray-200 dark:border-gray-700 ml-2" />
+      </div>`);
+  }
+  const $wrap = $('#edit_icon_preview_wrap');
+  const $img  = $('#edit_icon_preview_img');
 
-        // Add File Extension
+  const src = data.icon_src; // <- pakai accessor
+  if (src) {
+    $img.attr('src', src);
+    $wrap.show();
+  } else {
+    $wrap.hide();
+  }
+}
+
+
+        $(document).on('change', '#edit_icon', function(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                if ($('#edit_icon_preview_wrap').length === 0) {
+                    $('#edit_icon').after(`
+          <div id="edit_icon_preview_wrap" class="mt-2">
+            <span class="text-xs text-gray-500 dark:text-gray-400">Preview:</span>
+            <img id="edit_icon_preview_img" class="inline-block w-8 h-8 align-middle rounded border border-gray-200 dark:border-gray-700 ml-2" />
+          </div>`);
+                }
+                $('#edit_icon_preview_img').attr('src', ev.target.result);
+                $('#edit_icon_preview_wrap').show();
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // ========= Submit ADD =========
         $('#addFileExtensionForm').on('submit', function(e) {
             e.preventDefault();
-            const $form = $(this);
-            const $btn = $form.find('[type="submit"]');
-            const nameError = $('#add-name-error');
-            const codeError = $('#add-code-error');
-            nameError.addClass('hidden');
-            codeError.addClass('hidden');
-
+            const $form = $(this),
+                $btn = $form.find('[type="submit"]');
+            $('#add-name-error, #add-code-error').addClass('hidden');
             const formData = new FormData(this);
-
             $.ajax({
                 url: $form.attr('action'),
                 method: 'POST',
@@ -526,85 +542,70 @@
                 data: formData,
                 processData: false,
                 contentType: false,
-                beforeSend: function() {
+                beforeSend: () => {
                     setButtonLoading($btn, true, 'Saving...');
                     setFormBusy($form, true);
                 },
-                success: function(data) {
-                    if (data.success) {
+                success: (resp) => {
+                    if (resp.success) {
                         table.ajax.reload();
                         hideModal(addModal);
                         $form[0].reset();
+                        $('#add_icon_preview_wrap').remove();
                         toastSuccess('Success', 'File extension added successfully.');
                     } else {
-                        toastError('Error', data.message || 'Failed to add file extension.');
+                        toastError('Error', resp.message || 'Failed to add file extension.');
                     }
                 },
-                error: function(xhr) {
+                error: (xhr) => {
                     const errors = xhr.responseJSON?.errors;
                     if (errors) {
-                        if (errors.name) nameError.text(errors.name[0]).removeClass('hidden');
-                        if (errors.code) codeError.text(errors.code[0]).removeClass('hidden');
+                        if (errors.name) $('#add-name-error').text(errors.name[0]).removeClass('hidden');
+                        if (errors.code) $('#add-code-error').text(errors.code[0]).removeClass('hidden');
                     }
-                    const msg = xhr.responseJSON?.message || 'Failed to add file extension.';
-                    toastError('Error', msg);
+                    toastError('Error', xhr.responseJSON?.message || 'Failed to add file extension.');
                 },
-                complete: function() {
+                complete: () => {
                     setButtonLoading($btn, false);
                     setFormBusy($form, false);
                 }
             });
         });
 
-        // Edit File Extension
+        // ========= Open EDIT =========
         $(document).on('click', '.edit-button', function() {
             const id = $(this).data('id');
-            const nameError = $('#edit-name-error');
-            const codeError = $('#edit-code-error');
-            nameError.addClass('hidden');
-            codeError.addClass('hidden');
-
+            $('#edit-name-error, #edit-code-error').addClass('hidden');
+            const $btn = $(`.edit-button[data-id="${id}"]`);
             $.ajax({
                 url: `/master/fileExtensions/${id}`,
                 method: 'GET',
-                beforeSend: function() {
-                    setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, '');
-                },
-                success: function(data) {
+                beforeSend: () => setButtonLoading($btn, true, ''),
+                success: (data) => {
                     $('#edit_name').val(data.name);
                     $('#edit_code').val(data.code);
-                    $('#edit_icon').val(data.icon);
-                    $('#edit_is_viewer').prop('checked', data.is_viewer);
+                    // JANGAN set value file input via js
+                    $('#edit_is_viewer').prop('checked', !!data.is_viewer);
                     $('#editFileExtensionForm').attr('action', `/master/fileExtensions/${id}`);
                     $('input[name="categories[]"]').prop('checked', false);
-                    if (data.categories && data.categories.length > 0) {
-                        data.categories.forEach(function(category) {
-                            $(`input[name="categories[]"][value="${category}"]`).prop('checked', true);
-                        });
+                    if (Array.isArray(data.categories)) {
+                        data.categories.forEach((c) => $(`input[name="categories[]"][value="${c}"]`).prop('checked', true));
                     }
+                    setEditIconPreview(data);
                     showModal(editModal);
                 },
-                error: function(xhr) {
-                    const msg = xhr.responseJSON?.message || 'Failed to fetch file extension data.';
-                    toastError('Error', msg);
-                },
-                complete: function() {
-                    setButtonLoading($('.edit-button[data-id="' + id + '"]'), false);
-                }
+                error: (xhr) => toastError('Error', xhr.responseJSON?.message || 'Failed to fetch file extension data.'),
+                complete: () => setButtonLoading($btn, false)
             });
         });
 
+        // ========= Submit EDIT =========
         $('#editFileExtensionForm').on('submit', function(e) {
             e.preventDefault();
-            const $form = $(this);
-            const $btn = $form.find('[type="submit"]');
-            const nameError = $('#edit-name-error');
-            const codeError = $('#edit-code-error');
-            nameError.addClass('hidden');
-            codeError.addClass('hidden');
-
+            const $form = $(this),
+                $btn = $form.find('[type="submit"]');
+            $('#edit-name-error, #edit-code-error').addClass('hidden');
             const formData = new FormData(this);
-
             $.ajax({
                 url: $form.attr('action'),
                 method: 'POST',
@@ -614,77 +615,71 @@
                 data: formData,
                 processData: false,
                 contentType: false,
-                beforeSend: function() {
+                beforeSend: () => {
                     setButtonLoading($btn, true, 'Saving...');
                     setFormBusy($form, true);
                 },
-                success: function(data) {
-                    if (data.success) {
+                success: (resp) => {
+                    if (resp.success) {
                         table.ajax.reload();
                         hideModal(editModal);
                         toastSuccess('Success', 'File extension updated successfully.');
                     } else {
-                        toastError('Error', data.message || 'Failed to update file extension.');
+                        toastError('Error', resp.message || 'Failed to update file extension.');
                     }
                 },
-                error: function(xhr) {
+                error: (xhr) => {
                     const errors = xhr.responseJSON?.errors;
                     if (errors) {
-                        if (errors.name) nameError.text(errors.name[0]).removeClass('hidden');
-                        if (errors.code) codeError.text(errors.code[0]).removeClass('hidden');
+                        if (errors.name) $('#edit-name-error').text(errors.name[0]).removeClass('hidden');
+                        if (errors.code) $('#edit-code-error').text(errors.code[0]).removeClass('hidden');
                     }
-                    const msg = xhr.responseJSON?.message || 'Failed to update file extension.';
-                    toastError('Error', msg);
+                    toastError('Error', xhr.responseJSON?.message || 'Failed to update file extension.');
                 },
-                complete: function() {
+                complete: () => {
                     setButtonLoading($btn, false);
                     setFormBusy($form, false);
                 }
             });
         });
 
-        // Delete File Extension
+        // ========= Delete =========
         $(document).on('click', '.delete-button', function() {
             fileExtensionIdToDelete = $(this).data('id');
             showModal(deleteModal);
         });
-
         $('#confirmDeleteButton').on('click', function() {
             if (!fileExtensionIdToDelete) return;
             const $btn = $(this);
-
             $.ajax({
                 url: `/master/fileExtensions/${fileExtensionIdToDelete}`,
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken
                 },
-                beforeSend: function() {
+                beforeSend: () => {
                     setButtonLoading($btn, true, 'Deleting...');
                     setFormBusy($('#deleteFileExtensionModal'), true);
                 },
-                success: function(data) {
-                    if (data.success) {
+                success: (resp) => {
+                    if (resp.success) {
                         table.ajax.reload();
                         hideModal(deleteModal);
                         fileExtensionIdToDelete = null;
                         toastSuccess('Success', 'File extension deleted successfully.');
                     } else {
-                        toastError('Error', data.message || 'Failed to delete file extension.');
+                        toastError('Error', resp.message || 'Failed to delete file extension.');
                     }
                 },
-                error: function(xhr) {
-                    const msg = xhr.responseJSON?.message || 'Failed to delete file extension.';
-                    toastError('Error', msg);
-                },
-                complete: function() {
+                error: (xhr) => toastError('Error', xhr.responseJSON?.message || 'Failed to delete file extension.'),
+                complete: () => {
                     setButtonLoading($btn, false);
                     setFormBusy($('#deleteFileExtensionModal'), false);
                 }
             });
         });
 
-        // Fix DataTables input/select focus styles
+        // ========= Cosmetic focus =========
         const overrideFocusStyles = function() {
             $(this).css({
                 'outline': 'none',

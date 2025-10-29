@@ -5,6 +5,7 @@
 
 <div x-data="dashboardController()" x-init="init()">
 
+    {{-- STAT CARDS --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-[15%]">
         <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Monitoring</h2>
@@ -83,6 +84,7 @@
         </div>
     </div>
 
+    {{-- BAGIAN FILTER --}}
     <div class="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
             <i class="fa-solid fa-filter mr-2 text-gray-500"></i> Filter Data
@@ -123,15 +125,29 @@
                 <label for="part_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
                 <div class="relative mt-1"> <select id="part_group" name="part_group" class="w-full"></select> </div>
             </div>
+
+            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sort By</label>
+                <div class="mt-2 flex space-x-4 pt-1">
+                    <div class="flex items-center">
+                        <input id="sort_actual" name="sort_by" type="radio" value="actual" class="h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-blue-500 dark:focus:ring-blue-600" checked>
+                        <label for="sort_actual" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">Sort by Actual</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input id="sort_plan" name="sort_by" type="radio" value="plan" class="h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-blue-500 dark:focus:ring-blue-600">
+                        <label for="sort_plan" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">Sort by Plan</label>
+                    </div>
+                </div>
+            </div>
             <div class="lg:col-span-4 w-full flex justify-end items-center pt-4 border-t border-gray-200 dark:border-gray-700 mt-2">
                 <div class="flex space-x-3">
                     <button type="button" @click="resetFilters" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"> Reset </button>
                     <button type="button" @click="applyFilters" :disabled="isLoading" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px]">
-                        <span x-show="!isLoading"> <i class="fa-solid fa-check mr-2"></i> Terapkan Filter </span>
+                        <span x-show="!isLoading"> <i class="fa-solid fa-check mr-2"></i> Apply Filter </span>
                         <span x-show="isLoading" style="display: none;"> <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg> Memuat... </span>
+                            </svg></span>
                     </button>
                 </div>
             </div>
@@ -317,10 +333,44 @@
 
                 mainCharts.forEach(chart => {
                     if (chart) {
+                        const currentCategories = chart.w.globals.categoryLabels ||
+                            chart.w.config.xaxis.categories || [];
+
                         chart.updateOptions(themeOptions);
+
+                        if (currentCategories && currentCategories.length > 0) {
+                            chart.updateOptions({
+                                xaxis: {
+                                    categories: currentCategories
+                                }
+                            });
+                        }
                     }
                 });
+            },
 
+            updateChartData() {
+                fetchDataFromServer().then(data => {
+                    this.apexPlanVsActualChart.updateOptions({
+                        xaxis: {
+                            categories: data.categories
+                        }
+                    });
+
+                    this.apexPlanVsActualChart.updateSeries([{
+                            name: 'Plan',
+                            data: data.planData
+                        },
+                        {
+                            name: 'Actual',
+                            data: data.actualData
+                        },
+                        {
+                            name: 'Percentage',
+                            data: data.percentageData
+                        }
+                    ]);
+                });
             },
 
             initCharts() {
@@ -396,13 +446,11 @@
                             opacity: 0.9
                         }
                     },
-
                     stroke: {
                         show: true,
                         width: [0, 0, 3],
                         curve: 'smooth'
                     },
-
                     xaxis: {
                         categories: [],
                         labels: {
@@ -443,13 +491,23 @@
                     }
                 };
 
-                this.apexPlanVsActualChart = new ApexCharts(document.querySelector("#planVsActualChart"), mainChartOptions);
+
+                const allChartOptions = {
+                    ...mainChartOptions,
+                    colors: ['#0063d5ff', '#3ea70dff', '#cfc100ff']
+                };
+
+                const projectChartOptions = {
+                    ...mainChartOptions,
+                    colors: ['#0063d5ff', '#3ea70dff', '#cfc100ff']
+                };
+
+                this.apexPlanVsActualChart = new ApexCharts(document.querySelector("#planVsActualChart"), allChartOptions);
                 this.apexPlanVsActualChart.render();
 
-                this.apexPlanVsActualProjectChart = new ApexCharts(document.querySelector("#planVsActualProjectChart"), mainChartOptions);
+                this.apexPlanVsActualProjectChart = new ApexCharts(document.querySelector("#planVsActualProjectChart"), projectChartOptions);
                 this.apexPlanVsActualProjectChart.render();
 
-                // Trend chart options
                 const trendChartOptions = {
                     series: [],
                     chart: {
@@ -464,6 +522,8 @@
                         foreColor: labelColor,
                         background: background
                     },
+
+                    colors: ['#3ea70dff', '#0063d5ff'],
                     theme: {
                         mode: isDarkMode ? 'dark' : 'light'
                     },
@@ -582,17 +642,17 @@
                     }
                 }
                 return `
-                    <div class="py-3 px-2 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
-                        <div class="flex-shrink-0 pt-1"> <i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i> </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start">
-                                <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-3 whitespace-nowrap">${fullTimestamp}</p>
+                        <div class="py-3 px-2 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                            <div class="flex-shrink-0 pt-1"> <i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i> </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-3 whitespace-nowrap">${fullTimestamp}</p>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${relativeTime}</p>
+                                ${metaDetails}
                             </div>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${relativeTime}</p>
-                            ${metaDetails}
-                        </div>
-                    </div>`;
+                        </div>`;
             },
 
             formatTimeAgo(dateString) {
@@ -618,7 +678,6 @@
                 if (this.isLoading) return;
                 this.isLoading = true;
 
-                // Tampilkan status loading pada chart
                 const isDarkMode = this.isDarkMode;
                 const labelColor = isDarkMode ? '#E2E8F0' : '#4A5568';
                 const loadingOptions = {
@@ -642,7 +701,8 @@
                         customer: $('#customer').val() || '',
                         model: $('#model').val() || '',
                         project_status: $('#project_status').val() || '',
-                        part_group: $('#part_group').val() || ''
+                        part_group: $('#part_group').val() || '',
+                        sort_by: document.querySelector('input[name="sort_by"]:checked')?.value || 'actual'
                     };
 
                     const params = new URLSearchParams();
@@ -747,6 +807,9 @@
                 const year = now.getFullYear();
                 const month = (now.getMonth() + 1).toString().padStart(2, '0');
                 document.getElementById('month_input').value = `${year}-${month}`;
+
+                document.getElementById('sort_actual').checked = true;
+
                 this.applyFilters();
             },
 
@@ -777,16 +840,12 @@
                         },
                         noData: {
                             text: '',
-                            style: {
-                                color: labelColor,
-                                fontSize: '16px'
-                            }
                         }
                     });
                     return;
                 }
 
-                const categories = apiData.map(item => `${item.customer_name || '?'} - ${item.model_name || '?'}`);
+                const categories = apiData.map(item => `${item.customer_name || '?'} - ${item.model_name || '?'} - ${item.part_group || '?'}`);
                 const actualSeriesData = apiData.map(item => parseInt(item.actual_count) || 0);
                 const planSeriesData = apiData.map(item => parseInt(item.plan_count) || 0);
                 const percentaceData = apiData.map(item => parseFloat(item.percentage).toFixed(2) || 0);
@@ -1136,7 +1195,6 @@
         }
     }
 
-    // Inisialisasi Alpine.js
     document.addEventListener('alpine:init', () => {
         Alpine.data('dashboardController', dashboardController);
     });

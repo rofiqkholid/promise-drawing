@@ -52,12 +52,12 @@
             <form id="addSupplierForm" action="{{ route('suppliers.store') }}" method="POST">
                 @csrf
                 <div class="mb-4">
-                    <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Name</label>
+                    <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Name <span class="text-red-600">*</span></label>
                     <input type="text" name="name" id="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. ABC Corp" required>
                     <p id="add-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
-                    <label for="code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Code</label>
+                    <label for="code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Code <span class="text-red-600">*</span></label>
                     <input type="text" name="code" id="code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. ABC" required>
                     <p id="add-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
@@ -110,12 +110,12 @@
                 @csrf
                 @method('PUT')
                 <div class="mb-4">
-                    <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Name</label>
+                    <label for="edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Name <span class="text-red-600">*</span></label>
                     <input type="text" name="name" id="edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
-                    <label for="edit_code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Code</label>
+                    <label for="edit_code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Supplier Code <span class="text-red-600">*</span></label>
                     <input type="text" name="code" id="edit_code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
@@ -236,13 +236,13 @@
             <form id="addUserLinkForm" method="POST">
                 @csrf
                 <div class="mb-4">
-                    <label for="ul_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Name</label>
+                    <label for="ul_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Name <span class="text-red-600">*</span></label>
                     <input type="text" name="name" id="ul_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. John Doe" required>
                     <p id="add-ul-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
-                    <label for="ul_email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Email</label>
-                    <input type="email" name="email" id="ul_email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. john@example.com">
+                    <label for="ul_email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Email <span class="text-red-600">*</span></label>
+                    <input type="email" name="email" id="ul_email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. john@example.com" required>
                     <p id="add-ul-email-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
 
@@ -274,13 +274,13 @@
                 @csrf
                 @method('PUT')
                 <div class="mb-4">
-                    <label for="ul_edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Name</label>
+                    <label for="ul_edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Name <span class="text-red-600">*</span></label>
                     <input type="text" name="name" id="ul_edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-ul-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="mb-4">
-                    <label for="ul_edit_email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Email</label>
-                    <input type="email" name="email" id="ul_edit_email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                    <label for="ul_edit_email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Email <span class="text-red-600">*</span></label>
+                    <input type="email" name="email" id="ul_edit_email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-ul-email-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">

@@ -62,6 +62,10 @@ Route::middleware(['auth'])->group(function () {
         return view('file_management.file_export');
     })->middleware(['auth', 'check.menu:4'])->name('file-manager.export');
 
+    Route::get('/file-manager.export/{package_id}/history', [ExportController::class, 'showRevisionHistory'])
+    ->middleware(['auth', 'check.menu:4'])
+    ->name('file-manager.export.history');
+
     Route::get('/file-manager.export/{id}', function ($id) {
         return view('file_management.file_export_detail', ['id' => $id]);
     })->middleware(['auth', 'check.menu:4'])->name('file-manager.export.detail');
@@ -244,6 +248,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/dashboard/getModel', [DashboardController::class, 'getModel'])->name('dashboard.getModel');
     Route::post('/dashboard/getPartGroup', [DashboardController::class, 'getPartGroup'])->name('dashboard.getPartGroup');
     Route::post('/dashboard/getStatus', [DashboardController::class, 'getStatus'])->name('dashboard.getStatus');
+    Route::post('/dashboard/detDataCardMonitoring', [DashboardController::class, 'detDataCardMonitoring'])->name('dashboard.detDataCardMonitoring');
     #End region
 
     #Region User Role
@@ -291,15 +296,29 @@ Route::middleware(['auth'])->group(function () {
     //dummy
     Route::get('/files/list', [UploadController::class, 'listFiles'])->name('api.files.list');
     Route::get('/files/{id}', [UploadController::class, 'getPackageDetails'])->name('api.files.detail');
-    Route::get('api.files.downloadable', [ExportController::class, 'listDownloadableFiles'])->name('api.files.downloadable');
 
-    Route::get('/approvals/filters', [ApprovalController::class, 'filters'])->name('api.approvals.filters');
+    //Export
+    Route::get('/export/kpi', [ExportController::class, 'kpi'])->middleware(['auth'])->name('api.export.kpi');
+
+    Route::get('/export/filters', [ExportController::class, 'filters'])->middleware(['auth'])->name('api.export.filters');
+
+    Route::get('/export/list', [ExportController::class, 'listExportableFiles'])->middleware(['auth'])->name('api.export.list');
+
+    Route::get('/export/history/{package_id}', [ExportController::class, 'listRevisionHistory'])->middleware(['auth'])->name('api.export.history.list');
+    Route::get('/download/file/{file_id}', [ExportController::class, 'downloadFile'])->name('api.export.download-file');
+    #End region
+
+    #region Approval
+     Route::get('/approvals/filters', [ApprovalController::class, 'filters'])->name('api.approvals.filters');
     Route::get('/approvals/list', [ApprovalController::class, 'listApprovals'])->name('api.approvals.list');
     Route::get('/approval/{id}', [ApprovalController::class, 'showDetail'])->name('approval.detail');
     Route::post('/approvals/{id}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
     Route::post('/approvals/{id}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
+    Route::post('/approvals/{id}/rollback', [ApprovalController::class, 'rollback'])->name('approvals.rollback');
+
     Route::get('/approvals/kpi', [ApprovalController::class, 'kpi'])->name('api.approvals.kpi');
-    #End region
+
+    #endregion
 
 
     #Region Role Menu

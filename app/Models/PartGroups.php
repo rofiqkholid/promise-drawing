@@ -17,6 +17,7 @@ class PartGroups extends Model
     protected $fillable = [
         'model_id',
         'customer_id',
+        'planning',
         'code_part_group',
         'code_part_group_desc',
     ];

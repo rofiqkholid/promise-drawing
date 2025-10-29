@@ -60,9 +60,9 @@ class SuppliersController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:50',
             'code' => 'required|string|max:10|unique:suppliers,code',
-            'email' => 'required|email|max:50',
-            'phone' => 'required|string|max:15',
-            'address' => 'required|string',
+            'email' => 'nullable|email|max:50',
+            'phone' => 'nullable|string|max:15',
+            'address' => 'nullable|string',
             'is_active' => 'required|boolean',
         ]);
 
@@ -92,9 +92,9 @@ class SuppliersController extends Controller
                 'max:10',
                 Rule::unique('suppliers')->ignore($supplier->id),
             ],
-            'email' => 'required|email|max:50',
-            'phone' => 'required|string|max:15',
-            'address' => 'required|string',
+            'email' => 'nullable|email|max:50',
+            'phone' => 'nullable|string|max:15',
+            'address' => 'nullable|string',
             'is_active' => 'required|boolean',
         ]);
 
@@ -164,7 +164,7 @@ class SuppliersController extends Controller
     // validasi dasar
     $validated = $request->validate([
         'name'  => ['required','string','max:100'],
-        'email' => ['nullable','email','max:150'],
+        'email' => ['required','email','max:150'],
     ]);
 
     // CEK DUPLIKAT: (supplier_id, name, email) — treat NULL secara eksplisit
@@ -216,7 +216,7 @@ class SuppliersController extends Controller
 
     $validated = $request->validate([
         'name'  => ['required','string','max:100'],
-        'email' => ['nullable','email','max:150'],
+        'email' => ['required','email','max:150'],
     ]);
 
     $name  = trim((string) $validated['name']);

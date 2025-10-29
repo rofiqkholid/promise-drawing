@@ -49,7 +49,7 @@
                 @csrf
 
                 <div class="mb-4">
-                    <label for="customer_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Customer</label>
+                    <label for="customer_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Customer <span class="text-red-600">*</span></label>
                     <select name="customer_id" id="customer_id" required
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         <option value="">Select Customer</option>
@@ -58,7 +58,7 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="model_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model</label>
+                    <label for="model_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model <span class="text-red-600">*</span></label>
                     <select name="model_id" id="model_id" required
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" disabled>
                         <option value="">Select Model</option>
@@ -67,13 +67,13 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="part_no" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part No</label>
+                    <label for="part_no" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part No <span class="text-red-600">*</span></label>
                     <input type="text" name="part_no" id="part_no" maxlength="20" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. 123-ABC-45" required>
                     <p id="add-part_no-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
 
                 <div class="mb-4">
-                    <label for="part_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part Name</label>
+                    <label for="part_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part Name <span class="text-red-600">*</span></label>
                     <input type="text" name="part_name" id="part_name" maxlength="50" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. Bracket Assembly" required>
                     <p id="add-part_name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
@@ -100,15 +100,15 @@
                 @csrf @method('PUT')
 
                 <div class="mb-4">
-                    <label for="edit_customer_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Customer</label>
-                    <select name="customer_id" id="edit_customer_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <label for="edit_customer_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Customer <span class="text-red-600">*</span></label>
+                    <select name="customer_id" id="edit_customer_id" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         <option value="">Select Customer</option>
                     </select>
                     <p id="edit-customer_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
 
                 <div class="mb-4">
-                    <label for="edit_model_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model</label>
+                    <label for="edit_model_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model <span class="text-red-600">*</span></label>
                     <select name="model_id" id="edit_model_id" required
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" disabled>
                         <option value="">Select Model</option>
@@ -117,13 +117,13 @@
                 </div>
 
                 <div class="mb-4">
-                    <label for="edit_part_no" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part No</label>
+                    <label for="edit_part_no" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part No <span class="text-red-600">*</span></label>
                     <input type="text" name="part_no" id="edit_part_no" maxlength="20" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-part_no-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
 
                 <div class="mb-4">
-                    <label for="edit_part_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part Name</label>
+                    <label for="edit_part_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part Name <span class="text-red-600">*</span></label>
                     <input type="text" name="part_name" id="edit_part_name" maxlength="50" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-part_name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>

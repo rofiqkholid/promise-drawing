@@ -302,70 +302,70 @@ class DashboardController extends Controller
 
     public function getUploadMonitoringData(Request $request)
     {
-        $docPackageQuery = DB::table('doc_packages AS dp')
-            ->select('dp.product_id', DB::raw('COUNT(dp.id) as actual_count'))
-            ->whereNotNull('dp.product_id')
-            ->whereNotNull('dp.current_revision_id');
+        $query = DB::table('part_groups AS pg')
+            ->leftJoin('models AS m', 'pg.model_id', '=', 'm.id')
+            ->leftJoin('customers AS c', 'pg.customer_id', '=', 'c.id')
+            ->leftJoin('doc_packages AS dp', function ($join) {
+                $join->on('dp.customer_id', '=', 'pg.customer_id')
+                    ->on('dp.model_id', '=', 'pg.model_id')
+                    ->on('dp.part_group_id', '=', 'pg.id');
+            })
+            ->select(
+                'c.code AS customer_name',
+                'm.name AS model_name',
+                'pg.code_part_group AS part_group',
+                'pg.planning AS plan_count',
+                DB::raw('COUNT(dp.id) AS actual_count')
+            );
 
         if ($request->filled('month')) {
             $month = $request->month;
             $startDate = $month . '-01 00:00:00';
             $endDate = date('Y-m-t 23:59:59', strtotime($startDate));
-            $docPackageQuery->whereBetween('dp.created_at', [$startDate, $endDate]);
+
+            $query->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('dp.created_at', [$startDate, $endDate])
+                    ->orWhereNull('dp.created_at');
+            });
         }
 
-        $docPackageQuery->when($request->filled('doc_group'), function ($q) use ($request) {
-            $q->where('dp.doctype_group_id', $request->doc_group);
-        });
-
-        $docPackageQuery->when($request->filled('sub_type'), function ($q) use ($request) {
-            $q->where('dp.doctype_subcategory_id', $request->sub_type);
-        });
-
-        $docPackageQuery->when($request->filled('part_group'), function ($q) use ($request) {
-            $q->where('dp.part_group_id', $request->part_group);
-        });
-
-        $docPackageQuery->when($request->filled('project_status'), function ($q) use ($request) {
-            $q->where('dp.project_status_id', $request->project_status);
-        });
-
-        $docPackageQuery->groupBy('dp.product_id');
-
-        $baseQuery = DB::table('products AS p')
-            ->leftJoin('customers AS c', 'p.customer_id', '=', 'c.id')
-            ->leftJoin('models AS m', 'p.model_id', '=', 'm.id')
-            ->leftJoinSub($docPackageQuery, 'dp_counts', function ($join) {
-                $join->on('p.id', '=', 'dp_counts.product_id');
+        $query->when($request->filled('doc_group'), function ($q) use ($request) {
+            $q->where(function ($w) use ($request) {
+                $w->where('dp.doctype_group_id', $request->doc_group)
+                    ->orWhereNull('dp.doctype_group_id');
             });
-
-        $baseQuery->when($request->filled('key_word'), function ($q) use ($request) {
-            $q->where('p.part_no', 'LIKE', '%' . $request->key_word . '%');
         });
 
-        $baseQuery->when($request->filled('customer'), function ($q) use ($request) {
-            $q->where('p.customer_id', $request->customer);
+        $query->when($request->filled('sub_type'), function ($q) use ($request) {
+            $q->where(function ($w) use ($request) {
+                $w->where('dp.doctype_subcategory_id', $request->sub_type)
+                    ->orWhereNull('dp.doctype_subcategory_id');
+            });
         });
 
-        $baseQuery->when($request->filled('model'), function ($q) use ($request) {
-            $q->where('p.model_id', $request->model);
+        $query->when($request->filled('part_group'), function ($q) use ($request) {
+            $q->where('pg.code_part_group', $request->part_group);
         });
 
-        $planColumn = 'm.planning';
+        $query->when($request->filled('project_status'), function ($q) use ($request) {
+            $q->where(function ($w) use ($request) {
+                $w->where('dp.project_status_id', $request->project_status)
+                    ->orWhereNull('dp.project_status_id');
+            });
+        });
 
-        $results = $baseQuery
-            ->select(
-                'c.code AS customer_name',
-                'm.name AS model_name',
-                DB::raw("SUM(COALESCE($planColumn, 0)) as plan_count"),
-                DB::raw('SUM(COALESCE(dp_counts.actual_count, 0)) as actual_count')
-            )
-            ->whereNotNull('c.code')
-            ->whereNotNull('m.name')
-            ->groupBy('c.code', 'm.name')
-            ->orderBy('actual_count', 'desc')
-            ->limit(5)
-            ->get();
+        $query->groupBy(
+            'pg.code_part_group',
+            'm.name',
+            'c.code',
+            'pg.planning'
+        );
+
+        $sortBy = $request->input('sort_by', 'plan');
+        $orderColumn = $sortBy === 'actual' ? 'actual_count' : 'pg.planning';
+        $query->orderBy($orderColumn, 'desc');
+
+        $results = $query->limit(5)->get();
 
         $results = $results->map(function ($item) {
             $plan = floatval($item->plan_count);
@@ -382,83 +382,81 @@ class DashboardController extends Controller
     }
 
 
+
     public function getUploadMonitoringDataProject(Request $request)
     {
-        $docPackageQuery = DB::table('doc_packages AS dp')
-            ->select('dp.product_id', DB::raw('COUNT(dp.id) as actual_count'))
-            ->whereNotNull('dp.product_id');
+        $query = DB::table('part_groups AS pg')
+            ->leftJoin('models AS m', 'pg.model_id', '=', 'm.id')
+            ->leftJoin('customers AS c', 'pg.customer_id', '=', 'c.id')
+            ->leftJoin('doc_packages AS dp', function ($join) {
+                $join->on('dp.customer_id', '=', 'pg.customer_id')
+                    ->on('dp.model_id', '=', 'pg.model_id')
+                    ->on('dp.part_group_id', '=', 'pg.id');
+            })
+            ->select(
+                'c.code AS customer_name',
+                'm.name AS model_name',
+                'pg.code_part_group AS part_group',
+                'pg.planning AS plan_count',
+                DB::raw('COUNT(dp.current_revision_id) AS actual_count')
+            )
+            ->where('m.status_id', 3); 
 
         if ($request->filled('month')) {
             $month = $request->month;
             $startDate = $month . '-01 00:00:00';
             $endDate = date('Y-m-t 23:59:59', strtotime($startDate));
-            $docPackageQuery->whereBetween('dp.created_at', [$startDate, $endDate]);
-        }
 
-        if ($request->filled('doc_group')) {
-            $docPackageQuery->where('dp.doctype_group_id', $request->doc_group);
-        }
-
-        if ($request->filled('sub_type')) {
-            $docPackageQuery->where('dp.doctype_subcategory_id', $request->sub_type);
-        }
-
-        if ($request->filled('part_group')) {
-            $docPackageQuery->where('dp.part_group_id', $request->part_group);
-        }
-
-        $docPackageQuery
-            ->join('project_status AS ps', 'dp.project_status_id', '=', 'ps.id')
-            ->where('ps.name', 'Project');
-
-        $docPackageQuery->groupBy('dp.product_id');
-
-        $baseQuery = DB::table('products AS p')
-            ->leftJoin('doc_packages AS dp', 'p.id', '=', 'dp.product_id')
-            ->leftJoin('customers AS c', 'p.customer_id', '=', 'c.id')
-            ->leftJoin('models AS m', 'p.model_id', '=', 'm.id')
-            ->leftJoin('project_status AS ps', 'dp.project_status_id', '=', 'ps.id')
-            ->leftJoinSub($docPackageQuery, 'dp_counts', function ($join) {
-                $join->on('p.id', '=', 'dp_counts.product_id');
+            $query->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('dp.created_at', [$startDate, $endDate])
+                    ->orWhereNull('dp.created_at');
             });
-
-        if ($request->filled('key_word')) {
-            $baseQuery->where('p.part_no', 'LIKE', '%' . $request->key_word . '%');
         }
 
-        if ($request->filled('customer')) {
-            $baseQuery->where('p.customer_id', $request->customer);
-        }
+        $query->when($request->filled('doc_group'), function ($q) use ($request) {
+            $q->where(function ($w) use ($request) {
+                $w->where('dp.doctype_group_id', $request->doc_group)
+                    ->orWhereNull('dp.doctype_group_id');
+            });
+        });
 
-        if ($request->filled('model')) {
-            $baseQuery->where('p.model_id', $request->model);
-        }
+        $query->when($request->filled('sub_type'), function ($q) use ($request) {
+            $q->where(function ($w) use ($request) {
+                $w->where('dp.doctype_subcategory_id', $request->sub_type)
+                    ->orWhereNull('dp.doctype_subcategory_id');
+            });
+        });
 
-        $planColumn = 'm.planning';
+        $query->when($request->filled('part_group'), function ($q) use ($request) {
+            $q->where('pg.code_part_group', $request->part_group);
+        });
 
-        $results = $baseQuery
-            ->select(
-                'c.code AS customer_name',
-                'm.name AS model_name',
-                'ps.name AS project_status_name',
-                DB::raw("SUM(COALESCE($planColumn, 0)) as plan_count"),
-                DB::raw('SUM(COALESCE(dp_counts.actual_count, 0)) as actual_count'),
-                DB::raw('ROUND((SUM(COALESCE(dp_counts.actual_count, 0)) * 100.0 / NULLIF(SUM(COALESCE(m.planning, 0)), 0)), 1) AS percentage')
-            )
-            ->whereNotNull('c.code')
-            ->whereNotNull('dp.current_revision_id')
-            ->whereNotNull('m.name')
-            ->where('ps.name', 'Project')
-            ->groupBy('c.code', 'm.name', 'ps.name')
-            ->orderBy('actual_count', 'desc')
-            ->limit(5)
-            ->get();
+        $query->groupBy(
+            'pg.id',
+            'pg.code_part_group',
+            'm.name',
+            'm.status_id',
+            'c.code',
+            'pg.planning'
+        );
 
-        $results->transform(function ($item) {
-            $item->percentage = number_format((float)$item->percentage, 1, '.', '');
+        $sortBy = $request->input('sort_by', 'plan');
+        $orderColumn = $sortBy === 'actual' ? 'actual_count' : 'pg.planning';
+        $query->orderBy($orderColumn, 'desc');
+
+        $results = $query->limit(5)->get();
+
+        $results = $results->map(function ($item) {
+            $plan = floatval($item->plan_count);
+            $actual = floatval($item->actual_count);
+            $percentage = $plan > 0 ? ($actual / $plan) * 100 : 0;
+            $item->percentage = number_format($percentage, 1);
             return $item;
         });
 
-        return response()->json(['status' => 'success', 'data' => $results]);
+        return response()->json([
+            'status' => 'success',
+            'data' => $results
+        ]);
     }
 }

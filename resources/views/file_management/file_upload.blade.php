@@ -43,7 +43,6 @@
                 <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">198</p>
             </div>
         </div>
-        {{-- Card 4 --}}
         <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
             <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-sky-500 dark:text-sky-400 bg-sky-100 dark:bg-sky-900/50 rounded-full">
                 <i class="fa-solid fa-layer-group fa-lg"></i>
