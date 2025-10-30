@@ -1,5 +1,5 @@
 {{-- Diperbarui dengan Font Awesome dan Dropdown Tema --}}
-<header class="flex justify-between items-center p-4 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300">
+<header class="flex justify-between items-center p-4 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300 relative z-10">
     <div>
         <h1 class="text-[1.2rem] font-semibold text-gray-700 dark:text-gray-200">PROMISE</h1>
         <p class="text-[0.7rem] text-gray-400 dark:text-gray-200">Project Management Integrated System Engineering</p>

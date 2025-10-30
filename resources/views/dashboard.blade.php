@@ -153,7 +153,7 @@
             initializeDashboard() {
                 const component = this;
                 component.initCharts();
-                
+
                 component.initDocGroupSelect2();
                 component.initSubTypeSelect2();
                 component.initCustomerSelect2();
@@ -175,52 +175,125 @@
                 const labelColor = newMode === 'dark' ? '#E2E8F0' : '#4A5568';
                 const background = newMode === 'dark' ? '#1F2937' : '#FFFFFF';
 
-                const themeOptions = {
-                    theme: {
-                        mode: newMode
-                    },
-                    chart: {
-                        foreColor: labelColor,
-                        background: background
-                    },
-                    xaxis: {
-                        labels: {
-                            style: {
-                                colors: labelColor
-                            }
-                        }
-                    },
-                    yaxis: {
-                        title: {
-                            style: {
-                                color: labelColor
-                            }
-                        },
-                        labels: {
-                            style: {
-                                colors: labelColor
-                            }
-                        }
-                    },
-                    grid: {
-                        borderColor: gridColor
-                    },
-                    tooltip: {
-                        theme: newMode
-                    }
-                };
-
                 const mainCharts = [
                     this.apexPlanVsActualChart,
                     this.apexPlanVsActualProjectChart,
                 ];
 
                 mainCharts.forEach(chart => {
-                    if (chart) {
-                        chart.updateOptions(themeOptions);
+                    if (chart && chart.w && chart.w.config) {
+                        const currentCategories = chart.w.globals.categoryLabels || [];
+                        const currentSeries = JSON.parse(JSON.stringify(chart.w.config.series || []));
+
+                        const updatedOptions = {
+                            theme: {
+                                mode: newMode
+                            },
+                            chart: {
+                                foreColor: labelColor,
+                                background: background,
+                                animations: {
+                                    enabled: true,
+                                    easing: 'easeinout',
+                                    speed: 800,
+                                    animateGradually: {
+                                        enabled: true,
+                                        delay: 150
+                                    },
+                                    dynamicAnimation: {
+                                        enabled: true,
+                                        speed: 350
+                                    }
+                                }
+                            },
+                            xaxis: {
+                                categories: currentCategories,
+                                labels: {
+                                    style: {
+                                        colors: labelColor
+                                    }
+                                }
+                            },
+                            yaxis: {
+                                labels: {
+                                    style: {
+                                        colors: labelColor
+                                    }
+                                }
+                            },
+                            grid: {
+                                borderColor: gridColor
+                            },
+                            tooltip: {
+                                theme: newMode
+                            },
+                            series: currentSeries
+                        };
+
+                        chart.updateOptions(updatedOptions, true, true);
                     }
                 });
+            },
 
+            updateBarChart(chart, apiData, chartName = 'Chart') {
+                if (!chart) return;
+
+                const isDarkMode = this.isDarkMode;
+                const labelColor = isDarkMode ? '#E2E8F0' : '#4A5568';
+
+                if (!apiData || !Array.isArray(apiData) || apiData.length === 0) {
+                    console.warn(`No valid data received for ${chartName}`);
+                    chart.updateOptions({
+                        series: [{
+                                name: 'Plan',
+                                data: []
+                            },
+                            {
+                                name: 'Actual',
+                                data: []
+                            },
+                            {
+                                name: 'Percentace',
+                                data: []
+                            }
+                        ],
+                        xaxis: {
+                            categories: []
+                        },
+                        noData: {
+                            text: 'No data found for this view.',
+                            style: {
+                                color: labelColor,
+                                fontSize: '16px'
+                            }
+                        }
+                    }, false, true); // Parameter ketiga: redraw = true
+                    return;
+                }
+
+                const categories = apiData.map(item => `${item.customer_name || '?'} - ${item.model_name || '?'}`);
+                const actualSeriesData = apiData.map(item => parseInt(item.actual_count) || 0);
+                const planSeriesData = apiData.map(item => parseInt(item.plan_count) || 0);
+                const percentaceData = apiData.map(item => parseFloat(item.percentage).toFixed(2) || 0);
+
+                chart.updateOptions({
+                    series: [{
+                            name: 'Plan',
+                            data: planSeriesData
+                        },
+                        {
+                            name: 'Actual',
+                            data: actualSeriesData
+                        },
+                        {
+                            name: 'Percentace',
+                            data: percentaceData
+                        }
+                    ],
+                    xaxis: {
+                        categories: categories
+                    }
+                }, false, true); // Parameter ketiga: redraw = true
             },
 
             initCharts() {
@@ -242,20 +315,20 @@
 
                 const mainChartOptions = {
                     series: [{
-                        name: 'Plan',
-                        type: 'bar',
-                        data: []
-                    },
-                    {
-                        name: 'Actual',
-                        type: 'bar',
-                        data: []
-                    },
-                    {
-                        name: 'Percentace',
-                        type: 'line',
-                        data: []
-                    }
+                            name: 'Plan',
+                            type: 'bar',
+                            data: []
+                        },
+                        {
+                            name: 'Actual',
+                            type: 'bar',
+                            data: []
+                        },
+                        {
+                            name: 'Percentace',
+                            type: 'line',
+                            data: []
+                        }
                     ],
                     chart: {
                         type: 'line',
@@ -269,6 +342,9 @@
                         foreColor: labelColor,
                         background: background
                     },
+                    // INI YANG DIUBAH: Menambahkan properti 'colors'
+                    colors: ['#0063d5ff', '#3ea70dff', '#bd8e00ff'],
+                    // ------------------------------------------
                     theme: {
                         mode: isDarkMode ? 'dark' : 'light'
                     },
@@ -481,7 +557,7 @@
                 const month = (now.getMonth() + 1).toString().padStart(2, '0');
                 document.getElementById('month_input').value = `${year}-${month}`;
                 document.getElementById('sort_actual').checked = true;
-                
+
                 this.applyFilters();
             },
 
@@ -495,17 +571,17 @@
                     console.warn(`No valid data received for ${chartName}`);
                     chart.updateOptions({
                         series: [{
-                            name: 'Plan',
-                            data: []
-                        },
-                        {
-                            name: 'Actual',
-                            data: []
-                        },
-                        {
-                            name: 'Percentace',
-                            data: []
-                        }
+                                name: 'Plan',
+                                data: []
+                            },
+                            {
+                                name: 'Actual',
+                                data: []
+                            },
+                            {
+                                name: 'Percentace',
+                                data: []
+                            }
                         ],
                         xaxis: {
                             categories: []
@@ -528,17 +604,17 @@
 
                 chart.updateOptions({
                     series: [{
-                        name: 'Plan',
-                        data: planSeriesData
-                    },
-                    {
-                        name: 'Actual',
-                        data: actualSeriesData
-                    },
-                    {
-                        name: 'Percentace',
-                        data: percentaceData
-                    }
+                            name: 'Plan',
+                            data: planSeriesData
+                        },
+                        {
+                            name: 'Actual',
+                            data: actualSeriesData
+                        },
+                        {
+                            name: 'Percentace',
+                            data: percentaceData
+                        }
                     ],
                     xaxis: {
                         categories: categories

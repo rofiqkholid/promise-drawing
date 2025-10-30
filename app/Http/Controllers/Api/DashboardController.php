@@ -43,7 +43,7 @@ class DashboardController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Could not fetch upload count.',
-                'error' => $e->getMessage() 
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -52,8 +52,8 @@ class DashboardController extends Controller
     {
         try {
             $uploadCount = DB::table('activity_logs')
-            ->where('activity_code', 'DOWNLOAD')
-            ->count('activity_code');
+                ->where('activity_code', 'DOWNLOAD')
+                ->count('activity_code');
 
             return response()->json([
                 'status' => 'success',
@@ -63,7 +63,7 @@ class DashboardController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Could not fetch upload count.',
-                'error' => $e->getMessage() 
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -72,7 +72,7 @@ class DashboardController extends Controller
     {
         try {
             $uploadCount = DB::table('doc_package_revision_files')
-            ->count('filename');
+                ->count('filename');
 
             return response()->json([
                 'status' => 'success',
@@ -82,7 +82,7 @@ class DashboardController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Could not fetch upload count.',
-                'error' => $e->getMessage() 
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -373,7 +373,7 @@ class DashboardController extends Controller
                 'm.name AS model_name',
                 'pg.code_part_group AS part_group',
                 'pg.planning AS plan_count',
-                DB::raw('COUNT(dp.id) AS actual_count')
+                DB::raw('COUNT(dp.current_revision_id) AS actual_count')
             );
 
         if ($request->filled('month')) {

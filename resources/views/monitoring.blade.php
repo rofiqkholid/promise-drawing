@@ -5,7 +5,6 @@
 
 <div x-data="dashboardController()" x-init="init()">
 
-    {{-- STAT CARDS --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-[15%]">
         <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Monitoring</h2>
@@ -228,6 +227,7 @@
                 userCountElement.textContent = 'Error';
             });
     }
+
     function fetchUDownloadCount() {
         const apiUrl = '/api/download-count';
         const userCountElement = document.getElementById('downloadCount');
@@ -246,6 +246,7 @@
                 userCountElement.textContent = 'Error';
             });
     }
+
     function fetchDocCount() {
         const apiUrl = '/api/doc-count';
         const userCountElement = document.getElementById('docCount');
@@ -343,65 +344,67 @@
                 const labelColor = newMode === 'dark' ? '#E2E8F0' : '#4A5568';
                 const background = newMode === 'dark' ? '#1F2937' : '#FFFFFF';
 
-                const themeOptions = {
-                    theme: {
-                        mode: newMode
-                    },
-                    chart: {
-                        foreColor: labelColor,
-                        background: background
-                    },
-                    xaxis: {
-                        labels: {
-                            style: {
-                                colors: labelColor
-                            }
-                        }
-                    },
-                    yaxis: {
-                        title: {
-                            style: {
-                                color: labelColor
-                            }
-                        },
-                        labels: {
-                            style: {
-                                colors: labelColor
-                            }
-                        }
-                    },
-                    grid: {
-                        borderColor: gridColor
-                    },
-                    tooltip: {
-                        theme: newMode
-                    }
-                };
-
                 const mainCharts = [
                     this.apexPlanVsActualChart,
                     this.apexPlanVsActualProjectChart,
                     this.apexUploadDownloadChart
+
                 ];
 
                 mainCharts.forEach(chart => {
-                    if (chart) {
-                        const currentCategories = chart.w.globals.categoryLabels ||
-                            chart.w.config.xaxis.categories || [];
+                    if (chart && chart.w && chart.w.config) {
+                        const currentCategories = chart.w.globals.categoryLabels || [];
+                        const currentSeries = JSON.parse(JSON.stringify(chart.w.config.series || []));
 
-                        chart.updateOptions(themeOptions);
-
-                        if (currentCategories && currentCategories.length > 0) {
-                            chart.updateOptions({
-                                xaxis: {
-                                    categories: currentCategories
+                        const updatedOptions = {
+                            theme: {
+                                mode: newMode
+                            },
+                            chart: {
+                                foreColor: labelColor,
+                                background: background,
+                                animations: {
+                                    enabled: true,
+                                    easing: 'easeinout',
+                                    speed: 800,
+                                    animateGradually: {
+                                        enabled: true,
+                                        delay: 150
+                                    },
+                                    dynamicAnimation: {
+                                        enabled: true,
+                                        speed: 350
+                                    }
                                 }
-                            });
-                        }
+                            },
+                            xaxis: {
+                                categories: currentCategories,
+                                labels: {
+                                    style: {
+                                        colors: labelColor
+                                    }
+                                }
+                            },
+                            yaxis: {
+                                labels: {
+                                    style: {
+                                        colors: labelColor
+                                    }
+                                }
+                            },
+                            grid: {
+                                borderColor: gridColor
+                            },
+                            tooltip: {
+                                theme: newMode
+                            },
+                            series: currentSeries
+                        };
+
+                        chart.updateOptions(updatedOptions, true, true);
                     }
                 });
             },
-
             updateChartData() {
                 fetchDataFromServer().then(data => {
                     this.apexPlanVsActualChart.updateOptions({
