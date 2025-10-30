@@ -43,6 +43,7 @@
                 <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">198</p>
             </div>
         </div>
+        {{-- Card 4 --}}
         <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
             <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-sky-500 dark:text-sky-400 bg-sky-100 dark:bg-sky-900/50 rounded-full">
                 <i class="fa-solid fa-layer-group fa-lg"></i>
@@ -59,7 +60,7 @@
             <a href="{{ route('drawing.upload') }}"
                 class="w-full sm:w-auto inline-flex items-center gap-2 justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
                 <i class="fa-solid fa-upload"></i>
-                Upload Drawing Package
+                Upload New Drawing Package
             </a>
         </div>
 
@@ -73,7 +74,7 @@
                         <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ECN No</th>
                         <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Uploaded At</th>
                         <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                        <th class="py-3 px-4 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Info</th>
+                        <th class="py-3 px-4 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
@@ -143,8 +144,7 @@
                         orderable: false,
                         searchable: false,
                         render: function(data, type, row) {
-                            // We'll render a clickable info icon; but we also make the whole row clickable below
-                            return `<button class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400" title="Details" onclick="openPackageDetails(${row.id})"><i class="fa-solid fa-circle-info fa-lg"></i></button>`;
+                            return `<button class="text-blue-600 hover:text-blue-900 dark:text-blue-400 transition-colors" title="Details" onclick="openPackageDetails('${row.id}')"><i class="fa-solid fa-eye fa-lg"></i></button>`;
                         }
                     }
                 ],
@@ -274,7 +274,6 @@
             };
         }
 
-        // Tambahkan setelah fungsi detectTheme
         function formatTimeAgo(date) {
             const seconds = Math.floor((new Date() - date) / 1000);
             let interval = seconds / 31536000;
@@ -406,8 +405,7 @@
             loaderOverlay.innerHTML = `<div class="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center gap-3"><div class="loader-border w-8 h-8 border-4 border-blue-400 rounded-full animate-spin"></div><div class="text-sm text-gray-700 dark:text-gray-300">Loading package details...</div></div>`;
             document.body.appendChild(loaderOverlay);
 
-            // Fetch package details
-            fetch(`{{ url('/files') }}` + '/' + id)
+            fetch(`{{ url('/files') }}` + '/' + encodeURIComponent(id))
                 .then(res => {
                     if (!res.ok) throw new Error('Failed to load details');
                     return res.json();
@@ -416,11 +414,9 @@
                     const pkg = json.package || {};
                     const files = json.files || { count: 0, size_bytes: 0 };
 
-                    // remove loader
                     const loader = document.getElementById('package-details-modal');
                     if (loader) loader.remove();
 
-                    // normalize fields (support both package- and revision-based keys)
                     const packageNo = pkg.package_no ?? pkg.packageNo ?? 'N/A';
                     const revisionNo = pkg.revision_no ?? pkg.current_revision_no ?? pkg.revisionNo ?? 0;
                     const customerCode = pkg.customer_code ?? pkg.customerCode ?? pkg.customer_code ?? '-';
@@ -435,7 +431,6 @@
                     const revisionNote = pkg.revision_note ?? pkg.note ?? '';
                     const isObsolete = pkg.is_obsolete || pkg.isObsolete ? true : false;
 
-                    // build overlay and dialog
                     const overlay = document.createElement('div');
                     overlay.id = 'package-details-modal';
                     overlay.className = 'fixed inset-0 bg-black bg-opacity-40 p-4 flex items-center justify-center z-50';
@@ -537,8 +532,8 @@
                                     <i class="fa-solid fa-clipboard-list mr-2 text-blue-500"></i>
                                     Activity Log
                                 </h4>
-                                <div id="activity-log-content" class="space-y-4 max-h-72 overflow-y-auto pr-2">
-                                    <p class="italic text-center text-gray-500 dark:text-gray-400 py-4">Loading activity logs...</p>
+                                <div id="activity-log-content" class="space-y-4 max-h-96 overflow-y-auto pr-2">
+                                    <p class="italic text-center text-gray-500 dark:text-gray-400">Loading activity logs...</p>
                                 </div>
                             </div>
                         </div>
@@ -554,21 +549,17 @@
                     overlay.appendChild(dialog);
                     document.body.appendChild(overlay);
 
-                    // focus management
                     const closeBtn = document.getElementById('pkg-close-btn');
                     const closeBtn2 = document.getElementById('pkg-close-btn-2');
                     if (closeBtn) closeBtn.addEventListener('click', closePackageDetails);
                     if (closeBtn2) closeBtn2.addEventListener('click', closePackageDetails);
                     if (closeBtn) closeBtn.focus();
 
-                    // close on ESC
                     function escHandler(e) { if (e.key === 'Escape') closePackageDetails(); }
                     document.addEventListener('keydown', escHandler);
 
-                    // remove listener when modal removed
                     overlay._cleanup = function() { document.removeEventListener('keydown', escHandler); };
 
-                    // Fetch activity logs for the selected package
                     fetch(`{{ route('upload.drawing.activity-logs') }}`, {
                         method: 'POST',
                         headers: {
@@ -609,33 +600,23 @@
 @push('styles')
     <style>
         #activity-log-content::-webkit-scrollbar {
-            width: 5px;
+            width: 6px;
         }
         #activity-log-content::-webkit-scrollbar-track {
             background: transparent;
-            margin-top: 5px;
-            margin-bottom: 5px;
         }
         #activity-log-content::-webkit-scrollbar-thumb {
             background-color: #d1d5db;
             border-radius: 20px;
-            border: 1px solid transparent;
-            background-clip: content-box;
         }
         .dark #activity-log-content::-webkit-scrollbar-thumb {
             background-color: #4b5563;
         }
         #activity-log-content:hover::-webkit-scrollbar-thumb {
-            background-color: #9ca3af;
+            background-color: #93c5fd;
         }
         .dark #activity-log-content:hover::-webkit-scrollbar-thumb {
-            background-color: #6b7280;
-        }
-        #activity-log-content:hover::-webkit-scrollbar-track {
-             background: rgba(0, 0, 0, 0.03); 
-        }
-        .dark #activity-log-content:hover::-webkit-scrollbar-track {
-             background: rgba(255, 255, 255, 0.05);
+            background-color: #60a5fa;
         }
     </style>
 @endpush

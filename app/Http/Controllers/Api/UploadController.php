@@ -33,10 +33,9 @@ class UploadController extends Controller
 
         // $perPage = $request->get('length') ?: 25;
 
-        // DataTables expects { data: [...] }
         $rows = $query->get()->map(function($row) {
             return [
-                'id' => $row->id,
+                'id' => str_replace('=', '-', encrypt($row->id)),
                 'package_no' => $row->package_no,
                 'customer' => $row->customer ?? '-',
                 'model' => $row->model ?? '-',
@@ -45,7 +44,7 @@ class UploadController extends Controller
                 'uploaded_at' => $row->uploaded_at ? date('Y-m-d H:i:s', strtotime($row->uploaded_at)) : null,
                 'status' => $row->status ?? 'draft',
                 'ecn_no' => $row->ecn_no ?? '-',
-                'revision_label_name' => $row->revision_label_name // Bisa null
+                'revision_label_name' => $row->revision_label_name
             ];
         });
 
@@ -56,7 +55,7 @@ class UploadController extends Controller
 
     public function getPackageDetails(Request $request, $id): JsonResponse
     {
-        $revisionId = (int) $id;
+        $revisionId = (int) decrypt(str_replace('-', '=', $id));
 
         $rev = DB::table('doc_package_revisions as r')
             ->leftJoin('doc_packages as p', 'r.package_id', '=', 'p.id')
@@ -87,7 +86,6 @@ class UploadController extends Controller
             return response()->json(['error' => 'Revision not found'], 404);
         }
 
-        // aggregate files for this revision
         $agg = DB::table('doc_package_revision_files')
             ->where('revision_id', $revisionId)
             ->select(DB::raw('count(*) as total_files, sum(file_size) as total_bytes'))
