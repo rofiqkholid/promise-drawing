@@ -12,6 +12,9 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
 use App\Services\PathBuilder;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Encryption\Encrypter;
+use Illuminate\Support\Facades\Crypt;
+use App\Models\ActivityLog;
 use Carbon\Carbon;
 
 class DrawingUploadController extends Controller
@@ -33,6 +36,13 @@ class DrawingUploadController extends Controller
             ->where('id', $ids['doctype_group_id'])
             ->first(['name']);
 
+        $doctypeSubcategoryName = null;
+        if (!empty($ids['doctype_subcategory_id'])) {
+            $doctypeSubcategoryName = DB::table('doctype_subcategories')
+                ->where('id', $ids['doctype_subcategory_id'])
+                ->value('name');
+        }
+
         if (!$customer || !$model || !$product || !$dg) {
             Log::error('Master data tidak valid', [
                 'customer_id' => $ids['customer_id'],
@@ -43,12 +53,18 @@ class DrawingUploadController extends Controller
             abort(422, 'Master data tidak valid');
         }
 
-        return [
+        $result = [
             'customer_code' => $customer->code,
             'model_name' => $model->name,
             'doctype_group_name' => $dg->name,
             'part_no' => $product->part_no,
         ];
+
+        if ($doctypeSubcategoryName) {
+            $result['doctype_subcategories_name'] = $doctypeSubcategoryName;
+        }
+
+        return $result;
     }
 
     public function checkRevisionStatus(Request $request): JsonResponse
@@ -83,25 +99,18 @@ class DrawingUploadController extends Controller
                         $files = DB::table('doc_package_revision_files')->where('revision_id', $existingRevision->id)
                             ->get(['id', 'filename as name', 'category', 'file_size as size'])
                             ->groupBy('category')->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
-                        return response()->json([
-                            'mode' => 'edit_draft',
-                            'revision' => [
-                                'id' => $existingRevision->id,
-                                'package_id' => $existingRevision->package_id,
-                                'revision_no' => $existingRevision->revision_no,
-                                'ecn_no' => $existingRevision->ecn_no,
-                                'revision_label_id' => $existingRevision->revision_label_id,
-                                'revision_status' => $existingRevision->revision_status,
-                                'note' => $existingRevision->note,
-                                'receipt_date' => $existingRevision->receipt_date,
-                            ],
-                            'files' => $files
-                        ]);
+                        return response()->json(['mode' => 'edit_draft', 'revision' => $existingRevision, 'files' => $files]); //
                     } else {
+                        $files = DB::table('doc_package_revision_files')->where('revision_id', $existingRevision->id)
+                            ->get(['id', 'filename as name', 'category', 'file_size as size'])
+                            ->groupBy('category')->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
+
                         return response()->json([
                             'mode' => 'locked',
+                            'revision' => $existingRevision,
+                            'files' => $files,
                             'message' => 'ECN No. ' . htmlspecialchars($request->ecn_no) . ' already exists on this label and is locked with status: ' . ucfirst($existingRevision->revision_status)
-                        ], 409); //
+                        ], 409);
                     }
 
                 } else {
@@ -111,7 +120,7 @@ class DrawingUploadController extends Controller
 
                     return response()->json([
                         'mode' => 'locked',
-                        'message' => 'ECN No. ' . htmlspecialchars($request->ecn_no) . ' is already used by a draft on a different label: ' . htmlspecialchars($labelName)
+                        'message' => 'ECN No. ' . htmlspecialchars($request->ecn_no) . ' is already used by a draft on a different label: ' . htmlspecialchars($labelName) . '.'
                     ], 409);
                 }
             }
@@ -120,12 +129,6 @@ class DrawingUploadController extends Controller
         $nextRev = 0;
         if ($packageId) {
             $query = DB::table('doc_package_revisions')->where('package_id', $packageId);
-
-            if ($request->filled('revision_label_id')) {
-                $query->where('revision_label_id', $request->revision_label_id);
-            } else {
-                $query->whereNull('revision_label_id');
-            }
 
             $maxRevision = $query->max('revision_no');
             $nextRev = is_null($maxRevision) ? 0 : $maxRevision + 1;
@@ -147,9 +150,9 @@ class DrawingUploadController extends Controller
             'category' => 'nullable|integer|exists:doctype_subcategories,id',
             'partGroup' => 'required|integer|exists:part_groups,id',
             'ecn_no' => 'required|string|max:50',
+            'receipt_date' => 'nullable|date',
             'revision_label_id' => 'nullable|integer|exists:customer_revision_labels,id',
             'existing_revision_id' => 'nullable|integer|exists:doc_package_revisions,id',
-            'receipt_date' => 'nullable|date_format:Y-m-d',
             'files_to_delete' => 'nullable|array',
             'files_to_delete.*' => 'integer|exists:doc_package_revision_files,id',
             'files_2d.*' => 'nullable|file',
@@ -175,7 +178,7 @@ class DrawingUploadController extends Controller
             $revisionId = $validated['existing_revision_id'] ?? null;
 
             $currentRevisionNo = 0; // Default
-            $isEditMode = (bool) $revisionId; // Lacak status untuk logging
+            $isEditMode = (bool) $revisionId;
 
             if ($revisionId) {
                 // EDIT MODE
@@ -198,30 +201,17 @@ class DrawingUploadController extends Controller
 
                 if ($revToEdit->revision_status !== 'draft') throw new \Exception("Revision is locked and cannot be edited.");
 
-                $updateData = [];
-                if ($r->filled('note') && $revToEdit->note !== $r->input('note')) {
-                    $updateData['note'] = $r->input('note');
-                }
-                $newReceiptDate = $validated['receipt_date'] ?: null;
-                if ($revToEdit->receipt_date != $newReceiptDate) { 
-                    $updateData['receipt_date'] = $newReceiptDate;
-                }
-
-                if (!empty($updateData)) {
-                    $updateData['updated_at'] = now();
-                    DB::table('doc_package_revisions')->where('id', $revisionId)->update($updateData);
+                if ($r->filled('note') && $revToEdit->note !== $r->note || $r->filled('receipt_date') && $revToEdit->receipt_date !== $r->receipt_date) {
+                    DB::table('doc_package_revisions')->where('id', $revisionId)->update([
+                        'note' => $r->note,
+                        'receipt_date' => $r->receipt_date,
+                    ]);
                 }
 
                 $currentRevisionNo = $revToEdit->revision_no;
 
             } else {
-                // CREATE NEW MODE
-                $revQuery = DB::table('doc_package_revisions')->where('package_id', $packageId);
-                if (!empty($validated['revision_label_id'])) {
-                    $revQuery->where('revision_label_id', $validated['revision_label_id']);
-                } else {
-                    $revQuery->whereNull('revision_label_id');
-                }
+                $revQuery = DB::table('doc_package_revisions')->where('package_id', $packageId)->lockForUpdate();
                 $maxRevision = $revQuery->max('revision_no');
                 $nextRevisionNo = is_null($maxRevision) ? 0 : $maxRevision + 1;
 
@@ -234,10 +224,10 @@ class DrawingUploadController extends Controller
                     'package_id' => $packageId,
                     'revision_no' => $nextRevisionNo,
                     'ecn_no' => $validated['ecn_no'],
+                    'receipt_date' => $validated['receipt_date'] ?? null,
                     'revision_label_id' => $validated['revision_label_id'] ?: null,
                     'revision_status' => 'draft',
                     'note' => $r->input('note'),
-                    'receipt_date' => $validated['receipt_date'] ?: null,
                     'is_obsolete' => 0,
                     'created_by' => $this->getAuthUserInt(),
                     'created_at' => now(),
@@ -348,65 +338,66 @@ class DrawingUploadController extends Controller
                                 ->value('label');
             }
 
+            $partGroupCode = DB::table('part_groups')->where('id', $packageIds['part_group_id'])->value('code_part_group');
+
             $metaLogData = [
                 'part_no' => $packageLabels['part_no'] ?? null,
                 'doctype_group' => $packageLabels['doctype_group_name'] ?? null,
                 'customer_code' => $packageLabels['customer_code'] ?? null,
                 'model_name' => $packageLabels['model_name'] ?? null,
+                'part_group_code' => $partGroupCode,
                 'doctype_subcategory' => $subCatName,
                 'note' => $r->input('note'),
                 'package_no' => $package ? $package->package_no : null,
                 'revision_no' => $currentRevisionNo,
-                'ecn_no' => $validated['ecn_no'], // <-- DATA BARU
-                'revision_label' => $labelName    // <-- DATA BARU
+                'ecn_no' => $validated['ecn_no'],
+                'receipt_date' => $validated['receipt_date'] ?? null,
+                'revision_label' => $labelName
             ];
 
-            $metaLog = json_encode($metaLogData);
+            $activityCode = 'UPLOAD';
 
-            $activityCode = 'UPLOAD'; // Sesuai 'CK_al_activity_code'
-
-            DB::table('activity_logs')->insert([
+            ActivityLog::create([
                 'user_id' => $this->getAuthUserInt(),
                 'activity_code' => $activityCode,
                 'scope_type' => 'revision',
                 'scope_id' => $packageId,
                 'revision_id' => $revisionId,
-                'meta' => $metaLog,
-                'created_at' => Carbon::now(),
+                'meta' => $metaLogData,
             ]);
 
             DB::commit();
 
             return response()->json(['success' => true, 'message' => 'Draft has been saved successfully.', 'revision_id' => $revisionId, 'package_id' => $packageId]);
 
-        } 
+        }
         catch (\Exception $e) {
-    DB::rollBack();
+            DB::rollBack();
 
-    foreach ($savedFilePaths as $path) {
-        Storage::disk($this->disk)->delete($path);
-    }
+            foreach ($savedFilePaths as $path) {
+                Storage::disk($this->disk)->delete($path);
+            }
 
-    $errors = [];
-    if ($e instanceof \Illuminate\Validation\ValidationException) {
-        $errors = $e->errors();
-        $message = $e->getMessage();
-        $statusCode = 422;
-    } else {
-        $message = 'An unexpected error occurred on the server.';
-        $statusCode = 500;
-    }
+            $errors = [];
+            if ($e instanceof \Illuminate\Validation\ValidationException) {
+                $errors = $e->errors();
+                $message = $e->getMessage();
+                $statusCode = 422;
+            } else {
+                $message = 'An unexpected error occurred on the server.';
+                $statusCode = 500;
+            }
 
-    Log::error('Upload failed and rolled back', [
-        'error' => $e->getMessage(),
-        'errors' => $errors,
-    ]);
+            Log::error('Upload failed and rolled back', [
+                'error' => $e->getMessage(),
+                'errors' => $errors,
+            ]);
 
-    return response()->json([
-        'message' => $message,
-        'errors' => $errors,
-    ], $statusCode);
-}
+            return response()->json([
+                'message' => $message,
+                'errors' => $errors,
+            ], $statusCode);
+        }
 
     }
 
@@ -706,6 +697,7 @@ class DrawingUploadController extends Controller
             'model_id' => $r->input('model_id', $r->input('model')),
             'product_id' => $r->input('partNo'),
             'doctype_group_id' => $r->input('docType'),
+            'doctype_subcategory_id' => $r->input('category'),
         ];
         $labels = $this->getFolderLabels($ids);
         $partGroup = DB::table('part_groups')->where('id', (int)($r->input('partGroup')))->value('code_part_group');
@@ -795,28 +787,40 @@ class DrawingUploadController extends Controller
                                 ->value('label');
             }
 
-            $metaLog = json_encode([
+            $package = DB::table('doc_packages')->where('id', $packageId)->first(['part_group_id']);
+            $partGroupCode = null;
+            if ($package) {
+                $partGroupCode = DB::table('part_groups')->where('id', $package->part_group_id)->value('code_part_group');
+            }
+
+            $metaLogData = [
                 'package_id' => $packageId,
                 'revision_no' => $revision->revision_no,
                 'ecn_no' => $revision->ecn_no,
-                'revision_label' => $labelName
-            ]);
+                'revision_label' => $labelName,
+                'part_group_code' => $partGroupCode
+            ];
 
             $activityCode = 'SUBMIT_APPROVAL';
 
-            DB::table('activity_logs')->insert([
+            ActivityLog::create([
                 'user_id' => $this->getAuthUserInt(),
                 'activity_code' => $activityCode,
                 'scope_type' => 'revision',
                 'scope_id' => $packageId,
                 'revision_id' => $revision->id,
-                'meta' => $metaLog,
-                'created_at' => Carbon::now(),
+                'meta' => $metaLogData,
             ]);
 
             DB::commit();
 
-            return response()->json(['success' => true, 'message' => 'Revision set to pending and approval requested.']);
+            $encryptedId = str_replace('=', '-', encrypt($revisionId));
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Revision set to pending and approval requested.',
+                'revision_id' => $encryptedId
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to request approval', ['error' => $e->getMessage(), 'package_id' => $packageId, 'revision_no' => $revision->revision_no]);
@@ -834,7 +838,6 @@ class DrawingUploadController extends Controller
         $partGroup = $r->input('partGroup');
         $revisionNo = $r->input('revision_no');
 
-        // If metadata provided, try to find matching package
         if ($customer && $model && $partNo && $docType && $partGroup) {
             $q = DB::table('doc_packages')->where('customer_id', (int) $customer)->where('model_id', (int) $model)->where('product_id', (int) $partNo)->where('doctype_group_id', (int) $docType)->where('part_group_id', (int) $partGroup);
             if ($category) {
@@ -853,7 +856,6 @@ class DrawingUploadController extends Controller
                     }
                 });
                 $logs = $logsQ->orderBy('created_at', 'desc')->limit(50)->get();
-                // decode meta and include user name if available
                 $logs = $logs->map(function ($row) {
                     $meta = null;
                     try {
@@ -881,7 +883,6 @@ class DrawingUploadController extends Controller
             }
         }
 
-        // Fallback: return latest global logs
         $global = DB::table('activity_logs')->orderBy('created_at', 'desc')->limit(50)->get();
         $global = $global->map(function ($row) {
             $meta = null;
@@ -960,5 +961,65 @@ class DrawingUploadController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
+    }
+
+
+    public function reviseConfirmed(Request $r): JsonResponse
+    {
+        $encryptedId = $r->revision_id;
+
+        DB::beginTransaction();
+
+        $revisionId = Crypt::decrypt(str_replace('-', '=', $encryptedId));
+
+        $updateCount =  DB::table('doc_package_revisions')
+            ->where('id', $revisionId)
+            ->update(['revision_status' => 'draft', 'updated_at' => Carbon::now()]);
+
+        if ($updateCount !== 1) {
+            DB::rollBack();
+            return response()->json(['message' => 'Revision not found or already in draft.', 'status' => 'error', 'read-only' => 'false'], 404);
+        }
+
+        $dbPackage = DB::table('doc_package_revisions')->where('id', $revisionId)->first(['id', 'package_id', 'revision_label_id', 'revision_no', 'ecn_no']);
+
+        if (!$dbPackage) {
+            DB::rollBack();
+            return response()->json(['message' => 'Database consistency error.', 'status' => 'error', 'read-only' => 'false'], 500);
+        }
+
+        $dbCustomerRevisionLabel = DB::table('customer_revision_labels')
+            ->where('id', $dbPackage->revision_label_id)
+            ->first(['label']);
+
+        $labelName = $dbCustomerRevisionLabel ? $dbCustomerRevisionLabel->label : null;
+
+        $package = DB::table('doc_packages')->where('id', $dbPackage->package_id)->first(['part_group_id']);
+        $partGroupCode = null;
+        if ($package) {
+            $partGroupCode = DB::table('part_groups')->where('id', $package->part_group_id)->value('code_part_group');
+        }
+
+        $metaLogData = [
+            'package_id' => $dbPackage->package_id,
+            'revision_no' => $dbPackage->revision_no,
+            'ecn_no' => $dbPackage->ecn_no,
+            'revision_label' => $labelName,
+            'previous_status' => 'approved',
+            'part_group_code' => $partGroupCode
+        ];
+
+        ActivityLog::create([
+            'user_id' => Auth::user()->id,
+            'activity_code' => 'REVISE_CONFIRM',
+            'scope_type' => 'revision',
+            'scope_id' => $dbPackage->package_id,
+            'revision_id' => $revisionId,
+            'meta' => $metaLogData,
+        ]);
+
+        DB::commit();
+
+        return response()->json(['message' => 'Revision confirmed successfully.', 'status' => 'success', 'read-only' => 'true'], 200);
     }
 }

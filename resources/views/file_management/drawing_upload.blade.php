@@ -7,12 +7,28 @@
 
         <div class="mb-8">
             <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Upload New Drawing Package</h2>
-                <a href="{{ url()->previous() }}"
-                    class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    Back
-                </a>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl" x-text="isCreatingNewRevision ? 'Create New Revision' : 'Drawing Package Details'">Upload New Drawing Package</h2>
+                <div class="flex items-center gap-2">
+
+                    <button type="button" @click.prevent="startNewRevision"
+                        x-show="savedRevisionId && isReadOnly && !isCreatingNewRevision"
+                        class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-green-300 text-sm font-medium rounded-md shadow-sm text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:bg-green-700 dark:text-green-100 dark:border-green-600 dark:hover:bg-green-600 dark:focus:ring-offset-gray-800">
+                        <i class="fa-solid fa-plus-circle"></i>
+                        Create New Revision
+                    </button>
+
+                    <button type="button" onclick="reviseConfirm()"
+                        x-show="revisionStatus === 'pending' || revisionStatus === 'rejected'"
+                        class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
+                        <i class="fa-solid fa-file-pen"></i>
+                    </button>
+
+                    <a href="{{ url('file-manager.upload') }}"
+                        class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        {{-- Back --}}
+                    </a>
+                </div>
             </div>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Fill in the metadata and upload all related drawing
                 files in one go.</p>
@@ -35,74 +51,90 @@
                             <div wire:ignore>
                                 <label for="customer"
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
-                                <select id="customer" name="customer" class="mt-1 block w-full" :disabled="isReadOnly"></select>
+                                <select id="customer" name="customer" class="mt-1 block w-full" :disabled="isMetadataLocked"></select>
                             </div>
                             <div wire:ignore>
                                 <label for="model"
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
-                                <select id="model" name="model" class="mt-1 block w-full" :disabled="isReadOnly"></select>
+                                <select id="model" name="model" class="mt-1 block w-full" :disabled="isMetadataLocked"></select>
                             </div>
                             <div wire:ignore>
                                 <label for="partNo"
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part
                                     No</label>
-                                <select id="partNo" name="partNo" class="mt-1 block w-full" :disabled="isReadOnly"></select>
+                                <select id="partNo" name="partNo" class="mt-1 block w-full" :disabled="isMetadataLocked"></select>
                             </div>
                             <div wire:ignore>
                                 <label for="docType"
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300">Document
                                     Type</label>
-                                <select id="docType" name="docType" class="mt-1 block w-full" :disabled="isReadOnly"></select>
+                                <select id="docType" name="docType" class="mt-1 block w-full" :disabled="isMetadataLocked"></select>
                             </div>
                             <div wire:ignore>
                                 <label for="category"
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
-                                <select id="category" name="category" class="mt-1 block w-full" :disabled="isReadOnly"></select>
+                                <select id="category" name="category" class="mt-1 block w-full" :disabled="isMetadataLocked"></select>
                             </div>
                             <div wire:ignore>
                                 <label for="partGroup"
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
-                                <select id="partGroup" name="partGroup" class="mt-1 block w-full" :disabled="isReadOnly"></select>
+                                <select id="partGroup" name="partGroup" class="mt-1 block w-full" :disabled="isMetadataLocked"></select>
                             </div>
 
-                            <div>
-                                <label for="ecn_no" class="block text-sm font-medium text-gray-700 dark:text-gray-300">ECN Number</label>
-                                <input type="text" x-model.debounce.500ms="ecn_no" id="ecn_no" name="ecn_no" class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" :disabled="!isMetadataFilled || isReadOnly || draftSaved">
-                            </div>
-
-                            <div>
-                             <label for="receipt_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Receipt Date
-                             </label>
-                                <input type="date" x-model="receipt_date" id="receipt_date" name="receipt_date"
-                                    class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                                    :disabled="!isMetadataFilled || isReadOnly || draftSaved">
+                            <div class="sm:col-span-2 grid grid-cols-2 gap-6">
+                                <div>
+                                    <label for="ecn_no" class="block text-sm font-medium text-gray-700 dark:text-gray-300">ECN Number</label>
+                                    <input type="text" x-model.debounce.500ms="ecn_no" id="ecn_no" name="ecn_no" class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" :disabled="isReadOnly">
+                                </div>
+                                <div>
+                                    <label for="receipt_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Receipt Date</label>
+                                    <input type="date" x-model="receipt_date" id="receipt_date" name="receipt_date" class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" :disabled="isReadOnly">
+                                </div>
                             </div>
 
                             <div class="sm:col-span-2" x-show="customerHasLabels" x-transition>
                                 <label for="revision_label_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Revision Label</label>
-                                <select id="revision_label_id" name="revision_label_id" class="mt-1 block w-full" :disabled="!isMetadataFilled || isReadOnly || draftSaved"></select>
+                                <select id="revision_label_id" name="revision_label_id" class="mt-1 block w-full" :disabled="isReadOnly"></select>
                             </div>
 
-                            <div class="sm:col-span-2">
-                                <label for="note"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Revision Note
-                                    (optional)</label>
-                                <textarea x-model="note" id="note" name="note" rows="3"
-                                    class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                                    :disabled="isReadOnly || !isFormReady || draftSaved"></textarea>
-                                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">A short note that will be saved on
-                                    the selected package revision.</p>
-                            </div>
-                        </div>
-                    </div>
+                                                    <div class="sm:col-span-2">
+                                                        <label for="note"
+                                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Revision Note
+                                                            (optional)</label>
+                                                        <textarea x-model="note" id="note" name="note" rows="3"
+                                                            class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                                            :disabled="isReadOnly"></textarea>
+                                                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">A short note that will be saved on
+                                                            the selected package revision.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                    <div id="revision-options" x-show="isFormReady" x-transition.opacity
-                        class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                                            <div x-show="isReadOnly && revisionStatus"
+                                                class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                                                <div class="flex items-center">
+                                                    <i class="fa-solid fa-info-circle mr-3 text-blue-500 text-xl"></i>
+                                                    <div>
+                                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Current Status</h3>
+                                                        <p class="text-sm text-gray-600 dark:text-gray-300">This revision is currently <strong
+                                                                class="font-semibold"
+                                                                :class="{
+                                                                    'text-green-600 dark:text-green-400': revisionStatus === 'approved',
+                                                                    'text-red-600 dark:text-red-400': revisionStatus === 'rejected',
+                                                                    'text-yellow-600 dark:text-yellow-400': revisionStatus === 'pending',
+                                                                    'text-gray-700 dark:text-gray-300': revisionStatus === 'draft'
+                                                                }"
+                                                                x-text="revisionStatus.charAt(0).toUpperCase() + revisionStatus.slice(1)"></strong>.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                        <div class="flex items-center mb-6">
-                            <i class="fa-solid fa-history mr-3 text-blue-500 text-xl"></i>
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Revision Status</h3>
+                                            <div id="revision-options" x-show="isFormReady && !isReadOnly" x-transition.opacity
+                                                class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+
+                                                <div class="flex items-center mb-6">
+                                                    <i class="fa-solid fa-history mr-3 text-blue-500 text-xl"></i>                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Revision Status</h3>
                         </div>
 
                         <div x-show="revisionCheck.status === 'checking'" x-transition>
@@ -156,7 +188,7 @@
 
             </div>
 
-            <div id="drawing-files-section" :class="{ 'opacity-50 pointer-events-none': !isMetadataFilled || !ecn_no.trim() || (customerHasLabels && !revision_label_id) || isReadOnly || revisionCheck.status === 'locked' }"
+            <div id="drawing-files-section" :class="{ 'opacity-50 pointer-events-none': !isMetadataFilled || isReadOnly }"
                 class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-opacity">
 
                 <div class="mb-6">
@@ -216,97 +248,72 @@
                                         </div>
                                     </div>
 
-                                    <div class="file-list-area flex-grow min-h-0 space-y-4">
+                                    <div class="file-list-container flex-grow min-h-0" :id="`file-list-${cat.id}`">
 
-                                        {{-- Section for NEW files --}}
-                                        <div>
-                                            <template x-if="fileStores[cat.id].some(f => !f.uploaded)">
-                                                <h5 class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-2 px-1">
-                                                    Files to Upload
-                                                </h5>
-                                            </template>
-                                            <div class="space-y-1">
-                                                <template x-for="(fileWrapper, index) in fileStores[cat.id]" :key="`${cat.id}-new-${index}`">
-                                                    <div x-show="!fileWrapper.uploaded" x-transition
-                                                        class="file-preview-item flex items-center space-x-3 p-2 rounded-md border border-dashed border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30">
-                                                        {{-- Icon --}}
-                                                        <div class="file-icon text-white w-10 h-10 flex items-center justify-center rounded flex-shrink-0" :class="getFileIcon(fileWrapper.name).color">
-                                                            <i class="fa-solid" :class="getFileIcon(fileWrapper.name).icon"></i>
-                                                        </div>
-                                                        {{-- Details --}}
-                                                        <div class="file-details flex-1 min-w-0">
-                                                            <p class="file-name text-sm text-gray-800 dark:text-gray-200 truncate" :title="fileWrapper.name" x-text="fileWrapper.name"></p>
-                                                            <p class="file-size text-xs text-gray-500 dark:text-gray-400" x-text="formatBytes(fileWrapper.size)"></p>
-                                                            {{-- Progress Bar --}}
-                                                            <div x-show="fileWrapper.status === 'uploading' || fileWrapper.status === 'retrying'" class="progress-bar-container mt-1">
-                                                                <div class="progress-bar" :style="`width: ${fileWrapper.progress || 0}%`"></div>
-                                                            </div>
-                                                            {{-- Status Text --}}
-                                                            <div class="status-container mt-1 h-5 flex items-center">
-                                                                <template x-if="fileWrapper.status === 'failed'"><i class="fa-solid fa-circle-exclamation text-red-500"></i></template>
-                                                                <template x-if="fileWrapper.status === 'uploading' || fileWrapper.status === 'retrying'"><i class="fa-solid fa-spinner fa-spin text-blue-500"></i></template>
-                                                                <p class="status-text text-xs ml-1.5" :class="{
-                                                                    'text-red-600 dark:text-red-400': fileWrapper.status === 'failed',
-                                                                    'text-blue-600 dark:text-blue-400': fileWrapper.status === 'uploading' || fileWrapper.status === 'retrying',
-                                                                    'text-gray-500 dark:text-gray-400': fileWrapper.status === 'added' || !fileWrapper.status
-                                                                }" x-text="fileWrapper.statusText || 'Added'"></p>
-                                                            </div>
-                                                        </div>
-                                                        {{-- Action Buttons --}}
-                                                        <div class="flex-shrink-0 ml-2">
-                                                            <button type="button" x-show="!isReadOnly && fileWrapper.status === 'failed'" class="action-btn" @click.prevent="uploadFile(fileWrapper, cat.id)" title="Retry Upload">
-                                                                <i class="fa-solid fa-rotate-right text-blue-500 hover:text-blue-700"></i>
-                                                            </button>
-                                                            <button type="button" x-show="!isReadOnly && fileWrapper.status !== 'uploading' && fileWrapper.status !== 'retrying'" class="action-btn" @click.prevent="removeNewFile(cat.id, index)" title="Remove File">
-                                                                <i class="fa-solid fa-trash-can text-red-500 hover:text-red-700"></i>
-                                                            </button>
-                                                        </div>
+                                        <h5 x-show="fileStores[cat.id].some(f => !f.uploaded)"
+                                            class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-2 mb-1 px-2"
+                                            style="border-bottom: 1px dashed #d1d5db; padding-bottom: 4px; margin-bottom: 8px;">
+                                            New Files
+                                        </h5>
+                                        <template x-for="fileWrapper in fileStores[cat.id].filter(f => !f.uploaded)" :key="fileWrapper._uid">
+                                            <div class="file-preview-item flex items-center space-x-3 p-2 rounded-md">
+                                                <div class="file-icon text-white w-10 h-10 flex items-center justify-center rounded flex-shrink-0" :class="getFileIcon(fileWrapper.name).color">
+                                                    <i class="fa-solid" :class="getFileIcon(fileWrapper.name).icon"></i>
+                                                </div>
+                                                <div class="file-details flex-1 min-w-0">
+                                                    <p class="file-name text-sm text-gray-800 dark:text-gray-200 truncate" :title="fileWrapper.name" x-text="fileWrapper.name"></p>
+                                                    <p class="file-size text-xs text-gray-500 dark:text-gray-400" x-text="formatBytes(fileWrapper.size)"></p>
+
+                                                    <div x-show="fileWrapper.status === 'uploading' || fileWrapper.status === 'retrying'" class="progress-bar-container mt-1">
+                                                        <div class="progress-bar" :style="`width: ${fileWrapper.progress || 0}%`"></div>
                                                     </div>
-                                                </template>
-                                            </div>
-                                        </div>
 
-                                        {{-- Separator --}}
-                                        <template x-if="fileStores[cat.id].some(f => !f.uploaded) && fileStores[cat.id].some(f => f.uploaded)">
-                                            <hr class="border-gray-200 dark:border-gray-700 my-4">
+                                                    <div class="status-container mt-1 h-5 flex items-center">
+                                                        <template x-if="fileWrapper.status === 'failed'"><i class="fa-solid fa-circle-exclamation text-red-500"></i></template>
+                                                        <template x-if="fileWrapper.status === 'uploading' || fileWrapper.status === 'retrying'"><i class="fa-solid fa-spinner fa-spin text-blue-500"></i></template>
+                                                        <p class="status-text text-xs ml-1.5" :class="{
+                                                            'text-red-600 dark:text-red-400': fileWrapper.status === 'failed',
+                                                            'text-blue-600 dark:text-blue-400': fileWrapper.status === 'uploading' || fileWrapper.status === 'retrying',
+                                                            'text-gray-500 dark:text-gray-400': fileWrapper.status === 'added' || !fileWrapper.status
+                                                        }" x-text="fileWrapper.statusText || 'Added'"></p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-shrink-0 ml-2">
+                                                    <button type="button" x-show="!isReadOnly && fileWrapper.status === 'failed'" class="action-btn" @click.prevent="uploadFile(fileWrapper, cat.id)" title="Retry Upload">
+                                                        <i class="fa-solid fa-rotate-right text-blue-500 hover:text-blue-700"></i>
+                                                    </button>
+                                                    <button type="button" x-show="!isReadOnly && fileWrapper.status !== 'uploading' && fileWrapper.status !== 'retrying'" class="action-btn" @click.prevent="removeFile(cat.id, fileWrapper)" title="Remove File">
+                                                        <i class="fa-solid fa-trash-can text-red-500 hover:text-red-700"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </template>
 
-                                        {{-- Section for UPLOADED files --}}
-                                        <div>
-                                            <template x-if="fileStores[cat.id].some(f => f.uploaded)">
-                                                 <h5 class="text-xs font-semibold uppercase text-gray-500 dark:text-gray-400 mb-2 px-1">
-                                                    Uploaded Files
-                                                </h5>
-                                            </template>
-                                            <div class="space-y-1">
-                                                 <template x-for="(fileWrapper, index) in fileStores[cat.id]" :key="`${cat.id}-old-${index}`">
-                                                    {{-- Only show files that ARE uploaded --}}
-                                                    <div x-show="fileWrapper.uploaded" x-transition
-                                                        class="file-preview-item flex items-center space-x-3 p-2 rounded-md bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700">
-                                                         {{-- Icon --}}
-                                                        <div class="file-icon text-white w-10 h-10 flex items-center justify-center rounded flex-shrink-0" :class="getFileIcon(fileWrapper.name).color">
-                                                            <i class="fa-solid" :class="getFileIcon(fileWrapper.name).icon"></i>
-                                                        </div>
-                                                        {{-- Details --}}
-                                                        <div class="file-details flex-1 min-w-0">
-                                                            <p class="file-name text-sm text-gray-800 dark:text-gray-200 truncate" :title="fileWrapper.name" x-text="fileWrapper.name"></p>
-                                                            <p class="file-size text-xs text-gray-500 dark:text-gray-400" x-text="formatBytes(fileWrapper.size)"></p>
-                                                            {{-- Status Text for uploaded --}}
-                                                            <div class="status-container mt-1 h-5 flex items-center">
-                                                                <i class="fa-solid fa-check-circle text-green-500"></i>
-                                                                <p class="status-text text-xs ml-1.5 text-green-600 dark:text-green-400 font-medium" x-text="fileWrapper.statusText || 'On Server'"></p>
-                                                            </div>
-                                                        </div>
-                                                        {{-- Action Button (Delete Existing) --}}
-                                                        <div class="flex-shrink-0 ml-2">
-                                                            <button type="button" x-show="!isReadOnly" class="action-btn" @click.prevent="confirmDeleteExistingFile(cat.id, index)" title="Delete File from Server">
-                                                                <i class="fa-solid fa-trash-can text-red-500 hover:text-red-700"></i>
-                                                            </button>
-                                                        </div>
+                                        <h5 x-show="fileStores[cat.id].some(f => f.uploaded)"
+                                            class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-4 mb-1 px-2"
+                                            style="border-bottom: 1px dashed #d1d5db; padding-bottom: 4px; margin-bottom: 8px;">
+                                            On Server
+                                        </h5>
+                                        <template x-for="fileWrapper in fileStores[cat.id].filter(f => f.uploaded)" :key="fileWrapper._uid">
+                                            <div class="file-preview-item flex items-center space-x-3 p-2 rounded-md">
+                                                <div class="file-icon text-white w-10 h-10 flex items-center justify-center rounded flex-shrink-0" :class="getFileIcon(fileWrapper.name).color">
+                                                    <i class="fa-solid" :class="getFileIcon(fileWrapper.name).icon"></i>
+                                                </div>
+                                                <div class="file-details flex-1 min-w-0">
+                                                    <p class="file-name text-sm text-gray-800 dark:text-gray-200 truncate" :title="fileWrapper.name" x-text="fileWrapper.name"></p>
+                                                    <p class="file-size text-xs text-gray-500 dark:text-gray-400" x-text="formatBytes(fileWrapper.size)"></p>
+                                                    <div class="status-container mt-1 h-5 flex items-center">
+                                                        <i class="fa-solid fa-check-circle text-green-500"></i>
+                                                        <p class="status-text text-xs ml-1.5 text-green-600 dark:text-green-400" x-text="fileWrapper.statusText || 'On Server'"></p>
                                                     </div>
-                                                </template>
+                                                </div>
+                                                <div class="flex-shrink-0 ml-2">
+                                                    <button type="button" x-show="!isReadOnly" class="action-btn" @click.prevent="removeFile(cat.id, fileWrapper)" title="Remove File">
+                                                        <i class="fa-solid fa-trash-can text-red-500 hover:text-red-700"></i>
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
+                                        </template>
                                     </div>
                                 </div>
                             </div>
@@ -324,7 +331,7 @@
                 </button>
 
                 <button type="button" @click="requestApproval"
-                    :disabled="!draftSaved || approvalRequested || hasNewFiles" {{-- Tambahkan || hasNewFiles --}}
+                    :disabled="!draftSaved || approvalRequested || hasNewFiles"
                     class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed">
                     <span x-show="!approvalRequested"><i class="fa-solid fa-paper-plane mr-1"></i> Request Approval</span>
                     <span x-show="approvalRequested"><i class="fa-solid fa-check mr-1"></i> Requested</span>
@@ -334,7 +341,80 @@
     </div>
 
     <script>
-        // Toast functions 
+        function reviseConfirm() {
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const revisionId = urlParams.get('revision_id');
+
+                            if (!revisionId) {
+                                Swal.fire('Error', 'No revision ID found in the URL.', 'error');
+                                return;
+                            }
+
+                            Swal.fire({
+                                title: 'Are you sure?',
+                                text: "You are about to revert this approved revision to a draft. This action will be logged.",
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#3085d6',
+                                cancelButtonColor: '#d33',
+                                confirmButtonText: 'Yes, revise it!'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    const reviseUrl = "{{ route('upload.drawing.revise-confirm') }}";
+                                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                                    Swal.fire({
+                                        title: 'Processing...',
+                                        text: 'Please wait while the revision is being updated.',
+                                        allowOutsideClick: false,
+                                        didOpen: () => {
+                                            Swal.showLoading();
+                                        }
+                                    });
+
+                                    fetch(reviseUrl, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Accept': 'application/json',
+                                            'X-CSRF-TOKEN': csrfToken
+                                        },
+                                        body: JSON.stringify({
+                                            revision_id: revisionId
+                                        })
+                                    })
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            return response.json().then(errorData => {
+                                                throw new Error(errorData.message || `Server Error: ${response.status}`);
+                                            }).catch(() => {
+                                                throw new Error(`Server Error: ${response.status}`);
+                                            });
+                                        }
+                                        return response.json();
+                                    })
+                                    .then(data => {
+                                        Swal.fire({
+                                            title: 'Success!',
+                                            text: data.message,
+                                            icon: 'success'
+                                        }).then(() => {
+                                            const baseUrl = "{{ url('/drawing-upload') }}";
+                                            window.location.href = `${baseUrl}?revision_id=${revisionId}&read_only=false`;
+                                        });
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        Swal.fire({
+                                            title: 'Request Failed!',
+                                            text: error.message,
+                                            icon: 'error'
+                                        });
+                                    });
+                                }
+                            });
+                        }
+        // Toast functions
         function detectTheme() {
             const isDark = document.documentElement.classList.contains('dark');
             return isDark ? {
@@ -448,9 +528,9 @@
                 category: null,
                 partGroup: null,
                 ecn_no: '',
+                receipt_date: '',
                 revision_label_id: null,
                 note: '',
-                receipt_date: null,
 
                 customerHasLabels: false,
                 revisionCheck: {
@@ -496,6 +576,8 @@
                 hasNewFiles: false,
                 isLoadingDraft: false,
                 isReadOnly: false,
+                isCreatingNewRevision: false,
+                originalRevisionStatus: null,
 
                 // --- COMPUTED ---
                 get isMetadataFilled() {
@@ -504,6 +586,14 @@
 
                 get isFormReady() {
                     return this.isMetadataFilled && this.ecn_no.trim() !== '';
+                },
+
+                get isMetadataLocked() {
+                    if (this.isLoadingDraft) return true;
+                    if (this.draftSaved) return true;
+                    if (this.isCreatingNewRevision) return true;
+                    if (this.isReadOnly) return true;
+                    return false;
                 },
 
                 // --- METHODS ---
@@ -595,7 +685,6 @@
                         this.checkRevisionStatus();
                     });
 
-                    // this.fetchActivityLogs();
                     this.$watch('enabledCategories', (newValue, oldValue) => {
                         const removed = oldValue.filter(x => !newValue.includes(x));
                         removed.forEach(catId => {
@@ -689,23 +778,27 @@
                         method: 'GET',
                         success: (json) => {
                             const pkg = json.package;
-                            if (!pkg) { // Jika revisi tidak ada
+                            if (!pkg) {
                                 toastError('Error', 'Revision not found.');
                                 this.isLoadingDraft = false;
                                 setTimeout(() => { window.location.href = '{{ route("file-manager.upload") }}'; }, 2000);
                                 return;
                             }
 
+                            this.revisionStatus = pkg.revision_status;
+                            this.originalRevisionStatus = pkg.revision_status;
+                            this.revisionStatus = pkg.revision_status;
+
                             if (isReadOnly) {
-                                this.isReadOnly = true; // Set state dari URL
+                                this.isReadOnly = true;
                             } else if (pkg.revision_status !== 'draft') {
                                 toastWarning('Info', 'This file cannot be edited. Open in Read-Only mode.');
                                 this.isReadOnly = true;
                             }
 
                             this.ecn_no = pkg.ecn_no;
+                            this.receipt_date = pkg.receipt_date ? pkg.receipt_date.split(' ')[0] : '';
                             this.note = pkg.revision_note;
-                            this.receipt_date = pkg.receipt_date || null;
 
                             this.customer = pkg.customer_id;
                             this.model = pkg.model_id;
@@ -715,11 +808,12 @@
                             this.partGroup = pkg.part_group_id;
                             this.revision_label_id = pkg.revision_label_id;
 
+                            this.savedRevisionId = pkg.id;
+                            this.savedPackageId = pkg.package_id;
+
                             if (!this.isReadOnly) {
-                                this.draftSaved = true; 
-                                this.savedRevisionId = pkg.id; 
-                                this.savedPackageId = pkg.package_id; 
-                                this.approvalRequested = (pkg.revision_status === 'pending'); 
+                                this.draftSaved = true;
+                                this.approvalRequested = (pkg.revision_status === 'pending');
                             }
 
                             this.initSelect2WithData('customer', 'Select Customer', "{{ route('upload.getCustomerData') }}", { id: pkg.customer_id, text: pkg.customer_code, ajaxData: {} });
@@ -742,9 +836,6 @@
 
                             this.$nextTick(() => {
                                 this.isLoadingDraft = false;
-                                if (!this.isReadOnly) {
-                                    this.checkRevisionStatus();
-                                }
                             });
                         },
                         error: (xhr) => {
@@ -753,6 +844,32 @@
                             setTimeout(() => { window.location.href = '{{ route("file-manager.upload") }}'; }, 2000);
                         }
                     });
+                },
+
+                startNewRevision() {
+                    this.isCreatingNewRevision = true;
+                    this.isReadOnly = false;
+                    this.revisionStatus = 'draft';
+                    this.draftSaved = false;
+                    this.approvalRequested = false;
+                    this.savedRevisionId = null;
+
+                    this.ecn_no = '';
+                    this.receipt_date = '';
+                    this.note = '';
+                    this.revision_label_id = null;
+                    $('#revision_label_id').val(null).trigger('change');
+
+                    this.clearFileStores();
+                    this.filesToDelete = [];
+                    this.hasNewFiles = false;
+
+                    this.$nextTick(() => {
+                        document.getElementById('ecn_no').focus();
+                        this.checkRevisionStatus();
+                    });
+
+                    toastInfo('New Revision Mode', 'Metadata dikunci. Masukkan ECN baru dan upload file.');
                 },
 
                 resetAndDisable(propNames) {
@@ -847,6 +964,7 @@
                                 this.revisionCheck.revision = res.revision;
                                 this.revisionCheck.files = res.files;
                                 this.note = res.revision.note;
+                                this.receipt_date = res.revision.receipt_date ? res.revision.receipt_date.split(' ')[0] : '';
                                 this.filesToDelete = [];
                                 this.populateFileStores(res.files);
                             } else if (res.mode === 'locked') {
@@ -855,7 +973,20 @@
                         },
                         error: (xhr) => {
                             this.revisionCheck.status = 'locked';
-                            this.revisionCheck.message = xhr.responseJSON?.message || 'Failed to check revision status.';
+                            const res = xhr.responseJSON;
+                            if (res) {
+                                this.revisionCheck.message = res.message || 'Failed to check revision status.';
+                                if (res.revision) {
+                                    this.revisionCheck.revision = res.revision;
+                                    this.note = res.revision.note;
+                                    this.receipt_date = res.revision.receipt_date ? res.revision.receipt_date.split(' ')[0] : '';
+                                    if (res.files) {
+                                        this.populateFileStores(res.files);
+                                    }
+                                }
+                            } else {
+                                this.revisionCheck.message = 'Failed to check revision status.';
+                            }
                             toastError('Error', this.revisionCheck.message);
                         }
                     });
@@ -874,6 +1005,7 @@
                     for (const category in filesByCategory) {
                         if (this.fileStores.hasOwnProperty(category)) {
                             this.fileStores[category] = filesByCategory[category].map(file => ({
+                                _uid: file.id,
                                 id: file.id,
                                 name: file.name,
                                 size: file.size,
@@ -932,6 +1064,7 @@
 
                         if (!this.fileStores[category].some(f => f.name === file.name && f.size === file.size)) {
                             this.fileStores[category].push({
+                                _uid: Date.now() + Math.random(),
                                 file: file,
                                 name: file.name,
                                 size: file.size,
@@ -959,58 +1092,30 @@
                             this.approvalRequested = false;
                         }
                     }
+
+                    const hasNewFiles = Object.values(this.fileStores).some(categoryFiles =>
+                        categoryFiles.some(file => !file.uploaded)
+                    );
+                    this.hasNewFiles = hasNewFiles;
+
                     this.checkFileConflicts();
                 },
-                removeNewFile(category, index) {
-                    this.fileStores[category].splice(index, 1);
+                removeFile(category, fileWrapper) {
+                    if (fileWrapper.uploaded) {
+                        this.filesToDelete.push(fileWrapper.id);
+                    }
+
+                    const index = this.fileStores[category].indexOf(fileWrapper);
+                    if (index > -1) {
+                        this.fileStores[category].splice(index, 1);
+                    }
+
                     if (this.draftSaved) {
-                         this.hasNewFiles = this.enabledCategories.some(cat => this.fileStores[cat].some(f => !f.uploaded));
+                        const hasNewFiles = Object.values(this.fileStores).some(categoryFiles =>
+                            categoryFiles.some(file => !file.uploaded)
+                        );
+                        this.hasNewFiles = hasNewFiles;
                     }
-                    this.debouncedCheckConflicts();
-                },
-                confirmDeleteExistingFile(category, index) {
-                    const file = this.fileStores[category][index];
-                    if (!file || !file.uploaded || !file.id) return; 
-
-                    const t = detectTheme();
-
-                    Swal.fire({
-                        title: 'Delete this file?',
-                        html: `Are you sure you want to permanently delete <strong style="word-break: break-all;">${file.name}</strong> from this draft? <br><br> <span style="font-weight: 500;">This action will be saved when you click "Upload to Draft".</span>`,
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Yes, delete it!',
-                        cancelButtonText: 'Cancel',
-                        confirmButtonColor: '#dc2626',
-                        cancelButtonColor: '#6b7280',
-                        background: t.bg,
-                        color: t.fg,
-                        customClass: {
-                            popup: 'border',
-                            confirmButton: '...',
-                            cancelButton: '...'
-                        },
-                         didOpen: (popup) => { popup.style.borderColor = t.border; }
-
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            this.deleteExistingFile(category, index);
-                        }
-                    });
-                },
-
-                deleteExistingFile(category, index) {
-                    const file = this.fileStores[category][index];
-                    if (!file || !file.uploaded || !file.id) return;
-
-                    if (!this.filesToDelete.includes(file.id)) {
-                        this.filesToDelete.push(file.id);
-                    }
-                    this.fileStores[category].splice(index, 1);
-                    this.hasNewFiles = true;
-                    this.approvalRequested = false;
-                    toastSuccess('Marked for Deletion', `'${file.name}' will be deleted when you save the draft.`);
-                    this.debouncedCheckConflicts();
                 },
                 getFileIcon(fileName) {
                     const ext = fileName.split('.').pop().toLowerCase();
@@ -1127,9 +1232,9 @@
                     formData.append('category', this.category || '');
                     formData.append('partGroup', this.partGroup);
                     formData.append('ecn_no', this.ecn_no);
+                    formData.append('receipt_date', this.receipt_date);
                     formData.append('revision_label_id', this.revision_label_id || '');
                     formData.append('note', this.note || '');
-                    formData.append('receipt_date', this.receipt_date || '');
 
                     let revNo;
                     if (this.revisionCheck.status === 'edit_draft' && this.revisionCheck.revision) {
@@ -1200,9 +1305,7 @@
                             this.hasNewFiles = false;
                             this.approvalRequested = false;
                             this.filesToDelete = [];
-                            // setTimeout(() => {
-                            //     this.fetchActivityLogs();
-                            // }, 500);
+
                             this.enableMetadataEditing(false);
                             this.checkRevisionStatus();
                         },
@@ -1244,9 +1347,12 @@
                         },
                         success: (res) => {
                             toastSuccess('Requested', 'Draft set to pending for approval.');
-                            // setTimeout(() => {
-                            //     this.fetchActivityLogs();
-                            // }, 500);
+                            if (res.revision_id) {
+                                const baseUrl = "{{ url('/drawing-upload') }}";
+                                window.location.href = `${baseUrl}?revision_id=${res.revision_id}&read_only=true`;
+                            } else {
+                                window.location.reload();
+                            }
                         },
                         error: (xhr) => {
                             toastError('Error', xhr.responseJSON?.message ||
@@ -1255,29 +1361,7 @@
                         }
                     });
                 },
-                // fetchActivityLogs() {
-                //     const data = {
-                //         _token: "{{ csrf_token() }}"
-                //     };
-                //     if (this.isMetadataFilled) {
-                //         Object.assign(data, {
-                //             customer: this.customer,
-                //             model: this.model,
-                //             partNo: this.partNo,
-                //             docType: this.docType,
-                //             category: this.category,
-                //             partGroup: this.partGroup
-                //         });
-                //     }
-                //     $.ajax({
-                //         url: "{{ route('upload.drawing.activity-logs') }}",
-                //         method: 'POST',
-                //         data: data,
-                //         success: (res) => renderActivityLogs(res.logs || []),
-                //         error: (xhr) => console.warn('Failed to load activity logs', xhr
-                //             .responseText)
-                //     });
-                // },
+
 
                 showConflictModal() {
                     const t = detectTheme();
@@ -1299,7 +1383,7 @@
                                         <input type="radio" name="conflict_action_${index}" value="replace" class="form-radio h-4 w-4 text-orange-600" style="margin-right: 6px;"> Replace
                                     </label>
                                     <label style="display: flex; align-items: center; cursor: pointer; color: ${t.fg}; font-size: 0.875rem;">
-                                        <input type="radio" name="conflict_action_${index}" value="suffix" checked class="form-radio h-4 w-4 text-blue-600" style="margin-right: 6px;"> Add New With Suffix
+                                        <input type="radio" name="conflict_action_${index}" value="suffix" checked class="form-radio h-4 w-4 text-blue-600" style="margin-right: 6px;"> Add New
                                     </label>
                                 </div>
                             </div>
@@ -1309,18 +1393,18 @@
                     Swal.fire({
                         title: '<i class="fa-solid fa-copy mr-2"></i> File Already Exists',
                         html: `
-                            <p style="margin-bottom: 1.5rem; color: ${t.fg}; text-align: center;">Some of the files you uploaded already exist on the server. Select an action for each file below.</p>
+                            <p style="margin-bottom: 1.5rem; color: ${t.fg}; text-align: left;">Some of the files you uploaded already exist on the server. Select an action for each file below.</p>
                             <div style="max-height: 300px; overflow-y: auto; border: 1px solid ${t.border}; border-radius: 8px; background-color: ${t.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)'};">
                                 ${conflictHtml}
                             </div>
                         `,
-                        width: '48rem', // Make it wider
+                        width: '48rem',
                         icon: 'warning',
                         showCloseButton: true,
                         allowOutsideClick: false,
                         backdrop: true,
                         timer: null,
-                        confirmButtonText: '<i class="fa-solid fa-check-circle mr-2"></i> Apply Selection',
+                        confirmButtonText: '<i class="fa-solid fa-check-circle mr-2"></i> Terapkan Pilihan',
                         confirmButtonColor: '#3b82f6',
                         background: t.bg,
                         color: t.fg,
@@ -1339,7 +1423,6 @@
                         },
                         didOpen: (popup) => {
                             popup.style.borderColor = t.border;
-                            // Remove the last border-bottom
                             const items = popup.querySelectorAll('.conflict-item');
                             if (items.length > 0) {
                                 items[items.length - 1].style.borderBottom = 'none';
@@ -1356,7 +1439,7 @@
                                 this.fileStores[cat] = this.fileStores[cat].filter(fw => !conflictFileWrappers.includes(fw));
                             });
                             this.conflictFiles = [];
-                            toastWarning('Upload Cancelled', 'The conflicting file has been removed from the upload list.');
+                            toastWarning('Upload Cancelled', 'Conflicting files have been removed from the upload list.');
                         }
                     });
                 },
@@ -1372,7 +1455,6 @@
 
                     const totalFilesToCheck = filesToCheck['2d'].length + filesToCheck['3d'].length + filesToCheck['ecn'].length;
                     if (totalFilesToCheck === 0) {
-                        // This case can be hit when deleting a file, so if files were just added, show the toast.
                         if (addedCount > 0) {
                             toastInfo('Files Added', `Added ${addedCount} file${addedCount > 1 ? 's' : ''} to ${category.toUpperCase()} category.`);
                         }
@@ -1407,7 +1489,7 @@
                                     if (res.conflicts[cat].includes(fileWrapper.name)) {
                                         fileWrapper.conflict = true;
                                         if (!fileWrapper.action || fileWrapper.action === 'add') {
-                                           fileWrapper.action = 'suffix'; // Set default for conflicts
+                                           fileWrapper.action = 'suffix';
                                         }
                                         this.conflictFiles.push(fileWrapper);
                                     } else {
@@ -1497,7 +1579,7 @@
         }
 
         .file-list-container {
-            max-height: 250px;
+            max-height: 300px;
             overflow-y: auto;
             padding-right: 8px;
             margin-right: -8px;
@@ -1630,4 +1712,3 @@
             background-color: #450a0a;
         }
     </style>
-

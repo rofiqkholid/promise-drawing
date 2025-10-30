@@ -18,7 +18,7 @@
                         <i class="fa-solid fa-file-lines fa-xl"></i>
                     </div>
                     <div>
-                        <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Total Document</h3>
+                        <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Total Files</h3>
                         <p id="docCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
                     </div>
                 </div>
