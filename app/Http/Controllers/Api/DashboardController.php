@@ -533,7 +533,7 @@ class DashboardController extends Controller
                 'm.name AS model_name',
                 'pg.code_part_group AS part_group',
                 'pg.planning AS plan_count',
-                DB::raw('COUNT(dp.id) AS actual_count')
+                DB::raw('COUNT(dp.current_revision_id) AS actual_count')
             );
 
         if ($request->filled('month')) {

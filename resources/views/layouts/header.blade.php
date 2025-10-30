@@ -1,4 +1,3 @@
-{{-- Diperbarui dengan Font Awesome dan Dropdown Tema --}}
 <header class="flex justify-between items-center p-4 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300 relative z-10">
     <div>
         <h1 class="text-[1.2rem] font-semibold text-gray-700 dark:text-gray-200">PROMISE</h1>
@@ -41,7 +40,6 @@
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit" class="flex items-center text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-500 focus:outline-none transition-colors duration-200" title="Logout">
-                {{-- Ikon Logout Font Awesome --}}
                 <i class="fa-solid fa-right-from-bracket text-xl"></i>
                 <span class="ml-2 text-sm hidden md:block"></span>
             </button>
