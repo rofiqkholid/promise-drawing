@@ -6,17 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign In - PROMISE Dashboard</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=McLaren&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'McLaren', sans-serif;
         }
 
         .theme-transition {
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
+
+        
     </style>
 </head>
 
@@ -28,7 +32,7 @@
 
             <img src="{{ asset('assets/image/favicon.ico') }}" alt="PROMISE Logo" class="mx-auto h-24 w-auto mb-4">
 
-            <h1 class="text-3xl font-semibold text-gray-900">PROMISE</h1>
+            <h1 class="text-3xl font-semibold text-gray-900">Promise</h1>
             <h2 class="mt-2 text-xl font-semibold text-gray-800">
                 Sign In to Your Account
             </h2>
@@ -52,7 +56,7 @@
             @csrf
             <div class="space-y-4">
                 <div>
-                    <label for="nik" class="block text-sm font-medium text-gray-700">Employee ID</label>
+                    <label for="nik" class="block text-sm font-medium text-gray-700">Employee ID (NIK)</label>
                     <div class="relative mt-1">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

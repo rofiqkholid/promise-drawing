@@ -15,8 +15,8 @@
 
     <div class="flex items-center ml-[3px] h-16 mb-10 flex-shrink-0">
         <img src="{{ asset('assets/image/favicon.ico') }}" alt="Logo" class="h-10 w-10 object-contain flex-shrink-0">
-        <span class="ml-4 text-[1.5rem] font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">
-            PROMISE
+        <span class="titlePromise ml-4 text-[1.5rem] font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">
+            Promise
         </span>
     </div>
 
