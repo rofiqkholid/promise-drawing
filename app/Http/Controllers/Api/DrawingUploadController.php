@@ -817,7 +817,7 @@ class DrawingUploadController extends Controller
             $encryptedId = str_replace('=', '-', encrypt($revisionId));
 
             return response()->json([
-                'success' => true, 
+                'success' => true,
                 'message' => 'Revision set to pending and approval requested.',
                 'revision_id' => $encryptedId
             ]);

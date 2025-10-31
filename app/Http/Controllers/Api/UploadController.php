@@ -11,29 +11,81 @@ class UploadController extends Controller
 {
     public function listFiles(Request $request): JsonResponse
     {
+        $draw = $request->get('draw', 1);
+        $start = $request->get('start', 0);
+        $length = $request->get('length', 10);
+        $search = $request->get('search')['value'] ?? '';
+        $order = $request->get('order')[0] ?? null;
+
         $query = DB::table('doc_package_revisions as r')
             ->leftJoin('doc_packages as p', 'r.package_id', '=', 'p.id')
             ->leftJoin('customers as c', 'p.customer_id', '=', 'c.id')
             ->leftJoin('models as m', 'p.model_id', '=', 'm.id')
             ->leftJoin('products as pr', 'p.product_id', '=', 'pr.id')
             ->leftJoin('customer_revision_labels as crl', 'r.revision_label_id', '=', 'crl.id')
-            ->select([
-                'r.id as id',
-                'p.package_no as package_no',
-                'c.code as customer',
-                'm.name as model',
-                'pr.part_no as part_no',
-                'r.revision_no as revision_no',
-                'r.updated_at as uploaded_at',
-                'r.revision_status as status',
-                'r.ecn_no as ecn_no',
-                'crl.label as revision_label_name'
-            ])
-            ->orderBy('r.updated_at', 'desc');
+            ->leftJoin('doctype_groups as dg', 'p.doctype_group_id', '=', 'dg.id')
+            ->leftJoin('doctype_subcategories as sc', 'p.doctype_subcategory_id', '=', 'sc.id')
+            ->leftJoin('part_groups as pg', 'p.part_group_id', '=', 'pg.id');
 
-        // $perPage = $request->get('length') ?: 25;
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('p.package_no', 'like', "%{$search}%")
+                  ->orWhere('c.code', 'like', "%{$search}%")
+                  ->orWhere('m.name', 'like', "%{$search}%")
+                  ->orWhere('pr.part_no', 'like', "%{$search}%")
+                  ->orWhere('r.revision_no', 'like', "%{$search}%")
+                  ->orWhere('r.ecn_no', 'like', "%{$search}%")
+                  ->orWhere('crl.label', 'like', "%{$search}%")
+                  ->orWhere('dg.name', 'like', "%{$search}%")
+                  ->orWhere('sc.name', 'like', "%{$search}%")
+                  ->orWhere('pg.code_part_group', 'like', "%{$search}%");
+            });
+        }
 
-        $rows = $query->get()->map(function($row) {
+        $totalRecords = DB::table('doc_package_revisions')->count();
+
+        $filteredRecords = $query->count();
+
+        if ($order) {
+            $sortBy = $order['column'];
+            $direction = $order['dir'];
+            $columnName = $request->get('columns')[$sortBy]['name'];
+
+            $columnMap = [
+                'package_no' => 'p.package_no',
+                'customer' => 'c.code',
+                'model' => 'm.name',
+                'part_no' => 'pr.part_no',
+                'revision_no' => 'r.revision_no',
+                'uploaded_at' => 'r.updated_at',
+                'status' => 'r.revision_status',
+                'ecn_no' => 'r.ecn_no',
+                'doctype_group' => 'dg.name',
+                'doctype_subcategory' => 'sc.name',
+                'part_group' => 'pg.code_part_group'
+            ];
+
+            $dbColumn = $columnMap[$columnName] ?? 'r.updated_at';
+            $query->orderBy($dbColumn, $direction);
+        } else {
+            $query->orderBy('r.updated_at', 'desc');
+        }
+
+        $rows = $query->skip($start)->take($length)->get([
+            'r.id as id',
+            'p.package_no as package_no',
+            'c.code as customer',
+            'm.name as model',
+            'pr.part_no as part_no',
+            'r.revision_no as revision_no',
+            'r.updated_at as uploaded_at',
+            'r.revision_status as status',
+            'r.ecn_no as ecn_no',
+            'crl.label as revision_label_name',
+            'dg.name as doctype_group',
+            'sc.name as doctype_subcategory',
+            'pg.code_part_group as part_group'
+        ])->map(function($row) {
             return [
                 'id' => str_replace('=', '-', encrypt($row->id)),
                 'package_no' => $row->package_no,
@@ -44,11 +96,17 @@ class UploadController extends Controller
                 'uploaded_at' => $row->uploaded_at ? date('Y-m-d H:i:s', strtotime($row->uploaded_at)) : null,
                 'status' => $row->status ?? 'draft',
                 'ecn_no' => $row->ecn_no ?? '-',
-                'revision_label_name' => $row->revision_label_name
+                'revision_label_name' => $row->revision_label_name,
+                'doctype_group' => $row->doctype_group ?? '-',
+                'doctype_subcategory' => $row->doctype_subcategory ?? '-',
+                'part_group' => $row->part_group ?? '-'
             ];
         });
 
         return response()->json([
+            'draw' => (int) $draw,
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
             'data' => $rows
         ]);
     }
@@ -104,5 +162,19 @@ class UploadController extends Controller
             ],
             'file_list' => $file_list
         ]);
+    }
+
+    public function getKpiStats(): JsonResponse
+    {
+        $kpiStats = DB::table('doc_package_revisions')
+            ->select(
+                DB::raw('COUNT(*) as totalupload'),
+                DB::raw("COUNT(CASE WHEN revision_status = 'draft' THEN 1 END) as totaldraft"),
+                DB::raw("COUNT(CASE WHEN revision_status = 'pending' THEN 1 END) as totalpending"),
+                DB::raw("COUNT(CASE WHEN revision_status = 'rejected' THEN 1 END) as totalrejected")
+            )
+            ->first();
+
+        return response()->json($kpiStats);
     }
 }

@@ -9,18 +9,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=McLaren&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
         body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .promiseFont {
             font-family: 'McLaren', sans-serif;
         }
 
         .theme-transition {
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
-
-        
     </style>
 </head>
 
@@ -32,7 +35,7 @@
 
             <img src="{{ asset('assets/image/favicon.ico') }}" alt="PROMISE Logo" class="mx-auto h-24 w-auto mb-4">
 
-            <h1 class="text-3xl font-semibold text-gray-900">Promise</h1>
+            <h1 class="promiseFont text-3xl font-semibold text-gray-900">Promise</h1>
             <h2 class="mt-2 text-xl font-semibold text-gray-800">
                 Sign In to Your Account
             </h2>

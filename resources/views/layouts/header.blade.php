@@ -11,13 +11,13 @@
                 <input
                     type="text"
                     placeholder="Search..."
-                    class="w-40 sm:w-64 pl-10 pr-4 py-2 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                    class="w-50 sm:w-64 pl-10 pr-4 py-2 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none"
                     x-model="searchQuery"
                     @focus="showDropdown()"
                     @blur="closeDropdown()"
                     @keydown="handleKeydown($event)"
                     x-ref="searchInput">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-300">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-300">
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </span>
             </div>

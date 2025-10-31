@@ -15,42 +15,42 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {{-- Card 1 --}}
         <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-full">
-                <i class="fa-solid fa-box-archive fa-lg"></i>
+            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-full">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
             </div>
             <div class="ml-4">
                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Upload</p>
-                <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">512</p>
+                <p id="totalUpload" class="text-2xl font-semibold text-gray-900 dark:text-gray-100">-</p>
             </div>
         </div>
         {{-- Card 2 --}}
         <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-teal-500 dark:text-teal-400 bg-teal-100 dark:bg-teal-900/50 rounded-full">
-                <i class="fa-solid fa-ruler-combined fa-lg"></i>
+            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-full">
+                <i class="fa-solid fa-file-pen fa-lg"></i>
             </div>
             <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Dwg Study</p>
-                <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">300</p>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Draft</p>
+                <p id="totalDraft" class="text-2xl font-semibold text-gray-900 dark:text-gray-100">-</p>
             </div>
         </div>
         {{-- Card 3 --}}
         <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-purple-500 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/50 rounded-full">
-                <i class="fa-solid fa-industry fa-lg"></i>
+            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-yellow-500 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/50 rounded-full">
+                <i class="fa-solid fa-hourglass-half fa-lg"></i>
             </div>
             <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Go Mfg</p>
-                <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">198</p>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Pending</p>
+                <p id="totalPending" class="text-2xl font-semibold text-gray-900 dark:text-gray-100">-</p>
             </div>
         </div>
         {{-- Card 4 --}}
         <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-sky-500 dark:text-sky-400 bg-sky-100 dark:bg-sky-900/50 rounded-full">
-                <i class="fa-solid fa-layer-group fa-lg"></i>
+            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-red-500 dark:text-red-400 bg-red-100 dark:bg-red-900/50 rounded-full">
+                <i class="fa-solid fa-ban fa-lg"></i>
             </div>
             <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Others</p>
-                <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">14</p>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Rejected</p>
+                <p id="totalRejected" class="text-2xl font-semibold text-gray-900 dark:text-gray-100">-</p>
             </div>
         </div>
     </div>
@@ -68,13 +68,16 @@
             <table id="fileTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700/50">
                     <tr>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Package Info</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Revision</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ECN No</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Uploaded At</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                        <th class="py-3 px-4 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Action</th>
+                        <th class="py-3 px-4 text-left ...">No</th>
+                        <th class="py-3 px-4 text-left ...">Package Info</th>
+                        <th class="py-3 px-4 text-left ...">Revision</th>
+                        <th class="py-3 px-4 text-left ...">ECN No</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Doc Group</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sub-Category</th>
+                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Part Group</th>
+                        <th class="py-3 px-4 text-left ...">Uploaded At</th>
+                        <th class="py-3 px-4 text-left ...">Status</th>
+                        <th class="py-3 px-4 text-center ...">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
@@ -90,9 +93,11 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
+            loadKpiStats();
+
             let table = $('#fileTable').DataTable({
                 processing: true,
-                serverSide: false,
+                serverSide: true,
                 ajax: {
                     url: '{{ route("api.files.list") }}',
                     type: 'GET',
@@ -103,6 +108,7 @@
                         data: null,
                         name: 'Package Info',
                         searchable: true,
+                        orderable: false,
                         render: function(data, type, row) {
                             return `${row.customer} - ${row.model} - ${row.part_no}`;
                         }
@@ -111,6 +117,7 @@
                         data: null,
                         name: 'Revision',
                         searchable: true,
+                        orderable: false,
                         render: function(data, type, row) {
                             let revStr = `Rev${row.revision_no}`;
                             if (row.revision_label_name) {
@@ -119,11 +126,14 @@
                             return revStr;
                         }
                     },
-                    {data: 'ecn_no', name: 'ECN No', searchable: true},
-                    {data: 'uploaded_at', name: 'Uploaded At', searchable: true},
+                    {data: 'ecn_no', name: 'ecn_no', searchable: true},
+                    {data: 'doctype_group', name: 'doctype_group', searchable: true, orderable: true},
+                    {data: 'doctype_subcategory', name: 'doctype_subcategory', searchable: true, orderable: true},
+                    {data: 'part_group', name: 'part_group', searchable: true, orderable: true},
+                    {data: 'uploaded_at', name: 'uploaded_at', searchable: true},
                     {
                         data: 'status',
-                        name: 'Status',
+                        name: 'status',
                         render: function(data, type, row) {
                             let colorClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-300';
                             if (data === 'draft') {
@@ -202,7 +212,6 @@
                         }
                         const loader = Swal.getLoader();
                         if (loader) {
-                            // Mengatur warna border spinner
                             loader.style.borderColor = `${t.icon.info} transparent transparent transparent`;
                         }
                         window.location.href = targetUrl;
@@ -210,6 +219,20 @@
                 });
             });
         });
+
+        function loadKpiStats() {
+            fetch('{{ route("api.files.kpi-stats") }}')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('totalUpload').textContent = data.totalupload || 0;
+                    document.getElementById('totalDraft').textContent = data.totaldraft || 0;
+                    document.getElementById('totalPending').textContent = data.totalpending || 0;
+                    document.getElementById('totalRejected').textContent = data.totalrejected || 0;
+                })
+                .catch(error => {
+                    console.error('Error loading KPI stats:', error);
+                });
+        }
 
         function deleteFile(id) {
             if (confirm('Are you sure you want to delete this file?')) {
@@ -228,7 +251,6 @@
 
         function formatDate(dt) {
             if (!dt) return '-';
-            // expect ISO string from backend; fallback to raw value
             try {
                 const d = new Date(dt);
                 if (isNaN(d.getTime())) return dt;

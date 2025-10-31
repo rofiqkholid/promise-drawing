@@ -26,15 +26,15 @@ class PathBuilder
             self::seg((string) $m['model_name']),
             self::seg((string) $m['doctype_group_name']),
         ];
-        
+
         // Add doctype_subcategories_name if available
         if (!empty($m['doctype_subcategories_name'])) {
             $pathParts[] = self::seg((string) $m['doctype_subcategories_name']);
         }
-        
+
         $pathParts[] = self::seg((string) $m['part_no']);
         $pathParts[] = self::seg((string) $m['part_group']);
-        
+
         return implode('/', $pathParts);
     }
 
@@ -104,7 +104,7 @@ class PathBuilder
                 break;
             }
         }
-        if ($iRev === null || $iRev < 4) return null; // Updated index to account for doctype_subcategories
+        if ($iRev === null || $iRev < 4) return null;
         return $p[$iRev - 1] ?? null;
     }
 

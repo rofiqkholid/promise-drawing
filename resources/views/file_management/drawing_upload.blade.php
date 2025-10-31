@@ -787,7 +787,6 @@
 
                             this.revisionStatus = pkg.revision_status;
                             this.originalRevisionStatus = pkg.revision_status;
-                            this.revisionStatus = pkg.revision_status;
 
                             if (isReadOnly) {
                                 this.isReadOnly = true;
@@ -1712,3 +1711,4 @@
             background-color: #450a0a;
         }
     </style>
+
