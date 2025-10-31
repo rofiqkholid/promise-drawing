@@ -18,7 +18,7 @@
           <i class="fa-solid fa-box-archive fa-lg"></i>
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Document</p>
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Package</p>
           <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             <span id="cardTotal">0</span>
           </p>
@@ -121,7 +121,7 @@
 <script>
 $(function () {
   let table;
-  const ENDPOINT = '{{ route("api.approvals.filters") }}';
+  const ENDPOINT = '{{ route("approvals.filters") }}';
 
   // --- helper: reset Select2 ke "All" (pasti sukses untuk AJAX mode) ---
   function resetSelect2ToAll($el) {
@@ -209,7 +209,7 @@ $(function () {
     $('#cardTotal, #cardWaiting, #cardApproved, #cardRejected').text('…');
 
     $.ajax({
-      url: '{{ route("api.approvals.kpi") }}',
+      url: '{{ route("approvals.kpi") }}',
       data: params,
       dataType: 'json',
       success: function (res) {
@@ -231,7 +231,7 @@ $(function () {
       processing: true,
       serverSide: true,
       ajax: {
-        url: '{{ route("api.approvals.list") }}',
+        url: '{{ route("approvals.list") }}',
         type: 'GET',
         data: function (d) {
           const f = getCurrentFilters();
@@ -256,9 +256,9 @@ $(function () {
           name: 'dpr.revision_status',
           render: function (data) {
             let cls = '';
-            if (data === 'Reject')   cls = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
+            if (data === 'Rejected')   cls = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
             if (data === 'Waiting')  cls = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
-            if (data === 'Complete') cls = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
+            if (data === 'Approved') cls = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
             return `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${cls}">${data ?? ''}</span>`;
           }
         },

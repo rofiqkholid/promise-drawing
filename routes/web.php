@@ -313,14 +313,14 @@ Route::middleware(['auth'])->group(function () {
     #End region
 
     #region Approval
-     Route::get('/approvals/filters', [ApprovalController::class, 'filters'])->name('api.approvals.filters');
-    Route::get('/approvals/list', [ApprovalController::class, 'listApprovals'])->name('api.approvals.list');
+     Route::get('/approvals/filters', [ApprovalController::class, 'filters'])->name('approvals.filters');
+    Route::get('/approvals/list', [ApprovalController::class, 'listApprovals'])->name('approvals.list');
     Route::get('/approval/{id}', [ApprovalController::class, 'showDetail'])->name('approval.detail');
     Route::post('/approvals/{id}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
     Route::post('/approvals/{id}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
     Route::post('/approvals/{id}/rollback', [ApprovalController::class, 'rollback'])->name('approvals.rollback');
 
-    Route::get('/approvals/kpi', [ApprovalController::class, 'kpi'])->name('api.approvals.kpi');
+    Route::get('/approvals/kpi', [ApprovalController::class, 'kpi'])->name('approvals.kpi');
 
     #endregion
 

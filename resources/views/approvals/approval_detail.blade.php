@@ -22,7 +22,11 @@
               Approval Metadata
             </h2>
 
-            <a href="{{ url()->previous() }}"
+            @php
+              $backUrl = url()->previous();
+              $backUrl = ($backUrl && $backUrl !== url()->current()) ? $backUrl : route('approval');
+            @endphp
+            <a href="{{ $backUrl }}"
                class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
               <i class="fa-solid fa-arrow-left"></i>
               Back
@@ -96,7 +100,7 @@
             <span class="text-sm font-medium text-gray-900 dark:text-gray-100">Activity Log</span>
           </div>
           <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full"
-            x-text="`${pkg.activityLogs?.length || 0} events`"></span>
+                x-text="`${pkg.activityLogs?.length || 0} events`"></span>
         </div>
 
         <div class="p-2 space-y-2" role="log" aria-label="Activity Log">
@@ -150,7 +154,7 @@
               <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate" x-text="selectedFile?.name"></h3>
               <p class="text-xs text-gray-500 dark:text-gray-400">Last updated: {{ now()->format('M d, Y H:i') }}</p>
             </div>
-            <a x-show="selectedFile?.url" :href="selectedFile?.url" target="_blank"
+            <a x-show="selectedFile?.url" :href="selectedFile?.url" target="_blank" rel="noopener"
                class="inline-flex items-center px-3 py-1.5 text-xs text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
               <i class="fa-solid fa-up-right-from-square mr-2"></i> Open
             </a>
@@ -186,19 +190,15 @@
               <div class="w-full">
                 <div x-ref="igesWrap" class="w-full h-[70vh] rounded border border-gray-200 dark:border-gray-700 bg-black/5"></div>
 
-                <!-- TOOLBAR (Shaded, Shaded+Edges, Measure) -->
+                <!-- TOOLBAR -->
                 <div class="mt-3 flex flex-wrap items-center gap-2">
-                  <!-- Display styles -->
                   <div class="inline-flex rounded-md shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
                     <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700" @click="setDisplayStyle('shaded')">Shaded</button>
-                    <!-- <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700" @click="setDisplayStyle('shaded-edges')">Shaded+Edges</button> -->
                   </div>
                   <div class="inline-flex rounded-md shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <!-- <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700" @click="setDisplayStyle('shaded')">Shaded</button> -->
                     <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700" @click="setDisplayStyle('shaded-edges')">Shaded+Edges</button>
                   </div>
 
-                  <!-- Measure -->
                   <div class="inline-flex items-center gap-2 ml-2">
                     <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
                             :class="{'bg-blue-50 dark:bg-blue-900/30': iges.measure.enabled}"
@@ -254,8 +254,7 @@
       </div>
 
       <div class="px-5 py-4 text-sm text-gray-700 dark:text-gray-200">
-        Are you sure you want to Approve this package?
-        <span class="font-semibold">Approved</span>?
+        Are you sure you want to <span class="font-semibold">Approve</span> this package?
       </div>
 
       <div class="px-5 py-4 bg-gray-50 dark:bg-gray-800/60 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
@@ -382,7 +381,7 @@
 <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
 
 <script>
-  /* ========== Toast Utilities (tetap) ========== */
+  /* ========== Toast Utilities ========== */
   function detectTheme() {
     const isDark = document.documentElement.classList.contains('dark');
     return isDark ? {
@@ -460,19 +459,11 @@
       _onIgesResize: null,
 
       /* ===== Helpers jenis file ===== */
-      isImage(name) {
-        const ext = (name || '').split('.').pop().toLowerCase();
-        return ['png','jpg','jpeg','webp','gif','bmp'].includes(ext);
-      },
-      isPdf(name) { return (name || '').split('.').pop().toLowerCase() === 'pdf'; },
-      isTiff(name) {
-        const ext = (name || '').split('.').pop().toLowerCase();
-        return ext === 'tif' || ext === 'tiff';
-      },
-      isCad(name) {
-        const ext = (name || '').split('.').pop().toLowerCase();
-        return ['igs','iges','stp','step'].includes(ext);
-      },
+      extOf(name){ const i = (name||'').lastIndexOf('.'); return i>-1 ? (name||'').slice(i+1).toLowerCase() : ''; },
+      isImage(name) { return ['png','jpg','jpeg','webp','gif','bmp'].includes(this.extOf(name)); },
+      isPdf(name)   { return this.extOf(name) === 'pdf'; },
+      isTiff(name)  { return ['tif','tiff'].includes(this.extOf(name)); },
+      isCad(name)   { return ['igs','iges','stp','step'].includes(this.extOf(name)); },
       pdfSrc(u) { return u; },
 
       /* ===== TIFF renderer ===== */
@@ -545,7 +536,7 @@
         this._onIgesResize = null;
       },
 
-      /* ===== Meta line formatter ===== */
+      /* ===== Meta line formatter ===== */ 
       metaLine() {
         const m = this.pkg?.metadata || {};
         // urutan: Customer - Model - Part No - Revision - Status
@@ -689,7 +680,7 @@
         const s1 = new THREE.Mesh(sg, sm); s1.position.copy(a); group.add(s1);
         const s2 = new THREE.Mesh(sg, sm); s2.position.copy(b); group.add(s2);
 
-        // label (DOM) di dalam igesWrap
+        // label (DOM)
         const wrap = this.$refs.igesWrap;
         const lbl = document.createElement('div');
         lbl.className = 'measure-label';
@@ -721,7 +712,14 @@
 
       /* ===== Lifecycle ===== */
       init() {
-        // tidak perlu sinkron tinggi lagi
+        // Esc untuk tutup modal + cleanup
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            if (this.showApproveModal) this.closeApproveModal();
+            if (this.showRejectModal) this.closeRejectModal();
+            if (this.showRollbackModal) this.closeRollbackModal();
+          }
+        });
         window.addEventListener('beforeunload', () => this.disposeCad());
       },
 
@@ -762,8 +760,9 @@
       closeRollbackModal() { if (!this.processing) this.showRollbackModal = false; },
 
       async confirmApprove() {
+        if (this.processing) return;
+        this.processing = true;
         try {
-          this.processing = true;
           const url = `{{ route('approvals.approve', ['id' => $approvalId]) }}`;
           const response = await fetch(url, {
             method: 'POST',
@@ -773,17 +772,22 @@
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
           });
-          const responseText = await response.text();
-          const result = JSON.parse(responseText);
-          if (!response.ok) throw new Error(result.message || 'Server returned an error.');
+          const text = await response.text(); let result = {};
+          try { result = JSON.parse(text); } catch {}
+          if (!response.ok) {
+            if (response.status === 409) throw new Error(result.message || 'Revision has already been approved by someone else.');
+            if (response.status === 403) throw new Error(result.message || 'You do not have permission to approve.');
+            if (response.status === 422) throw new Error(result.message || 'Revision is not in a state that can be approved.');
+            throw new Error(result.message || 'Server returned an error.');
+          }
 
           this.pkg.status = 'Approved';
           this.addPkgActivity('approved', '{{ auth()->user()->name ?? "Reviewer" }}');
           this.showApproveModal = false;
-          toastSuccess('Success', result.message);
+          toastSuccess('Success', result.message || 'Revision approved successfully!');
         } catch (err) {
-          console.error('Fetch Error:', err);
-          if (err instanceof SyntaxError) toastError('Error', 'Received an invalid response from server. Check console.');
+          console.error('Approve Error:', err);
+          if (err instanceof SyntaxError) toastError('Error', 'Received an invalid response from server.');
           else toastError('Error', err.message || 'Approve failed');
         } finally {
           this.processing = false;
@@ -791,14 +795,15 @@
       },
 
       async confirmReject() {
+        if (this.processing) return;
         if (!this.rejectNote || this.rejectNote.trim().length === 0) {
           this.rejectNoteError = true;
           toastWarning('Warning', 'Rejection note is required.');
           return;
         }
         this.rejectNoteError = false;
+        this.processing = true;
         try {
-          this.processing = true;
           const url = `{{ route('approvals.reject', ['id' => $approvalId]) }}`;
           const response = await fetch(url, {
             method: 'POST',
@@ -809,17 +814,21 @@
             },
             body: JSON.stringify({ note: this.rejectNote })
           });
-          const responseText = await response.text();
-          const result = JSON.parse(responseText);
-          if (!response.ok) throw new Error(result.message || 'Server returned an error.');
+          const text = await response.text(); let result = {};
+          try { result = JSON.parse(text); } catch {}
+          if (!response.ok) {
+            if (response.status === 403) throw new Error(result.message || 'You do not have permission to reject.');
+            if (response.status === 422) throw new Error(result.message || 'Revision is not in a state that can be rejected.');
+            throw new Error(result.message || 'Server returned an error.');
+          }
 
           this.pkg.status = 'Rejected';
           this.addPkgActivity('rejected', '{{ auth()->user()->name ?? "Reviewer" }}', this.rejectNote);
           this.showRejectModal = false;
-          toastSuccess('Rejected', result.message);
+          toastSuccess('Rejected', result.message || 'Revision rejected successfully!');
         } catch (err) {
-          console.error('Fetch Error:', err);
-          if (err instanceof SyntaxError) toastError('Error', 'Received an invalid response from server. Check console.');
+          console.error('Reject Error:', err);
+          if (err instanceof SyntaxError) toastError('Error', 'Received an invalid response from server.');
           else toastError('Error', err.message || 'Reject failed');
         } finally {
           this.processing = false;
@@ -827,8 +836,9 @@
       },
 
       async confirmRollback() {
+        if (this.processing) return;
+        this.processing = true;
         try {
-          this.processing = true;
           const url = `{{ route('approvals.rollback', ['id' => $approvalId]) }}`;
           const response = await fetch(url, {
             method: 'POST',
@@ -838,17 +848,21 @@
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
           });
-          const responseText = await response.text();
-          const result = JSON.parse(responseText);
-          if (!response.ok) throw new Error(result.message || 'Server returned an error.');
+          const text = await response.text(); let result = {};
+          try { result = JSON.parse(text); } catch {}
+          if (!response.ok) {
+            if (response.status === 403) throw new Error(result.message || 'You do not have permission to rollback.');
+            if (response.status === 422) throw new Error(result.message || 'Revision is not in a state that can be rolled back.');
+            throw new Error(result.message || 'Server returned an error.');
+          }
 
           this.pkg.status = 'Waiting';
           this.addPkgActivity('rollbacked', '{{ auth()->user()->name ?? "Reviewer" }}', 'Status set to Waiting');
           this.showRollbackModal = false;
           toastSuccess('Rolled back', result.message || 'Status dikembalikan ke Waiting.');
         } catch (err) {
-          console.error('Fetch Error:', err);
-          if (err instanceof SyntaxError) toastError('Error', 'Received an invalid response from server. Check console.');
+          console.error('Rollback Error:', err);
+          if (err instanceof SyntaxError) toastError('Error', 'Received an invalid response from server.');
           else toastError('Error', err.message || 'Rollback failed');
         } finally {
           this.processing = false;

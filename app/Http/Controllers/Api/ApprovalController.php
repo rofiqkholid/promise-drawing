@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\QueryException; 
 use App\Models\Customers;
 use App\Models\Models;
 use App\Models\DoctypeGroups;
@@ -44,7 +45,7 @@ class ApprovalController extends Controller
             $q->where('dsc.name', $req->category);
         }
         if ($req->filled('status') && $req->status !== 'All') {
-            $statusMapping = ['Waiting' => 'pending', 'Approved' => 'approved', 'Reject' => 'rejected'];
+            $statusMapping = ['Waiting' => 'pending', 'Approved' => 'approved', 'Rejected' => 'rejected'];
             if (isset($statusMapping[$req->status])) {
                 $q->where('dpr.revision_status', $statusMapping[$req->status]);
             }
@@ -107,7 +108,6 @@ class ApprovalController extends Controller
                     $builder = DB::table('models as m')
                         ->join('customers as c', 'm.customer_id', '=', 'c.id')
                         ->selectRaw('m.name AS id, m.name AS text')
-                        // Abaikan filter customer kalau 'All' atau kosong
                         ->when($customerCode && $customerCode !== 'All', fn($x) => $x->where('c.code', $customerCode))
                         ->when($q, fn($x) => $x->where('m.name', 'like', "%{$q}%"))
                         ->orderBy('m.name');
@@ -130,7 +130,6 @@ class ApprovalController extends Controller
                     $builder = DB::table('doctype_subcategories as dsc')
                         ->join('doctype_groups as dtg', 'dsc.doctype_group_id', '=', 'dtg.id')
                         ->selectRaw('dsc.name AS id, dsc.name AS text')
-                        // Abaikan filter doc type kalau 'All' atau kosong
                         ->when($docTypeName && $docTypeName !== 'All', fn($x) => $x->where('dtg.name', $docTypeName))
                         ->when($q, fn($x) => $x->where('dsc.name', 'like', "%{$q}%"))
                         ->orderBy('dsc.name');
@@ -143,7 +142,7 @@ class ApprovalController extends Controller
                     $all = collect([
                         ['id' => 'Waiting',  'text' => 'Waiting'],
                         ['id' => 'Approved', 'text' => 'Approved'],
-                        ['id' => 'Reject',   'text' => 'Reject'],
+                        ['id' => 'Rejected',   'text' => 'Rejected'],
                     ]);
                     $filtered = $q
                         ? $all->filter(fn($r) => str_contains(strtolower($r['text']), strtolower($q)))
@@ -208,7 +207,7 @@ class ApprovalController extends Controller
             'statuses'   => collect([
                 ['name' => 'Waiting'],
                 ['name' => 'Approved'],
-                ['name' => 'Reject'],
+                ['name' => 'Rejected'],
             ]),
         ]);
     }
@@ -245,7 +244,7 @@ class ApprovalController extends Controller
             $query->where('dsc.name', $request->category);
         }
         if ($request->filled('status') && $request->status !== 'All') {
-            $statusMapping = ['Waiting' => 'pending', 'Approved' => 'approved', 'Reject' => 'rejected'];
+            $statusMapping = ['Waiting' => 'pending', 'Approved' => 'approved', 'Rejected' => 'rejected'];
             if (isset($statusMapping[$request->status])) {
                 $query->where('dpr.revision_status', $statusMapping[$request->status]);
             }
@@ -270,7 +269,7 @@ class ApprovalController extends Controller
             'dsc.name as category',
             'p.part_no',
             'dpr.revision_no as revision',
-            DB::raw("CASE dpr.revision_status WHEN 'pending' THEN 'Waiting' WHEN 'approved' THEN 'Approved' WHEN 'rejected' THEN 'Reject' ELSE dpr.revision_status END as status"),
+            DB::raw("CASE dpr.revision_status WHEN 'pending' THEN 'Waiting' WHEN 'approved' THEN 'Approved' WHEN 'rejected' THEN 'Rejected' ELSE dpr.revision_status END as status"),
             'dpr.created_at'
         )
             ->orderBy('dpr.created_at', 'desc')
@@ -324,81 +323,144 @@ class ApprovalController extends Controller
         // Activity Log: hanya UPLOAD untuk package ini (opsional filter per revisi)
         $logs = $this->buildApprovalLogs($revision->package_id, $revision->id);
 
-$detail = [
-    'metadata' => [
-        'customer' => $package->customer,
-        'model'    => $package->model,
-        'part_no'  => $package->part_no,
-        'revision' => 'Rev-' . $revision->revision_no,
-    ],
-    'status'       => match ($revision->revision_status) {
-        'pending'  => 'Waiting',
-        'approved' => 'Approved',
-        'rejected' => 'Rejected',
-        default    => ucfirst($revision->revision_status ?? 'Waiting'),
-    },
-    'files'        => $files,
-    'activityLogs' => $logs,
-];
+        $detail = [
+            'metadata' => [
+                'customer' => $package->customer,
+                'model'    => $package->model,
+                'part_no'  => $package->part_no,
+                'revision' => 'Rev-' . $revision->revision_no,
+            ],
+            'status'       => match ($revision->revision_status) {
+                'pending'  => 'Waiting',
+                'approved' => 'Approved',
+                'rejected' => 'Rejected',
+                default    => ucfirst($revision->revision_status ?? 'Waiting'),
+            },
+            'files'        => $files,
+            'activityLogs' => $logs,
+        ];
 
-return view('approvals.approval_detail', [
-    'approvalId' => $id,
-    'detail'     => $detail,
-]);
+        return view('approvals.approval_detail', [
+            'approvalId' => $id,
+            'detail'     => $detail,
+        ]);
     }
 
 
-    public function approve(Request $request, $revision_id)
-    {
-        $userId = Auth::user()->id;
+   
 
+public function approve(Request $request, $revision_id)
+{
+    $userId = Auth::id() ?? 1;
+
+    try {
         DB::beginTransaction();
-        try {
-            $revision = DB::table('doc_package_revisions')
-                ->where('id', $revision_id)->lockForUpdate()->first();
 
-            if (!$revision || $revision->revision_status !== 'pending') {
-                return response()->json(['message' => 'Revision cannot be approved.'], 422);
-            }
+        // Kunci baris revisi yang diproses
+        $revision = DB::table('doc_package_revisions')
+            ->where('id', $revision_id)
+            ->lockForUpdate()
+            ->first(['id','package_id','revision_no','revision_status']);
 
-            DB::table('doc_package_revisions')->where('id', $revision_id)->update([
+        if (!$revision) {
+            DB::rollBack();
+            return response()->json(['message' => 'Revision not found.'], 404);
+        }
+
+        // Idempotent guard: kalau sudah approved, balas sukses saja
+        if ($revision->revision_status === 'approved') {
+            DB::rollBack();
+            return response()->json(['message' => 'Revision already approved.'], 200);
+        }
+
+        if ($revision->revision_status !== 'pending') {
+            DB::rollBack();
+            return response()->json(['message' => 'Revision cannot be approved.'], 422);
+        }
+
+        // 1) Set revisi ini Approved & Aktif
+        DB::table('doc_package_revisions')
+            ->where('id', $revision_id)
+            ->update([
                 'revision_status' => 'approved',
+                'is_obsolete'     => 0,
                 'updated_at'      => Carbon::now(),
             ]);
 
-            DB::table('doc_packages')->where('id', $revision->package_id)->update([
+        // 2) Obsolete-kan semua revisi lain dalam package yang sama
+        DB::table('doc_package_revisions')
+            ->where('package_id', $revision->package_id)
+            ->where('id', '!=', $revision_id)
+            ->update([
+                'is_obsolete' => 1,
+                // Opsional kalau ingin menandai status lama jadi 'obsolete':
+                // 'revision_status' => DB::raw("CASE WHEN revision_status='approved' THEN 'obsolete' ELSE revision_status END"),
+                'updated_at'  => Carbon::now(),
+            ]);
+
+        // 3) Update pointer current_revision_* pada doc_packages
+        DB::table('doc_packages')
+            ->where('id', $revision->package_id)
+            ->update([
                 'current_revision_id' => $revision->id,
                 'current_revision_no' => $revision->revision_no,
                 'updated_at'          => Carbon::now(),
             ]);
 
-            DB::table('doc_package_revisions')
-                ->where('package_id', $revision->package_id)
-                ->where('id', '!=', $revision_id)
-                ->update(['is_obsolete' => 1]);
-
-            DB::table('package_approvals')->where('revision_id', $revision_id)->update([
-                'decided_by' => $userId ?? 1,
+        // 4) Update baris package_approvals untuk revisi ini
+        DB::table('package_approvals')
+            ->where('revision_id', $revision_id)
+            ->update([
+                'decided_by' => $userId,
                 'decided_at' => Carbon::now(),
                 'decision'   => 'approved',
+                'updated_at' => Carbon::now(),
             ]);
 
-            ActivityLog::create([
-                'scope_type'    => 'package',
-                'scope_id'      => $revision->package_id,
-                'revision_id'   => $revision_id,
-                'activity_code' => ActivityLog::APPROVE,
-                'user_id'       => $userId,
-                'meta'          => ['note' => 'Revision approved'],
-            ]);
+        // 5) Activity log
+        ActivityLog::create([
+            'scope_type'    => 'package',
+            'scope_id'      => $revision->package_id,
+            'revision_id'   => $revision_id,
+            'activity_code' => ActivityLog::APPROVE,
+            'user_id'       => $userId,
+            'meta'          => ['note' => 'Revision approved'],
+        ]);
 
-            DB::commit();
-            return response()->json(['message' => 'Revision approved successfully!']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Failed to approve revision.', 'error' => $e->getMessage()], 500);
+        DB::commit();
+        return response()->json(['message' => 'Revision approved successfully!']);
+
+    } catch (QueryException $e) {
+        DB::rollBack();
+
+        // 2627/2601 = unique index violation (SQL Server)
+        $msg = $e->getMessage();
+        $isUniqueViolation =
+            str_contains($msg, '2627') ||
+            str_contains($msg, '2601') ||
+            str_contains($msg, 'IX_doc_package_revisions_one_active_approved');
+
+        if ($isUniqueViolation) {
+            return response()->json([
+                'message' => 'Revision has already been approved by someone else.',
+            ], 409);
         }
+
+        return response()->json([
+            'message' => 'Failed to approve revision.',
+            'error'   => $e->getMessage(),
+        ], 500);
+
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        return response()->json([
+            'message' => 'Failed to approve revision.',
+            'error'   => $e->getMessage(),
+        ], 500);
     }
+}
+
+
 
     public function reject(Request $request, $revision_id)
     {
@@ -444,81 +506,81 @@ return view('approvals.approval_detail', [
         }
     }
 
-   private function buildApprovalLogs(int $packageId, ?int $revisionId)
-{
-    $q = DB::table('activity_logs as al')
-        ->leftJoin('users as u', 'u.id', '=', 'al.user_id')
-        ->where(function ($w) use ($packageId, $revisionId) {
-            // 1) log level package (benar)
-            $w->where(function ($x) use ($packageId) {
-                $x->where('al.scope_type', 'package')
-                  ->where('al.scope_id', $packageId);
-            });
-
-            // 2) log level revision (kalau ada yang tulis begitu)
-            if (!empty($revisionId)) {
-                $w->orWhere(function ($x) use ($revisionId) {
-                    $x->where('al.scope_type', 'revision')
-                      ->where('al.scope_id', $revisionId);
-                });
-
-                // 3) Fallback legacy (opsional): ada yang salah isi scope_id=revision_id di scope_type='package'
-                $w->orWhere(function ($x) use ($revisionId) {
+    private function buildApprovalLogs(int $packageId, ?int $revisionId)
+    {
+        $q = DB::table('activity_logs as al')
+            ->leftJoin('users as u', 'u.id', '=', 'al.user_id')
+            ->where(function ($w) use ($packageId, $revisionId) {
+                // 1) log level package (benar)
+                $w->where(function ($x) use ($packageId) {
                     $x->where('al.scope_type', 'package')
-                      ->where('al.scope_id', $revisionId);
+                        ->where('al.scope_id', $packageId);
                 });
-            }
-        })
-        // tampilkan log spesifik revisi INI atau log umum (revision_id NULL)
-        ->where(function ($w) use ($revisionId) {
-            if (!empty($revisionId)) {
-                $w->whereNull('al.revision_id')
-                  ->orWhere('al.revision_id', $revisionId);
-            } else {
-                $w->whereNull('al.revision_id');
-            }
-        })
-        // urutan stabil meskipun created_at null / sama
-        ->orderByDesc('al.created_at')
-        ->orderByDesc('al.id')
-        ->limit(200);
 
-    return $q->get([
+                // 2) log level revision (kalau ada yang tulis begitu)
+                if (!empty($revisionId)) {
+                    $w->orWhere(function ($x) use ($revisionId) {
+                        $x->where('al.scope_type', 'revision')
+                            ->where('al.scope_id', $revisionId);
+                    });
+
+                    // 3) Fallback legacy (opsional): ada yang salah isi scope_id=revision_id di scope_type='package'
+                    $w->orWhere(function ($x) use ($revisionId) {
+                        $x->where('al.scope_type', 'package')
+                            ->where('al.scope_id', $revisionId);
+                    });
+                }
+            })
+            // tampilkan log spesifik revisi INI atau log umum (revision_id NULL)
+            ->where(function ($w) use ($revisionId) {
+                if (!empty($revisionId)) {
+                    $w->whereNull('al.revision_id')
+                        ->orWhere('al.revision_id', $revisionId);
+                } else {
+                    $w->whereNull('al.revision_id');
+                }
+            })
+            // urutan stabil meskipun created_at null / sama
+            ->orderByDesc('al.created_at')
+            ->orderByDesc('al.id')
+            ->limit(200);
+
+        return $q->get([
             'al.id',
             'al.activity_code',
             'al.meta',
             'al.created_at',
             'u.name as user_name'
         ])
-        ->map(function ($row) {
-            $code = strtoupper($row->activity_code ?? '');
-            $action = str_starts_with($code, 'UPLOAD')  ? 'uploaded'
-                   : (str_starts_with($code, 'APPROVE') ? 'approved'
-                   : (str_starts_with($code, 'REJECT')  ? 'rejected'
-                   : (str_starts_with($code, 'ROLLBACK') ? 'rollbacked'
-                   : strtolower($code ?: 'info'))));
+            ->map(function ($row) {
+                $code = strtoupper($row->activity_code ?? '');
+                $action = str_starts_with($code, 'UPLOAD')  ? 'uploaded'
+                    : (str_starts_with($code, 'APPROVE') ? 'approved'
+                        : (str_starts_with($code, 'REJECT')  ? 'rejected'
+                            : (str_starts_with($code, 'ROLLBACK') ? 'rollbacked'
+                                : strtolower($code ?: 'info'))));
 
-            $meta = $row->meta;
-            if (is_string($meta)) {
-                try {
-                    $meta = json_decode($meta, true, 512, JSON_THROW_ON_ERROR);
-                } catch (\Throwable) {
-                    $meta = null;
+                $meta = $row->meta;
+                if (is_string($meta)) {
+                    try {
+                        $meta = json_decode($meta, true, 512, JSON_THROW_ON_ERROR);
+                    } catch (\Throwable) {
+                        $meta = null;
+                    }
                 }
-            }
 
-            return [
-                'id'      => (int) $row->id,
-                'action'  => $action,
-                'user'    => $row->user_name ?? 'System',
-                'note'    => is_array($meta) ? ($meta['note'] ?? '') : ($meta ?: ''),
-                'time'    => optional($row->created_at)->format('Y-m-d H:i'),
-                'time_ts' => optional($row->created_at)?->timestamp ?? 0,
-            ];
-        });
-}
+                return [
+                    'id'      => (int) $row->id,
+                    'action'  => $action,
+                    'user'    => $row->user_name ?? 'System',
+                    'note'    => is_array($meta) ? ($meta['note'] ?? '') : ($meta ?: ''),
+                    'time'    => optional($row->created_at)->format('Y-m-d H:i'),
+                    'time_ts' => optional($row->created_at)?->timestamp ?? 0,
+                ];
+            });
+    }
 
-public function rollback(Request $request, $revision_id): JsonResponse
+   public function rollback(Request $request, $revision_id): JsonResponse
 {
     $userId = Auth::user()->id;
 
@@ -528,22 +590,62 @@ public function rollback(Request $request, $revision_id): JsonResponse
         $revision = DB::table('doc_package_revisions')
             ->where('id', $revision_id)
             ->lockForUpdate()
-            ->first(['id','package_id','revision_status']);
+            ->first(['id', 'package_id', 'revision_no', 'revision_status']);
 
         if (!$revision) {
             return response()->json(['message' => 'Revision not found.'], 404);
         }
 
-        // Ubah status revisi -> pending (Waiting)
+        $packageId = (int) $revision->package_id;
+
+        // 1) Revisi sekarang -> Waiting & OBSOLETE (bukan 0)
         DB::table('doc_package_revisions')
             ->where('id', $revision_id)
             ->update([
                 'revision_status' => 'pending',
-                'is_obsolete'     => 0,                 // biar bisa diproses lagi
+                'is_obsolete'     => 1,                 // <— penting: jangan aktif
                 'updated_at'      => Carbon::now(),
             ]);
 
-        // Ubah status di package_approvals -> waiting
+        // 2) Cari revisi Approved sebelumnya pada package yang sama (berdasar decided_at paling baru)
+        $prev = DB::table('doc_package_revisions as r')
+            ->join('package_approvals as pa', 'pa.revision_id', '=', 'r.id')
+            ->where('r.package_id', $packageId)
+            ->where('r.id', '<>', $revision_id)
+            ->where('r.revision_status', 'approved')
+            ->orderByDesc('pa.decided_at') // paling baru yang pernah approved
+            ->lockForUpdate()
+            ->first(['r.id', 'r.revision_no']);
+
+        if ($prev) {
+            // 3a) Aktifkan kembali revisi sebelumnya
+            DB::table('doc_package_revisions')
+                ->where('id', $prev->id)
+                ->update([
+                    'is_obsolete' => 0,
+                    'updated_at'  => Carbon::now(),
+                ]);
+
+            // 3b) Update pointer current_revision_* ke revisi sebelumnya
+            DB::table('doc_packages')
+                ->where('id', $packageId)
+                ->update([
+                    'current_revision_id' => $prev->id,
+                    'current_revision_no' => $prev->revision_no,
+                    'updated_at'          => Carbon::now(),
+                ]);
+        } else {
+            // Tidak ada approved sebelumnya -> kosongkan pointer current_*
+            DB::table('doc_packages')
+                ->where('id', $packageId)
+                ->update([
+                    'current_revision_id' => null,
+                    'current_revision_no' => 0,
+                    'updated_at'          => Carbon::now(),
+                ]);
+        }
+
+        // 4) Set approval baris saat ini jadi waiting lagi
         DB::table('package_approvals')
             ->where('revision_id', $revision_id)
             ->update([
@@ -554,18 +656,18 @@ public function rollback(Request $request, $revision_id): JsonResponse
                 'updated_at' => Carbon::now(),
             ]);
 
-        // Log ROLLBACK untuk Activity Log di UI
+        // 5) Activity Log
         ActivityLog::create([
             'scope_type'    => 'package',
-            'scope_id'      => $revision->package_id,
+            'scope_id'      => $packageId,
             'revision_id'   => $revision_id,
             'activity_code' => 'ROLLBACK',
             'user_id'       => $userId,
-            'meta'          => ['note' => 'Status set to Waiting'],
+            'meta'          => ['note' => 'Set current revision to Waiting; re-activated previous Approved revision if any'],
         ]);
 
         DB::commit();
-        return response()->json(['message' => 'Status dikembalikan ke Waiting.']);
+        return response()->json(['message' => 'Status dikembalikan ke Waiting. Revisi sebelumnya diaktifkan kembali.']);
     } catch (\Throwable $e) {
         DB::rollBack();
         return response()->json([
@@ -574,7 +676,5 @@ public function rollback(Request $request, $revision_id): JsonResponse
         ], 500);
     }
 }
-
-
 
 }

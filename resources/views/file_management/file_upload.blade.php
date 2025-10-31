@@ -60,7 +60,7 @@
             <a href="{{ route('drawing.upload') }}"
                 class="w-full sm:w-auto inline-flex items-center gap-2 justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
                 <i class="fa-solid fa-upload"></i>
-                Upload New Drawing Package
+                Upload New Drawing
             </a>
         </div>
 
@@ -144,7 +144,7 @@
                         orderable: false,
                         searchable: false,
                         render: function(data, type, row) {
-                            return `<button class="text-blue-600 hover:text-blue-900 dark:text-blue-400 transition-colors" title="Details" onclick="openPackageDetails('${row.id}')"><i class="fa-solid fa-eye fa-lg"></i></button>`;
+                            return `<button class="text-blue-600 hover:text-blue-900 dark:hover:text-blue-300 dark:text-blue-400 transition-colors" title="Details" onclick="openPackageDetails('${row.id}')"><i class="fa-solid fa-eye fa-lg"></i></button>`;
                         }
                     }
                 ],
@@ -475,7 +475,7 @@
                                     </div>
                                     <div class="sm:col-span-1">
                                         <dt class="text-gray-500">Obsolete</dt>
-                                        <dd class="font-semibold text-gray-900 dark:text-gray-100">${isObsolete ? '<span class="text-red-500">Yes</span>' : 'No'}</dd>
+                                        <dd class="font-semibold text-gray-900 dark:text-gray-100">${isObsolete ? '<span class="text-red-500">No</span>' : 'Yes'}</dd>
                                     </div>
                                 </dl>
                             </div>
