@@ -44,7 +44,7 @@ class ApprovalController extends Controller
             $q->where('dsc.name', $req->category);
         }
         if ($req->filled('status') && $req->status !== 'All') {
-            $statusMapping = ['Waiting' => 'pending', 'Complete' => 'approved', 'Reject' => 'rejected'];
+            $statusMapping = ['Waiting' => 'pending', 'Approved' => 'approved', 'Reject' => 'rejected'];
             if (isset($statusMapping[$req->status])) {
                 $q->where('dpr.revision_status', $statusMapping[$req->status]);
             }
@@ -142,7 +142,7 @@ class ApprovalController extends Controller
                 case 'status':
                     $all = collect([
                         ['id' => 'Waiting',  'text' => 'Waiting'],
-                        ['id' => 'Complete', 'text' => 'Complete'],
+                        ['id' => 'Approved', 'text' => 'Approved'],
                         ['id' => 'Reject',   'text' => 'Reject'],
                     ]);
                     $filtered = $q
@@ -207,7 +207,7 @@ class ApprovalController extends Controller
             'categories' => $categories,    // {name}
             'statuses'   => collect([
                 ['name' => 'Waiting'],
-                ['name' => 'Complete'],
+                ['name' => 'Approved'],
                 ['name' => 'Reject'],
             ]),
         ]);
@@ -245,7 +245,7 @@ class ApprovalController extends Controller
             $query->where('dsc.name', $request->category);
         }
         if ($request->filled('status') && $request->status !== 'All') {
-            $statusMapping = ['Waiting' => 'pending', 'Complete' => 'approved', 'Reject' => 'rejected'];
+            $statusMapping = ['Waiting' => 'pending', 'Approved' => 'approved', 'Reject' => 'rejected'];
             if (isset($statusMapping[$request->status])) {
                 $query->where('dpr.revision_status', $statusMapping[$request->status]);
             }
@@ -270,7 +270,7 @@ class ApprovalController extends Controller
             'dsc.name as category',
             'p.part_no',
             'dpr.revision_no as revision',
-            DB::raw("CASE dpr.revision_status WHEN 'pending' THEN 'Waiting' WHEN 'approved' THEN 'Complete' WHEN 'rejected' THEN 'Reject' ELSE dpr.revision_status END as status"),
+            DB::raw("CASE dpr.revision_status WHEN 'pending' THEN 'Waiting' WHEN 'approved' THEN 'Approved' WHEN 'rejected' THEN 'Reject' ELSE dpr.revision_status END as status"),
             'dpr.created_at'
         )
             ->orderBy('dpr.created_at', 'desc')

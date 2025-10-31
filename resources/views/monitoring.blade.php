@@ -692,7 +692,7 @@
                 const relativeTime = this.formatTimeAgo(log.created_at);
                 let metaDetails = '';
                 if (log.meta && typeof log.meta === 'object' && log.activity_code === 'UPLOAD') {
-                    const detailsArray = [log.meta.customer_code, log.meta.model_name, log.meta.part_no, log.meta.doctype_group, log.meta.doctype_subcategory].filter(Boolean);
+                    const detailsArray = [log.meta.customer_code, log.meta.model_name, log.meta.part_no, log.meta.doctype_group, log.meta.part_group_code, log.meta.doctype_subcategory, log.meta.ecn_no].filter(Boolean);
                     if (detailsArray.length > 0) {
                         metaDetails = `<p class="mt-2 text-sm text-gray-600 dark:text-gray-400 font-mono">${detailsArray.join(' - ')}</p>`;
                     }
