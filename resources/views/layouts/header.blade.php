@@ -10,7 +10,7 @@
             <div class="relative">
                 <input
                     type="text"
-                    placeholder="Cari menu..."
+                    placeholder="Search..."
                     class="w-40 sm:w-64 pl-10 pr-4 py-2 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                     x-model="searchQuery"
                     @focus="showDropdown()"
@@ -22,7 +22,6 @@
                 </span>
             </div>
 
-            <!-- Di dalam template dropdown results -->
             <div x-show="searchOpen"
                 x-transition:enter="transition ease-out duration-100"
                 x-transition:enter-start="transform opacity-0 scale-95"
@@ -35,16 +34,15 @@
                 @mousedown.prevent>
 
                 <div class="search-dropdown-container">
-                    <!-- Search History - Tampilkan bahkan ketika kosong setelah clear -->
                     <template x-if="!searchQuery.trim()">
                         <div>
                             <div class="search-section-title">
                                 <div class="flex justify-between items-center">
-                                    <span class="text-xs font-semibold text-gray-500 uppercase">Riwayat Pencarian</span>
+                                    <span class="text-xs font-semibold text-gray-500 uppercase">Search History</span>
                                     <button @click.prevent="clearHistory()"
                                         class="text-xs text-blue-500 hover:text-blue-700 focus:outline-none transition-colors"
                                         x-bind:disabled="searchHistory.length === 0">
-                                        Bersihkan
+                                        Clean
                                     </button>
                                 </div>
                             </div>
@@ -65,12 +63,11 @@
                                 </ul>
                             </template>
 
-                            <!-- Tampilkan pesan ketika history kosong -->
                             <template x-if="searchHistory.length === 0">
                                 <div class="p-4 text-center">
                                     <i class="fa-solid fa-clock-rotate-left text-gray-400 text-lg mb-2"></i>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">Riwayat pencarian kosong</p>
-                                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Pencarian Anda akan muncul di sini</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Search history is empty</p>
+                                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Your search will appear here</p>
                                 </div>
                             </template>
                         </div>
@@ -81,7 +78,7 @@
                         <div>
                             <div class="search-section-title">
                                 <span class="text-xs font-semibold text-gray-500 uppercase">
-                                    Hasil Menu (<span x-text="filteredMenus.length"></span>)
+                                    Results (<span x-text="filteredMenus.length"></span>)
                                 </span>
                             </div>
                             <ul>
@@ -104,7 +101,7 @@
                     <template x-if="searchQuery.trim() && filteredMenus.length === 0">
                         <div class="p-6 text-center">
                             <i class="fa-solid fa-search text-gray-400 text-xl mb-3"></i>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Tidak ada menu yang cocok dengan</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">There is no menu that matches</p>
                             <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mt-1">"<span x-text="searchQuery"></span>"</p>
                         </div>
                     </template>

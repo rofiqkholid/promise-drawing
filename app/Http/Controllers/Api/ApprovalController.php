@@ -351,7 +351,7 @@ class ApprovalController extends Controller
 
 public function approve(Request $request, $revision_id)
 {
-    $userId = Auth::id() ?? 1;
+    $userId = Auth::user()->id() ?? 1;
 
     try {
         DB::beginTransaction();
