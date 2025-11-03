@@ -62,6 +62,10 @@ Route::middleware(['auth'])->group(function () {
         return view('file_management.file_export');
     })->middleware(['auth', 'check.menu:4'])->name('file-manager.export');
 
+    Route::get('/file-manager.share', function () {
+        return view('file_management.share');
+    })->middleware(['auth', 'check.menu:4'])->name('file-manager.share');
+
 
     Route::get('/file-manager.export/{id}', [ExportController::class, 'showDetail'])->middleware(['auth', 'check.menu:4'])->name('file-manager.export.detail');
 
