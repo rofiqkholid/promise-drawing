@@ -373,16 +373,17 @@ class DashboardController extends Controller
                 'm.name AS model_name',
                 'pg.code_part_group AS part_group',
                 'pg.planning AS plan_count',
-                DB::raw('COUNT(dp.current_revision_id) AS actual_count')
+                DB::raw('COUNT(dp.current_revision_id) AS actual_count'),
+                'pg.created_at'
             );
 
         if ($request->filled('month')) {
             $month = $request->month;
-            $startDate = $month . '-01 00:00:00';
-            $endDate = date('Y-m-t 23:59:59', strtotime($startDate));
+            [$year, $monthNum] = explode('-', $month);
 
-            $query->where(function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('dp.created_at', [$startDate, $endDate])
+            $query->where(function ($q) use ($year, $monthNum) {
+                $q->whereYear('dp.created_at', $year)
+                    ->whereMonth('dp.created_at', $monthNum)
                     ->orWhereNull('dp.created_at');
             });
         }
@@ -416,7 +417,8 @@ class DashboardController extends Controller
             'pg.code_part_group',
             'm.name',
             'c.code',
-            'pg.planning'
+            'pg.planning',
+            'pg.created_at'
         );
 
         $sortBy = $request->input('sort_by', 'plan');
@@ -438,6 +440,7 @@ class DashboardController extends Controller
             'data' => $results
         ]);
     }
+
 
 
 
