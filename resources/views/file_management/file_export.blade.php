@@ -11,14 +11,14 @@
       <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Find and download your files from the Data Center.</p>
     </div>
 
-    <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4 sm:mt-0">
+    <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:mt-0">
       {{-- Card Total Document --}}
       <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
         <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-full">
           <i class="fa-solid fa-box-archive fa-lg"></i>
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Package</p> {{-- Ganti jadi Package --}}
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Document</p>
           <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             <span id="cardTotal">0</span>
           </p>
@@ -89,7 +89,7 @@
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Doc Type</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Part No</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Latest Revision</th> {{-- MODIFIKASI --}}
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Revision</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
@@ -184,7 +184,7 @@ $(function () {
 
   function loadKPI() {
     const params = getCurrentFilters();
-    $('#cardTotal, #cardWaiting, #cardApproved').text('…');
+    $('#cardTotal, #cardWaiting, #cardApproved, #cardRejected').text('…');
 
     $.ajax({
       url: '{{ route("api.export.kpi") }}',
@@ -195,10 +195,11 @@ $(function () {
         $('#cardTotal').text(c.total ?? 0);
         $('#cardWaiting').text(c.waiting ?? 0);
         $('#cardApproved').text(c.approved ?? 0);
+        $('#cardRejected').text(c.rejected ?? 0);
       },
       error: function (xhr) {
         console.error('KPI error', xhr.responseText);
-        $('#cardTotal, #cardWaiting, #cardApproved').text('0');
+        $('#cardTotal, #cardWaiting, #cardApproved, #cardRejected').text('0');
       }
     });
   }
@@ -224,14 +225,9 @@ $(function () {
         { data: 'customer', name: 'c.code' },
         { data: 'model',    name: 'm.name' },
         { data: 'doc_type', name: 'dtg.name' },
-        { data: 'category', name: 'dsc.name' },
+        { data: 'category', name: 'category' },
         { data: 'part_no',  name: 'p.part_no' },
-        {
-          data: 'latest_revision',
-          name: 'latest_revision',
-          orderable: false,
-          render: (data) => data ? `Rev-${data}` : '-' // Tampilkan 'Rev-'
-        },
+        { data: 'revision', name: 'dpr.revision_no' },
       ],
       responsive: true,
       dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
@@ -263,9 +259,7 @@ $(function () {
 
     $('#exportTable tbody').on('click', 'tr', function () {
       const row = table.row(this).data();
-      if (row && row.package_id) {
-        window.location.href = `/file-manager.export/${row.package_id}/history`;
-      }
+      if (row && row.id) window.location.href = `/file-manager.export/${row.id}`;
     }).on('mouseenter', 'tr', function () {
       $(this).css('cursor', 'pointer');
     });

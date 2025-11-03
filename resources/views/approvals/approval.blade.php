@@ -93,20 +93,22 @@
 
   {{-- Tabel section --}}
   <div class="mt-8 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-    <div class="overflow-x-auto">
-      <table id="approvalTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+    <div class="overflow-x-hidden">
+      <table id="approvalTable" class="w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead class="bg-gray-50 dark:bg-gray-700/50">
-          <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customer</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Model</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Doc Type</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Part No</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Revision</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-          </tr>
-        </thead>
+  <tr>
+    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No</th>
+    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Package Data</th>
+    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Request Date</th>
+    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Decision Date</th>
+    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+  </tr>
+</thead>
+
+
+
+
+
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
         </tbody>
       </table>
@@ -119,194 +121,271 @@
 
 @push('scripts')
 <script>
-$(function () {
-  let table;
-  const ENDPOINT = '{{ route("approvals.filters") }}';
+  $(function() {
+    let table;
+    const ENDPOINT = '{{ route("approvals.filters") }}';
 
-  // --- helper: reset Select2 ke "All" (pasti sukses untuk AJAX mode) ---
-  function resetSelect2ToAll($el) {
-    $el.empty(); // bersihkan option agar cache Select2 tak bentrok
-    const opt = new Option('All', 'All', true, true);
-    $el.append(opt);
-    $el.trigger('change');         // update nilai ke Select2
-    $el.trigger('select2:select'); // jaga-jaga untuk beberapa versi Select2
-  }
+    // --- helper: reset Select2 ke "All" (pasti sukses untuk AJAX mode) ---
+    function resetSelect2ToAll($el) {
+      $el.empty(); // bersihkan option agar cache Select2 tak bentrok
+      const opt = new Option('All', 'All', true, true);
+      $el.append(opt);
+      $el.trigger('change'); // update nilai ke Select2
+      $el.trigger('select2:select'); // jaga-jaga untuk beberapa versi Select2
+    }
 
-  // --- Select2 AJAX (server-side) helper ---
-  function makeSelect2($el, field, extraParamsFn) {
-    $el.select2({
-      width: '100%',
-      placeholder: 'All',
-      allowClear: false,
-      minimumResultsForSearch: 0,
-      ajax: {
-        url: ENDPOINT,
-        dataType: 'json',
-        delay: 250,
-        cache: true,
-        data: function (params) {
-          const p = {
-            select2: field,             // mode select2 di controller
-            q: params.term || '',
-            page: params.page || 1
-          };
-          if (typeof extraParamsFn === 'function') {
-            Object.assign(p, extraParamsFn());
-          }
-          return p;
-        },
-        processResults: function (data, params) {
-          params.page = params.page || 1;
-          // Pastikan "All" selalu ada di hasil (paling atas)
-          const results = Array.isArray(data.results) ? data.results.slice() : [];
-          if (!results.some(r => r.id === 'All')) {
-            results.unshift({ id: 'All', text: 'All' });
-          }
-          return {
-            results,
-            pagination: { more: data.pagination ? data.pagination.more : false }
-          };
-        }
-      },
-      templateResult: function (item) {
-        if (item.loading) return item.text;
-        return $('<div class="text-sm">' + (item.text || item.id) + '</div>');
-      },
-      templateSelection: function (item) {
-        return item.text || item.id || 'All';
-      }
-    });
-  }
-
-  // Inisialisasi Select2 server-side + dependent params
-  makeSelect2($('#customer'),      'customer');
-  makeSelect2($('#model'),         'model',      () => ({ customer_code: $('#customer').val() || '' }));
-  makeSelect2($('#document-type'), 'doc_type');
-  makeSelect2($('#category'),      'category',   () => ({ doc_type: $('#document-type').val() || '' }));
-  makeSelect2($('#status'),        'status');
-
-  // Dependent behavior -> set anak ke "All" (bukan null)
-  $('#customer').on('change', function () {
-    resetSelect2ToAll($('#model'));
-  });
-  $('#document-type').on('change', function () {
-    resetSelect2ToAll($('#category'));
-  });
-
-  function getCurrentFilters() {
-    const valOrAll = v => (v && v.length ? v : 'All');
-    return {
-      customer:  valOrAll($('#customer').val()),
-      model:     valOrAll($('#model').val()),
-      doc_type:  valOrAll($('#document-type').val()),
-      category:  valOrAll($('#category').val()),
-      status:    valOrAll($('#status').val()),
-    };
-  }
-
-  function loadKPI() {
-    const params = getCurrentFilters();
-    $('#cardTotal, #cardWaiting, #cardApproved, #cardRejected').text('…');
-
-    $.ajax({
-      url: '{{ route("approvals.kpi") }}',
-      data: params,
-      dataType: 'json',
-      success: function (res) {
-        const c = res.cards || {};
-        $('#cardTotal').text(c.total ?? 0);
-        $('#cardWaiting').text(c.waiting ?? 0);
-        $('#cardApproved').text(c.approved ?? 0);
-        $('#cardRejected').text(c.rejected ?? 0);
-      },
-      error: function (xhr) {
-        console.error('KPI error', xhr.responseText);
-        $('#cardTotal, #cardWaiting, #cardApproved, #cardRejected').text('0');
-      }
-    });
-  }
-
-  function initTable() {
-    table = $('#approvalTable').DataTable({
-      processing: true,
-      serverSide: true,
-      ajax: {
-        url: '{{ route("approvals.list") }}',
-        type: 'GET',
-        data: function (d) {
-          const f = getCurrentFilters();
-          d.customer  = f.customer;
-          d.model     = f.model;
-          d.doc_type  = f.doc_type;
-          d.category  = f.category;
-          d.status    = f.status;
-        }
-      },
-      order: [[ 1, 'asc' ]],
-      columns: [
-        { data: null, orderable: false, searchable: false },
-        { data: 'customer', name: 'c.code' },
-        { data: 'model',    name: 'm.name' },
-        { data: 'doc_type', name: 'dtg.name' },
-        { data: 'category', name: 'category' },
-        { data: 'part_no',  name: 'p.part_no' },
-        { data: 'revision', name: 'dpr.revision_no' },
-        {
-          data: 'status',
-          name: 'dpr.revision_status',
-          render: function (data) {
-            let cls = '';
-            if (data === 'Rejected')   cls = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
-            if (data === 'Waiting')  cls = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
-            if (data === 'Approved') cls = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
-            return `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${cls}">${data ?? ''}</span>`;
+    // --- Select2 AJAX (server-side) helper ---
+    function makeSelect2($el, field, extraParamsFn) {
+      $el.select2({
+        width: '100%',
+        placeholder: 'All',
+        allowClear: false,
+        minimumResultsForSearch: 0,
+        ajax: {
+          url: ENDPOINT,
+          dataType: 'json',
+          delay: 250,
+          cache: true,
+          data: function(params) {
+            const p = {
+              select2: field, // mode select2 di controller
+              q: params.term || '',
+              page: params.page || 1
+            };
+            if (typeof extraParamsFn === 'function') {
+              Object.assign(p, extraParamsFn());
+            }
+            return p;
+          },
+          processResults: function(data, params) {
+            params.page = params.page || 1;
+            // Pastikan "All" selalu ada di hasil (paling atas)
+            const results = Array.isArray(data.results) ? data.results.slice() : [];
+            if (!results.some(r => r.id === 'All')) {
+              results.unshift({
+                id: 'All',
+                text: 'All'
+              });
+            }
+            return {
+              results,
+              pagination: {
+                more: data.pagination ? data.pagination.more : false
+              }
+            };
           }
         },
-      ],
-      responsive: true,
-      dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
-    });
-
-    table.on('draw.dt', function () {
-      const info = table.page.info();
-      table.column(0, { page: 'current' }).nodes().each(function (cell, i) {
-        cell.innerHTML = i + 1 + info.start;
+        templateResult: function(item) {
+          if (item.loading) return item.text;
+          return $('<div class="text-sm">' + (item.text || item.id) + '</div>');
+        },
+        templateSelection: function(item) {
+          return item.text || item.id || 'All';
+        }
       });
-    });
-  }
+    }
 
-  function bindHandlers() {
-    // perubahan filter -> reload & refresh KPI
-    $('#customer, #model, #document-type, #category, #status').on('change', function () {
-      if (table) table.ajax.reload(null, true);
-      loadKPI();
-    });
+    // Inisialisasi Select2 server-side + dependent params
+    makeSelect2($('#customer'), 'customer');
+    makeSelect2($('#model'), 'model', () => ({
+      customer_code: $('#customer').val() || ''
+    }));
+    makeSelect2($('#document-type'), 'doc_type');
+    makeSelect2($('#category'), 'category', () => ({
+      doc_type: $('#document-type').val() || ''
+    }));
+    makeSelect2($('#status'), 'status');
 
-    // tombol reset -> set semua ke "All", reload table & KPI
-    $('#btnResetFilters').on('click', function () {
-      resetSelect2ToAll($('#customer'));
+    // Dependent behavior -> set anak ke "All" (bukan null)
+    $('#customer').on('change', function() {
       resetSelect2ToAll($('#model'));
-      resetSelect2ToAll($('#document-type'));
+    });
+    $('#document-type').on('change', function() {
       resetSelect2ToAll($('#category'));
-      resetSelect2ToAll($('#status'));
-
-      if (table) table.ajax.reload(null, true);
-      loadKPI();
     });
 
-    // klik row -> detail
-    $('#approvalTable tbody').on('click', 'tr', function () {
-      const row = table.row(this).data();
-      if (row && row.id) window.location.href = `/approval/${row.id}`;
-    }).on('mouseenter', 'tr', function () {
-      $(this).css('cursor', 'pointer');
-    });
-  }
+    function getCurrentFilters() {
+      const valOrAll = v => (v && v.length ? v : 'All');
+      return {
+        customer: valOrAll($('#customer').val()),
+        model: valOrAll($('#model').val()),
+        doc_type: valOrAll($('#document-type').val()),
+        category: valOrAll($('#category').val()),
+        status: valOrAll($('#status').val()),
+      };
+    }
 
-  // start
-  initTable();
-  loadKPI();
-  bindHandlers();
-});
+    function loadKPI() {
+      const params = getCurrentFilters();
+      $('#cardTotal, #cardWaiting, #cardApproved, #cardRejected').text('…');
+
+      $.ajax({
+        url: '{{ route("approvals.kpi") }}',
+        data: params,
+        dataType: 'json',
+        success: function(res) {
+          const c = res.cards || {};
+          $('#cardTotal').text(c.total ?? 0);
+          $('#cardWaiting').text(c.waiting ?? 0);
+          $('#cardApproved').text(c.approved ?? 0);
+          $('#cardRejected').text(c.rejected ?? 0);
+        },
+        error: function(xhr) {
+          console.error('KPI error', xhr.responseText);
+          $('#cardTotal, #cardWaiting, #cardApproved, #cardRejected').text('0');
+        }
+      });
+    }
+     
+    // formatter tanggal (tetap)
+function fmtDate(v) {
+  if (!v) return '';
+  const d = new Date(v);
+  if (isNaN(d)) return v;
+  const pad = n => n.toString().padStart(2, '0');
+  const dd = pad(d.getDate());
+  const MM = pad(d.getMonth() + 1);
+  const yyyy = d.getFullYear();
+  const HH = pad(d.getHours());
+  const mm = pad(d.getMinutes());
+  return `${dd}-${MM}-${yyyy} ${HH}:${mm}`;
+}
+
+
+   function initTable() {
+  table = $('#approvalTable').DataTable({
+    processing: true,
+    serverSide: true,
+    ajax: {
+      url: '{{ route("approvals.list") }}',
+      type: 'GET',
+      data: function (d) {
+        const f = getCurrentFilters();
+        d.customer  = f.customer;
+        d.model     = f.model;
+        d.doc_type  = f.doc_type;
+        d.category  = f.category;
+        d.status    = f.status;
+      }
+    },
+
+    // default: Request Date terbaru di atas (kolom index 2)
+    order: [[ 2, 'desc' ]],
+
+    columns: [
+      // No
+      { data: null, orderable: false, searchable: false },
+
+      // Package Data
+      {
+        data: null,
+        orderable: false,
+        searchable: false,
+        render: function (row) {
+          const parts = [
+            row.customer,
+            row.model,
+            row.doc_type,
+            row.category,
+            row.part_no,
+            row.revision
+          ].filter(Boolean);
+          return `<div class="text-sm">${parts.join(' - ')}</div>`;
+        }
+      },
+
+      // Request Date (was Upload Date)
+      {
+        data: 'request_date',          // <- ganti nama field
+        name: 'dpr.requested_at',      // <- SESUAIKAN dgn nama kolom DB
+        render: function (v) {
+          const text = fmtDate(v);
+          return `<span title="${v || ''}">${text}</span>`;
+        }
+      },
+
+      // Decision Date (new)
+     {
+      data: 'decision_date',          // kirim dari server; null saat Waiting
+      name: 'dpr.decided_at',         // sesuaikan dengan kolom DB Anda
+      render: function (v, t, row) {
+        if (!v || row.status === 'Waiting')
+          return '<span class="text-gray-400">—</span>';
+        const text = fmtDate(v);
+        return `<span title="${row.status} at ${v}">${text}</span>`;
+      }
+    },
+
+      // Status
+      {
+        data: 'status',
+        name: 'dpr.revision_status',
+        render: function (data) {
+          let cls = '';
+          if (data === 'Rejected') cls = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
+          if (data === 'Waiting')  cls = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
+          if (data === 'Approved') cls = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
+          return `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${cls}">${data ?? ''}</span>`;
+        }
+      },
+    ],
+
+    columnDefs: [
+      { targets: 0, className: 'text-center w-12', width: '48px' },
+      { targets: 2, className: 'whitespace-nowrap' }, // Request Date
+      { targets: 3, className: 'whitespace-nowrap' }  // Approve Date
+    ],
+
+    responsive: true,
+    dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
+    createdRow: function(row) {
+      $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700/50 cursor-pointer');
+    }
+  });
+
+  // Penomoran ulang setiap draw
+  table.on('draw.dt', function () {
+    const info = table.page.info();
+    table.column(0, { page: 'current' }).nodes().each(function (cell, i) {
+      cell.innerHTML = i + 1 + info.start;
+    });
+  });
+}
+
+
+
+    function bindHandlers() {
+      // perubahan filter -> reload & refresh KPI
+      $('#customer, #model, #document-type, #category, #status').on('change', function() {
+        if (table) table.ajax.reload(null, true);
+        loadKPI();
+      });
+
+      // tombol reset -> set semua ke "All", reload table & KPI
+      $('#btnResetFilters').on('click', function() {
+        resetSelect2ToAll($('#customer'));
+        resetSelect2ToAll($('#model'));
+        resetSelect2ToAll($('#document-type'));
+        resetSelect2ToAll($('#category'));
+        resetSelect2ToAll($('#status'));
+
+        if (table) table.ajax.reload(null, true);
+        loadKPI();
+      });
+
+      // klik row -> detail
+      $('#approvalTable tbody').on('click', 'tr', function() {
+        const row = table.row(this).data();
+        if (row && row.id) window.location.href = `/approval/${row.id}`;
+      }).on('mouseenter', 'tr', function() {
+        $(this).css('cursor', 'pointer');
+      });
+    }
+
+    // start
+    initTable();
+    loadKPI();
+    bindHandlers();
+  });
 </script>
 @endpush

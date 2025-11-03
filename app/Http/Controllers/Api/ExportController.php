@@ -22,77 +22,18 @@ use ZipArchive;
 
 class ExportController extends Controller
 {
-    public function showRevisionHistory($package_id)
-    {
-        $package = DB::table('doc_packages as dp')
-            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-            ->join('models as m', 'dp.model_id', '=', 'm.id')
-            ->join('products as p', 'dp.product_id', '=', 'p.id')
-            ->where('dp.id', $package_id)
-            ->select('c.code as customer_code', 'm.name as model_name', 'p.part_no')
-            ->first();
-
-        if (!$package) {
-            abort(404, 'Package not found.');
-        }
-
-        return view('file_management.file_export_history', [
-            'package_id' => $package_id,
-            'package' => $package,
-        ]);
-    }
-
-    public function listRevisionHistory(Request $request, $package_id): JsonResponse
-    {
-        $start = $request->get('start', 0);
-        $length = $request->get('length', 10);
-        $orderColumnIndex = $request->get('order')[0]['column'] ?? 0;
-        $orderColumnName = $request->get('columns')[$orderColumnIndex]['name'] ?? 'dpr.created_at';
-        $orderDir = $request->get('order')[0]['dir'] ?? 'desc';
-
-        $query = DB::table('doc_package_revisions as dpr')
-            ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
-            ->where('dpr.package_id', $package_id)
-            ->where('dpr.revision_status', '=', 'approved');
-
-        $recordsTotal = $query->count();
-        $recordsFiltered = $recordsTotal;
-
-        $data = $query->select(
-                'dpr.id',
-                'dpr.revision_no',
-                'dpr.ecn_no',
-                'dpr.created_at as release_date',
-                'crl.label as revision_label_name'
-            )
-            ->orderBy($orderColumnName, $orderDir)
-            ->skip($start)
-            ->take($length)
-            ->get();
-
-        return response()->json([
-            "draw" => intval($request->get('draw')),
-            "recordsTotal" => $recordsTotal,
-            "recordsFiltered" => $recordsFiltered,
-            "data" => $data
-        ]);
-    }
-
     public function kpi(Request $req)
     {
-        $q = DB::table('doc_packages as dp')
+        $q = DB::table('doc_package_revisions as dpr')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
             ->join('products as p', 'dp.product_id', '=', 'p.id')
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-            ->whereExists(function ($sub) {
-                $sub->select(DB::raw(1))
-                    ->from('doc_package_revisions as dpr')
-                    ->whereColumn('dpr.package_id', 'dp.id')
-                    ->where('dpr.revision_status', 'approved');
-            });
+            ->where('dpr.revision_status', '=', 'approved');
 
+        // FILTER
         if ($req->filled('customer') && $req->customer !== 'All') {
             $q->where('c.code', $req->customer);
         }
@@ -111,15 +52,18 @@ class ExportController extends Controller
         return response()->json([
             'cards' => [
                 'total' => $total,
-                'approved' => $total,
-                'waiting' => 0,
+                'approved' => $total, // All are approved
+            ],
+            'metrics' => [
+                'approval_rate'  => 100.0,
+                'rejection_rate' => 0.0,
+                'wip_rate'       => 0.0,
             ],
         ]);
     }
 
     public function filters(Request $request): JsonResponse
     {
-        // ====== MODE SELECT2 (server-side) ======
         if ($request->filled('select2')) {
             $field   = $request->get('select2');   // 'customer' | 'model' | 'doc_type' | 'category'
             $q       = trim($request->get('q', ''));
@@ -127,14 +71,15 @@ class ExportController extends Controller
             $perPage = 20;
 
             // dependent params
-            $customerCode = $request->get('customer_code'); // untuk model
-            $docTypeName  = $request->get('doc_type');      // untuk category
+            $customerCode = $request->get('customer_code');
+            $docTypeName  = $request->get('doc_type');
 
             $total = 0;
             $items = collect();
 
             switch ($field) {
                 case 'customer':
+                    // id = code, text = code
                     $builder = DB::table('customers as c')
                         ->selectRaw('c.code AS id, c.code AS text')
                         ->when($q, fn($x) => $x->where(function ($w) use ($q) {
@@ -212,7 +157,7 @@ class ExportController extends Controller
         // doc types
         $docTypes = DoctypeGroups::orderBy('name')->get(['id', 'name']);
 
-        // resolve doc_type (by name) -> id
+        // resolve doc_type
         $docTypeName = $request->get('doc_type');
         $docTypeId   = null;
         if ($docTypeName && $docTypeName !== 'All') {
@@ -239,21 +184,17 @@ class ExportController extends Controller
         $length = $request->get('length', 10);
         $searchValue = $request->get('search')['value'] ?? '';
         $orderColumnIndex = $request->get('order')[0]['column'] ?? 0;
-        $orderColumnName = $request->get('columns')[$orderColumnIndex]['name'] ?? 'dp.id';
+        $orderColumnName = $request->get('columns')[$orderColumnIndex]['name'] ?? 'dpr.created_at';
         $orderDir = $request->get('order')[0]['dir'] ?? 'desc';
 
-        $query = DB::table('doc_packages as dp')
+        $query = DB::table('doc_package_revisions as dpr')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
             ->join('products as p', 'dp.product_id', '=', 'p.id')
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-            ->whereExists(function ($sub) {
-                $sub->select(DB::raw(1))
-                    ->from('doc_package_revisions as dpr')
-                    ->whereColumn('dpr.package_id', 'dp.id')
-                    ->where('dpr.revision_status', 'approved');
-            });
+            ->where('dpr.revision_status', '=', 'approved');
 
         $recordsTotal = $query->count();
 
@@ -275,7 +216,6 @@ class ExportController extends Controller
                 $q->where('c.code', 'like', "%{$searchValue}%")
                     ->orWhere('m.name', 'like', "%{$searchValue}%")
                     ->orWhere('p.part_no', 'like', "%{$searchValue}%")
-                    ->orWhere('dtg.name', 'like', "%{$searchValue}%")
                     ->orWhere('dsc.name', 'like', "%{$searchValue}%");
             });
         }
@@ -283,18 +223,14 @@ class ExportController extends Controller
         $recordsFiltered = $query->count();
 
         $data = $query->select(
-            'dp.id as package_id',
+            'dpr.id',
             'c.code as customer',
             'm.name as model',
             'dtg.name as doc_type',
             'dsc.name as category',
             'p.part_no',
-
-            DB::raw("(SELECT TOP 1 dpr.revision_no
-                      FROM doc_package_revisions as dpr
-                      WHERE dpr.package_id = dp.id
-                        AND dpr.revision_status = 'approved'
-                      ORDER BY dpr.created_at DESC, dpr.id DESC) as latest_revision")
+            'dpr.revision_no as revision',
+            'dpr.created_at'
         )
             ->orderBy($orderColumnName, $orderDir)
             ->skip($start)
@@ -314,7 +250,7 @@ class ExportController extends Controller
         // $id = revision_id
         $revision = DB::table('doc_package_revisions as dpr')
             ->where('dpr.id', $id)
-            ->where('dpr.revision_status', '=', 'approved') // Only approved revisions
+            ->where('dpr.revision_status', '=', 'approved')
             ->first();
 
         if (!$revision) {
@@ -338,7 +274,7 @@ class ExportController extends Controller
             ->map(function ($items) {
                 return $items->map(function ($item) {
                     $url = URL::signedRoute('preview.file', ['id' => $item->id]);
-                    return ['name' => $item->name, 'url' => $url, 'file_id' => $item->id]; // Added file_id for download
+                    return ['name' => $item->name, 'url' => $url, 'file_id' => $item->id];
                 });
             })
             ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
@@ -356,7 +292,6 @@ class ExportController extends Controller
         return view('file_management.file_export_detail', [
             'exportId' => $id,
             'detail'     => $detail,
-            'package_id' => $revision->package_id
         ]);
     }
 
@@ -368,7 +303,6 @@ class ExportController extends Controller
             abort(404, 'File not found.');
         }
 
-        // Ensure the revision is approved before allowing download
         $revision = DB::table('doc_package_revisions')
             ->where('id', $file->revision_id)
             ->where('revision_status', '=', 'approved')
@@ -405,7 +339,7 @@ class ExportController extends Controller
         }
 
         $zipFileName = 'package_rev_' . $revision->revision_no . '_' . now()->format('Ymd_His') . '.zip';
-        $zipFilePath = storage_path('app/public/' . $zipFileName); // Store in public storage for easy access
+        $zipFilePath = storage_path('app/public/' . $zipFileName);
 
         $zip = new \ZipArchive();
         if ($zip->open($zipFilePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
@@ -420,7 +354,6 @@ class ExportController extends Controller
             abort(500, 'Could not create zip file.');
         }
 
-        // Return the zip file for download
         return response()->download($zipFilePath)->deleteFileAfterSend(true);
     }
 }

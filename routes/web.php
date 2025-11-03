@@ -62,13 +62,8 @@ Route::middleware(['auth'])->group(function () {
         return view('file_management.file_export');
     })->middleware(['auth', 'check.menu:4'])->name('file-manager.export');
 
-    Route::get('/file-manager.export/{package_id}/history', [ExportController::class, 'showRevisionHistory'])
-    ->middleware(['auth', 'check.menu:4'])
-    ->name('file-manager.export.history');
 
-    Route::get('/file-manager.export/{id}', function ($id) {
-        return view('file_management.file_export_detail', ['id' => $id]);
-    })->middleware(['auth', 'check.menu:4'])->name('file-manager.export.detail');
+    Route::get('/file-manager.export/{id}', [ExportController::class, 'showDetail'])->middleware(['auth', 'check.menu:4'])->name('file-manager.export.detail');
 
     Route::get('/approval', function () {
         return view('approvals.approval');
@@ -307,8 +302,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/export/list', [ExportController::class, 'listExportableFiles'])->middleware(['auth'])->name('api.export.list');
 
-    Route::get('/export/history/{package_id}', [ExportController::class, 'listRevisionHistory'])->middleware(['auth'])->name('api.export.history.list');
-    Route::get('/download/file/{file_id}', [ExportController::class, 'downloadFile'])->name('api.export.download-file');
+    Route::get('/download/file/{file_id}', [ExportController::class, 'downloadFile'])->middleware('check.menu:4')->name('api.export.download-file');
+    Route::get('/download/package/{revision_id}', [ExportController::class, 'downloadPackage'])->middleware('check.menu:4')->name('api.export.download-package');
     #End region
 
     #region Approval
