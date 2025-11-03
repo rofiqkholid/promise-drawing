@@ -77,14 +77,14 @@ class ApprovalController extends Controller
     {
         // ====== MODE SELECT2 (server-side) ======
         if ($request->filled('select2')) {
-            $field   = $request->get('select2');   // 'customer' | 'model' | 'doc_type' | 'category' | 'status'
+            $field   = $request->get('select2');    
             $q       = trim($request->get('q', ''));
             $page    = max(1, (int)$request->get('page', 1));
             $perPage = 20;
 
             // dependent params
-            $customerCode = $request->get('customer_code'); // untuk model
-            $docTypeName  = $request->get('doc_type');      // untuk category
+            $customerCode = $request->get('customer_code'); 
+            $docTypeName  = $request->get('doc_type');     
 
             $total = 0;
             $items = collect();
@@ -155,14 +155,13 @@ class ApprovalController extends Controller
                     return response()->json(['results' => [], 'pagination' => ['more' => false]]);
             }
 
-            // === Selalu prepend "All" pada halaman pertama ===
-            // (supaya "All" selalu tersedia di dropdown tanpa harus diketik)
+            
             if ($page === 1) {
                 $items = collect([['id' => 'All', 'text' => 'All']])->merge($items);
             }
 
-            // Hitung flag "more" untuk pagination (perhatikan item "All" di page 1)
-            $effectiveTotal = $total + ($page === 1 ? 1 : 0); // tambahkan 1 untuk "All" di halaman 1
+            
+            $effectiveTotal = $total + ($page === 1 ? 1 : 0); 
             $more = ($effectiveTotal > $page * $perPage);
 
             return response()->json([
@@ -201,9 +200,9 @@ class ApprovalController extends Controller
 
         return response()->json([
             'customers'  => Customers::orderBy('code')->get(['id', 'code']),
-            'models'     => $models,        // {id, name}
-            'doc_types'  => $docTypes,      // {id, name}
-            'categories' => $categories,    // {name}
+            'models'     => $models,        
+            'doc_types'  => $docTypes,      
+            'categories' => $categories,    
             'statuses'   => collect([
                 ['name' => 'Waiting'],
                 ['name' => 'Approved'],
@@ -457,8 +456,6 @@ public function approve(Request $request, $revision_id)
             ->where('id', '!=', $revision_id)
             ->update([
                 'is_obsolete' => 1,
-                // Opsional kalau ingin menandai status lama jadi 'obsolete':
-                // 'revision_status' => DB::raw("CASE WHEN revision_status='approved' THEN 'obsolete' ELSE revision_status END"),
                 'updated_at'  => Carbon::now(),
             ]);
 
@@ -667,7 +664,7 @@ public function approve(Request $request, $revision_id)
             ->where('id', $revision_id)
             ->update([
                 'revision_status' => 'pending',
-                'is_obsolete'     => 1,                 // <— penting: jangan aktif
+                'is_obsolete'     => 1,                 
                 'updated_at'      => Carbon::now(),
             ]);
 
@@ -677,7 +674,7 @@ public function approve(Request $request, $revision_id)
             ->where('r.package_id', $packageId)
             ->where('r.id', '<>', $revision_id)
             ->where('r.revision_status', 'approved')
-            ->orderByDesc('pa.decided_at') // paling baru yang pernah approved
+            ->orderByDesc('pa.decided_at') 
             ->lockForUpdate()
             ->first(['r.id', 'r.revision_no']);
 

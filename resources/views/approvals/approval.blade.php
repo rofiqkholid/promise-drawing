@@ -96,14 +96,14 @@
     <div class="overflow-x-hidden">
       <table id="approvalTable" class="w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead class="bg-gray-50 dark:bg-gray-700/50">
-  <tr>
-    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No</th>
-    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Package Data</th>
-    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Request Date</th>
-    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Decision Date</th>
-    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-  </tr>
-</thead>
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Package Data</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Request Date</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Decision Date</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+          </tr>
+        </thead>
 
 
 
@@ -127,11 +127,11 @@
 
     // --- helper: reset Select2 ke "All" (pasti sukses untuk AJAX mode) ---
     function resetSelect2ToAll($el) {
-      $el.empty(); // bersihkan option agar cache Select2 tak bentrok
+      $el.empty(); 
       const opt = new Option('All', 'All', true, true);
       $el.append(opt);
-      $el.trigger('change'); // update nilai ke Select2
-      $el.trigger('select2:select'); // jaga-jaga untuk beberapa versi Select2
+      $el.trigger('change'); 
+      $el.trigger('select2:select'); 
     }
 
     // --- Select2 AJAX (server-side) helper ---
@@ -148,7 +148,7 @@
           cache: true,
           data: function(params) {
             const p = {
-              select2: field, // mode select2 di controller
+              select2: field, 
               q: params.term || '',
               page: params.page || 1
             };
@@ -236,121 +236,145 @@
         }
       });
     }
-     
+
     // formatter tanggal (tetap)
-function fmtDate(v) {
-  if (!v) return '';
-  const d = new Date(v);
-  if (isNaN(d)) return v;
-  const pad = n => n.toString().padStart(2, '0');
-  const dd = pad(d.getDate());
-  const MM = pad(d.getMonth() + 1);
-  const yyyy = d.getFullYear();
-  const HH = pad(d.getHours());
-  const mm = pad(d.getMinutes());
-  return `${dd}-${MM}-${yyyy} ${HH}:${mm}`;
-}
-
-
-   function initTable() {
-  table = $('#approvalTable').DataTable({
-    processing: true,
-    serverSide: true,
-    ajax: {
-      url: '{{ route("approvals.list") }}',
-      type: 'GET',
-      data: function (d) {
-        const f = getCurrentFilters();
-        d.customer  = f.customer;
-        d.model     = f.model;
-        d.doc_type  = f.doc_type;
-        d.category  = f.category;
-        d.status    = f.status;
-      }
-    },
-
-    // default: Request Date terbaru di atas (kolom index 2)
-    order: [[ 2, 'desc' ]],
-
-    columns: [
-      // No
-      { data: null, orderable: false, searchable: false },
-
-      // Package Data
-      {
-        data: null,
-        orderable: false,
-        searchable: false,
-        render: function (row) {
-          const parts = [
-            row.customer,
-            row.model,
-            row.doc_type,
-            row.category,
-            row.part_no,
-            row.revision
-          ].filter(Boolean);
-          return `<div class="text-sm">${parts.join(' - ')}</div>`;
-        }
-      },
-
-      // Request Date (was Upload Date)
-      {
-        data: 'request_date',          // <- ganti nama field
-        name: 'dpr.requested_at',      // <- SESUAIKAN dgn nama kolom DB
-        render: function (v) {
-          const text = fmtDate(v);
-          return `<span title="${v || ''}">${text}</span>`;
-        }
-      },
-
-      // Decision Date (new)
-     {
-      data: 'decision_date',          // kirim dari server; null saat Waiting
-      name: 'dpr.decided_at',         // sesuaikan dengan kolom DB Anda
-      render: function (v, t, row) {
-        if (!v || row.status === 'Waiting')
-          return '<span class="text-gray-400">—</span>';
-        const text = fmtDate(v);
-        return `<span title="${row.status} at ${v}">${text}</span>`;
-      }
-    },
-
-      // Status
-      {
-        data: 'status',
-        name: 'dpr.revision_status',
-        render: function (data) {
-          let cls = '';
-          if (data === 'Rejected') cls = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
-          if (data === 'Waiting')  cls = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
-          if (data === 'Approved') cls = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
-          return `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${cls}">${data ?? ''}</span>`;
-        }
-      },
-    ],
-
-    columnDefs: [
-      { targets: 0, className: 'text-center w-12', width: '48px' },
-      { targets: 2, className: 'whitespace-nowrap' }, // Request Date
-      { targets: 3, className: 'whitespace-nowrap' }  // Approve Date
-    ],
-
-    responsive: true,
-    dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
-    createdRow: function(row) {
-      $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700/50 cursor-pointer');
+    function fmtDate(v) {
+      if (!v) return '';
+      const d = new Date(v);
+      if (isNaN(d)) return v;
+      const pad = n => n.toString().padStart(2, '0');
+      const dd = pad(d.getDate());
+      const MM = pad(d.getMonth() + 1);
+      const yyyy = d.getFullYear();
+      const HH = pad(d.getHours());
+      const mm = pad(d.getMinutes());
+      return `${dd}-${MM}-${yyyy} ${HH}:${mm}`;
     }
-  });
 
-  // Penomoran ulang setiap draw
-  table.on('draw.dt', function () {
-    const info = table.page.info();
-    table.column(0, { page: 'current' }).nodes().each(function (cell, i) {
-      cell.innerHTML = i + 1 + info.start;
-    });
-  });
-}
+
+    function initTable() {
+      table = $('#approvalTable').DataTable({
+        processing: true,
+        serverSide: true,
+        ajax: {
+          url: '{{ route("approvals.list") }}',
+          type: 'GET',
+          data: function(d) {
+            const f = getCurrentFilters();
+            d.customer = f.customer;
+            d.model = f.model;
+            d.doc_type = f.doc_type;
+            d.category = f.category;
+            d.status = f.status;
+          }
+        },
+
+        // default: Request Date terbaru di atas (kolom index 2)
+        order: [
+          [2, 'desc']
+        ],
+
+        columns: [
+          // No
+          {
+            data: null,
+            orderable: false,
+            searchable: false
+          },
+
+          // Package Data
+          {
+            data: null,
+            orderable: false,
+            searchable: false,
+            render: function(row) {
+              const revVal = row.revision ?? row.revision_no;
+              const revTxt = (revVal !== undefined && revVal !== null && revVal !== '') ?
+                `rev ${revVal}` :
+                '';
+
+              const parts = [
+                row.customer,
+                row.model,
+                row.doc_type,
+                row.category,
+                row.part_no,
+                revTxt
+              ].filter(Boolean);
+
+              return `<div class="text-sm">${parts.join(' - ')}</div>`;
+            }
+          },
+
+
+          // Request Date (was Upload Date)
+          {
+            data: 'request_date',
+            name: 'dpr.requested_at',
+            render: function(v) {
+              const text = fmtDate(v);
+              return `<span title="${v || ''}">${text}</span>`;
+            }
+          },
+
+          // Decision Date (new)
+          {
+            data: 'decision_date',
+            name: 'dpr.decided_at',
+            render: function(v, t, row) {
+              if (!v || row.status === 'Waiting')
+                return '<span class="text-gray-400">—</span>';
+              const text = fmtDate(v);
+              return `<span title="${row.status} at ${v}">${text}</span>`;
+            }
+          },
+
+          // Status
+          {
+            data: 'status',
+            name: 'dpr.revision_status',
+            render: function(data) {
+              let cls = '';
+              if (data === 'Rejected') cls = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
+              if (data === 'Waiting') cls = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
+              if (data === 'Approved') cls = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
+              return `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${cls}">${data ?? ''}</span>`;
+            }
+          },
+        ],
+
+        columnDefs: [{
+            targets: 0,
+            className: 'text-center w-12',
+            width: '48px'
+          },
+          {
+            targets: 2,
+            className: 'whitespace-nowrap'
+          },
+          {
+            targets: 3,
+            className: 'whitespace-nowrap'
+          }
+        ],
+
+        responsive: true,
+        dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
+        createdRow: function(row) {
+          $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700/50 cursor-pointer');
+        }
+      });
+
+      // Penomoran ulang setiap draw
+      table.on('draw.dt', function() {
+        const info = table.page.info();
+        table.column(0, {
+          page: 'current'
+        }).nodes().each(function(cell, i) {
+          cell.innerHTML = i + 1 + info.start;
+        });
+      });
+    }
 
 
 

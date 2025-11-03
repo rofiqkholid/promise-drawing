@@ -112,7 +112,6 @@ class DrawingUploadController extends Controller
                             'message' => 'ECN No. ' . htmlspecialchars($request->ecn_no) . ' already exists on this label and is locked with status: ' . ucfirst($existingRevision->revision_status)
                         ], 409);
                     }
-
                 } else {
                     $labelName = $draftLabelId
                         ? DB::table('customer_revision_labels')->where('id', $draftLabelId)->value('label')
@@ -209,7 +208,6 @@ class DrawingUploadController extends Controller
                 }
 
                 $currentRevisionNo = $revToEdit->revision_no;
-
             } else {
                 $revQuery = DB::table('doc_package_revisions')->where('package_id', $packageId)->lockForUpdate();
                 $maxRevision = $revQuery->max('revision_no');
@@ -240,7 +238,9 @@ class DrawingUploadController extends Controller
 
             if (!empty($validated['files_to_delete'])) {
                 $filesToDelete = DB::table('doc_package_revision_files')->whereIn('id', $validated['files_to_delete'])->get();
-                foreach($filesToDelete as $file) { Storage::disk($this->disk)->delete($file->storage_path); }
+                foreach ($filesToDelete as $file) {
+                    Storage::disk($this->disk)->delete($file->storage_path);
+                }
                 DB::table('doc_package_revision_files')->whereIn('id', $validated['files_to_delete'])->delete();
             }
 
@@ -291,7 +291,6 @@ class DrawingUploadController extends Controller
                                     'uploaded_by' => $this->getAuthUserInt(),
                                     'updated_at' => now(),
                                 ]);
-
                         } else {
 
                             if ($action === 'suffix') {
@@ -315,7 +314,10 @@ class DrawingUploadController extends Controller
                                 'storage_path' => $fullStoragePath,
                                 'file_size' => filesize($diskPath),
                                 'checksum_sha256' => hash_file('sha256', $diskPath),
-                                'uploaded_by' => $this->getAuthUserInt(), 'created_at' => now(), 'updated_at' => now(), 'is_active' => 1,
+                                'uploaded_by' => $this->getAuthUserInt(),
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                                'is_active' => 1,
                             ]);
                         }
                     }
@@ -327,15 +329,15 @@ class DrawingUploadController extends Controller
             $subCatName = null;
             if (!empty($packageIds['doctype_subcategory_id'])) {
                 $subCatName = DB::table('doctype_subcategories')
-                                ->where('id', $packageIds['doctype_subcategory_id'])
-                                ->value('name');
+                    ->where('id', $packageIds['doctype_subcategory_id'])
+                    ->value('name');
             }
 
             $labelName = null;
             if (!empty($validated['revision_label_id'])) {
                 $labelName = DB::table('customer_revision_labels')
-                                ->where('id', $validated['revision_label_id'])
-                                ->value('label');
+                    ->where('id', $validated['revision_label_id'])
+                    ->value('label');
             }
 
             $partGroupCode = DB::table('part_groups')->where('id', $packageIds['part_group_id'])->value('code_part_group');
@@ -369,9 +371,7 @@ class DrawingUploadController extends Controller
             DB::commit();
 
             return response()->json(['success' => true, 'message' => 'Draft has been saved successfully.', 'revision_id' => $revisionId, 'package_id' => $packageId]);
-
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
 
             foreach ($savedFilePaths as $path) {
@@ -398,7 +398,6 @@ class DrawingUploadController extends Controller
                 'errors' => $errors,
             ], $statusCode);
         }
-
     }
 
     public function getCustomerData(Request $request): JsonResponse
@@ -686,8 +685,8 @@ class DrawingUploadController extends Controller
             ->select('fe.code', 'cfe.category_name')
             ->get()
             ->groupBy('category_name')
-            ->map(fn ($items) => $items->pluck('code')->map('strtolower')->all())
-            ->mapWithKeys(fn ($items, $key) => [strtolower($key) => $items]);
+            ->map(fn($items) => $items->pluck('code')->map('strtolower')->all())
+            ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
     }
 
     private function buildMetaBase(Request $r): array
@@ -783,8 +782,8 @@ class DrawingUploadController extends Controller
             $labelName = null;
             if (!empty($revision->revision_label_id)) {
                 $labelName = DB::table('customer_revision_labels')
-                                ->where('id', $revision->revision_label_id)
-                                ->value('label');
+                    ->where('id', $revision->revision_label_id)
+                    ->value('label');
             }
 
             $package = DB::table('doc_packages')->where('id', $packageId)->first(['part_group_id']);
@@ -957,7 +956,6 @@ class DrawingUploadController extends Controller
             }
 
             return response()->json(['conflicts' => $conflicts]);
-
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }

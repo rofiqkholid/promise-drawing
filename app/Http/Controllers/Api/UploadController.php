@@ -57,7 +57,7 @@ class UploadController extends Controller
                 'model' => 'm.name',
                 'part_no' => 'pr.part_no',
                 'revision_no' => 'r.revision_no',
-                'uploaded_at' => 'r.updated_at',
+                'uploaded_at' => 'r.created_at',
                 'status' => 'r.revision_status',
                 'ecn_no' => 'r.ecn_no',
                 'doctype_group' => 'dg.name',
@@ -124,7 +124,7 @@ class UploadController extends Controller
             ->leftJoin('doctype_subcategories as sc', 'p.doctype_subcategory_id', '=', 'sc.id')
             ->leftJoin('part_groups as pg', 'p.part_group_id', '=', 'pg.id')
             ->select(
-                'r.id as id', 'r.package_id as package_id', 'p.package_no as package_no',
+                'r.id as id', 'r.receipt_date', 'r.package_id as package_id', 'p.package_no as package_no',
                 'r.revision_no as revision_no', 'r.revision_status as revision_status', 'r.note as revision_note',
                 'r.ecn_no as ecn_no',
                 'r.revision_label_id as revision_label_id',
