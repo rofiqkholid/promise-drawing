@@ -65,10 +65,10 @@ class UploadController extends Controller
                 'part_group' => 'pg.code_part_group'
             ];
 
-            $dbColumn = $columnMap[$columnName] ?? 'r.updated_at';
+            $dbColumn = $columnMap[$columnName] ?? 'r.created_at';
             $query->orderBy($dbColumn, $direction);
         } else {
-            $query->orderBy('r.updated_at', 'desc');
+            $query->orderBy('r.created_at', 'desc');
         }
 
         $rows = $query->skip($start)->take($length)->get([
@@ -78,7 +78,7 @@ class UploadController extends Controller
             'm.name as model',
             'pr.part_no as part_no',
             'r.revision_no as revision_no',
-            'r.updated_at as uploaded_at',
+            'r.created_at as uploaded_at',
             'r.revision_status as status',
             'r.ecn_no as ecn_no',
             'crl.label as revision_label_name',
