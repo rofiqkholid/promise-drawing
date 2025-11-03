@@ -211,79 +211,143 @@ class ApprovalController extends Controller
             ]),
         ]);
     }
-    public function listApprovals(Request $request): JsonResponse
-    {
-        $start = $request->get('start', 0);
-        $length = $request->get('length', 10);
-        $searchValue = $request->get('search')['value'] ?? '';
-        $orderColumnIndex = $request->get('order')[0]['column'] ?? 0;
-        $orderColumnName = $request->get('columns')[$orderColumnIndex]['name'] ?? 'dpr.created_at';
-        $orderDir = $request->get('order')[0]['dir'] ?? 'desc';
+   public function listApprovals(Request $request): JsonResponse
+{
+    $start = (int) $request->get('start', 0);
+    $length = (int) $request->get('length', 10);
+    $searchValue = $request->get('search')['value'] ?? '';
 
-        $query = DB::table('doc_package_revisions as dpr')
-            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
-            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-            ->join('models as m', 'dp.model_id', '=', 'm.id')
-            ->join('products as p', 'dp.product_id', '=', 'p.id')
-            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-            ->where('dpr.revision_status', '<>', 'draft');
+    // DataTables: ambil kolom yang di-order dari "name" (sudah kita set di front-end)
+    $orderColumnIndex = (int) ($request->get('order')[0]['column'] ?? 0);
+    $orderDir = $request->get('order')[0]['dir'] ?? 'desc';
+    $orderColumnName = $request->get('columns')[$orderColumnIndex]['name'] ?? 'dpr.created_at';
 
-        $recordsTotal = $query->count();
-
-        if ($request->filled('customer') && $request->customer !== 'All') {
-            $query->where('c.code', $request->customer);
-        }
-        if ($request->filled('model') && $request->model !== 'All') {
-            $query->where('m.name', $request->model);
-        }
-        if ($request->filled('doc_type') && $request->doc_type !== 'All') {
-            $query->where('dtg.name', $request->doc_type);
-        }
-        if ($request->filled('category') && $request->category !== 'All') {
-            $query->where('dsc.name', $request->category);
-        }
-        if ($request->filled('status') && $request->status !== 'All') {
-            $statusMapping = ['Waiting' => 'pending', 'Approved' => 'approved', 'Rejected' => 'rejected'];
-            if (isset($statusMapping[$request->status])) {
-                $query->where('dpr.revision_status', $statusMapping[$request->status]);
-            }
-        }
-
-        if (!empty($searchValue)) {
-            $query->where(function ($q) use ($searchValue) {
-                $q->where('c.code', 'like', "%{$searchValue}%")
-                    ->orWhere('m.name', 'like', "%{$searchValue}%")
-                    ->orWhere('p.part_no', 'like', "%{$searchValue}%")
-                    ->orWhere('dsc.name', 'like', "%{$searchValue}%");
-            });
-        }
-
-        $recordsFiltered = $query->count();
-
-        $data = $query->select(
-            'dpr.id',
-            'c.code as customer',
-            'm.name as model',
-            'dtg.name as doc_type',
-            'dsc.name as category',
-            'p.part_no',
-            'dpr.revision_no as revision',
-            DB::raw("CASE dpr.revision_status WHEN 'pending' THEN 'Waiting' WHEN 'approved' THEN 'Approved' WHEN 'rejected' THEN 'Rejected' ELSE dpr.revision_status END as status"),
-            'dpr.created_at'
+    // Subquery: approval terbaru per revision_id (SQL Server-ready)
+    $latestPa = DB::table('package_approvals as pa')
+        ->select(
+            'pa.id',
+            'pa.revision_id',
+            'pa.requested_at',
+            'pa.decided_at',
+            'pa.decision',
+            'pa.decided_by'
         )
-            ->orderBy('dpr.created_at', 'desc')
-            ->skip($start)
-            ->take($length)
-            ->get();
+        ->selectRaw("
+            ROW_NUMBER() OVER (
+              PARTITION BY pa.revision_id
+              ORDER BY COALESCE(pa.decided_at, pa.requested_at) DESC, pa.id DESC
+            ) as rn
+        ");
 
-        return response()->json([
-            "draw" => intval($request->get('draw')),
-            "recordsTotal" => $recordsTotal,
-            "recordsFiltered" => $recordsFiltered,
-            "data" => $data
-        ]);
+    $query = DB::table('doc_package_revisions as dpr')
+        ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+        ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+        ->join('models as m', 'dp.model_id', '=', 'm.id')
+        ->join('products as p', 'dp.product_id', '=', 'p.id')
+        ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+        ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+        // join approval terbaru (rn=1)
+        ->leftJoinSub($latestPa, 'pa', function ($join) {
+            $join->on('pa.revision_id', '=', 'dpr.id')
+                 ->where('pa.rn', '=', 1);
+        })
+        ->where('dpr.revision_status', '<>', 'draft');
+
+    // total sebelum filter (pakai join yg sama biar konsisten)
+    $recordsTotal = (clone $query)->count();
+
+    // ===== Filters =====
+    if ($request->filled('customer') && $request->customer !== 'All') {
+        $query->where('c.code', $request->customer);
     }
+    if ($request->filled('model') && $request->model !== 'All') {
+        $query->where('m.name', $request->model);
+    }
+    if ($request->filled('doc_type') && $request->doc_type !== 'All') {
+        $query->where('dtg.name', $request->doc_type);
+    }
+    if ($request->filled('category') && $request->category !== 'All') {
+        $query->where('dsc.name', $request->category);
+    }
+    if ($request->filled('status') && $request->status !== 'All') {
+        // front-end kirim Waiting/Approved/Rejected
+        $statusMap = ['Waiting' => 'pending', 'Approved' => 'approved', 'Rejected' => 'rejected'];
+        $val = $statusMap[$request->status] ?? null;
+        if ($val) {
+            // status bisa dari dpr.revision_status atau pa.decision → pakai COALESCE
+            $query->whereRaw("COALESCE(pa.decision, dpr.revision_status) = ?", [$val]);
+        }
+    }
+
+    // ===== Global search (tambahkan sesuai kebutuhan) =====
+    if ($searchValue !== '') {
+        $query->where(function ($q) use ($searchValue) {
+            $q->where('c.code', 'like', "%{$searchValue}%")
+              ->orWhere('m.name', 'like', "%{$searchValue}%")
+              ->orWhere('p.part_no', 'like', "%{$searchValue}%")
+              ->orWhere('dsc.name', 'like', "%{$searchValue}%")
+              // opsional: cari di gabungan "Package Data"
+              ->orWhereRaw("
+                CONCAT(c.code,' ',m.name,' ',dtg.name,' ',COALESCE(dsc.name,''),' ',COALESCE(p.part_no,''),' ',dpr.revision_no) LIKE ?
+              ", ["%{$searchValue}%"]);
+        });
+    }
+
+    $recordsFiltered = (clone $query)->count();
+
+    // ===== Select + alias untuk front-end =====
+    $query->select(
+        'dpr.id',
+        'c.code as customer',
+        'm.name as model',
+        'dtg.name as doc_type',
+        'dsc.name as category',
+        'p.part_no',
+        'dpr.revision_no as revision',
+        // status netral (ambil dari pa.decision dulu, fallback dpr)
+        DB::raw("
+            CASE COALESCE(pa.decision, dpr.revision_status)
+                WHEN 'pending'  THEN 'Waiting'
+                WHEN 'approved' THEN 'Approved'
+                WHEN 'rejected' THEN 'Rejected'
+                ELSE COALESCE(pa.decision, dpr.revision_status)
+            END as status
+        "),
+        'pa.requested_at as request_date',
+        'pa.decided_at   as decision_date'
+    );
+
+    // ===== Ordering aman (whitelist) =====
+    $orderWhitelist = [
+        'dpr.created_at',
+        'dpr.updated_at',
+        'pa.requested_at',
+        'pa.decided_at',
+        'dpr.revision_status',
+        'c.code',
+        'm.name',
+        'dtg.name',
+        'dsc.name',
+        'p.part_no',
+        // tambahkan jika perlu
+    ];
+    $orderBy = in_array($orderColumnName, $orderWhitelist, true) ? $orderColumnName : 'pa.requested_at';
+    $orderDirection = in_array(strtolower($orderDir), ['asc','desc'], true) ? $orderDir : 'desc';
+
+    $data = $query
+        ->orderBy($orderBy, $orderDirection)
+        ->skip($start)
+        ->take($length)
+        ->get();
+
+    return response()->json([
+        "draw" => (int) $request->get('draw'),
+        "recordsTotal" => $recordsTotal,
+        "recordsFiltered" => $recordsFiltered,
+        "data" => $data
+    ]);
+}
+
 
 
     public function showDetail($id)

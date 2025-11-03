@@ -382,8 +382,8 @@ class DashboardController extends Controller
             $endDate = date('Y-m-t 23:59:59', strtotime($startDate));
 
             $query->where(function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('pg.created_at', [$startDate, $endDate])
-                    ->orWhereNull('pg.created_at');
+                $q->whereBetween('dp.created_at', [$startDate, $endDate])
+                    ->orWhereNull('dp.created_at');
             });
         }
 
