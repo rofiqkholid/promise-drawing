@@ -51,13 +51,13 @@ class DashboardController extends Controller
     public function getDownloadCount(): JsonResponse
     {
         try {
-            $uploadCount = DB::table('activity_logs')
+            $downloadCount = DB::table('activity_logs')
                 ->where('activity_code', 'DOWNLOAD')
                 ->count('activity_code');
 
             return response()->json([
                 'status' => 'success',
-                'count' => $uploadCount
+                'count' => $downloadCount
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -71,12 +71,12 @@ class DashboardController extends Controller
     public function getDocCount(): JsonResponse
     {
         try {
-            $uploadCount = DB::table('doc_package_revision_files')
+            $docCount = DB::table('doc_package_revision_files')
                 ->count('filename');
 
             return response()->json([
                 'status' => 'success',
-                'count' => $uploadCount
+                'count' => $docCount
             ]);
         } catch (\Exception $e) {
             return response()->json([
