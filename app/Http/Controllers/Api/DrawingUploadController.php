@@ -78,61 +78,65 @@ class DrawingUploadController extends Controller
             'category' => 'nullable|integer|exists:doctype_subcategories,id',
             'ecn_no' => 'required|string|max:50',
             'revision_label_id' => 'nullable|integer|exists:customer_revision_labels,id',
+            'existing_revision_id' => 'nullable|integer|exists:doc_package_revisions,id'
         ]);
 
         $packageId = $this->findPackageId($validated);
         $requestLabelId = $request->revision_label_id ?: null;
+        $existingRevisionId = $request->input('existing_revision_id');
 
         if ($packageId) {
-            $existingRevision = DB::table('doc_package_revisions')
+            $conflictQuery = DB::table('doc_package_revisions')
                 ->where('package_id', $packageId)
-                ->where('ecn_no', $request->ecn_no)
-                ->first(); //
+                ->where('ecn_no', $request->ecn_no);
 
-            if ($existingRevision) {
-                $draftLabelId = $existingRevision->revision_label_id ?: null;
+            if ($existingRevisionId) {
+                $conflictQuery->where('id', '!=', $existingRevisionId);
+            }
 
+            $conflictingRevision = $conflictQuery->first();
 
-                if ($draftLabelId == $requestLabelId) {
+            if ($conflictingRevision) {
+                $labelName = $conflictingRevision->revision_label_id
+                    ? DB::table('customer_revision_labels')->where('id', $conflictingRevision->revision_label_id)->value('label')
+                    : '-- No Label --';
 
-                    if ($existingRevision->revision_status === 'draft') {
-                        $files = DB::table('doc_package_revision_files')->where('revision_id', $existingRevision->id)
-                            ->get(['id', 'filename as name', 'category', 'file_size as size'])
-                            ->groupBy('category')->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
-                        return response()->json(['mode' => 'edit_draft', 'revision' => $existingRevision, 'files' => $files]); //
-                    } else {
-                        $files = DB::table('doc_package_revision_files')->where('revision_id', $existingRevision->id)
-                            ->get(['id', 'filename as name', 'category', 'file_size as size'])
-                            ->groupBy('category')->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
+                return response()->json([
+                    'mode' => 'locked',
+                    'message' => 'ECN No. ' . htmlspecialchars($request->ecn_no) . ' is already used by another revision: ' . htmlspecialchars($labelName) . '.'
+                ], 409);
+            }
 
-                        return response()->json([
-                            'mode' => 'locked',
-                            'revision' => $existingRevision,
-                            'files' => $files,
-                            'message' => 'ECN No. ' . htmlspecialchars($request->ecn_no) . ' already exists on this label and is locked with status: ' . ucfirst($existingRevision->revision_status)
-                        ], 409);
-                    }
-                } else {
-                    $labelName = $draftLabelId
-                        ? DB::table('customer_revision_labels')->where('id', $draftLabelId)->value('label')
-                        : '-- No Label --';
+            if ($existingRevisionId) {
+                $currentDraft = DB::table('doc_package_revisions')->where('id', $existingRevisionId)->first();
 
+                if ($currentDraft->revision_status !== 'draft') {
                     return response()->json([
                         'mode' => 'locked',
-                        'message' => 'ECN No. ' . htmlspecialchars($request->ecn_no) . ' is already used by a draft on a different label: ' . htmlspecialchars($labelName) . '.'
+                        'revision' => $currentDraft,
+                        'message' => 'This revision is locked and cannot be edited.'
                     ], 409);
                 }
+
+                $files = DB::table('doc_package_revision_files')->where('revision_id', $currentDraft->id)
+                    ->get(['id', 'filename as name', 'category', 'file_size as size'])
+                    ->groupBy('category')->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
+
+                return response()->json(['mode' => 'edit_draft', 'revision' => $currentDraft, 'files' => $files]);
             }
+
+            $query = DB::table('doc_package_revisions')->where('package_id', $packageId);
+            $maxRevision = $query->max('revision_no');
+            $nextRev = is_null($maxRevision) ? 0 : $maxRevision + 1;
+
+            return response()->json([
+                'mode' => 'create_new',
+                'next_rev' => $nextRev
+            ]);
+
         }
 
         $nextRev = 0;
-        if ($packageId) {
-            $query = DB::table('doc_package_revisions')->where('package_id', $packageId);
-
-            $maxRevision = $query->max('revision_no');
-            $nextRev = is_null($maxRevision) ? 0 : $maxRevision + 1;
-        }
-
         return response()->json([
             'mode' => 'create_new',
             'next_rev' => $nextRev
@@ -151,6 +155,7 @@ class DrawingUploadController extends Controller
             'ecn_no' => 'required|string|max:50',
             'receipt_date' => 'nullable|date',
             'revision_label_id' => 'nullable|integer|exists:customer_revision_labels,id',
+            'revision_no' => 'nullable|integer',
             'existing_revision_id' => 'nullable|integer|exists:doc_package_revisions,id',
             'files_to_delete' => 'nullable|array',
             'files_to_delete.*' => 'integer|exists:doc_package_revision_files,id',
@@ -177,7 +182,7 @@ class DrawingUploadController extends Controller
             $revisionId = $validated['existing_revision_id'] ?? null;
 
             $currentRevisionNo = 0; // Default
-            $isEditMode = (bool) $revisionId;
+            $metaBase = null;
 
             if ($revisionId) {
                 // EDIT MODE
@@ -200,11 +205,69 @@ class DrawingUploadController extends Controller
 
                 if ($revToEdit->revision_status !== 'draft') throw new \Exception("Revision is locked and cannot be edited.");
 
-                if ($r->filled('note') && $revToEdit->note !== $r->note || $r->filled('receipt_date') && $revToEdit->receipt_date !== $r->receipt_date) {
-                    DB::table('doc_package_revisions')->where('id', $revisionId)->update([
-                        'note' => $r->note,
-                        'receipt_date' => $r->receipt_date,
-                    ]);
+                $oldMeta = $this->buildMetaBaseFromDb($revToEdit, $packageIds);
+                $oldRevFolder = PathBuilder::revisionFolderName($oldMeta);
+                $oldRoot = PathBuilder::root($oldMeta);
+                $oldRevPath = $oldRoot . '/' . $oldRevFolder;
+
+                $updates = [];
+                $needsFolderMove = false;
+
+                $newEcn = $r->input('ecn_no');
+                if ($newEcn !== $revToEdit->ecn_no) {
+                    $existing = DB::table('doc_package_revisions')
+                        ->where('package_id', $packageId)
+                        ->where('ecn_no', $newEcn)
+                        ->where('id', '!=', $revisionId)
+                        ->first();
+                    if ($existing) {
+                        throw new \Exception("ECN No. '{$newEcn}' is already in use by another revision for this package.");
+                    }
+                    $updates['ecn_no'] = $newEcn;
+                    $needsFolderMove = true;
+                }
+
+                $newLabelId = $r->input('revision_label_id') ?: null;
+                if ($newLabelId != $revToEdit->revision_label_id) {
+                    $updates['revision_label_id'] = $newLabelId;
+                    $needsFolderMove = true;
+                }
+
+                $newReceiptDate = $r->input('receipt_date') ?: null;
+                if ($newReceiptDate != $revToEdit->receipt_date) {
+                    $updates['receipt_date'] = $newReceiptDate;
+                }
+
+                $newNote = $r->input('note');
+                if ($newNote !== $revToEdit->note) {
+                    $updates['note'] = $newNote;
+                }
+
+                $currentRevisionNo = $revToEdit->revision_no;
+                $metaBase = $this->buildMetaBase($r, $currentRevisionNo); // Pakai rev_no yang ada
+                $newRevFolder = PathBuilder::revisionFolderName($metaBase);
+                $newRoot = PathBuilder::root($metaBase);
+                $newRevPath = $newRoot . '/' . $newRevFolder;
+
+                if (!empty($updates)) {
+                    $updates['updated_at'] = now();
+                    DB::table('doc_package_revisions')->where('id', $revisionId)->update($updates);
+                }
+
+                if ($needsFolderMove && $oldRevPath !== $newRevPath && Storage::disk($this->disk)->exists($oldRevPath)) {
+                    if (Storage::disk($this->disk)->exists($newRevPath)) {
+                        throw new \Exception("Target folder '{$newRevPath}' already exists. Cannot move.");
+                    }
+
+                    Storage::disk($this->disk)->move($oldRevPath, $newRevPath);
+
+                    $filesToUpdate = DB::table('doc_package_revision_files')->where('revision_id', $revisionId)->get();
+                    foreach ($filesToUpdate as $file) {
+                        $newStoragePath = str_replace($oldRevPath, $newRevPath, $file->storage_path);
+                        DB::table('doc_package_revision_files')
+                            ->where('id', $file->id)
+                            ->update(['storage_path' => $newStoragePath, 'updated_at' => now()]);
+                    }
                 }
 
                 $currentRevisionNo = $revToEdit->revision_no;
@@ -234,7 +297,9 @@ class DrawingUploadController extends Controller
                 ]);
             }
 
-            $metaBase = $this->buildMetaBase($r, $currentRevisionNo);
+            if ($metaBase === null) {
+                $metaBase = $this->buildMetaBase($r, $currentRevisionNo);
+            }
 
             if (!empty($validated['files_to_delete'])) {
                 $filesToDelete = DB::table('doc_package_revision_files')->whereIn('id', $validated['files_to_delete'])->get();
@@ -689,7 +754,25 @@ class DrawingUploadController extends Controller
             ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
     }
 
-    private function buildMetaBase(Request $r): array
+    private function buildMetaBaseFromDb(object $revision, array $packageIds): array
+    {
+        $labels = $this->getFolderLabels($packageIds);
+        $partGroup = DB::table('part_groups')->where('id', $packageIds['part_group_id'])->value('code_part_group');
+
+        $revisionLabelName = null;
+        if ($revision->revision_label_id) {
+            $revisionLabelName = DB::table('customer_revision_labels')->where('id', $revision->revision_label_id)->value('label');
+        }
+
+        return $labels + [
+            'part_group' => $partGroup,
+            'revision_label_name' => $revisionLabelName,
+            'rev' => (int) $revision->revision_no,
+            'ecn_no' => $revision->ecn_no,
+        ];
+    }
+
+    private function buildMetaBase(Request $r, int $revNo): array
     {
         $ids = [
             'customer_id' => $r->input('customer_id', $r->input('customer')),
@@ -697,9 +780,12 @@ class DrawingUploadController extends Controller
             'product_id' => $r->input('partNo'),
             'doctype_group_id' => $r->input('docType'),
             'doctype_subcategory_id' => $r->input('category'),
+            'part_group_id' => $r->input('partGroup'),
         ];
         $labels = $this->getFolderLabels($ids);
+
         $partGroup = DB::table('part_groups')->where('id', (int)($r->input('partGroup')))->value('code_part_group');
+
         $revisionLabelName = $r->input('revision_label_id')
             ? DB::table('customer_revision_labels')->where('id', $r->input('revision_label_id'))->value('label')
             : $r->input('label_name');
@@ -707,7 +793,7 @@ class DrawingUploadController extends Controller
         return $labels + [
             'part_group' => $partGroup,
             'revision_label_name' => $revisionLabelName,
-            'rev' => (int)($r->input('revision_no', $r->input('next_rev', 0))),
+            'rev' => $revNo,
             'ecn_no' => $r->input('ecn_no'),
         ];
     }

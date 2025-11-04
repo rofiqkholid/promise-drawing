@@ -66,15 +66,27 @@
   {{-- Filter section --}}
   <div class="mt-8 bg-white dark:bg-gray-800 p-7 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">Filters</h3>
-      <button id="btnResetFilters"
-        type="button"
-        class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600
-               bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
-        <i class="fa-solid fa-rotate-left"></i>
-        Reset Filters
-      </button>
-    </div>
+  <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">Filters</h3>
+  <div class="flex items-center gap-2">
+    <button id="btnDownloadSummary"
+      type="button"
+      class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-green-500
+             bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200
+             hover:bg-green-100 dark:hover:bg-green-900/60">
+      <i class="fa-solid fa-file-excel"></i>
+      Download Summary
+    </button>
+
+    <button id="btnResetFilters"
+      type="button"
+      class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600
+             bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+      <i class="fa-solid fa-rotate-left"></i>
+      Reset Filters
+    </button>
+  </div>
+</div>
+
 
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-5">
       @foreach(['Customer', 'Model', 'Document Type', 'Category', 'Status'] as $label)
@@ -396,6 +408,12 @@
         if (table) table.ajax.reload(null, true);
         loadKPI();
       });
+
+       $('#btnDownloadSummary').on('click', function() {
+    const f = getCurrentFilters();
+    const query = $.param(f);
+    window.location.href = '{{ route("approvals.summary") }}?' + query;
+  });
 
       // klik row -> detail
       $('#approvalTable tbody').on('click', 'tr', function() {

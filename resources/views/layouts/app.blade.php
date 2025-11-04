@@ -49,10 +49,15 @@
         @include('layouts.sidebar')
         <div class="flex-1 flex flex-col pl-20">
             @include('layouts.header')
-            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6">
+
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 pb-20">
                 @yield('content')
             </main>
+
         </div>
+    </div>
+    <div class="fixed bottom-0 left-0 right-0 z-10 pl-20">
+        @include('layouts.footer')
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>

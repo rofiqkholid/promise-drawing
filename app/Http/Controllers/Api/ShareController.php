@@ -4,147 +4,191 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash; // Untuk password hashing
-use Illuminate\Support\Facades\Mail; // Untuk mengirim email
-use Illuminate\Support\Str;        // Untuk token random
-use Carbon\Carbon;
-// use App\Mail\ShareLinkMail;      // Anda perlu membuat Mailable ini
-// use App\Models\SharedLink;       // Anda perlu membuat Model dan tabel ini
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth; 
+use Illuminate\Http\JsonResponse;
 
 class ShareController extends Controller
 {
     /**
-     * Membuat link sharing untuk revisi dan mengirimkannya via email.
+     * Mengambil daftar semua role untuk ditampilkan di popup.
+     * Asumsi: Anda memiliki tabel 'roles' dengan kolom 'id' dan 'name'.
      *
-     * @param Request $request
-     * @param int $revisionId
-     * @return JsonResponse
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function sendShareLink(Request $request, $revisionId): JsonResponse
+    public function getRoles()
     {
-        // 1. Validasi Input
-        $validated = $request->validate([
-            'emails'        => 'required|array|min:1',
-            'emails.*'      => 'required|email:rfc,dns', // Validasi setiap email
-            'duration_days' => 'required|integer|min:1|max:365', // Batasi durasi (misal max 1 tahun)
-            'password'      => 'nullable|string|min:6|required_with:use_password', // Wajib jika checkbox dicentang
-            'use_password'  => 'sometimes|boolean', // Untuk checkbox (dikirim jika dicentang)
-            'message'       => 'nullable|string|max:1000',
-        ]);
-
-        $revisionId = (int) $revisionId;
-        $userId = Auth::id();
-        if (!$userId) {
-            return response()->json(['message' => 'User not authenticated.'], 401);
-        }
-
-        // 2. Ambil data revisi & paket untuk info dan permission check
-        $revision = DB::table('doc_package_revisions as r')
-            ->join('doc_packages as p', 'r.package_id', '=', 'p.id')
-            ->join('products as pr', 'p.product_id', '=', 'pr.id')
-            ->where('r.id', $revisionId)
-            ->select('r.id', 'r.package_id', 'r.revision_no', 'pr.part_no') // Ambil data yang relevan
-            ->first();
-
-        if (!$revision) {
-            return response()->json(['message' => 'Revision not found.'], 404);
-        }
-
-        // 3. !!! PENTING: Implementasikan Pengecekan Permission di sini !!!
-        // Contoh: Apakah user yang login boleh membagikan revisi ini?
-        // $user = $request->user();
-        // if (!$user || !$user->can('share', $revision)) {
-        //     Log::warning("Share Link: Permission denied", ['revisionId' => $revisionId, 'userId' => $userId]);
-        //     return response()->json(['message' => 'Permission denied to share this revision.'], 403);
-        // }
-
-        // 4. Buat Data Share Link
-        $token = Str::random(40); // Token unik
-        $expiresAt = Carbon::now()->addDays($validated['duration_days']);
-        $passwordHash = isset($validated['password']) ? Hash::make($validated['password']) : null;
-        $recipientEmails = implode(',', $validated['emails']); // Simpan sebagai string comma-separated
-
-        // --- BUTUH TABEL BARU: `shared_links` ---
-        // Anda perlu membuat migrasi untuk tabel ini, contoh kolom:
-        // id, token (unique index), revision_id, shared_by_user_id, recipient_emails (text),
-        // expires_at (datetime), password (nullable string), created_at, updated_at
         try {
-             DB::table('shared_links')->insert([ // Ganti dengan Model jika Anda membuatnya
-                 'token' => $token,
-                 'revision_id' => $revisionId,
-                 'shared_by_user_id' => $userId,
-                 'recipient_emails' => $recipientEmails,
-                 'expires_at' => $expiresAt,
-                 'password' => $passwordHash,
-                 'created_at' => Carbon::now(),
-                 'updated_at' => Carbon::now(),
-             ]);
-            // Atau jika pakai Model: SharedLink::create([...]);
+            // Mengambil data dari tabel 'roles' tanpa model
+            // Asumsi 'is_active' atau semacamnya, sesuaikan jika perlu
+            $roles = DB::table('roles')
+                ->select('id', 'role_name')
+                // ->where('is_active', 1) 
+                ->orderBy('role_name', 'asc')
+                ->get();
 
+            return response()->json($roles);
         } catch (\Exception $e) {
-            Log::error("Share Link: Failed to create share record in DB", [
-                'revisionId' => $revisionId, 'userId' => $userId, 'error' => $e->getMessage()
-            ]);
-            return response()->json(['message' => 'Could not create share link record.'], 500);
+            Log::error('ShareController@getRoles failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Gagal memuat daftar role'], 500);
         }
-        // --- AKHIR BAGIAN TABEL BARU ---
-
-        // 5. Buat URL Publik (Anda perlu definisikan route ini)
-        // Contoh nama route: 'public.share.view'
-        try {
-            $shareUrl = route('public.share.view', ['token' => $token]);
-        } catch(\Exception $e) {
-             Log::error("Share Link: Route 'public.share.view' not defined.", ['exception' => $e]);
-             // Hapus record DB yang baru dibuat jika URL gagal dibuat
-             DB::table('shared_links')->where('token', $token)->delete();
-             return response()->json(['message' => 'Server configuration error (route missing).'], 500);
-        }
-
-
-        // 6. Kirim Email ke Setiap Penerima
-        // --- BUTUH MAILABLE BARU: `ShareLinkMail` ---
-        // Buat mailable: php artisan make:mail ShareLinkMail
-        // Desain email di resource/views/emails/share_link.blade.php
-        $mailData = [
-            'shareUrl' => $shareUrl,
-            'sharerName' => Auth::user()->name ?? 'A user', // Nama pengirim
-            'partNo' => $revision->part_no,
-            'revisionNo' => $revision->revision_no,
-            'expiresAt' => $expiresAt->format('Y-m-d H:i'),
-            'isPasswordProtected' => !is_null($passwordHash),
-            'customMessage' => $validated['message'] ?? null,
-        ];
-
-        try {
-            foreach ($validated['emails'] as $email) {
-                // Gunakan Queue jika memungkinkan untuk performa lebih baik
-                Mail::to($email)->send(new \App\Mail\ShareLinkMail($mailData)); // Ganti namespace jika perlu
-            }
-        } catch (\Exception $e) {
-            Log::error("Share Link: Failed to send email", [
-                'revisionId' => $revisionId, 'emails' => $validated['emails'], 'error' => $e->getMessage()
-            ]);
-            // Email gagal terkirim, tapi link sudah dibuat. Beri tahu user.
-            return response()->json([
-                'success' => true, // Link tetap berhasil dibuat
-                'message' => 'Share link created, but failed to send email automatically. Please check logs.'
-            ], 207); // 207 Multi-Status
-        }
-        // --- AKHIR BAGIAN MAILABLE ---
-
-        // 7. Berhasil
-        return response()->json([
-            'success' => true,
-            'message' => 'Share link sent successfully to ' . count($validated['emails']) . ' recipient(s).'
-        ]);
     }
 
-    // Anda perlu membuat method (dan route) publik untuk menangani $shareUrl
-    // public function viewSharedLink($token) { ... }
-    // Method ini akan: validasi token, cek expiry, minta password jika ada,
-    // tampilkan detail revisi & file, sediakan tombol download ZIP (memanggil downloadPackageZip)
+    /**
+     * Meng-update kolom 'share_to' di tabel 'doc_packages'.
+     *
+     * @param Request $request
+     * @param int $packageId ID dari doc_packages yang akan di-update
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateShare(Request $request, $packageId)
+    {
+        // Validasi input
+        $validator = Validator::make($request->all(), [
+            'role_id' => 'required|integer'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 400);
+        }
+
+        $roleId = $request->input('role_id');
+        $userId = Auth::id(); // Ambil ID user yg melakukan aksi
+
+        try {
+            // 1. Cek apakah role_id valid (ada di tabel roles)
+            $roleExists = DB::table('roles')->where('id', $roleId)->exists();
+            if (!$roleExists) {
+                return response()->json(['error' => 'Role ID tidak valid'], 400);
+            }
+
+            // 2. Lakukan update di tabel 'doc_packages' tanpa model
+            $updateCount = DB::table('doc_packages')
+                ->where('id', $packageId)
+                ->update([
+                    'share_to' => $roleId,
+                    'updated_at' => now(),
+                    'updated_by' => $userId // Asumsi Anda punya kolom ini
+                ]);
+
+            if ($updateCount == 0) {
+                // Bisa jadi package ID-nya tidak ditemukan
+                return response()->json(['error' => 'Doc Package tidak ditemukan'], 404);
+            }
+
+            // Ambil nama role untuk pesan sukses
+            $roleName = DB::table('roles')->where('id', $roleId)->value('name');
+
+            return response()->json([
+                'success' => "Paket berhasil dibagikan ke role: {$roleName}"
+            ]);
+        } catch (\Exception $e) {
+            Log::error("ShareController@updateShare failed for package $packageId: " . $e->getMessage());
+            return response()->json(['error' => 'Update database gagal'], 500);
+        }
+    }
+
+    public function listPackage(Request $request): JsonResponse
+    {
+        $draw = $request->get('draw', 1);
+        $start = $request->get('start', 0);
+        $length = $request->get('length', 10);
+        $search = $request->get('search')['value'] ?? '';
+        $order = $request->get('order')[0] ?? null;
+
+        $query = DB::table('doc_package_revisions as r')
+            ->leftJoin('doc_packages as p', 'r.package_id', '=', 'p.id')
+            ->leftJoin('customers as c', 'p.customer_id', '=', 'c.id')
+            ->leftJoin('models as m', 'p.model_id', '=', 'm.id')
+            ->leftJoin('products as pr', 'p.product_id', '=', 'pr.id')
+            ->leftJoin('customer_revision_labels as crl', 'r.revision_label_id', '=', 'crl.id')
+            ->leftJoin('doctype_groups as dg', 'p.doctype_group_id', '=', 'dg.id')
+            ->leftJoin('doctype_subcategories as sc', 'p.doctype_subcategory_id', '=', 'sc.id')
+            ->leftJoin('part_groups as pg', 'p.part_group_id', '=', 'pg.id');
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('p.package_no', 'like', "%{$search}%")
+                    ->orWhere('c.code', 'like', "%{$search}%")
+                    ->orWhere('m.name', 'like', "%{$search}%")
+                    ->orWhere('pr.part_no', 'like', "%{$search}%")
+                    ->orWhere('r.revision_no', 'like', "%{$search}%")
+                    ->orWhere('r.ecn_no', 'like', "%{$search}%")
+                    ->orWhere('crl.label', 'like', "%{$search}%")
+                    ->orWhere('dg.name', 'like', "%{$search}%")
+                    ->orWhere('sc.name', 'like', "%{$search}%")
+                    ->orWhere('pg.code_part_group', 'like', "%{$search}%");
+            });
+        }
+
+        $totalRecords = DB::table('doc_package_revisions')->count();
+
+        $filteredRecords = $query->count();
+
+        if ($order) {
+            $sortBy = $order['column'];
+            $direction = $order['dir'];
+            $columnName = $request->get('columns')[$sortBy]['name'];
+
+            $columnMap = [
+                'package_no' => 'p.package_no',
+                'customer' => 'c.code',
+                'model' => 'm.name',
+                'part_no' => 'pr.part_no',
+                'revision_no' => 'r.revision_no',
+                'uploaded_at' => 'r.created_at',
+                'status' => 'r.revision_status',
+                'ecn_no' => 'r.ecn_no',
+                'doctype_group' => 'dg.name',
+                'doctype_subcategory' => 'sc.name',
+                'part_group' => 'pg.code_part_group'
+            ];
+
+            $dbColumn = $columnMap[$columnName] ?? 'r.created_at';
+            $query->orderBy($dbColumn, $direction);
+        } else {
+            $query->orderBy('r.created_at', 'desc');
+        }
+
+        $rows = $query->skip($start)->take($length)->get([
+            'r.id as id',
+            'p.package_no as package_no',
+            'c.code as customer',
+            'm.name as model',
+            'pr.part_no as part_no',
+            'r.revision_no as revision_no',
+            'r.created_at as uploaded_at',
+            'r.revision_status as status',
+            'r.ecn_no as ecn_no',
+            'crl.label as revision_label_name',
+            'dg.name as doctype_group',
+            'sc.name as doctype_subcategory',
+            'pg.code_part_group as part_group'
+        ])->map(function ($row) {
+            return [
+                'id' => str_replace('=', '-', encrypt($row->id)),
+                'package_no' => $row->package_no,
+                'customer' => $row->customer ?? '-',
+                'model' => $row->model ?? '-',
+                'part_no' => $row->part_no ?? '-',
+                'revision_no' => is_null($row->revision_no) ? '0' : (string)$row->revision_no,
+                'uploaded_at' => $row->uploaded_at ? date('Y-m-d H:i:s', strtotime($row->uploaded_at)) : null,
+                'status' => $row->status ?? 'draft',
+                'ecn_no' => $row->ecn_no ?? '-',
+                'revision_label_name' => $row->revision_label_name,
+                'doctype_group' => $row->doctype_group ?? '-',
+                'doctype_subcategory' => $row->doctype_subcategory ?? '-',
+                'part_group' => $row->part_group ?? '-'
+            ];
+        });
+
+        return response()->json([
+            'draw' => (int) $draw,
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $rows
+        ]);
+    }
 }

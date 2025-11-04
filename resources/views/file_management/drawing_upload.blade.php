@@ -48,53 +48,53 @@
                         location.</p>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div wire:ignore>
+                        <div>
                             <label for="customer"
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
                             <select id="customer" name="customer" class="mt-1 block w-full" :disabled="isMetadataLocked"></select>
                         </div>
-                        <div wire:ignore>
+                        <div>
                             <label for="model"
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
-                            <select id="model" name="model" class="mt-1 block w-full" :disabled="isMetadataLocked"></select>
+                            <select id="model" name="model" class="mt-1 block w-full" :disabled="isMetadataLocked || !customer"></select>
                         </div>
-                        <div wire:ignore>
+                        <div>
                             <label for="partNo"
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part
                                 No</label>
-                            <select id="partNo" name="partNo" class="mt-1 block w-full" :disabled="isMetadataLocked"></select>
+                            <select id="partNo" name="partNo" class="mt-1 block w-full" :disabled="isMetadataLocked || !model"></select>
                         </div>
-                        <div wire:ignore>
+                        <div>
                             <label for="docType"
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300">Document
                                 Type</label>
-                            <select id="docType" name="docType" class="mt-1 block w-full" :disabled="isMetadataLocked"></select>
+                            <select id="docType" name="docType" class="mt-1 block w-full" :disabled="isMetadataLocked || !partNo"></select>
                         </div>
-                        <div wire:ignore>
+                        <div>
                             <label for="category"
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
-                            <select id="category" name="category" class="mt-1 block w-full" :disabled="isMetadataLocked"></select>
+                            <select id="category" name="category" class="mt-1 block w-full" :disabled="isMetadataLocked || !docType"></select>
                         </div>
-                        <div wire:ignore>
+                        <div>
                             <label for="partGroup"
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
-                            <select id="partGroup" name="partGroup" class="mt-1 block w-full" :disabled="isMetadataLocked"></select>
+                            <select id="partGroup" name="partGroup" class="mt-1 block w-full" :disabled="isMetadataLocked || !category"></select>
                         </div>
 
                         <div class="sm:col-span-2 grid grid-cols-2 gap-6">
                             <div>
                                 <label for="ecn_no" class="block text-sm font-medium text-gray-700 dark:text-gray-300">ECN Number</label>
-                                <input type="text" x-model.debounce.500ms="ecn_no" id="ecn_no" name="ecn_no" class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" :disabled="isReadOnly">
+                                <input type="text" x-model.debounce.500ms="ecn_no" id="ecn_no" name="ecn_no" class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" :disabled="isReadOnly || !isMetadataFilled">
                             </div>
                             <div>
                                 <label for="receipt_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Receipt Date</label>
-                                <input type="date" x-model="receipt_date" id="receipt_date" name="receipt_date" class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" :disabled="isReadOnly">
+                                <input type="date" x-model="receipt_date" id="receipt_date" name="receipt_date" class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" :disabled="isReadOnly || !isMetadataFilled">
                             </div>
                         </div>
 
                         <div class="sm:col-span-2" x-show="customerHasLabels" x-transition>
                             <label for="revision_label_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Revision Label</label>
-                            <select id="revision_label_id" name="revision_label_id" class="mt-1 block w-full" :disabled="isReadOnly"></select>
+                            <select id="revision_label_id" name="revision_label_id" class="mt-1 block w-full" :disabled="isReadOnly || !isMetadataFilled"></select>
                         </div>
 
                         <div class="sm:col-span-2">
@@ -103,7 +103,7 @@
                                 (optional)</label>
                             <textarea x-model="note" id="note" name="note" rows="3"
                                 class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                                :disabled="isReadOnly"></textarea>
+                                :disabled="isReadOnly || !isMetadataFilled"></textarea>
                             <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">A short note that will be saved on
                                 the selected package revision.</p>
                         </div>
@@ -325,15 +325,15 @@
 
         <div class="flex justify-end pt-4 gap-4" x-show="!isReadOnly" x-transition>
             <button type="submit" id="submit-button"
-                :disabled="!isMetadataFilled || isUploading || (draftSaved && !hasNewFiles)"
-                class="inline-flex items-center gap-2 justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800">
+                :disabled="!isMetadataFilled || isUploading || (draftSaved && !isDirty)"
+                class="inline-flex items-center gap-2 justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 enabled:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800">
                 <i class="fa-solid" :class="{ 'fa-upload': !isUploading, 'fa-spinner fa-spin': isUploading }"></i>
-                <span x-text="isUploading ? 'Uploading...' : 'Upload to Draft'"></span>
+                <span x-text="isUploading ? 'Uploading...' : (draftSaved ? 'Update Draft' : 'Save to Draft')"></span>
             </button>
 
             <button type="button" @click="requestApproval"
-                :disabled="!draftSaved || approvalRequested || hasNewFiles"
-                class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed">
+                :disabled="!draftSaved || approvalRequested || isDirty"
+                class="px-4 py-2 bg-yellow-500 enabled:hover:bg-yellow-600 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed">
                 <span x-show="!approvalRequested"><i class="fa-solid fa-paper-plane mr-1"></i> Request Approval</span>
                 <span x-show="approvalRequested"><i class="fa-solid fa-check mr-1"></i> Requested</span>
             </button>
@@ -533,6 +533,13 @@
             revision_label_id: null,
             note: '',
 
+            originalDraftData: {
+                ecn_no: '',
+                receipt_date: '',
+                note: '',
+                revision_label_id: null
+            },
+
             customerHasLabels: false,
             revisionCheck: {
                 status: null, // null, 'checking', 'create_new', 'edit_draft', 'locked'
@@ -575,12 +582,25 @@
             savedPackageId: null,
             savedRevisionId: null,
             hasNewFiles: false,
+            // isDirty: false,
             isLoadingDraft: false,
+            // originalEcnNo: '',
             isReadOnly: false,
             isCreatingNewRevision: false,
             originalRevisionStatus: null,
 
             // --- COMPUTED ---
+            get isDirty() {
+                if (this.isLoadingDraft) return false;
+                if (this.hasNewFiles) return true;
+                if (this.filesToDelete.length > 0) return true;
+                if (this.ecn_no !== this.originalDraftData.ecn_no) return true;
+                if (this.receipt_date !== this.originalDraftData.receipt_date) return true;
+                if ((this.note || '') !== this.originalDraftData.note) return true;
+                if (this.revision_label_id != this.originalDraftData.revision_label_id) return true;
+                return false;
+            },
+
             get isMetadataFilled() {
                 return this.customer && this.model && this.partNo && this.docType && this.partGroup;
             },
@@ -670,6 +690,23 @@
                             model_id: this.model
                         });
                 });
+
+                // this.$watch('ecn_no', (newValue, oldValue) => {
+                //     if (this.isLoadingDraft) return;
+                //     if (newValue !== this.originalEcnNo) {
+                //         this.isDirty = true;
+                //     } else {
+                //         this.isDirty = false;
+                //     }
+                // });
+
+                // this.$watch('receipt_date', () => {
+                //     if (!this.isLoadingDraft) this.isDirty = true;
+                // });
+
+                // this.$watch('note', () => {
+                //     if (!this.isLoadingDraft) this.isDirty = true;
+                // });
 
                 this.$watch('isFormReady', (isReady) => {
                     if (isReady && !this.isLoadingDraft && !this.isReadOnly) {
@@ -789,6 +826,8 @@
                         this.revisionStatus = pkg.revision_status;
                         this.originalRevisionStatus = pkg.revision_status;
 
+                        // this.originalEcnNo = pkg.ecn_no;
+
                         if (isReadOnly) {
                             this.isReadOnly = true;
                         } else if (pkg.revision_status !== 'draft') {
@@ -799,6 +838,13 @@
                         this.ecn_no = pkg.ecn_no;
                         this.receipt_date = pkg.receipt_date ? pkg.receipt_date.split(' ')[0] : '';
                         this.note = pkg.revision_note;
+
+                        this.originalDraftData = {
+                            ecn_no: this.ecn_no,
+                            receipt_date: this.receipt_date,
+                            note: this.note || '',
+                            revision_label_id: this.revision_label_id
+                        };
 
                         this.customer = pkg.customer_id;
                         this.model = pkg.model_id;
@@ -895,6 +941,8 @@
                 this.revision_label_id = null;
                 $('#revision_label_id').val(null).trigger('change');
 
+                this.originalDraftData = { ecn_no: '', receipt_date: '', note: '', revision_label_id: null };
+
                 this.clearFileStores();
                 this.filesToDelete = [];
                 this.hasNewFiles = false;
@@ -973,6 +1021,7 @@
                 if (!this.isFormReady) return;
 
                 this.revisionCheck.status = 'checking';
+                const currentRevId = this.savedRevisionId || (this.revisionCheck.revision ? this.revisionCheck.revision.id : null);
 
                 $.ajax({
                     url: "{{ route('upload.drawing.check-status') }}",
@@ -986,7 +1035,8 @@
                         category: this.category || null,
                         partGroup: this.partGroup,
                         ecn_no: this.ecn_no,
-                        revision_label_id: this.revision_label_id || null
+                        revision_label_id: this.revision_label_id || null,
+                        existing_revision_id: currentRevId
                     },
                     success: (res) => {
                         this.revisionCheck.status = res.mode;
@@ -998,8 +1048,10 @@
                         } else if (res.mode === 'edit_draft') {
                             this.revisionCheck.revision = res.revision;
                             this.revisionCheck.files = res.files;
-                            this.note = res.revision.note;
-                            this.receipt_date = res.revision.receipt_date ? res.revision.receipt_date.split(' ')[0] : '';
+                            if (!this.draftSaved) {
+                                this.note = res.revision.note;
+                                this.receipt_date = res.revision.receipt_date ? res.revision.receipt_date.split(' ')[0] : '';
+                            }
                             this.filesToDelete = [];
                             this.populateFileStores(res.files);
                         } else if (res.mode === 'locked') {
@@ -1013,8 +1065,10 @@
                             this.revisionCheck.message = res.message || 'Failed to check revision status.';
                             if (res.revision) {
                                 this.revisionCheck.revision = res.revision;
-                                this.note = res.revision.note;
-                                this.receipt_date = res.revision.receipt_date ? res.revision.receipt_date.split(' ')[0] : '';
+                                if (!this.draftSaved) {
+                                    this.note = res.revision.note;
+                                    this.receipt_date = res.revision.receipt_date ? res.revision.receipt_date.split(' ')[0] : '';
+                                }
                                 if (res.files) {
                                     this.populateFileStores(res.files);
                                 }
@@ -1127,6 +1181,7 @@
                     if (this.draftSaved) {
                         this.hasNewFiles = true;
                         this.approvalRequested = false;
+                        // this.isDirty = true;
                     }
                 }
 
@@ -1146,6 +1201,8 @@
                 if (index > -1) {
                     this.fileStores[category].splice(index, 1);
                 }
+
+                // this.isDirty = true;
 
                 if (this.draftSaved) {
                     const hasNewFiles = Object.values(this.fileStores).some(categoryFiles =>
@@ -1244,14 +1301,14 @@
                 return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
             },
             submitForm() {
-                const totalFiles = this.enabledCategories.reduce((acc, cat) => acc + this.fileStores[cat].filter(f => !f.uploaded).length, 0);
+                if (!this.isDirty) {
+                    toastInfo('No Changes', 'There are no changes to save.');
+                    return;
+                }
 
-                if (totalFiles === 0 && this.filesToDelete.length === 0) {
-                    if (this.draftSaved) {
-                        toastInfo('No Changes', 'There are no new files to upload or files to delete.');
-                    } else {
-                        toastWarning('Warning', 'Please select at least one file to upload.');
-                    }
+                const totalFiles = this.enabledCategories.reduce((acc, cat) => acc + this.fileStores[cat].filter(f => !f.uploaded).length, 0);
+                if (!this.draftSaved && totalFiles === 0) {
+                    toastWarning('New Draft Requires Files', 'Please select at least one file to upload for a new draft.');
                     return;
                 }
 
@@ -1342,6 +1399,15 @@
                         this.hasNewFiles = false;
                         this.approvalRequested = false;
                         this.filesToDelete = [];
+                        // this.isDirty = false;
+                        // this.originalEcnNo = this.ecn_no;
+
+                        this.originalDraftData = {
+                            ecn_no: this.ecn_no,
+                            receipt_date: this.receipt_date,
+                            note: this.note || '',
+                            revision_label_id: this.revision_label_id
+                        };
 
                         this.enableMetadataEditing(false);
                         this.checkRevisionStatus();
@@ -1362,7 +1428,7 @@
             },
             enableMetadataEditing(allow) {
                 const selectors = ['#customer', '#model', '#partNo', '#docType', '#category',
-                    '#partGroup', '#ecn_no', '#revision_label_id'
+                    '#partGroup'
                 ];
                 selectors.forEach(s => {
                     $(s).prop('disabled', !allow).trigger('change.select2');

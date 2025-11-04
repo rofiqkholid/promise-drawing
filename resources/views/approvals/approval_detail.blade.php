@@ -13,7 +13,7 @@
 
       <!-- ===== Meta Card ===== -->
       <div x-ref="metaCard"
-           class="self-start bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+        class="self-start bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
         <!-- Header -->
         <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 md:justify-between">
@@ -23,11 +23,11 @@
             </h2>
 
             @php
-              $backUrl = url()->previous();
-              $backUrl = ($backUrl && $backUrl !== url()->current()) ? $backUrl : route('approval');
+            $backUrl = url()->previous();
+            $backUrl = ($backUrl && $backUrl !== url()->current()) ? $backUrl : route('approval');
             @endphp
             <a href="{{ $backUrl }}"
-               class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
+              class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
               <i class="fa-solid fa-arrow-left"></i>
               Back
             </a>
@@ -37,8 +37,8 @@
         <!-- Body: single line with dashes -->
         <div class="p-4">
           <p class="text-sm text-gray-900 dark:text-gray-100 truncate"
-             x-text="metaLine()"
-             :title="metaLine()"></p>
+            x-text="metaLine()"
+            :title="metaLine()"></p>
         </div>
 
         <!-- Footer (Approve / Reject / Rollback) -->
@@ -63,7 +63,7 @@
 
       <!-- ===== File Groups (2D / 3D / ECN) ===== -->
       @php
-        function renderFileGroup($title, $icon, $category) {
+      function renderFileGroup($title, $icon, $category) {
       @endphp
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
         <button @click="toggleSection('{{$category}}')" class="w-full p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between focus:outline-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200" :aria-expanded="openSections.includes('{{$category}}')">
@@ -100,7 +100,7 @@
             <span class="text-sm font-medium text-gray-900 dark:text-gray-100">Activity Log</span>
           </div>
           <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full"
-                x-text="`${pkg.activityLogs?.length || 0} events`"></span>
+            x-text="`${pkg.activityLogs?.length || 0} events`"></span>
         </div>
 
         <div class="p-2 space-y-2" role="log" aria-label="Activity Log">
@@ -155,7 +155,7 @@
               <p class="text-xs text-gray-500 dark:text-gray-400">Last updated: {{ now()->format('M d, Y H:i') }}</p>
             </div>
             <a x-show="selectedFile?.url" :href="selectedFile?.url" target="_blank" rel="noopener"
-               class="inline-flex items-center px-3 py-1.5 text-xs text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
+              class="inline-flex items-center px-3 py-1.5 text-xs text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
               <i class="fa-solid fa-up-right-from-square mr-2"></i> Open
             </a>
           </div>
@@ -179,7 +179,9 @@
             <!-- TIFF -->
             <template x-if="isTiff(selectedFile?.name)">
               <div class="w-full">
-                <canvas x-ref="tifCanvas" class="w-full max-h-[70vh] object-contain bg-black/5 rounded"></canvas>
+                <canvas x-ref="tifCanvas"
+        class="max-w-full max-h-[70vh] object-contain bg-black/5 rounded"></canvas>
+
                 <div x-show="tifLoading" class="text-xs text-gray-500 mt-2">Rendering TIFF…</div>
                 <div x-show="tifError" class="text-xs text-red-600 mt-2" x-text="tifError"></div>
               </div>
@@ -201,12 +203,12 @@
 
                   <div class="inline-flex items-center gap-2 ml-2">
                     <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
-                            :class="{'bg-blue-50 dark:bg-blue-900/30': iges.measure.enabled}"
-                            @click="toggleMeasure()">
+                      :class="{'bg-blue-50 dark:bg-blue-900/30': iges.measure.enabled}"
+                      @click="toggleMeasure()">
                       Measure
                     </button>
                     <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
-                            @click="clearMeasurements()">
+                      @click="clearMeasurements()">
                       Clear
                     </button>
                   </div>
@@ -239,10 +241,10 @@
 
   <!-- APPROVE MODAL -->
   <div x-show="showApproveModal"
-       x-transition.opacity
-       x-cloak
-       class="fixed inset-0 z-50 flex items-center justify-center"
-       aria-modal="true" role="dialog">
+    x-transition.opacity
+    x-cloak
+    class="fixed inset-0 z-50 flex items-center justify-center"
+    aria-modal="true" role="dialog">
     <div class="absolute inset-0 bg-black/40" @click="closeApproveModal()"></div>
 
     <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
@@ -262,7 +264,7 @@
           Cancel
         </button>
         <button @click="confirmApprove()" :disabled="processing"
-                class="px-3 py-1.5 rounded-md bg-green-600 text-white text-sm hover:bg-green-700 disabled:opacity-60">
+          class="px-3 py-1.5 rounded-md bg-green-600 text-white text-sm hover:bg-green-700 disabled:opacity-60">
           <span x-show="!processing">Yes, Approve</span>
           <span x-show="processing">Processing…</span>
         </button>
@@ -272,10 +274,10 @@
 
   <!-- REJECT MODAL -->
   <div x-show="showRejectModal"
-       x-transition.opacity
-       x-cloak
-       class="fixed inset-0 z-50 flex items-center justify-center"
-       aria-modal="true" role="dialog">
+    x-transition.opacity
+    x-cloak
+    class="fixed inset-0 z-50 flex items-center justify-center"
+    aria-modal="true" role="dialog">
     <div class="absolute inset-0 bg-black/40" @click="closeRejectModal()"></div>
 
     <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg mx-4 overflow-hidden">
@@ -292,7 +294,7 @@
 
       <div class="px-5 pb-2">
         <textarea x-model.trim="rejectNote" rows="4" placeholder="Enter rejection note here..."
-                  class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm p-3 focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
+          class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm p-3 focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
         <p class="mt-1 text-xs text-red-600" x-show="rejectNoteError">Note is required</p>
       </div>
 
@@ -301,8 +303,8 @@
           Cancel
         </button>
         <button @click="confirmReject()"
-                :disabled="processing || rejectNote.length === 0"
-                class="px-3 py-1.5 rounded-md bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-60">
+          :disabled="processing || rejectNote.length === 0"
+          class="px-3 py-1.5 rounded-md bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-60">
           <span x-show="!processing">Yes, Reject</span>
           <span x-show="processing">Processing…</span>
         </button>
@@ -312,10 +314,10 @@
 
   <!-- ROLLBACK MODAL -->
   <div x-show="showRollbackModal"
-       x-transition.opacity
-       x-cloak
-       class="fixed inset-0 z-50 flex items-center justify-center"
-       aria-modal="true" role="dialog">
+    x-transition.opacity
+    x-cloak
+    class="fixed inset-0 z-50 flex items-center justify-center"
+    aria-modal="true" role="dialog">
     <div class="absolute inset-0 bg-black/40" @click="closeRollbackModal()"></div>
 
     <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
@@ -335,7 +337,7 @@
           Cancel
         </button>
         <button @click="confirmRollback()" :disabled="processing"
-                class="px-3 py-1.5 rounded-md bg-amber-600 text-white text-sm hover:bg-amber-700 disabled:opacity-60">
+          class="px-3 py-1.5 rounded-md bg-amber-600 text-white text-sm hover:bg-amber-700 disabled:opacity-60">
           <span x-show="!processing">Yes, Rollback</span>
           <span x-show="processing">Processing…</span>
         </button>
@@ -347,10 +349,22 @@
 </div>
 
 <style>
-  [x-collapse] { @apply overflow-hidden transition-all duration-300 ease-in-out; }
-  .preview-area { @apply bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center; }
-  [x-cloak] { display: none !important; }
-  .measure-label { user-select: none; white-space: nowrap; }
+  [x-collapse] {
+    @apply overflow-hidden transition-all duration-300 ease-in-out;
+  }
+
+  .preview-area {
+    @apply bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center;
+  }
+
+  [x-cloak] {
+    display: none !important;
+  }
+
+  .measure-label {
+    user-select: none;
+    white-space: nowrap;
+  }
 </style>
 
 @endsection
@@ -363,12 +377,17 @@
 <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 
 <!-- UTIF.js untuk render TIFF -->
-<script src="https://unpkg.com/utif@3.1.0/dist/UTIF.min.js"></script>
+<!-- UTIF.js untuk render TIFF (v2, API klasik) -->
+<script src="https://unpkg.com/utif@2.0.1/UTIF.js"></script>
+
+
+
+
 
 <!-- ES Module shims + Import Map untuk Three.js (module) -->
 <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
 <script type="importmap">
-{
+  {
   "imports": {
     "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
     "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
@@ -390,46 +409,114 @@
       fg: '#E5E7EB',
       border: 'rgba(71, 85, 105, 0.5)',
       progress: 'rgba(255,255,255,.9)',
-      icon: { success: '#22c55e', error: '#ef4444', warning: '#f59e0b', info: '#3b82f6' }
+      icon: {
+        success: '#22c55e',
+        error: '#ef4444',
+        warning: '#f59e0b',
+        info: '#3b82f6'
+      }
     } : {
       mode: 'light',
       bg: 'rgba(255, 255, 255, 0.98)',
       fg: '#0f172a',
       border: 'rgba(226, 232, 240, 1)',
       progress: 'rgba(15,23,42,.8)',
-      icon: { success: '#16a34a', error: '#dc2626', warning: '#d97706', info: '#2563eb' }
+      icon: {
+        success: '#16a34a',
+        error: '#dc2626',
+        warning: '#d97706',
+        info: '#2563eb'
+      }
     };
   }
   const BaseToast = Swal.mixin({
-    toast: true, position: 'top-end', showConfirmButton: false,
-    timer: 2600, timerProgressBar: true,
-    showClass: { popup: 'swal2-animate-toast-in' },
-    hideClass: { popup: 'swal2-animate-toast-out' },
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 2600,
+    timerProgressBar: true,
+    showClass: {
+      popup: 'swal2-animate-toast-in'
+    },
+    hideClass: {
+      popup: 'swal2-animate-toast-out'
+    },
     didOpen: (toast) => {
       toast.addEventListener('mouseenter', Swal.stopTimer);
       toast.addEventListener('mouseleave', Swal.resumeTimer);
     }
   });
-  function renderToast({ icon = 'success', title = 'Success', text = '' } = {}) {
+
+  function renderToast({
+    icon = 'success',
+    title = 'Success',
+    text = ''
+  } = {}) {
     const t = detectTheme();
     BaseToast.fire({
-      icon, title, text,
+      icon,
+      title,
+      text,
       iconColor: t.icon[icon] || t.icon.success,
-      background: t.bg, color: t.fg,
-      customClass: { popup: 'swal2-toast border', title: '', timerProgressBar: '' },
+      background: t.bg,
+      color: t.fg,
+      customClass: {
+        popup: 'swal2-toast border',
+        title: '',
+        timerProgressBar: ''
+      },
       didOpen: (toast) => {
-        const bar = toast.querySelector('.swal2-timer-progress-bar'); if (bar) bar.style.background = t.progress;
-        const popup = toast.querySelector('.swal2-popup'); if (popup) popup.style.borderColor = t.border;
+        const bar = toast.querySelector('.swal2-timer-progress-bar');
+        if (bar) bar.style.background = t.progress;
+        const popup = toast.querySelector('.swal2-popup');
+        if (popup) popup.style.borderColor = t.border;
         toast.addEventListener('mouseenter', Swal.stopTimer);
         toast.addEventListener('mouseleave', Swal.resumeTimer);
       }
     });
   }
-  function toastSuccess(title='Berhasil', text='Operasi berhasil dijalankan.') { renderToast({icon:'success', title, text}); }
-  function toastError(title='Gagal', text='Terjadi kesalahan.') { BaseToast.update({timer:3400}); renderToast({icon:'error', title, text}); BaseToast.update({timer:2600}); }
-  function toastWarning(title='Peringatan', text='Periksa kembali data Anda.') { renderToast({icon:'warning', title, text}); }
-  function toastInfo(title='Informasi', text='') { renderToast({icon:'info', title, text}); }
-  window.toastSuccess = toastSuccess; window.toastError = toastError; window.toastWarning = toastWarning; window.toastInfo = toastInfo;
+
+  function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') {
+    renderToast({
+      icon: 'success',
+      title,
+      text
+    });
+  }
+
+  function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') {
+    BaseToast.update({
+      timer: 3400
+    });
+    renderToast({
+      icon: 'error',
+      title,
+      text
+    });
+    BaseToast.update({
+      timer: 2600
+    });
+  }
+
+  function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') {
+    renderToast({
+      icon: 'warning',
+      title,
+      text
+    });
+  }
+
+  function toastInfo(title = 'Informasi', text = '') {
+    renderToast({
+      icon: 'info',
+      title,
+      text
+    });
+  }
+  window.toastSuccess = toastSuccess;
+  window.toastError = toastError;
+  window.toastWarning = toastWarning;
+  window.toastInfo = toastInfo;
 
   /* ========== Alpine Component ========== */
   function approvalDetail() {
@@ -441,59 +528,120 @@
       openSections: [],
 
       // modal
-      showApproveModal: false, showRejectModal: false, processing: false,
-      rejectNote: '', rejectNoteError: false,
+      showApproveModal: false,
+      showRejectModal: false,
+      processing: false,
+      rejectNote: '',
+      rejectNoteError: false,
       showRollbackModal: false,
 
       // TIFF state
-      tifLoading: false, tifError: '',
+      tifLoading: false,
+      tifError: '',
 
       // CAD viewer state
       iges: {
-        renderer: null, scene: null, camera: null, controls: null, animId: 0,
-        loading: false, error: '',
+        renderer: null,
+        scene: null,
+        camera: null,
+        controls: null,
+        animId: 0,
+        loading: false,
+        error: '',
         rootModel: null,
         THREE: null,
-        measure: { enabled: false, group: null, p1: null, p2: null }
+        measure: {
+          enabled: false,
+          group: null,
+          p1: null,
+          p2: null
+        }
       },
       _onIgesResize: null,
 
       /* ===== Helpers jenis file ===== */
-      extOf(name){ const i = (name||'').lastIndexOf('.'); return i>-1 ? (name||'').slice(i+1).toLowerCase() : ''; },
-      isImage(name) { return ['png','jpg','jpeg','webp','gif','bmp'].includes(this.extOf(name)); },
-      isPdf(name)   { return this.extOf(name) === 'pdf'; },
-      isTiff(name)  { return ['tif','tiff'].includes(this.extOf(name)); },
-      isCad(name)   { return ['igs','iges','stp','step'].includes(this.extOf(name)); },
-      pdfSrc(u) { return u; },
+      extOf(name) {
+        const i = (name || '').lastIndexOf('.');
+        return i > -1 ? (name || '').slice(i + 1).toLowerCase() : '';
+      },
+      isImage(name) {
+        return ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'].includes(this.extOf(name));
+      },
+      isPdf(name) {
+        return this.extOf(name) === 'pdf';
+      },
+      isTiff(name) {
+        return ['tif', 'tiff'].includes(this.extOf(name));
+      },
+      isCad(name) {
+        return ['igs', 'iges', 'stp', 'step'].includes(this.extOf(name));
+      },
+      pdfSrc(u) {
+        return u;
+      },
 
       /* ===== TIFF renderer ===== */
-      async renderTiff(url) {
-        if (!url || !window.UTIF) return;
-        this.tifLoading = true; this.tifError = '';
-        try {
-          const resp = await fetch(url, { cache:'no-store', credentials:'same-origin' });
-          if (!resp.ok) throw new Error('Gagal mengambil file TIFF');
-          const buf = await resp.arrayBuffer();
-          const ifds = UTIF.decode(buf);
-          UTIF.decodeImages(buf, ifds);
-          if (!ifds?.length) throw new Error('TIFF tidak memiliki frame');
-          const first = ifds[0];
-          const rgba = UTIF.toRGBA8(first);
-          const w = first.width, h = first.height;
-          const canvas = this.$refs.tifCanvas; if (!canvas) throw new Error('Canvas TIFF tidak ditemukan');
-          const ctx = canvas.getContext('2d');
-          canvas.width = w; canvas.height = h;
-          const imgData = new ImageData(new Uint8ClampedArray(rgba), w, h);
-          ctx.putImageData(imgData, 0, 0);
-        } catch (e) { console.error(e); this.tifError = e?.message || 'Gagal render TIFF'; }
-        finally { this.tifLoading = false; }
-      },
+      /* ===== TIFF renderer ===== */
+/* ===== TIFF renderer (pakai UTIF.renderImage) ===== */
+/* ===== TIFF renderer (pakai UTIF.renderImage) ===== */
+/* ===== TIFF renderer (UTIF v3, full frame) ===== */
+async renderTiff(url) {
+  if (!url || typeof window.UTIF === 'undefined') return;
+
+  this.tifLoading = true;
+  this.tifError = '';
+
+  try {
+    // Ambil file TIFF
+    const resp = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+    if (!resp.ok) throw new Error('Gagal mengambil file TIFF');
+    const buf = await resp.arrayBuffer();
+
+    // Decode semua IFD
+    const ifds = UTIF.decode(buf);
+    if (!ifds || !ifds.length) throw new Error('TIFF tidak memiliki frame');
+
+    // Decode pixel frame pertama
+    UTIF.decodeImage(buf, ifds[0]);
+
+    // Konversi ke RGBA
+    const rgba = UTIF.toRGBA8(ifds[0]);
+    const w = ifds[0].width;
+    const h = ifds[0].height;
+
+    // Pastikan canvas sudah ada
+    await this.$nextTick();
+    const canvas = this.$refs.tifCanvas;
+    if (!canvas) throw new Error('Canvas TIFF tidak ditemukan');
+
+    const ctx = canvas.getContext('2d');
+    canvas.width  = w;
+    canvas.height = h;
+
+    const imgData = ctx.createImageData(w, h);
+    imgData.data.set(rgba);     // rgba sudah Uint8Array RGBA penuh
+    ctx.putImageData(imgData, 0, 0);
+  } catch (e) {
+    console.error(e);
+    this.tifError = e?.message || 'Gagal render TIFF';
+  } finally {
+    this.tifLoading = false;
+  }
+},
+
+
+
+
+
+
+
+
 
       /* ===== OCCT result -> THREE meshes ===== */
       _buildThreeFromOcct(result, THREE) {
         const group = new THREE.Group();
         const meshes = result.meshes || [];
-        for (let i=0; i<meshes.length; i++) {
+        for (let i = 0; i < meshes.length; i++) {
           const m = meshes[i];
           const g = new THREE.BufferGeometry();
           g.setAttribute('position', new THREE.Float32BufferAttribute(m.attributes.position.array, 3));
@@ -501,7 +649,12 @@
           if (m.index?.array) g.setIndex(m.index.array);
           let color = 0xcccccc;
           if (m.color && m.color.length === 3) color = (m.color[0] << 16) | (m.color[1] << 8) | (m.color[2]);
-          const mat = new THREE.MeshStandardMaterial({ color, metalness: 0, roughness: 1, side: THREE.DoubleSide });
+          const mat = new THREE.MeshStandardMaterial({
+            color,
+            metalness: 0,
+            roughness: 1,
+            side: THREE.DoubleSide
+          });
           const mesh = new THREE.Mesh(g, mat);
           mesh.name = m.name || `mesh_${i}`;
           group.add(mesh);
@@ -514,7 +667,11 @@
         try {
           cancelAnimationFrame(this.iges.animId || 0);
           if (this._onIgesResize) window.removeEventListener('resize', this._onIgesResize);
-          const { renderer, scene, controls } = this.iges || {};
+          const {
+            renderer,
+            scene,
+            controls
+          } = this.iges || {};
           controls?.dispose?.();
           scene?.traverse?.(o => {
             o.geometry?.dispose?.();
@@ -525,18 +682,30 @@
           });
           renderer?.dispose?.();
           const wrap = this.$refs.igesWrap;
-          if (wrap) while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+          if (wrap)
+            while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
         } catch {}
         this.iges = {
-          renderer: null, scene: null, camera: null, controls: null, animId: 0,
-          loading: false, error: '',
-          rootModel: null, THREE: null,
-          measure: { enabled: false, group: null, p1: null, p2: null }
+          renderer: null,
+          scene: null,
+          camera: null,
+          controls: null,
+          animId: 0,
+          loading: false,
+          error: '',
+          rootModel: null,
+          THREE: null,
+          measure: {
+            enabled: false,
+            group: null,
+            p1: null,
+            p2: null
+          }
         };
         this._onIgesResize = null;
       },
 
-      /* ===== Meta line formatter ===== */ 
+      /* ===== Meta line formatter ===== */
       metaLine() {
         const m = this.pkg?.metadata || {};
         // urutan: Customer - Model - Part No - Revision - Status
@@ -547,56 +716,63 @@
 
       /* ===== Display Styles / Edges ===== */
       _oriMats: new Map(),
-      _cacheOriginalMaterials(root, THREE){
-        root.traverse(o=>{
+      _cacheOriginalMaterials(root, THREE) {
+        root.traverse(o => {
           if (o.isMesh && !this._oriMats.has(o)) {
             const m = o.material;
-            this._oriMats.set(o, Array.isArray(m) ? m.map(mm=>mm.clone()) : m.clone());
+            this._oriMats.set(o, Array.isArray(m) ? m.map(mm => mm.clone()) : m.clone());
           }
         });
       },
-      _restoreMaterials(root){
-        root.traverse(o=>{
+      _restoreMaterials(root) {
+        root.traverse(o => {
           if (!o.isMesh) return;
-          const m = this._oriMats.get(o); if (!m) return;
-          o.material = Array.isArray(m) ? m.map(mm=>mm.clone()) : m.clone();
+          const m = this._oriMats.get(o);
+          if (!m) return;
+          o.material = Array.isArray(m) ? m.map(mm => mm.clone()) : m.clone();
         });
         this._setWireframe(root, false);
         this._toggleEdges(root, false);
         this._setPolygonOffset(root, false);
       },
-      _setWireframe(root, on=true){
-        root.traverse(o=>{
+      _setWireframe(root, on = true) {
+        root.traverse(o => {
           if (!o.isMesh) return;
-          (Array.isArray(o.material)?o.material:[o.material]).forEach(m=> m.wireframe = on);
+          (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.wireframe = on);
         });
       },
-      _setPolygonOffset(root, on=true, factor=1, units=1){
-        root.traverse(o=>{
+      _setPolygonOffset(root, on = true, factor = 1, units = 1) {
+        root.traverse(o => {
           if (!o.isMesh) return;
-          (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{
-            m.polygonOffset = on; m.polygonOffsetFactor = factor; m.polygonOffsetUnits = units;
+          (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
+            m.polygonOffset = on;
+            m.polygonOffsetFactor = factor;
+            m.polygonOffsetUnits = units;
           });
         });
       },
-      _addEdges(mesh, THREE, threshold=30){
+      _addEdges(mesh, THREE, threshold = 30) {
         if (mesh.userData.edges) return mesh.userData.edges;
         const edgesGeo = new THREE.EdgesGeometry(mesh.geometry, threshold);
-        const edgesMat = new THREE.LineBasicMaterial({ transparent:true, opacity:0.6, depthTest:false });
+        const edgesMat = new THREE.LineBasicMaterial({
+          transparent: true,
+          opacity: 0.6,
+          depthTest: false
+        });
         const edges = new THREE.LineSegments(edgesGeo, edgesMat);
         edges.renderOrder = 999;
         mesh.add(edges);
         mesh.userData.edges = edges;
         return edges;
       },
-      _toggleEdges(root, on=true, color=0x000000){
+      _toggleEdges(root, on = true, color = 0x000000) {
         const THREE = this.iges.THREE;
-        root.traverse(o=>{
+        root.traverse(o => {
           if (!o.isMesh) return;
-          if (on){
+          if (on) {
             const e = this._addEdges(o, THREE, 30);
             e.material.color = new THREE.Color(color);
-          } else if (o.userData.edges){
+          } else if (o.userData.edges) {
             o.remove(o.userData.edges);
             o.userData.edges.geometry.dispose();
             o.userData.edges.material.dispose();
@@ -604,11 +780,12 @@
           }
         });
       },
-      setDisplayStyle(mode){
-        const root = this.iges.rootModel; if (!root) return;
+      setDisplayStyle(mode) {
+        const root = this.iges.rootModel;
+        if (!root) return;
         this._restoreMaterials(root);
         if (mode === 'shaded') return;
-        if (mode === 'shaded-edges'){
+        if (mode === 'shaded-edges') {
           this._setPolygonOffset(root, true, 1, 1);
           this._toggleEdges(root, true, 0x000000);
           return;
@@ -616,7 +793,7 @@
       },
 
       /* ===== Measure (2-click) ===== */
-      toggleMeasure(){
+      toggleMeasure() {
         const M = this.iges.measure;
         M.enabled = !M.enabled;
         if (M.enabled && !M.group) {
@@ -625,38 +802,49 @@
           this.iges.scene.add(M.group);
           this._bindMeasureEvents(true);
         }
-        if (!M.enabled){
+        if (!M.enabled) {
           this._bindMeasureEvents(false);
           M.p1 = M.p2 = null;
         }
       },
-      clearMeasurements(){
+      clearMeasurements() {
         const g = this.iges.measure.group;
         if (!g) return;
-        (g.children||[]).forEach(ch => ch.userData?.dispose?.());
+        (g.children || []).forEach(ch => ch.userData?.dispose?.());
         g.clear();
       },
-      _bindMeasureEvents(on){
-        const canvas = this.iges.renderer?.domElement; if (!canvas) return;
-        if (on){
-          this._onMeasureDblClick = (ev)=>{
+      _bindMeasureEvents(on) {
+        const canvas = this.iges.renderer?.domElement;
+        if (!canvas) return;
+        if (on) {
+          this._onMeasureDblClick = (ev) => {
             if (!this.iges.measure.enabled) return;
-            const p = this._pickPoint(ev); if (!p) return;
+            const p = this._pickPoint(ev);
+            if (!p) return;
             const M = this.iges.measure;
-            if (!M.p1) { M.p1 = p; return; }
-            M.p2 = p; this._drawMeasurement(M.p1, M.p2); M.p1 = M.p2 = null;
+            if (!M.p1) {
+              M.p1 = p;
+              return;
+            }
+            M.p2 = p;
+            this._drawMeasurement(M.p1, M.p2);
+            M.p1 = M.p2 = null;
           };
           canvas.addEventListener('dblclick', this._onMeasureDblClick);
         } else {
           canvas.removeEventListener('dblclick', this._onMeasureDblClick);
         }
       },
-      _pickPoint(ev){
-        const { THREE, camera, rootModel } = this.iges;
+      _pickPoint(ev) {
+        const {
+          THREE,
+          camera,
+          rootModel
+        } = this.iges;
         const rect = this.iges.renderer.domElement.getBoundingClientRect();
         const mouse = new THREE.Vector2(
-          ((ev.clientX - rect.left)/rect.width)*2 - 1,
-          -((ev.clientY - rect.top)/rect.height)*2 + 1
+          ((ev.clientX - rect.left) / rect.width) * 2 - 1,
+          -((ev.clientY - rect.top) / rect.height) * 2 + 1
         );
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(mouse, camera);
@@ -664,21 +852,25 @@
         if (!hits.length) return null;
         return hits[0].point.clone();
       },
-      _drawMeasurement(a, b){
+      _drawMeasurement(a, b) {
         const THREE = this.iges.THREE;
         const group = new THREE.Group();
 
         // line
-        const geom = new THREE.BufferGeometry().setFromPoints([a,b]);
+        const geom = new THREE.BufferGeometry().setFromPoints([a, b]);
         const line = new THREE.Line(geom, new THREE.LineBasicMaterial({}));
         group.add(line);
 
         // end points
-        const s = Math.max(0.4, a.distanceTo(b)/160);
+        const s = Math.max(0.4, a.distanceTo(b) / 160);
         const sg = new THREE.SphereGeometry(s, 16, 16);
         const sm = new THREE.MeshBasicMaterial({});
-        const s1 = new THREE.Mesh(sg, sm); s1.position.copy(a); group.add(s1);
-        const s2 = new THREE.Mesh(sg, sm); s2.position.copy(b); group.add(s2);
+        const s1 = new THREE.Mesh(sg, sm);
+        s1.position.copy(a);
+        group.add(s1);
+        const s2 = new THREE.Mesh(sg, sm);
+        s2.position.copy(b);
+        group.add(s2);
 
         // label (DOM)
         const wrap = this.$refs.igesWrap;
@@ -694,9 +886,10 @@
         lbl.style.zIndex = '20';
         wrap.appendChild(lbl);
 
-        const updateLabel = ()=>{
+        const updateLabel = () => {
           const mid = a.clone().add(b).multiplyScalar(0.5).project(this.iges.camera);
-          const w = wrap.clientWidth, h = wrap.clientHeight;
+          const w = wrap.clientWidth,
+            h = wrap.clientHeight;
           const x = (mid.x * 0.5 + 0.5) * w;
           const y = (-mid.y * 0.5 + 0.5) * h;
           lbl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
@@ -704,7 +897,7 @@
         };
 
         group.userData.update = updateLabel;
-        group.userData.dispose = ()=> lbl.remove();
+        group.userData.dispose = () => lbl.remove();
         updateLabel();
 
         this.iges.measure.group.add(group);
@@ -730,34 +923,62 @@
         else this.openSections.push(c);
       },
 
-      selectFile(file) {
-        if (this.isCad(this.selectedFile?.name)) this.disposeCad();
-        if (this.isTiff(this.selectedFile?.name)) { this.tifError = ''; this.tifLoading = false; }
+     selectFile(file) {
+  if (this.isCad(this.selectedFile?.name)) this.disposeCad();
+  if (this.isTiff(this.selectedFile?.name)) {
+    this.tifError = '';
+    this.tifLoading = false;
+  }
 
-        this.selectedFile = { ...file };
+  this.selectedFile = { ...file };
 
-        if (this.isTiff(file?.name)) this.renderTiff(file.url);
-        else if (this.isCad(file?.name)) this.renderCadOcct(file.url);
-      },
+  this.$nextTick(() => {
+    if (this.isTiff(file?.name)) {
+      this.renderTiff(file.url);
+    } else if (this.isCad(file?.name)) {
+      this.renderCadOcct(file.url);
+    }
+  });
+},
+
+
 
       addPkgActivity(action, user, note = '') {
         this.pkg.activityLogs.unshift({
-          action, user, note: note || '',
+          action,
+          user,
+          note: note || '',
           time: new Date().toLocaleString()
         });
       },
 
       /* ===== Helper status ===== */
-      isWaiting() { return (this.pkg.status || '').toLowerCase() === 'waiting'; },
+      isWaiting() {
+        return (this.pkg.status || '').toLowerCase() === 'waiting';
+      },
 
       /* ===== approve / reject / rollback ===== */
-      approvePackage() { this.showApproveModal = true; },
-      rejectPackage() { this.rejectNote = ''; this.rejectNoteError = false; this.showRejectModal = true; },
-      rollbackPackage() { this.showRollbackModal = true; },
+      approvePackage() {
+        this.showApproveModal = true;
+      },
+      rejectPackage() {
+        this.rejectNote = '';
+        this.rejectNoteError = false;
+        this.showRejectModal = true;
+      },
+      rollbackPackage() {
+        this.showRollbackModal = true;
+      },
 
-      closeApproveModal() { if (!this.processing) this.showApproveModal = false; },
-      closeRejectModal() { if (!this.processing) this.showRejectModal = false; },
-      closeRollbackModal() { if (!this.processing) this.showRollbackModal = false; },
+      closeApproveModal() {
+        if (!this.processing) this.showApproveModal = false;
+      },
+      closeRejectModal() {
+        if (!this.processing) this.showRejectModal = false;
+      },
+      closeRollbackModal() {
+        if (!this.processing) this.showRollbackModal = false;
+      },
 
       async confirmApprove() {
         if (this.processing) return;
@@ -772,8 +993,11 @@
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
           });
-          const text = await response.text(); let result = {};
-          try { result = JSON.parse(text); } catch {}
+          const text = await response.text();
+          let result = {};
+          try {
+            result = JSON.parse(text);
+          } catch {}
           if (!response.ok) {
             if (response.status === 409) throw new Error(result.message || 'Revision has already been approved by someone else.');
             if (response.status === 403) throw new Error(result.message || 'You do not have permission to approve.');
@@ -812,10 +1036,15 @@
               'Accept': 'application/json',
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
-            body: JSON.stringify({ note: this.rejectNote })
+            body: JSON.stringify({
+              note: this.rejectNote
+            })
           });
-          const text = await response.text(); let result = {};
-          try { result = JSON.parse(text); } catch {}
+          const text = await response.text();
+          let result = {};
+          try {
+            result = JSON.parse(text);
+          } catch {}
           if (!response.ok) {
             if (response.status === 403) throw new Error(result.message || 'You do not have permission to reject.');
             if (response.status === 422) throw new Error(result.message || 'Revision is not in a state that can be rejected.');
@@ -848,8 +1077,11 @@
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
           });
-          const text = await response.text(); let result = {};
-          try { result = JSON.parse(text); } catch {}
+          const text = await response.text();
+          let result = {};
+          try {
+            result = JSON.parse(text);
+          } catch {}
           if (!response.ok) {
             if (response.status === 403) throw new Error(result.message || 'You do not have permission to rollback.');
             if (response.status === 422) throw new Error(result.message || 'Revision is not in a state that can be rolled back.');
@@ -873,42 +1105,56 @@
       async renderCadOcct(url) {
         if (!url) return;
         this.disposeCad();
-        this.iges.loading = true; this.iges.error = '';
+        this.iges.loading = true;
+        this.iges.error = '';
 
         try {
           const THREE = await import('three');
-          const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+          const {
+            OrbitControls
+          } = await import('three/addons/controls/OrbitControls.js');
           const bvh = await import('three-mesh-bvh');
           THREE.Mesh.prototype.raycast = bvh.acceleratedRaycast;
           THREE.BufferGeometry.prototype.computeBoundsTree = bvh.computeBoundsTree;
-          THREE.BufferGeometry.prototype.disposeBoundsTree  = bvh.disposeBoundsTree;
+          THREE.BufferGeometry.prototype.disposeBoundsTree = bvh.disposeBoundsTree;
 
           // scene & camera
           const scene = new THREE.Scene();
           scene.background = null;
           const wrap = this.$refs.igesWrap;
-          const width = wrap?.clientWidth || 800, height = wrap?.clientHeight || 500;
+          const width = wrap?.clientWidth || 800,
+            height = wrap?.clientHeight || 500;
 
-          const camera = new THREE.PerspectiveCamera(50, width/height, 0.1, 10000);
+          const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 10000);
           camera.position.set(250, 200, 250);
 
-          const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+          const renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true
+          });
           renderer.setPixelRatio(window.devicePixelRatio || 1);
           renderer.setSize(width, height);
           wrap.appendChild(renderer.domElement);
           wrap.style.position = 'relative';
-          wrap.style.overflow  = 'hidden';
+          wrap.style.overflow = 'hidden';
 
           // lights
-          const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8); hemi.position.set(0, 200, 0); scene.add(hemi);
-          const dir  = new THREE.DirectionalLight(0xffffff, 0.9); dir.position.set(150, 200, 100); scene.add(dir);
+          const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
+          hemi.position.set(0, 200, 0);
+          scene.add(hemi);
+          const dir = new THREE.DirectionalLight(0xffffff, 0.9);
+          dir.position.set(150, 200, 100);
+          scene.add(dir);
 
           // controls
           const controls = new OrbitControls(camera, renderer.domElement);
           controls.enableDamping = true;
 
           // fetch file
-          const resp = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+          const resp = await fetch(url, {
+            cache: 'no-store',
+            credentials: 'same-origin'
+          });
           if (!resp.ok) throw new Error('Gagal mengambil file CAD');
           const buffer = await resp.arrayBuffer();
           const file = new Uint8Array(buffer);
@@ -936,13 +1182,15 @@
 
           // auto-fit kamera
           const box = new THREE.Box3().setFromObject(group);
-          const size = new THREE.Vector3(); box.getSize(size);
-          const center = new THREE.Vector3(); box.getCenter(center);
+          const size = new THREE.Vector3();
+          box.getSize(size);
+          const center = new THREE.Vector3();
+          box.getCenter(center);
           const maxDim = Math.max(size.x, size.y, size.z) || 100;
           const fitDist = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360));
-          camera.position.copy(center.clone().add(new THREE.Vector3(1,1,1).normalize().multiplyScalar(fitDist * 1.6)));
+          camera.position.copy(center.clone().add(new THREE.Vector3(1, 1, 1).normalize().multiplyScalar(fitDist * 1.6)));
           camera.near = Math.max(maxDim / 100, 0.1);
-          camera.far  = Math.max(maxDim * 100, 1000);
+          camera.far = Math.max(maxDim * 100, 1000);
           camera.updateProjectionMatrix();
           controls.target.copy(center);
           controls.update();
@@ -961,7 +1209,8 @@
           this._onIgesResize = () => {
             const w = this.$refs.igesWrap?.clientWidth || 800;
             const h = this.$refs.igesWrap?.clientHeight || 500;
-            camera.aspect = w / h; camera.updateProjectionMatrix();
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
             renderer.setSize(w, h);
           };
           window.addEventListener('resize', this._onIgesResize);

@@ -5,7 +5,6 @@
 
 <div x-data="dashboardController()" x-init="init()">
 
-    {{-- BAGIAN FILTER --}}
     <div class="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
             <i class="fa-solid fa-filter mr-2 text-gray-500"></i> Filter Data
@@ -31,7 +30,6 @@
                 <input type="month" id="month_input" name="month_input" class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:ring-0 focus:outline-none sm:text-sm py-[0.35rem] px-3">
             </div>
 
-            {{-- FILTER TAMBAHAN (MUNCUL SETELAH DOC GROUP DIPILIH) --}}
             <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
                 <label for="customer" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
                 <div class="relative mt-1"> <select id="customer" name="customer" class="w-full"></select> </div>
@@ -49,7 +47,6 @@
                 <div class="relative mt-1"> <select id="part_group" name="part_group" class="w-full"></select> </div>
             </div>
 
-            {{-- RADIO BUTTON SORT BY (DIPINDAHKAN KE PALING AKHIR DARI FILTER TAMBAHAN) --}}
             <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sort By</label>
                 <div class="mt-2 flex space-x-4 pt-1">
@@ -64,7 +61,6 @@
                 </div>
             </div>
 
-            {{-- TOMBOL FILTER --}}
             <div class="lg:col-span-4 w-full flex justify-end items-center pt-4 border-t border-gray-200 dark:border-gray-700 mt-2">
                 <div class="flex space-x-3">
                     <button type="button" @click="resetFilters" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"> Reset </button>

@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\DrawingUploadController;
 use App\Http\Controllers\Api\CustomerRevisionLabelController;
 use App\Http\Controllers\Api\PackageFormatController;
 use App\Http\Controllers\Api\FilePreviewController;
+use App\Http\Controllers\Api\ShareController;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -285,14 +286,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/upload/drawing/get-revision-labels/{customerId}', [CustomerRevisionLabelController::class, 'getLabelsForCustomer'])->name('upload.drawing.get-labels');
     Route::post('/upload/drawing/check-revision-status', [DrawingUploadController::class, 'checkRevisionStatus'])->name('upload.drawing.check-status');
     Route::post('/upload/drawing/check-conflicts', [DrawingUploadController::class, 'checkConflicts'])
-    ->name('upload.drawing.check-conflicts');
+        ->name('upload.drawing.check-conflicts');
 
     Route::post('/upload/drawing/sync', [DrawingUploadController::class, 'syncLegacyData'])->name('upload.drawing.sync-legacy');
     Route::post('/upload/drawing/store', [DrawingUploadController::class, 'store'])->name('upload.drawing.store');
     Route::post('/upload/drawing/activity-logs', [DrawingUploadController::class, 'activityLogs'])->name('upload.drawing.activity-logs');
     Route::post('/upload/drawing/request-approval', [DrawingUploadController::class, 'requestApproval'])->name('upload.drawing.request-approval');
     Route::post('/upload/drawing/revise-confirm', [DrawingUploadController::class, 'reviseConfirmed'])->middleware(['auth'])
-    ->name('upload.drawing.revise-confirm');
+        ->name('upload.drawing.revise-confirm');
 
     Route::get('/files/kpi', [UploadController::class, 'getKpiStats'])->name('api.files.kpi-stats');
     Route::get('/files/list', [UploadController::class, 'listFiles'])->name('api.files.list');
@@ -311,14 +312,15 @@ Route::middleware(['auth'])->group(function () {
     #End region
 
     #region Approval
-     Route::get('/approvals/filters', [ApprovalController::class, 'filters'])->name('approvals.filters');
+    Route::get('/approval/summary', [ApprovalController::class, 'exportSummary'])->name('approvals.summary');
+    Route::get('/approvals/filters', [ApprovalController::class, 'filters'])->name('approvals.filters');
     Route::get('/approvals/list', [ApprovalController::class, 'listApprovals'])->name('approvals.list');
     Route::get('/approval/{id}', [ApprovalController::class, 'showDetail'])->name('approval.detail');
     Route::post('/approvals/{id}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
     Route::post('/approvals/{id}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
     Route::post('/approvals/{id}/rollback', [ApprovalController::class, 'rollback'])->name('approvals.rollback');
-
     Route::get('/approvals/kpi', [ApprovalController::class, 'kpi'])->name('approvals.kpi');
+
 
     #endregion
 
@@ -349,7 +351,15 @@ Route::middleware(['auth'])->group(function () {
     #End region
 
     #region File Preview
-    Route::get('/preview/file/{id}', [FilePreviewController::class, 'show'])->middleware(['signed']) ->name('preview.file');
+    Route::get('/preview/file/{id}', [FilePreviewController::class, 'show'])->middleware(['signed'])->name('preview.file');
+    #end region
+
+    #region Share
+    Route::get('/share/get-roles', [ShareController::class, 'getRoles'])->name('share.getRoles');
+    Route::post('/share/package/{packageId}', [ShareController::class, 'updateShare'])->name('share.update');
+    Route::get('/share/list', [ShareController::class, 'listPackage'])->name('share.list');
+
+
     #end region
 
 });
