@@ -4,28 +4,23 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Models;
+use App\Models\DocTypeSubCategories;
+use App\Models\Customers;
+use App\Models\DoctypeGroups;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 
 class ShareController extends Controller
 {
-    /**
-     * Mengambil daftar semua role untuk ditampilkan di popup.
-     * Asumsi: Anda memiliki tabel 'roles' dengan kolom 'id' dan 'name'.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function getRoles()
     {
         try {
-            // Mengambil data dari tabel 'roles' tanpa model
-            // Asumsi 'is_active' atau semacamnya, sesuaikan jika perlu
             $roles = DB::table('roles')
                 ->select('id', 'role_name')
-                // ->where('is_active', 1) 
                 ->orderBy('role_name', 'asc')
                 ->get();
 
@@ -36,16 +31,8 @@ class ShareController extends Controller
         }
     }
 
-    /**
-     * Meng-update kolom 'share_to' di tabel 'doc_packages'.
-     *
-     * @param Request $request
-     * @param int $packageId ID dari doc_packages yang akan di-update
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function updateShare(Request $request, $packageId)
     {
-        // Validasi input
         $validator = Validator::make($request->all(), [
             'role_id' => 'required|integer'
         ]);
@@ -55,30 +42,26 @@ class ShareController extends Controller
         }
 
         $roleId = $request->input('role_id');
-        $userId = Auth::id(); // Ambil ID user yg melakukan aksi
+        $userId = Auth::id();
 
         try {
-            // 1. Cek apakah role_id valid (ada di tabel roles)
             $roleExists = DB::table('roles')->where('id', $roleId)->exists();
             if (!$roleExists) {
                 return response()->json(['error' => 'Role ID tidak valid'], 400);
             }
 
-            // 2. Lakukan update di tabel 'doc_packages' tanpa model
             $updateCount = DB::table('doc_packages')
                 ->where('id', $packageId)
                 ->update([
                     'share_to' => $roleId,
                     'updated_at' => now(),
-                    'updated_by' => $userId // Asumsi Anda punya kolom ini
+                    'updated_by' => $userId
                 ]);
 
             if ($updateCount == 0) {
-                // Bisa jadi package ID-nya tidak ditemukan
                 return response()->json(['error' => 'Doc Package tidak ditemukan'], 404);
             }
 
-            // Ambil nama role untuk pesan sukses
             $roleName = DB::table('roles')->where('id', $roleId)->value('name');
 
             return response()->json([
@@ -90,105 +73,271 @@ class ShareController extends Controller
         }
     }
 
+    public function choiseFilter(Request $request): JsonResponse
+    {
+        if ($request->filled('select2')) {
+            $field   = $request->get('select2');
+            $q       = trim($request->get('q', ''));
+            $page    = max(1, (int)$request->get('page', 1));
+            $perPage = 20;
+
+            $customerCode = $request->get('customer_code');
+            $docTypeName  = $request->get('doc_type');
+
+            $total = 0;
+            $items = collect();
+
+            switch ($field) {
+                case 'customer':
+                    $builder = DB::table('customers as c')
+                        ->selectRaw('c.code AS id, c.code AS text')
+                        ->when($q, fn($x) => $x->where(function ($w) use ($q) {
+                            $w->where('c.code', 'like', "%{$q}%")
+                                ->orWhere('c.name', 'like', "%{$q}%");
+                        }))
+                        ->orderBy('c.code');
+
+                    $total = (clone $builder)->count();
+                    $items = $builder->forPage($page, $perPage)->get();
+                    break;
+
+                case 'model':
+                    $builder = DB::table('models as m')
+                        ->join('customers as c', 'm.customer_id', '=', 'c.id')
+                        ->selectRaw('m.name AS id, m.name AS text')
+                        ->when($customerCode && $customerCode !== 'All', fn($x) => $x->where('c.code', $customerCode))
+                        ->when($q, fn($x) => $x->where('m.name', 'like', "%{$q}%"))
+                        ->orderBy('m.name');
+
+                    $total = (clone $builder)->count();
+                    $items = $builder->forPage($page, $perPage)->get();
+                    break;
+
+                case 'doc_type':
+                    $builder = DB::table('doctype_groups as dtg')
+                        ->selectRaw('dtg.name AS id, dtg.name AS text')
+                        ->when($q, fn($x) => $x->where('dtg.name', 'like', "%{$q}%"))
+                        ->orderBy('dtg.name');
+
+                    $total = (clone $builder)->count();
+                    $items = $builder->forPage($page, $perPage)->get();
+                    break;
+
+                case 'category':
+                    $builder = DB::table('doctype_subcategories as dsc')
+                        ->join('doctype_groups as dtg', 'dsc.doctype_group_id', '=', 'dtg.id')
+                        ->selectRaw('dsc.name AS id, dsc.name AS text')
+                        ->when($docTypeName && $docTypeName !== 'All', fn($x) => $x->where('dtg.name', $docTypeName))
+                        ->when($q, fn($x) => $x->where('dsc.name', 'like', "%{$q}%"))
+                        ->orderBy('dsc.name');
+
+                    $total = (clone $builder)->count();
+                    $items = $builder->forPage($page, $perPage)->get();
+                    break;
+
+                case 'status':
+                    $all = collect([
+                        ['id' => 'Waiting',  'text' => 'Waiting'],
+                        ['id' => 'Approved', 'text' => 'Approved'],
+                        ['id' => 'Rejected', 'text' => 'Rejected'],
+                    ]);
+                    $filtered = $q
+                        ? $all->filter(fn($r) => str_contains(strtolower($r['text']), strtolower($q)))
+                        : $all;
+                    $total = $filtered->count();
+                    $items = $filtered->slice(($page - 1) * $perPage, $perPage)->values();
+                    break;
+
+                default:
+                    return response()->json(['results' => [], 'pagination' => ['more' => false]]);
+            }
+
+            if ($page === 1) {
+                $items = collect([['id' => 'All', 'text' => 'All']])->merge($items);
+            }
+
+            $effectiveTotal = $total + ($page === 1 ? 1 : 0);
+            $more = ($effectiveTotal > $page * $perPage);
+
+            return response()->json([
+                'results'    => array_values($items->toArray()),
+                'pagination' => ['more' => $more]
+            ]);
+        }
+
+        $customerId = $request->integer('customer_id') ?: null;
+        if (!$customerId && $request->filled('customer_code')) {
+            $customerId = Customers::where('code', $request->get('customer_code'))->value('id');
+        }
+
+        $models = $customerId
+            ? Models::where('customer_id', $customerId)->orderBy('name')->get(['id', 'name'])
+            : Models::orderBy('name')->get(['id', 'name']);
+
+        $docTypes = DoctypeGroups::orderBy('name')->get(['id', 'name']);
+
+        $docTypeName = $request->get('doc_type');
+        $docTypeId   = null;
+        if ($docTypeName && $docTypeName !== 'All') {
+            $docTypeId = DoctypeGroups::where('name', $docTypeName)->value('id');
+        }
+
+        $categories = DocTypeSubCategories::when($docTypeId, function ($q) use ($docTypeId) {
+            $q->where('doctype_group_id', $docTypeId);
+        })
+            ->orderBy('name')
+            ->get(['name']);
+
+        return response()->json([
+            'customers'  => Customers::orderBy('code')->get(['id', 'code']),
+            'models'     => $models,
+            'doc_types'  => $docTypes,
+            'categories' => $categories,
+            'statuses'   => collect([
+                ['name' => 'Waiting'],
+                ['name' => 'Approved'],
+                ['name' => 'Rejected'],
+            ]),
+        ]);
+    }
+
     public function listPackage(Request $request): JsonResponse
     {
-        $draw = $request->get('draw', 1);
-        $start = $request->get('start', 0);
-        $length = $request->get('length', 10);
-        $search = $request->get('search')['value'] ?? '';
-        $order = $request->get('order')[0] ?? null;
+        $start       = (int) $request->get('start', 0);
+        $length      = (int) $request->get('length', 10);
+        $searchValue = $request->get('search')['value'] ?? '';
 
-        $query = DB::table('doc_package_revisions as r')
-            ->leftJoin('doc_packages as p', 'r.package_id', '=', 'p.id')
-            ->leftJoin('customers as c', 'p.customer_id', '=', 'c.id')
-            ->leftJoin('models as m', 'p.model_id', '=', 'm.id')
-            ->leftJoin('products as pr', 'p.product_id', '=', 'pr.id')
-            ->leftJoin('customer_revision_labels as crl', 'r.revision_label_id', '=', 'crl.id')
-            ->leftJoin('doctype_groups as dg', 'p.doctype_group_id', '=', 'dg.id')
-            ->leftJoin('doctype_subcategories as sc', 'p.doctype_subcategory_id', '=', 'sc.id')
-            ->leftJoin('part_groups as pg', 'p.part_group_id', '=', 'pg.id');
+        $orderColumnIndex = (int) ($request->get('order')[0]['column'] ?? 0);
+        $orderDir         = $request->get('order')[0]['dir'] ?? 'desc';
+        $orderColumnName  = $request->get('columns')[$orderColumnIndex]['name'] ?? 'dpr.created_at';
 
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('p.package_no', 'like', "%{$search}%")
-                    ->orWhere('c.code', 'like', "%{$search}%")
-                    ->orWhere('m.name', 'like', "%{$search}%")
-                    ->orWhere('pr.part_no', 'like', "%{$search}%")
-                    ->orWhere('r.revision_no', 'like', "%{$search}%")
-                    ->orWhere('r.ecn_no', 'like', "%{$search}%")
-                    ->orWhere('crl.label', 'like', "%{$search}%")
-                    ->orWhere('dg.name', 'like', "%{$search}%")
-                    ->orWhere('sc.name', 'like', "%{$search}%")
-                    ->orWhere('pg.code_part_group', 'like', "%{$search}%");
+        $latestPa = DB::table('package_approvals as pa')
+            ->select(
+                'pa.id',
+                'pa.revision_id',
+                'pa.requested_at',
+                'pa.decided_at',
+                'pa.decision',
+                'pa.decided_by'
+            )
+            ->selectRaw("
+                ROW_NUMBER() OVER (
+                    PARTITION BY pa.revision_id
+                    ORDER BY COALESCE(pa.decided_at, pa.requested_at) DESC, pa.id DESC
+                ) as rn
+            ");
+
+        $query = DB::table('doc_package_revisions as dpr')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoinSub($latestPa, 'pa', function ($join) {
+                $join->on('pa.revision_id', '=', 'dpr.id')
+                    ->where('pa.rn', '=', 1);
+            })
+            ->where('dpr.revision_status', '<>', 'draft');
+
+        $recordsTotal = (clone $query)->count();
+
+        if ($request->filled('customer') && $request->customer !== 'All') {
+            $query->where('c.code', $request->customer);
+        }
+        if ($request->filled('model') && $request->model !== 'All') {
+            $query->where('m.name', $request->model);
+        }
+        if ($request->filled('doc_type') && $request->doc_type !== 'All') {
+            $query->where('dtg.name', $request->doc_type);
+        }
+        if ($request->filled('category') && $request->category !== 'All') {
+            $query->where('dsc.name', $request->category);
+        }
+        if ($request->filled('status') && $request->status !== 'All') {
+            $statusMap = [
+                'Waiting'  => ['pending', 'waiting'],
+                'Approved' => ['approved'],
+                'Rejected' => ['rejected'],
+            ];
+            $vals = $statusMap[$request->status] ?? [];
+            if ($vals) {
+                $placeholders = implode(',', array_fill(0, count($vals), '?'));
+                $query->whereRaw(
+                    "COALESCE(pa.decision, dpr.revision_status) IN ($placeholders)",
+                    $vals
+                );
+            }
+        }
+
+        if ($searchValue !== '') {
+            $query->where(function ($q) use ($searchValue) {
+                $q->where('c.code', 'like', "%{$searchValue}%")
+                    ->orWhere('m.name', 'like', "%{$searchValue}%")
+                    ->orWhere('p.part_no', 'like', "%{$searchValue}%")
+                    ->orWhere('dsc.name', 'like', "%{$searchValue}%")
+                    ->orWhereRaw("
+                    CONCAT(
+                        c.code,' ',
+                        m.name,' ',
+                        dtg.name,' ',
+                        COALESCE(dsc.name,''),' ',
+                        COALESCE(p.part_no,''),' ',
+                        dpr.revision_no
+                    ) LIKE ?
+                ", ["%{$searchValue}%"]);
             });
         }
 
-        $totalRecords = DB::table('doc_package_revisions')->count();
+        $recordsFiltered = (clone $query)->count();
 
-        $filteredRecords = $query->count();
-
-        if ($order) {
-            $sortBy = $order['column'];
-            $direction = $order['dir'];
-            $columnName = $request->get('columns')[$sortBy]['name'];
-
-            $columnMap = [
-                'package_no' => 'p.package_no',
-                'customer' => 'c.code',
-                'model' => 'm.name',
-                'part_no' => 'pr.part_no',
-                'revision_no' => 'r.revision_no',
-                'uploaded_at' => 'r.created_at',
-                'status' => 'r.revision_status',
-                'ecn_no' => 'r.ecn_no',
-                'doctype_group' => 'dg.name',
-                'doctype_subcategory' => 'sc.name',
-                'part_group' => 'pg.code_part_group'
-            ];
-
-            $dbColumn = $columnMap[$columnName] ?? 'r.created_at';
-            $query->orderBy($dbColumn, $direction);
-        } else {
-            $query->orderBy('r.created_at', 'desc');
-        }
-
-        $rows = $query->skip($start)->take($length)->get([
-            'r.id as id',
-            'p.package_no as package_no',
+        $query->select(
+            'dpr.id',
             'c.code as customer',
             'm.name as model',
-            'pr.part_no as part_no',
-            'r.revision_no as revision_no',
-            'r.created_at as uploaded_at',
-            'r.revision_status as status',
-            'r.ecn_no as ecn_no',
-            'crl.label as revision_label_name',
-            'dg.name as doctype_group',
-            'sc.name as doctype_subcategory',
-            'pg.code_part_group as part_group'
-        ])->map(function ($row) {
-            return [
-                'id' => str_replace('=', '-', encrypt($row->id)),
-                'package_no' => $row->package_no,
-                'customer' => $row->customer ?? '-',
-                'model' => $row->model ?? '-',
-                'part_no' => $row->part_no ?? '-',
-                'revision_no' => is_null($row->revision_no) ? '0' : (string)$row->revision_no,
-                'uploaded_at' => $row->uploaded_at ? date('Y-m-d H:i:s', strtotime($row->uploaded_at)) : null,
-                'status' => $row->status ?? 'draft',
-                'ecn_no' => $row->ecn_no ?? '-',
-                'revision_label_name' => $row->revision_label_name,
-                'doctype_group' => $row->doctype_group ?? '-',
-                'doctype_subcategory' => $row->doctype_subcategory ?? '-',
-                'part_group' => $row->part_group ?? '-'
-            ];
-        });
+            'dtg.name as doc_type',
+            'dsc.name as category',
+            'p.part_no',
+            'dpr.revision_no as revision',
+            DB::raw("
+                CASE COALESCE(pa.decision, dpr.revision_status)
+                    WHEN 'pending'  THEN 'Waiting'
+                    WHEN 'waiting'  THEN 'Waiting'  
+                    WHEN 'approved' THEN 'Approved'
+                    WHEN 'rejected' THEN 'Rejected'
+                    ELSE COALESCE(pa.decision, dpr.revision_status)
+                END as status
+            "),
+            'pa.requested_at as request_date',
+            'pa.decided_at   as decision_date'
+        );
+
+        $orderWhitelist = [
+            'dpr.created_at',
+            'dpr.updated_at',
+            'pa.requested_at',
+            'pa.decided_at',
+            'dpr.revision_status',
+            'c.code',
+            'm.name',
+            'dtg.name',
+            'dsc.name',
+            'p.part_no',
+        ];
+        $orderBy        = in_array($orderColumnName, $orderWhitelist, true) ? $orderColumnName : 'pa.requested_at';
+        $orderDirection = in_array(strtolower($orderDir), ['asc', 'desc'], true) ? $orderDir : 'desc';
+
+        $data = $query
+            ->orderBy($orderBy, $orderDirection)
+            ->skip($start)
+            ->take($length)
+            ->get();
 
         return response()->json([
-            'draw' => (int) $draw,
-            'recordsTotal' => $totalRecords,
-            'recordsFiltered' => $filteredRecords,
-            'data' => $rows
+            "draw"            => (int) $request->get('draw'),
+            "recordsTotal"    => $recordsTotal,
+            "recordsFiltered" => $recordsFiltered,
+            "data"            => $data,
         ]);
     }
 }

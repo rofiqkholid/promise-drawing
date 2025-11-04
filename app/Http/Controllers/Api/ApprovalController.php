@@ -315,7 +315,7 @@ class ApprovalController extends Controller
             DB::raw("
                 CASE COALESCE(pa.decision, dpr.revision_status)
                     WHEN 'pending'  THEN 'Waiting'
-                    WHEN 'waiting'  THEN 'Waiting'   -- kalau ada sisa data lama
+                    WHEN 'waiting'  THEN 'Waiting'  
                     WHEN 'approved' THEN 'Approved'
                     WHEN 'rejected' THEN 'Rejected'
                     ELSE COALESCE(pa.decision, dpr.revision_status)
@@ -736,57 +736,57 @@ class ApprovalController extends Controller
     }
 
     public function exportSummary(Request $request)
-{
-    // === base query PA terakhir ===
-    $latestPa = DB::table('package_approvals as pa')
-        ->select(
-            'pa.id',
-            'pa.revision_id',
-            'pa.requested_at',
-            'pa.decided_at',
-            'pa.decision',
-            'pa.decided_by'
-        )
-        ->selectRaw("
+    {
+        // === base query PA terakhir ===
+        $latestPa = DB::table('package_approvals as pa')
+            ->select(
+                'pa.id',
+                'pa.revision_id',
+                'pa.requested_at',
+                'pa.decided_at',
+                'pa.decision',
+                'pa.decided_by'
+            )
+            ->selectRaw("
             ROW_NUMBER() OVER (
               PARTITION BY pa.revision_id
               ORDER BY COALESCE(pa.decided_at, pa.requested_at) DESC, pa.id DESC
             ) as rn
         ");
 
-    $query = DB::table('doc_package_revisions as dpr')
-        ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
-        ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-        ->join('models as m', 'dp.model_id', '=', 'm.id')
-        ->join('products as p', 'dp.product_id', '=', 'p.id')
-        ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-        ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-        ->leftJoin('doc_package_revision_files as f', 'f.revision_id', '=', 'dpr.id')
-        ->leftJoinSub($latestPa, 'pa', function ($join) {
-            $join->on('pa.revision_id', '=', 'dpr.id')
-                 ->where('pa.rn', '=', 1);
-        })
-        ->where('dpr.revision_status', '<>', 'draft');
+        $query = DB::table('doc_package_revisions as dpr')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('doc_package_revision_files as f', 'f.revision_id', '=', 'dpr.id')
+            ->leftJoinSub($latestPa, 'pa', function ($join) {
+                $join->on('pa.revision_id', '=', 'dpr.id')
+                    ->where('pa.rn', '=', 1);
+            })
+            ->where('dpr.revision_status', '<>', 'draft');
 
-    // === filter biasa (kecuali status) ===
-    if ($request->filled('customer') && $request->customer !== 'All') {
-        $query->where('c.code', $request->customer);
-    }
-    if ($request->filled('model') && $request->model !== 'All') {
-        $query->where('m.name', $request->model);
-    }
-    if ($request->filled('doc_type') && $request->doc_type !== 'All') {
-        $query->where('dtg.name', $request->doc_type);
-    }
-    if ($request->filled('category') && $request->category !== 'All') {
-        $query->where('dsc.name', $request->category);
-    }
+        // === filter biasa (kecuali status) ===
+        if ($request->filled('customer') && $request->customer !== 'All') {
+            $query->where('c.code', $request->customer);
+        }
+        if ($request->filled('model') && $request->model !== 'All') {
+            $query->where('m.name', $request->model);
+        }
+        if ($request->filled('doc_type') && $request->doc_type !== 'All') {
+            $query->where('dtg.name', $request->doc_type);
+        }
+        if ($request->filled('category') && $request->category !== 'All') {
+            $query->where('dsc.name', $request->category);
+        }
 
-    // === KHUSUS SUMMARY: selalu Approved saja ===
-    $query->whereRaw("COALESCE(pa.decision, dpr.revision_status) = 'approved'");
+        // === KHUSUS SUMMARY: selalu Approved saja ===
+        $query->whereRaw("COALESCE(pa.decision, dpr.revision_status) = 'approved'");
 
-    // === select untuk isi tabel summary ===
-    $rowsDb = $query->select(
+        // === select untuk isi tabel summary ===
+        $rowsDb = $query->select(
             'c.code as customer',
             'm.name as model',
             'p.part_no',
@@ -796,33 +796,32 @@ class ApprovalController extends Controller
             'dsc.name as category',
             DB::raw("'' as part_group")               // sementara kosong
         )
-        ->orderBy('c.code')
-        ->orderBy('m.name')
-        ->orderBy('p.part_no')
-        ->orderBy('f.filename')
-        ->get();
+            ->orderBy('c.code')
+            ->orderBy('m.name')
+            ->orderBy('p.part_no')
+            ->orderBy('f.filename')
+            ->get();
 
-    // konversi ke array 2D untuk export
-    $rows = [];
-    foreach ($rowsDb as $r) {
-        $rows[] = [
-            $r->part_no,
-            $r->part_name,
-            $r->file_name,
-            $r->doctype,
-            $r->category,
-            $r->part_group,  // sekarang string kosong
-        ];
+        // konversi ke array 2D untuk export
+        $rows = [];
+        foreach ($rowsDb as $r) {
+            $rows[] = [
+                $r->part_no,
+                $r->part_name,
+                $r->file_name,
+                $r->doctype,
+                $r->category,
+                $r->part_group,  // sekarang string kosong
+            ];
+        }
+
+        // header atas pakai filter (All kalau nggak dipilih)
+        $customerHeader = $request->get('customer', 'All');
+        $modelHeader    = $request->get('model', 'All');
+
+        $export   = new ApprovalSummaryExport($customerHeader, $modelHeader, $rows);
+        $filename = 'approval-summary-' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download($export, $filename);
     }
-
-    // header atas pakai filter (All kalau nggak dipilih)
-    $customerHeader = $request->get('customer', 'All');
-    $modelHeader    = $request->get('model', 'All');
-
-    $export   = new ApprovalSummaryExport($customerHeader, $modelHeader, $rows);
-    $filename = 'approval-summary-' . now()->format('Ymd_His') . '.xlsx';
-
-    return Excel::download($export, $filename);
-}
-
 }

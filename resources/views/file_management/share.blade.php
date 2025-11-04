@@ -1,24 +1,15 @@
 @extends('layouts.app')
-{{-- DIUBAH: Judul Halaman --}}
 @section('title', 'Share Packages - PROMISE')
 @section('header-title', 'Share Packages')
 
 @section('content')
 
-{{--
-  DIV x-data ini sudah ada, kita hanya perlu menambahkan modal di dalamnya.
-  'modalOpen: false' akan kita gunakan untuk modal share. 
---}}
 <div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900" x-data="{ modalOpen: false }">
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
-            {{-- DIUBAH: Judul Konten --}}
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Share Packages</h2>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Share packages with other roles.</p>
         </div>
-
-        {{-- DIHAPUS: Seluruh bagian 4 KPI Card di sini --}}
-
     </div>
 
     {{-- Filter section --}}
@@ -26,9 +17,6 @@
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">Filters</h3>
             <div class="flex items-center gap-2">
-
-                {{-- DIHAPUS: Tombol Download Summary --}}
-
                 <button id="btnResetFilters"
                     type="button"
                     class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600
@@ -38,7 +26,6 @@
                 </button>
             </div>
         </div>
-
 
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-5">
             @foreach(['Customer', 'Model', 'Document Type', 'Category', 'Status'] as $label)
@@ -75,10 +62,6 @@
         </div>
     </div>
 
-
-    {{-- ====================================================== --}}
-    {{-- HTML MODAL UNTUK SHARE (TETAP)            --}}
-    {{-- ====================================================== --}}
     <div x-show="modalOpen"
         class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75"
         @click.away="modalOpen = false"
@@ -123,19 +106,16 @@
             </div>
         </div>
     </div>
-
-
 </div>
 
 @endsection
+
 @push('scripts')
 <script>
     $(function() {
         let table;
-        // DIUBAH: Pastikan route ini masih valid untuk filter
-        const ENDPOINT = '{{ route("approvals.filters") }}';
+        const ENDPOINT = '{{ route("share.filters") }}';
 
-        // --- helper: reset Select2 ke "All" (pasti sukses untuk AJAX mode) ---
         function resetSelect2ToAll($el) {
             $el.empty();
             const opt = new Option('All', 'All', true, true);
@@ -144,7 +124,6 @@
             $el.trigger('select2:select');
         }
 
-        // --- Select2 AJAX (server-side) helper ---
         function makeSelect2($el, field, extraParamsFn) {
             $el.select2({
                 width: '100%',
@@ -169,7 +148,6 @@
                     },
                     processResults: function(data, params) {
                         params.page = params.page || 1;
-                        // Pastikan "All" selalu ada di hasil (paling atas)
                         const results = Array.isArray(data.results) ? data.results.slice() : [];
                         if (params.page === 1 && !results.some(r => r.id === 'All')) {
                             results.unshift({
@@ -195,7 +173,6 @@
             });
         }
 
-        // Inisialisasi Select2 server-side + dependent params
         makeSelect2($('#customer'), 'customer');
         makeSelect2($('#model'), 'model', () => ({
             customer_code: $('#customer').val() || ''
@@ -206,7 +183,6 @@
         }));
         makeSelect2($('#status'), 'status');
 
-        // Dependent behavior -> set anak ke "All" (bukan null)
         $('#customer').on('change', function() {
             resetSelect2ToAll($('#model'));
         });
@@ -225,7 +201,6 @@
             };
         }
 
-        // formatter tanggal (tetap)
         function fmtDate(v) {
             if (!v) return '';
             const d = new Date(v);
@@ -245,11 +220,7 @@
                 processing: true,
                 serverSide: true,
                 ajax: {
-                    // ======================================================
-                    // DIUBAH KEMBALI: Mengambil data dari route 'approvals.list'
-                    // agar datanya SAMA PERSIS dengan halaman Approvals
-                    // ======================================================
-                    url: '{{ route("approvals.list") }}',
+                    url: '{{ route("share.list") }}',
                     type: 'GET',
                     data: function(d) {
                         const f = getCurrentFilters();
@@ -261,20 +232,15 @@
                     }
                 },
 
-                // default: Request Date terbaru di atas (kolom index 2)
                 order: [
                     [2, 'desc']
                 ],
 
-                columns: [
-                    // No (index 0)
-                    {
+                columns: [{
                         data: null,
                         orderable: false,
                         searchable: false
                     },
-
-                    // Package Data (index 1)
                     {
                         data: null,
                         orderable: false,
@@ -297,9 +263,6 @@
                             return `<div class="text-sm">${parts.join(' - ')}</div>`;
                         }
                     },
-
-
-                    // Request Date (index 2)
                     {
                         data: 'request_date',
                         name: 'dpr.requested_at',
@@ -308,8 +271,6 @@
                             return `<span title="${v || ''}">${text}</span>`;
                         }
                     },
-
-                    // Decision Date (index 3)
                     {
                         data: 'decision_date',
                         name: 'dpr.decided_at',
@@ -320,8 +281,6 @@
                             return `<span title="${row.status} at ${v}">${text}</span>`;
                         }
                     },
-
-                    // Status (index 4)
                     {
                         data: 'status',
                         name: 'dpr.revision_status',
@@ -333,16 +292,12 @@
                             return `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${cls}">${data ?? ''}</span>`;
                         }
                     },
-
-                    // --- Kolom Actions (index 5) (TETAP) ---
                     {
-                        // Pastikan route 'approvals.list' Anda MENGIRIMKAN 'id'
                         data: 'id',
                         orderable: false,
                         searchable: false,
                         className: 'text-center whitespace-nowrap',
                         render: function(packageId, type, row) {
-                            // Tombol Share
                             return `
                                 <button 
                                     type="button" 
@@ -363,7 +318,7 @@
                         width: '48px'
                     },
                     {
-                        targets: [2, 3], // Request & Decision Date
+                        targets: [2, 3],
                         className: 'whitespace-nowrap'
                     }
                 ],
@@ -375,7 +330,6 @@
                 }
             });
 
-            // Penomoran ulang setiap draw
             table.on('draw.dt', function() {
                 const info = table.page.info();
                 table.column(0, {
@@ -388,12 +342,10 @@
 
 
         function bindHandlers() {
-            // perubahan filter -> reload 
             $('#customer, #model, #document-type, #category, #status').on('change', function() {
                 if (table) table.ajax.reload(null, true);
             });
 
-            // tombol reset -> set semua ke "All", reload table
             $('#btnResetFilters').on('click', function() {
                 resetSelect2ToAll($('#customer'));
                 resetSelect2ToAll($('#model'));
@@ -404,14 +356,12 @@
                 if (table) table.ajax.reload(null, true);
             });
 
-            // --- Logika Modal Share (TETAP) ---
             const $rootEl = $('[x-data="{ modalOpen: false }"]');
             const $selectRole = $('#selectRole');
             const $hiddenPackageId = $('#hiddenPackageId');
             const $shareError = $('#shareError');
             const $btnSaveShare = $('#btnSaveShare');
 
-            // 1. Fungsi untuk memuat roles ke <select>
             function loadRoles() {
                 $selectRole.html('<option value="">Memuat role...</option>').prop('disabled', true);
                 $.ajax({
@@ -436,7 +386,6 @@
                 });
             }
 
-            // 2. Listener untuk tombol "Share" di setiap baris tabel
             $('#approvalTable tbody').on('click', '.btn-share', function(e) {
                 e.stopPropagation();
 
@@ -454,7 +403,6 @@
                 }
             });
 
-            // 3. Listener untuk tombol "Simpan & Bagikan" di modal
             $btnSaveShare.on('click', function() {
                 const packageId = $hiddenPackageId.val();
                 const roleId = $selectRole.val();
@@ -468,7 +416,7 @@
                 $btnSaveShare.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...');
 
                 $.ajax({
-                    url: `/share/package/${packageId}`, // Gunakan route yang kita buat
+                    url: `/share/package/${packageId}`,
                     type: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}',
@@ -483,8 +431,6 @@
                         alert(response.success || 'Berhasil dibagikan!');
 
                         $btnSaveShare.prop('disabled', false).text('Simpan & Bagikan');
-
-                        // table.ajax.reload(null, false); // Opsional
                     },
                     error: function(xhr) {
                         let errorMsg = 'Terjadi kesalahan.';
@@ -497,15 +443,8 @@
                     }
                 });
             });
-            // --- SELESAI: Logika Modal Share ---
-
-
-            // DIHAPUS: Blok 'click tr' untuk pindah halaman
-            // $('#approvalTable tbody').on('click', 'tr', function(e) { ... });
-
         }
 
-        // start
         initTable();
         bindHandlers();
     });

@@ -176,12 +176,12 @@
                 title="PDF preview"></iframe>
             </template>
 
-            <!-- TIFF -->
+            <!-- TIFF (rendered as PNG into <img>) -->
             <template x-if="isTiff(selectedFile?.name)">
               <div class="w-full">
-                <canvas x-ref="tifCanvas"
-        class="max-w-full max-h-[70vh] object-contain bg-black/5 rounded"></canvas>
-
+                <img x-ref="tifImg"
+                     alt="TIFF Preview"
+                     class="max-w-full max-h-[70vh] object-contain bg-black/5 rounded" />
                 <div x-show="tifLoading" class="text-xs text-gray-500 mt-2">Rendering TIFF…</div>
                 <div x-show="tifError" class="text-xs text-red-600 mt-2" x-text="tifError"></div>
               </div>
@@ -376,24 +376,19 @@
 <!-- Alpine collapse (untuk x-collapse) -->
 <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 
-<!-- UTIF.js untuk render TIFF -->
 <!-- UTIF.js untuk render TIFF (v2, API klasik) -->
 <script src="https://unpkg.com/utif@2.0.1/UTIF.js"></script>
-
-
-
-
 
 <!-- ES Module shims + Import Map untuk Three.js (module) -->
 <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
 <script type="importmap">
   {
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-    "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+      "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
+    }
   }
-}
 </script>
 
 <!-- OCCT: parser STEP/IGES (WASM) -->
@@ -447,11 +442,7 @@
     }
   });
 
-  function renderToast({
-    icon = 'success',
-    title = 'Success',
-    text = ''
-  } = {}) {
+  function renderToast({ icon = 'success', title = 'Success', text = '' } = {}) {
     const t = detectTheme();
     BaseToast.fire({
       icon,
@@ -477,41 +468,21 @@
   }
 
   function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') {
-    renderToast({
-      icon: 'success',
-      title,
-      text
-    });
+    renderToast({ icon: 'success', title, text });
   }
 
   function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') {
-    BaseToast.update({
-      timer: 3400
-    });
-    renderToast({
-      icon: 'error',
-      title,
-      text
-    });
-    BaseToast.update({
-      timer: 2600
-    });
+    BaseToast.update({ timer: 3400 });
+    renderToast({ icon: 'error', title, text });
+    BaseToast.update({ timer: 2600 });
   }
 
   function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') {
-    renderToast({
-      icon: 'warning',
-      title,
-      text
-    });
+    renderToast({ icon: 'warning', title, text });
   }
 
   function toastInfo(title = 'Informasi', text = '') {
-    renderToast({
-      icon: 'info',
-      title,
-      text
-    });
+    renderToast({ icon: 'info', title, text });
   }
   window.toastSuccess = toastSuccess;
   window.toastError = toastError;
@@ -580,62 +551,63 @@
         return u;
       },
 
-      /* ===== TIFF renderer ===== */
-      /* ===== TIFF renderer ===== */
-/* ===== TIFF renderer (pakai UTIF.renderImage) ===== */
-/* ===== TIFF renderer (pakai UTIF.renderImage) ===== */
-/* ===== TIFF renderer (UTIF v3, full frame) ===== */
-async renderTiff(url) {
-  if (!url || typeof window.UTIF === 'undefined') return;
+      /* ===== TIFF renderer: render ke <img> seperti JPG ===== */
+      async renderTiff(url) {
+        if (!url || typeof window.UTIF === 'undefined') return;
 
-  this.tifLoading = true;
-  this.tifError = '';
+        this.tifLoading = true;
+        this.tifError = '';
 
-  try {
-    // Ambil file TIFF
-    const resp = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
-    if (!resp.ok) throw new Error('Gagal mengambil file TIFF');
-    const buf = await resp.arrayBuffer();
+        try {
+          const resp = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+          if (!resp.ok) throw new Error('Gagal mengambil file TIFF');
+          const buf = await resp.arrayBuffer();
 
-    // Decode semua IFD
-    const ifds = UTIF.decode(buf);
-    if (!ifds || !ifds.length) throw new Error('TIFF tidak memiliki frame');
+          // cari object UTIF yang valid
+          const U =
+            (window.UTIF && typeof window.UTIF.decode === 'function') ? window.UTIF :
+            (window.UTIF && window.UTIF.UTIF && typeof window.UTIF.UTIF.decode === 'function') ? window.UTIF.UTIF :
+            null;
 
-    // Decode pixel frame pertama
-    UTIF.decodeImage(buf, ifds[0]);
+          if (!U) throw new Error('Library UTIF tidak sesuai (decode() tidak ditemukan)');
 
-    // Konversi ke RGBA
-    const rgba = UTIF.toRGBA8(ifds[0]);
-    const w = ifds[0].width;
-    const h = ifds[0].height;
+          const ifds = U.decode(buf);
+          if (!ifds || !ifds.length) throw new Error('TIFF tidak memiliki frame');
+          const first = ifds[0];
 
-    // Pastikan canvas sudah ada
-    await this.$nextTick();
-    const canvas = this.$refs.tifCanvas;
-    if (!canvas) throw new Error('Canvas TIFF tidak ditemukan');
+          if (typeof U.decodeImage === 'function') {
+            U.decodeImage(buf, first);
+          } else if (typeof U.decodeImages === 'function') {
+            U.decodeImages(buf, ifds);
+          }
 
-    const ctx = canvas.getContext('2d');
-    canvas.width  = w;
-    canvas.height = h;
+          const rgba = U.toRGBA8(first);
+          const w = first.width;
+          const h = first.height;
 
-    const imgData = ctx.createImageData(w, h);
-    imgData.data.set(rgba);     // rgba sudah Uint8Array RGBA penuh
-    ctx.putImageData(imgData, 0, 0);
-  } catch (e) {
-    console.error(e);
-    this.tifError = e?.message || 'Gagal render TIFF';
-  } finally {
-    this.tifLoading = false;
-  }
-},
+          // offscreen canvas
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = w;
+          canvas.height = h;
 
+          const imgData = ctx.createImageData(w, h);
+          imgData.data.set(rgba);
+          ctx.putImageData(imgData, 0, 0);
 
+          await this.$nextTick();
+          const imgEl = this.$refs.tifImg;
+          if (!imgEl) throw new Error('Elemen img TIFF tidak ditemukan');
 
-
-
-
-
-
+          // jadikan PNG base64, tampil seperti JPG/PNG biasa
+          imgEl.src = canvas.toDataURL('image/png');
+        } catch (e) {
+          console.error(e);
+          this.tifError = e?.message || 'Gagal render TIFF';
+        } finally {
+          this.tifLoading = false;
+        }
+      },
 
       /* ===== OCCT result -> THREE meshes ===== */
       _buildThreeFromOcct(result, THREE) {
@@ -667,11 +639,7 @@ async renderTiff(url) {
         try {
           cancelAnimationFrame(this.iges.animId || 0);
           if (this._onIgesResize) window.removeEventListener('resize', this._onIgesResize);
-          const {
-            renderer,
-            scene,
-            controls
-          } = this.iges || {};
+          const { renderer, scene, controls } = this.iges || {};
           controls?.dispose?.();
           scene?.traverse?.(o => {
             o.geometry?.dispose?.();
@@ -682,8 +650,7 @@ async renderTiff(url) {
           });
           renderer?.dispose?.();
           const wrap = this.$refs.igesWrap;
-          if (wrap)
-            while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+          if (wrap) while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
         } catch {}
         this.iges = {
           renderer: null,
@@ -708,7 +675,6 @@ async renderTiff(url) {
       /* ===== Meta line formatter ===== */
       metaLine() {
         const m = this.pkg?.metadata || {};
-        // urutan: Customer - Model - Part No - Revision - Status
         return [m.customer, m.model, m.part_no, m.revision, this.pkg?.status]
           .filter(v => v && String(v).trim().length > 0)
           .join(' - ');
@@ -836,11 +802,7 @@ async renderTiff(url) {
         }
       },
       _pickPoint(ev) {
-        const {
-          THREE,
-          camera,
-          rootModel
-        } = this.iges;
+        const { THREE, camera, rootModel } = this.iges;
         const rect = this.iges.renderer.domElement.getBoundingClientRect();
         const mouse = new THREE.Vector2(
           ((ev.clientX - rect.left) / rect.width) * 2 - 1,
@@ -856,12 +818,10 @@ async renderTiff(url) {
         const THREE = this.iges.THREE;
         const group = new THREE.Group();
 
-        // line
         const geom = new THREE.BufferGeometry().setFromPoints([a, b]);
         const line = new THREE.Line(geom, new THREE.LineBasicMaterial({}));
         group.add(line);
 
-        // end points
         const s = Math.max(0.4, a.distanceTo(b) / 160);
         const sg = new THREE.SphereGeometry(s, 16, 16);
         const sm = new THREE.MeshBasicMaterial({});
@@ -872,7 +832,6 @@ async renderTiff(url) {
         s2.position.copy(b);
         group.add(s2);
 
-        // label (DOM)
         const wrap = this.$refs.igesWrap;
         const lbl = document.createElement('div');
         lbl.className = 'measure-label';
@@ -888,8 +847,7 @@ async renderTiff(url) {
 
         const updateLabel = () => {
           const mid = a.clone().add(b).multiplyScalar(0.5).project(this.iges.camera);
-          const w = wrap.clientWidth,
-            h = wrap.clientHeight;
+          const w = wrap.clientWidth, h = wrap.clientHeight;
           const x = (mid.x * 0.5 + 0.5) * w;
           const y = (-mid.y * 0.5 + 0.5) * h;
           lbl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
@@ -905,7 +863,6 @@ async renderTiff(url) {
 
       /* ===== Lifecycle ===== */
       init() {
-        // Esc untuk tutup modal + cleanup
         window.addEventListener('keydown', (e) => {
           if (e.key === 'Escape') {
             if (this.showApproveModal) this.closeApproveModal();
@@ -923,25 +880,24 @@ async renderTiff(url) {
         else this.openSections.push(c);
       },
 
-     selectFile(file) {
-  if (this.isCad(this.selectedFile?.name)) this.disposeCad();
-  if (this.isTiff(this.selectedFile?.name)) {
-    this.tifError = '';
-    this.tifLoading = false;
-  }
+      selectFile(file) {
+        if (this.isCad(this.selectedFile?.name)) this.disposeCad();
+        if (this.isTiff(this.selectedFile?.name)) {
+          this.tifError = '';
+          this.tifLoading = false;
+          if (this.$refs.tifImg) this.$refs.tifImg.src = '';
+        }
 
-  this.selectedFile = { ...file };
+        this.selectedFile = { ...file };
 
-  this.$nextTick(() => {
-    if (this.isTiff(file?.name)) {
-      this.renderTiff(file.url);
-    } else if (this.isCad(file?.name)) {
-      this.renderCadOcct(file.url);
-    }
-  });
-},
-
-
+        this.$nextTick(() => {
+          if (this.isTiff(file?.name)) {
+            this.renderTiff(file.url);
+          } else if (this.isCad(file?.name)) {
+            this.renderCadOcct(file.url);
+          }
+        });
+      },
 
       addPkgActivity(action, user, note = '') {
         this.pkg.activityLogs.unshift({
@@ -1036,9 +992,7 @@ async renderTiff(url) {
               'Accept': 'application/json',
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
-            body: JSON.stringify({
-              note: this.rejectNote
-            })
+            body: JSON.stringify({ note: this.rejectNote })
           });
           const text = await response.text();
           let result = {};
@@ -1110,20 +1064,16 @@ async renderTiff(url) {
 
         try {
           const THREE = await import('three');
-          const {
-            OrbitControls
-          } = await import('three/addons/controls/OrbitControls.js');
+          const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
           const bvh = await import('three-mesh-bvh');
           THREE.Mesh.prototype.raycast = bvh.acceleratedRaycast;
           THREE.BufferGeometry.prototype.computeBoundsTree = bvh.computeBoundsTree;
           THREE.BufferGeometry.prototype.disposeBoundsTree = bvh.disposeBoundsTree;
 
-          // scene & camera
           const scene = new THREE.Scene();
           scene.background = null;
           const wrap = this.$refs.igesWrap;
-          const width = wrap?.clientWidth || 800,
-            height = wrap?.clientHeight || 500;
+          const width = wrap?.clientWidth || 800, height = wrap?.clientHeight || 500;
 
           const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 10000);
           camera.position.set(250, 200, 250);
@@ -1138,7 +1088,6 @@ async renderTiff(url) {
           wrap.style.position = 'relative';
           wrap.style.overflow = 'hidden';
 
-          // lights
           const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
           hemi.position.set(0, 200, 0);
           scene.add(hemi);
@@ -1146,30 +1095,22 @@ async renderTiff(url) {
           dir.position.set(150, 200, 100);
           scene.add(dir);
 
-          // controls
           const controls = new OrbitControls(camera, renderer.domElement);
           controls.enableDamping = true;
 
-          // fetch file
-          const resp = await fetch(url, {
-            cache: 'no-store',
-            credentials: 'same-origin'
-          });
+          const resp = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
           if (!resp.ok) throw new Error('Gagal mengambil file CAD');
           const buffer = await resp.arrayBuffer();
           const file = new Uint8Array(buffer);
 
-          // parse dengan occt
-          const occt = await window.occtimportjs(); // dari <script> CDN
+          const occt = await window.occtimportjs();
           const ext = (url.split('?')[0].split('#')[0].split('.').pop() || '').toLowerCase();
           const res = (ext === 'stp' || ext === 'step') ? occt.ReadStepFile(file, null) : occt.ReadIgesFile(file, null);
           if (!res?.success) throw new Error('OCCT gagal mem-parsing file');
 
-          // build meshes -> scene
           const group = this._buildThreeFromOcct(res, THREE);
           scene.add(group);
 
-          // simpan refs
           this.iges.rootModel = group;
           this.iges.scene = scene;
           this.iges.camera = camera;
@@ -1177,10 +1118,8 @@ async renderTiff(url) {
           this.iges.controls = controls;
           this.iges.THREE = THREE;
 
-          // cache material asli
           this._cacheOriginalMaterials(group, THREE);
 
-          // auto-fit kamera
           const box = new THREE.Box3().setFromObject(group);
           const size = new THREE.Vector3();
           box.getSize(size);
@@ -1195,7 +1134,6 @@ async renderTiff(url) {
           controls.target.copy(center);
           controls.update();
 
-          // render loop + update label measure
           const animate = () => {
             controls.update();
             renderer.render(scene, camera);
@@ -1205,7 +1143,6 @@ async renderTiff(url) {
           };
           animate();
 
-          // resize
           this._onIgesResize = () => {
             const w = this.$refs.igesWrap?.clientWidth || 800;
             const h = this.$refs.igesWrap?.clientHeight || 500;
@@ -1215,7 +1152,6 @@ async renderTiff(url) {
           };
           window.addEventListener('resize', this._onIgesResize);
 
-          // default style
           this.setDisplayStyle('shaded-edges');
 
         } catch (e) {
