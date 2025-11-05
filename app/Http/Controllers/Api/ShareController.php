@@ -31,48 +31,6 @@ class ShareController extends Controller
         }
     }
 
-    public function updateShare(Request $request, $packageId)
-    {
-        $validator = Validator::make($request->all(), [
-            'role_id' => 'required|integer'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()->first()], 400);
-        }
-
-        $roleId = $request->input('role_id');
-        $userId = Auth::id();
-
-        try {
-            $roleExists = DB::table('roles')->where('id', $roleId)->exists();
-            if (!$roleExists) {
-                return response()->json(['error' => 'Role ID tidak valid'], 400);
-            }
-
-            $updateCount = DB::table('doc_packages')
-                ->where('id', $packageId)
-                ->update([
-                    'share_to' => $roleId,
-                    'updated_at' => now(),
-                    'updated_by' => $userId
-                ]);
-
-            if ($updateCount == 0) {
-                return response()->json(['error' => 'Doc Package tidak ditemukan'], 404);
-            }
-
-            $roleName = DB::table('roles')->where('id', $roleId)->value('name');
-
-            return response()->json([
-                'success' => "Paket berhasil dibagikan ke role: {$roleName}"
-            ]);
-        } catch (\Exception $e) {
-            Log::error("ShareController@updateShare failed for package $packageId: " . $e->getMessage());
-            return response()->json(['error' => 'Update database gagal'], 500);
-        }
-    }
-
     public function choiseFilter(Request $request): JsonResponse
     {
         if ($request->filled('select2')) {
@@ -238,7 +196,8 @@ class ShareController extends Controller
                 $join->on('pa.revision_id', '=', 'dpr.id')
                     ->where('pa.rn', '=', 1);
             })
-            ->where('dpr.revision_status', '<>', 'draft');
+            ->where('dpr.revision_status', '<>', 'draft')
+            ->where('dpr.revision_status', 'approved');
 
         $recordsTotal = (clone $query)->count();
 
@@ -292,7 +251,7 @@ class ShareController extends Controller
         $recordsFiltered = (clone $query)->count();
 
         $query->select(
-            'dpr.id',
+            'dp.id',
             'c.code as customer',
             'm.name as model',
             'dtg.name as doc_type',
@@ -308,6 +267,7 @@ class ShareController extends Controller
                     ELSE COALESCE(pa.decision, dpr.revision_status)
                 END as status
             "),
+            'dp.share_to as share_to',
             'pa.requested_at as request_date',
             'pa.decided_at   as decision_date'
         );
@@ -339,5 +299,36 @@ class ShareController extends Controller
             "recordsFiltered" => $recordsFiltered,
             "data"            => $data,
         ]);
+    }
+
+    public function saveShare(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'package_id' => 'required|integer|exists:doc_packages,id',
+            'role_ids'   => 'required|array|min:1',
+            'role_ids.*' => 'required|integer|exists:roles,id',
+        ], [
+            'role_ids.required' => 'Please select at least one role to share with.',
+            'role_ids.min'      => 'Please select at least one role to share with.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()->first()], 422);
+        }
+
+        $roleId = json_encode($request->input('role_ids'));
+
+        $updateSuccess = DB::table('doc_packages')
+            ->where('id', $request->input('package_id'))
+            ->update([
+                'share_to'   => $roleId,
+                'updated_at' => now()
+            ]);
+
+        if ($updateSuccess) {
+            return response()->json(['message' => 'Package shared successfully!']);
+        } else {
+            return response()->json(['message' => 'Package not found or no changes were made.'], 404);
+        }
     }
 }

@@ -20,6 +20,9 @@ use App\Models\ActivityLog;
 use App\Models\User;
 use App\Exports\ApprovalSummaryExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Contracts\Encryption\DecryptException;
+
+
 
 class ApprovalController extends Controller
 {
@@ -346,6 +349,11 @@ class ApprovalController extends Controller
             ->take($length)
             ->get();
 
+            $data = $data->map(function ($row) {
+    $row->hash = encrypt($row->id);  // hash terenkripsi untuk dipakai di Blade
+    return $row;
+});
+
         return response()->json([
             "draw"            => (int) $request->get('draw'),
             "recordsTotal"    => $recordsTotal,
@@ -354,65 +362,91 @@ class ApprovalController extends Controller
         ]);
     }
 
-    public function showDetail($id)
-    {
-        $revision = DB::table('doc_package_revisions as dpr')
-            ->where('dpr.id', $id)
-            ->first();
+ 
 
-        if (!$revision) {
-            abort(404, 'Approval request not found.');
+public function showDetail(string $id)
+{
+    // 1. Tentukan revisionId sebenarnya
+    if (ctype_digit($id)) {
+        // URL lama /approval/92
+        $revisionId = (int) $id;
+    } else {
+        // URL baru /approval/{hash}
+        try {
+            $revisionId = decrypt($id);
+        } catch (DecryptException $e) {
+            abort(404, 'Invalid approval ID.');
         }
-
-        $package = DB::table('doc_packages as dp')
-            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-            ->join('models as m', 'dp.model_id', '=', 'm.id')
-            ->join('products as p', 'dp.product_id', '=', 'p.id')
-            ->where('dp.id', $revision->package_id)
-            ->select('c.code as customer', 'm.name as model', 'p.part_no')
-            ->first();
-
-        $files = DB::table('doc_package_revision_files')
-            ->where('revision_id', $id)
-            ->select('id', 'filename as name', 'category', 'storage_path')
-            ->get()
-            ->groupBy('category')
-            ->map(function ($items) {
-                return $items->map(function ($item) {
-                    $url = URL::signedRoute('preview.file', ['id' => $item->id]);
-                    return ['name' => $item->name, 'url' => $url];
-                });
-            })
-            ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
-
-        $logs = $this->buildApprovalLogs($revision->package_id, $revision->id);
-
-        $detail = [
-            'metadata' => [
-                'customer' => $package->customer,
-                'model'    => $package->model,
-                'part_no'  => $package->part_no,
-                'revision' => 'Rev-' . $revision->revision_no,
-            ],
-            'status'       => match ($revision->revision_status) {
-                'pending'  => 'Waiting',
-                'approved' => 'Approved',
-                'rejected' => 'Rejected',
-                default    => ucfirst($revision->revision_status ?? 'Waiting'),
-            },
-            'files'        => $files,
-            'activityLogs' => $logs,
-        ];
-
-        return view('approvals.approval_detail', [
-            'approvalId' => $id,
-            'detail'     => $detail,
-        ]);
     }
+
+    // 2. Query pakai revisionId (angka)
+    $revision = DB::table('doc_package_revisions as dpr')
+        ->where('dpr.id', $revisionId)
+        ->first();
+
+    if (!$revision) {
+        abort(404, 'Approval request not found.');
+    }
+
+    $package = DB::table('doc_packages as dp')
+        ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+        ->join('models as m', 'dp.model_id', '=', 'm.id')
+        ->join('products as p', 'dp.product_id', '=', 'p.id')
+        ->where('dp.id', $revision->package_id)
+        ->select('c.code as customer', 'm.name as model', 'p.part_no')
+        ->first();
+
+    $files = DB::table('doc_package_revision_files')
+        ->where('revision_id', $revisionId)
+        ->select('id', 'filename as name', 'category', 'storage_path')
+        ->get()
+        ->groupBy('category')
+        ->map(function ($items) {
+            return $items->map(function ($item) {
+                $url = URL::signedRoute('preview.file', ['id' => $item->id]);
+                return ['name' => $item->name, 'url' => $url];
+            });
+        })
+        ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
+
+    $logs = $this->buildApprovalLogs($revision->package_id, $revisionId);
+
+    $detail = [
+        'metadata' => [
+            'customer' => $package->customer,
+            'model'    => $package->model,
+            'part_no'  => $package->part_no,
+            'revision' => 'Rev-' . $revision->revision_no,
+        ],
+        'status'       => match ($revision->revision_status) {
+            'pending'  => 'Waiting',
+            'approved' => 'Approved',
+            'rejected' => 'Rejected',
+            default    => ucfirst($revision->revision_status ?? 'Waiting'),
+        },
+        'files'        => $files,
+        'activityLogs' => $logs,
+    ];
+
+    // selalu kirim hash baru ke Blade untuk dipakai approve/reject
+    $hash = encrypt($revisionId);
+
+    return view('approvals.approval_detail', [
+        'approvalId' => $hash,
+        'detail'     => $detail,
+    ]);
+}
+
 
     public function approve(Request $request, $revision_id)
     {
         $userId = Auth::user()->id ?? 1;
+
+        try {
+        $revision_id = decrypt($id);   // decrypt hash
+    } catch (DecryptException $e) {
+        return response()->json(['message' => 'Invalid revision.'], 404);
+    }
 
         try {
             DB::beginTransaction();
@@ -512,6 +546,12 @@ class ApprovalController extends Controller
     public function reject(Request $request, $revision_id)
     {
         $userId = Auth::user()->id;
+
+        try {
+        $revision_id = decrypt($id);
+    } catch (DecryptException $e) {
+        return response()->json(['message' => 'Invalid revision.'], 404);
+    }
 
         $request->validate(['note' => 'required|string|max:500']);
 
@@ -636,6 +676,12 @@ class ApprovalController extends Controller
     {
         $userId = Auth::user()->id;
 
+         try {
+        $revision_id = decrypt($id);
+    } catch (DecryptException $e) {
+        return response()->json(['message' => 'Invalid revision.'], 404);
+    }
+
         DB::beginTransaction();
         try {
             $revision = DB::table('doc_package_revisions')
@@ -735,93 +781,116 @@ class ApprovalController extends Controller
         }
     }
 
-    public function exportSummary(Request $request)
-    {
-        // === base query PA terakhir ===
-        $latestPa = DB::table('package_approvals as pa')
-            ->select(
-                'pa.id',
-                'pa.revision_id',
-                'pa.requested_at',
-                'pa.decided_at',
-                'pa.decision',
-                'pa.decided_by'
-            )
-            ->selectRaw("
+   
+
+public function exportSummary(Request $request)
+{
+    // === base query approval terakhir ===
+    $latestPa = DB::table('package_approvals as pa')
+        ->select(
+            'pa.id',
+            'pa.revision_id',
+            'pa.requested_at',
+            'pa.decided_at',
+            'pa.decision',
+            'pa.decided_by'
+        )
+        ->selectRaw("
             ROW_NUMBER() OVER (
               PARTITION BY pa.revision_id
               ORDER BY COALESCE(pa.decided_at, pa.requested_at) DESC, pa.id DESC
             ) as rn
         ");
 
-        $query = DB::table('doc_package_revisions as dpr')
-            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
-            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-            ->join('models as m', 'dp.model_id', '=', 'm.id')
-            ->join('products as p', 'dp.product_id', '=', 'p.id')
-            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-            ->leftJoin('doc_package_revision_files as f', 'f.revision_id', '=', 'dpr.id')
-            ->leftJoinSub($latestPa, 'pa', function ($join) {
-                $join->on('pa.revision_id', '=', 'dpr.id')
-                    ->where('pa.rn', '=', 1);
-            })
-            ->where('dpr.revision_status', '<>', 'draft');
+    $query = DB::table('doc_package_revisions as dpr')
+    ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+    ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+    ->join('models as m', 'dp.model_id', '=', 'm.id')
+    ->join('products as p', 'dp.product_id', '=', 'p.id')
+    ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+    ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+    ->leftJoin('doc_package_revision_files as f', 'f.revision_id', '=', 'dpr.id')
+     ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')  
+    ->leftJoinSub($latestPa, 'pa', function ($join) {
+        $join->on('pa.revision_id', '=', 'dpr.id')
+             ->where('pa.rn', '=', 1);
+    })
+    ->where('dpr.revision_status', '<>', 'draft');
 
-        // === filter biasa (kecuali status) ===
-        if ($request->filled('customer') && $request->customer !== 'All') {
-            $query->where('c.code', $request->customer);
-        }
-        if ($request->filled('model') && $request->model !== 'All') {
-            $query->where('m.name', $request->model);
-        }
-        if ($request->filled('doc_type') && $request->doc_type !== 'All') {
-            $query->where('dtg.name', $request->doc_type);
-        }
-        if ($request->filled('category') && $request->category !== 'All') {
-            $query->where('dsc.name', $request->category);
-        }
 
-        // === KHUSUS SUMMARY: selalu Approved saja ===
-        $query->whereRaw("COALESCE(pa.decision, dpr.revision_status) = 'approved'");
+    // === filter (sama seperti list) ===
+    if ($request->filled('customer') && $request->customer !== 'All') {
+        $query->where('c.code', $request->customer);
+    }
+    if ($request->filled('model') && $request->model !== 'All') {
+        $query->where('m.name', $request->model);
+    }
+    if ($request->filled('doc_type') && $request->doc_type !== 'All') {
+        $query->where('dtg.name', $request->doc_type);
+    }
+    if ($request->filled('category') && $request->category !== 'All') {
+        $query->where('dsc.name', $request->category);
+    }
 
-        // === select untuk isi tabel summary ===
-        $rowsDb = $query->select(
+    // === SUMMARY: hanya yang Approved ===
+    $query->whereRaw("COALESCE(pa.decision, dpr.revision_status) = 'approved'");
+
+    // === ambil data dasar ===
+    $rowsDb = $query->select(
             'c.code as customer',
             'm.name as model',
             'p.part_no',
-            'p.part_name as part_name',               // dari tabel products
+            'p.part_name as part_name',
             'f.filename as file_name',
             'dtg.name as doctype',
             'dsc.name as category',
-            DB::raw("'' as part_group")               // sementara kosong
+            'dp.part_group_id as part_group',
+            'pg.code_part_group as part_group' 
         )
-            ->orderBy('c.code')
-            ->orderBy('m.name')
-            ->orderBy('p.part_no')
-            ->orderBy('f.filename')
-            ->get();
+        ->orderBy('c.code')
+        ->orderBy('m.name')
+        ->orderBy('p.part_no')
+        ->orderBy('f.filename')
+        ->get();
 
-        // konversi ke array 2D untuk export
-        $rows = [];
-        foreach ($rowsDb as $r) {
+    // === bentuk rows: group per (customer, model) seperti contoh Excel ===
+    $rows = [];
+
+    // groupBy per kombinasi customer + model
+    $grouped = $rowsDb->groupBy(function ($r) {
+        return $r->customer . '||' . $r->model;
+    });
+
+    foreach ($grouped as $key => $items) {
+        [$customer, $model] = explode('||', $key);
+        $firstRow = true;
+
+        foreach ($items as $r) {
             $rows[] = [
+                $firstRow ? $customer : '',
+                $firstRow ? $model    : '',
                 $r->part_no,
                 $r->part_name,
                 $r->file_name,
                 $r->doctype,
                 $r->category,
-                $r->part_group,  // sekarang string kosong
+                $r->part_group,
             ];
+            $firstRow = false;
         }
 
-        // header atas pakai filter (All kalau nggak dipilih)
-        $customerHeader = $request->get('customer', 'All');
-        $modelHeader    = $request->get('model', 'All');
-
-        $export   = new ApprovalSummaryExport($customerHeader, $modelHeader, $rows);
-        $filename = 'approval-summary-' . now()->format('Ymd_His') . '.xlsx';
-
-        return Excel::download($export, $filename);
+        // baris kosong pemisah antar group
+        $rows[] = ['', '', '', '', '', '', '', ''];
     }
+
+    // buang baris kosong terakhir kalau ada data
+    if (!empty($rows)) {
+        array_pop($rows);
+    }
+
+    $export   = new ApprovalSummaryExport($rows);
+    $filename = 'approval-summary-' . now()->format('Ymd_His') . '.xlsx';
+
+    return Excel::download($export, $filename);
+}
 }

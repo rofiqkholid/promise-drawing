@@ -356,9 +356,10 @@ Route::middleware(['auth'])->group(function () {
 
     #region Share
     Route::get('/share/get-roles', [ShareController::class, 'getRoles'])->name('share.getRoles');
-    Route::post('/share/package/{packageId}', [ShareController::class, 'updateShare'])->name('share.update');
     Route::get('/share/list', [ShareController::class, 'listPackage'])->name('share.list');
     Route::get('/share/filters', [ShareController::class, 'choiseFilter'])->name('share.filters');
+    Route::post('/share/save', [ShareController::class, 'saveShare'])->name('share.save');
+
 
 
     #end region

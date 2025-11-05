@@ -4,7 +4,7 @@
 
 @section('content')
 
-<div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900" x-data="{ modalOpen: false }">
+<div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900">
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Share Packages</h2>
@@ -12,7 +12,6 @@
         </div>
     </div>
 
-    {{-- Filter section --}}
     <div class="mt-8 bg-white dark:bg-gray-800 p-7 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">Filters</h3>
@@ -42,7 +41,6 @@
         </div>
     </div>
 
-    {{-- Tabel section --}}
     <div class="mt-8 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="overflow-x-hidden">
             <table id="approvalTable" class="w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -50,6 +48,7 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Package Data</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Share To</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Request Date</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Decision Date</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
@@ -62,30 +61,28 @@
         </div>
     </div>
 
-    <div x-show="modalOpen"
+    <div id="shareModal"
         class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75"
-        @click.away="modalOpen = false"
-        style="display: none;"
-        x-cloak>
+        style="display: none;">
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md" @click.stop>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
             <div class="flex items-center justify-between p-4 border-b dark:border-gray-700">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Bagikan Paket Dokumen</h3>
-                <button @click="modalOpen = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Share Document Package</h3>
+                <button type="button" class="btn-close-modal text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                     <i class="fa-solid fa-times fa-lg"></i>
                 </button>
             </div>
 
             <div class="p-6">
                 <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                    Pilih role untuk membagikan paket ini. Kolom `share_to` akan di-update sesuai pilihan Anda.
+                    Select one or more roles to share this package with.
                 </p>
 
                 <div>
-                    <label for="selectRole" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Pilih Role</label>
-                    <select id="selectRole" name="role_id" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        <option value="">Memuat role...</option>
-                    </select>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select Roles</label>
+                    <div id="roleListContainer" class="mt-2 max-h-48 overflow-y-auto space-y-2 border border-gray-300 dark:border-gray-600 rounded-md p-3 bg-white dark:bg-gray-700">
+                        <p class="text-gray-500 dark:text-gray-400">Loading roles...</p>
+                    </div>
                     <p id="shareError" class="text-red-500 text-sm mt-2" style="display: none;"></p>
                 </div>
 
@@ -93,17 +90,17 @@
             </div>
 
             <div class="flex justify-end p-4 bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700 rounded-b-lg space-x-3">
-                <button @click="modalOpen = false"
-                    type="button"
-                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
-                    Batal
+                <button type="button"
+                    class="btn-close-modal px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+                    Cancel
                 </button>
                 <button id="btnSaveShare"
                     type="button"
                     class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    Simpan & Bagikan
+                    Share
                 </button>
             </div>
+
         </div>
     </div>
 </div>
@@ -113,8 +110,102 @@
 @push('scripts')
 <script>
     $(function() {
+
+        function detectTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+
+            return isDark ? {
+                mode: 'dark',
+                bg: 'rgba(30, 41, 59, 0.95)',
+                fg: '#E5E7EB',
+                border: 'rgba(71, 85, 105, 0.5)',
+                progress: 'rgba(255,255,255,.9)',
+                icon: {
+                    success: '#22c55e',
+                    error: '#ef4444',
+                    warning: '#f59e0b',
+                    info: '#3b82f6'
+                }
+            } : {
+                mode: 'light',
+                bg: 'rgba(255, 255, 255, 0.98)',
+                fg: '#0f172a',
+                border: 'rgba(226, 232, 240, 1)',
+                progress: 'rgba(15,23,42,.8)',
+                icon: {
+                    success: '#16a34a',
+                    error: '#dc2626',
+                    warning: '#d97706',
+                    info: '#2563eb'
+                }
+            };
+        }
+
+        const BaseToast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2600,
+            timerProgressBar: true,
+            showClass: {
+                popup: 'swal2-animate-toast-in'
+            },
+            hideClass: {
+                popup: 'swal2-animate-toast-out'
+            },
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        function renderToast({
+            icon = 'success',
+            title = 'Success',
+            text = ''
+        } = {}) {
+            const t = detectTheme();
+
+            BaseToast.fire({
+                icon,
+                title,
+                text,
+                iconColor: t.icon[icon] || t.icon.success,
+                background: t.bg,
+                color: t.fg,
+                customClass: {
+                    popup: 'swal2-toast border',
+                    title: '',
+                    timerProgressBar: ''
+                },
+                didOpen: (toast) => {
+                    const bar = toast.querySelector('.swal2-timer-progress-bar');
+                    if (bar) bar.style.background = t.progress;
+                    const popup = toast.querySelector('.swal2-popup');
+                    if (popup) popup.style.borderColor = t.border;
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+        }
+
+        function toastSuccess(title = 'Success', text = 'Operation completed successfully.') {
+            renderToast({
+                icon: 'success',
+                title,
+                text
+            });
+        }
+
+
         let table;
         const ENDPOINT = '{{ route("share.filters") }}';
+
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
 
         function resetSelect2ToAll($el) {
             $el.empty();
@@ -264,6 +355,10 @@
                         }
                     },
                     {
+                        data: 'share_to',
+                        name: 'dp.share_to',
+                    },
+                    {
                         data: 'request_date',
                         name: 'dpr.requested_at',
                         render: function(v) {
@@ -356,93 +451,126 @@
                 if (table) table.ajax.reload(null, true);
             });
 
-            const $rootEl = $('[x-data="{ modalOpen: false }"]');
-            const $selectRole = $('#selectRole');
+            const $shareModal = $('#shareModal');
+            const $roleListContainer = $('#roleListContainer');
             const $hiddenPackageId = $('#hiddenPackageId');
             const $shareError = $('#shareError');
             const $btnSaveShare = $('#btnSaveShare');
 
+
+            $('body').on('click', '.btn-close-modal', function() {
+                $shareModal.hide();
+            });
+
+            $shareModal.on('click', function(e) {
+                if ($(e.target).is($shareModal)) {
+                    $(this).hide();
+                }
+            });
+
             function loadRoles() {
-                $selectRole.html('<option value="">Memuat role...</option>').prop('disabled', true);
+                $roleListContainer.html('<p class="text-gray-500 dark:text-gray-400">Loading...</p>');
+                $shareError.hide().text('');
+
                 $.ajax({
                     url: '{{ route("share.getRoles") }}',
                     type: 'GET',
                     dataType: 'json',
                     success: function(roles) {
-                        $selectRole.empty().prop('disabled', false);
-                        $selectRole.append('<option value="" selected disabled>-- Pilih Role --</option>');
+                        $roleListContainer.empty();
+
                         if (roles && roles.length > 0) {
                             roles.forEach(function(role) {
-                                $selectRole.append(new Option(role.name, role.id));
+                                const roleId = `role-${role.id}`;
+                                const checkboxHtml = `
+                                    <div class="relative flex items-start">
+                                        <div class="flex items-center h-5">
+                                            <input id="${roleId}" name="roles[]" value="${role.id}" type="checkbox" 
+                                                   class="role-checkbox h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-500 rounded focus:ring-blue-500 dark:bg-gray-600 dark:checked:bg-blue-500">
+                                        </div>
+                                        <div class="ml-3 text-sm">
+                                            <label for="${roleId}" class="font-medium text-gray-700 dark:text-gray-300">${role.role_name}</label>
+                                        </div>
+                                    </div>
+                                `;
+                                $roleListContainer.append(checkboxHtml);
                             });
                         } else {
-                            $selectRole.append('<option value="">Tidak ada role ditemukan</option>');
+                            $roleListContainer.html('<p class="text-gray-500 dark:text-gray-400">No roles found</p>');
                         }
                     },
                     error: function(xhr) {
-                        console.error('Gagal memuat roles:', xhr.responseText);
-                        $selectRole.html('<option value="">Gagal memuat role</option>');
+                        console.error('Failed to load roles:', xhr.responseText);
+                        $roleListContainer.html('<p class="text-red-500">Failed to load roles. Please try again later.</p>');
                     }
                 });
             }
 
+
             $('#approvalTable tbody').on('click', '.btn-share', function(e) {
                 e.stopPropagation();
-
                 const packageId = $(this).data('id');
                 if (!packageId) return;
 
                 $hiddenPackageId.val(packageId);
-                $shareError.hide().text('');
-                $btnSaveShare.prop('disabled', false).text('Simpan & Bagikan');
+                $btnSaveShare.prop('disabled', false).text('Share');
 
                 loadRoles();
 
-                if ($rootEl[0] && $rootEl[0].__x) {
-                    $rootEl[0].__x.data.modalOpen = true;
-                }
+                $shareModal.show();
             });
 
             $btnSaveShare.on('click', function() {
+                const $this = $(this);
                 const packageId = $hiddenPackageId.val();
-                const roleId = $selectRole.val();
 
-                if (!packageId || !roleId) {
-                    $shareError.text('Silakan pilih role terlebih dahulu.').show();
+                const selectedRoleIds = $roleListContainer.find('.role-checkbox:checked').map(function() {
+                    return $(this).val();
+                }).get();
+
+                $shareError.hide().text('');
+
+                if (selectedRoleIds.length === 0) {
+                    $shareError.text('Please select at least one role.').show();
                     return;
                 }
 
-                $shareError.hide().text('');
-                $btnSaveShare.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...');
+                if (!packageId) {
+                    $shareError.text('Package ID not found. Please reload the page.').show();
+                    return;
+                }
+
+                $this.prop('disabled', true).text('Sharing...');
 
                 $.ajax({
-                    url: `/share/package/${packageId}`,
+                    url: '{{ route("share.save") }}',
                     type: 'POST',
                     data: {
-                        _token: '{{ csrf_token() }}',
-                        role_id: roleId
+                        package_id: packageId,
+                        role_ids: selectedRoleIds
                     },
                     dataType: 'json',
                     success: function(response) {
-                        if ($rootEl[0] && $rootEl[0].__x) {
-                            $rootEl[0].__x.data.modalOpen = false;
-                        }
+                        $shareModal.hide();
 
-                        alert(response.success || 'Berhasil dibagikan!');
+                        toastSuccess('Package shared successfully!', '');
 
-                        $btnSaveShare.prop('disabled', false).text('Simpan & Bagikan');
+                        if (table) table.ajax.reload(null, false);
                     },
                     error: function(xhr) {
-                        let errorMsg = 'Terjadi kesalahan.';
-                        if (xhr.responseJSON && xhr.responseJSON.error) {
-                            errorMsg = xhr.responseJSON.error;
+                        console.error('Failed to share:', xhr.responseText);
+                        let errorMsg = 'Failed to share package. Please try again later.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
                         }
-                        console.error('Gagal share:', xhr.responseText);
                         $shareError.text(errorMsg).show();
-                        $btnSaveShare.prop('disabled', false).text('Simpan & Bagikan');
+                    },
+                    complete: function() {
+                        $this.prop('disabled', false).text('Share');
                     }
                 });
             });
+
         }
 
         initTable();

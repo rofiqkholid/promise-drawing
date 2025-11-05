@@ -417,11 +417,15 @@
 
       // klik row -> detail
       $('#approvalTable tbody').on('click', 'tr', function() {
-        const row = table.row(this).data();
-        if (row && row.id) window.location.href = `/approval/${row.id}`;
-      }).on('mouseenter', 'tr', function() {
-        $(this).css('cursor', 'pointer');
-      });
+  const row = table.row(this).data();
+
+  // asumsi controller approvals.list mengirimkan field "hash" (encrypt(id))
+  if (row && row.hash) {
+    window.location.href = `{{ url('/approval') }}/${encodeURIComponent(row.hash)}`;
+  }
+}).on('mouseenter', 'tr', function() {
+  $(this).css('cursor', 'pointer');
+});
     }
 
     // start
