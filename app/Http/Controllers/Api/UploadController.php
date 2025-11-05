@@ -123,11 +123,13 @@ class UploadController extends Controller
             ->leftJoin('doctype_groups as dg', 'p.doctype_group_id', '=', 'dg.id')
             ->leftJoin('doctype_subcategories as sc', 'p.doctype_subcategory_id', '=', 'sc.id')
             ->leftJoin('part_groups as pg', 'p.part_group_id', '=', 'pg.id')
+            ->leftJoin('customer_revision_labels as crl', 'r.revision_label_id', '=', 'crl.id')
             ->select(
                 'r.id as id', 'r.receipt_date', 'r.package_id as package_id', 'p.package_no as package_no',
                 'r.revision_no as revision_no', 'r.revision_status as revision_status', 'r.note as revision_note',
                 'r.ecn_no as ecn_no',
                 'r.revision_label_id as revision_label_id',
+                'crl.label as revision_label_name',
                 'r.is_obsolete as is_obsolete', 'r.created_by as revision_created_by', 'r.created_at as created_at', 'r.updated_at as updated_at',
                 'p.project_status_id', 'p.created_by as package_created_by',
                 'c.id as customer_id','c.name as customer_name','c.code as customer_code',

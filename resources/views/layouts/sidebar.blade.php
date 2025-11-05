@@ -11,7 +11,7 @@
 <aside
     x-data="{ openMenu: '' }"
     @mouseleave="openMenu = ''"
-    class="no-scrollbar fixed top-0 left-0 h-screen z-30 group w-20 hover:w-64 p-4 bg-white dark:bg-gray-900 flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden shadow-lg border-r border-gray-200 dark:border-gray-700">
+    class="no-scrollbar fixed top-0 left-0 h-screen z-50 group w-20 hover:w-64 p-4 bg-white dark:bg-gray-900 flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden shadow-lg border-r border-gray-200 dark:border-gray-700">
 
     <div class="flex items-center ml-[3px] h-16 mb-10 flex-shrink-0">
         <img src="{{ asset('assets/image/favicon.ico') }}" alt="Logo" class="h-10 w-10 object-contain flex-shrink-0">

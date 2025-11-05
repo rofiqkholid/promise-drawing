@@ -4,7 +4,14 @@
 
 @section('content')
 
-<div class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen" x-data="approvalDetail()" x-init="init()">
+<div
+  class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen"
+  x-data="approvalDetail()"
+  x-init="init()"
+  @mousemove.window="onPan($event)"
+  @mouseup.window="endPan()"
+  @mouseleave.window="endPan()"
+>
 
   <!-- ================= MAIN LAYOUT: LEFT STACK + RIGHT PREVIEW ================= -->
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6 items-start">
@@ -160,12 +167,42 @@
             </a>
           </div>
 
+          <!-- ZOOM TOOLBAR untuk JPG/PNG/TIFF/HPGL -->
+          <div x-show="isImage(selectedFile?.name) || isTiff(selectedFile?.name) || isHpgl(selectedFile?.name)"
+               class="mb-3 flex items-center justify-end gap-2 text-xs text-gray-700 dark:text-gray-200">
+            <span x-text="Math.round(imageZoom * 100) + '%'"></span>
+            <button @click="zoomOut()"
+                    class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+              -
+            </button>
+            <button @click="resetZoom()"
+                    class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+              Fit
+            </button>
+            <button @click="zoomIn()"
+                    class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+              +
+            </button>
+          </div>
+
           <!-- PREVIEW AREA (image/pdf/tiff/cad) -->
           <div class="preview-area bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center w-full">
 
-            <!-- IMAGE -->
+            <!-- IMAGE (JPG/PNG/...) -->
             <template x-if="isImage(selectedFile?.name)">
-              <img :src="selectedFile?.url" alt="File Preview" class="max-w-full max-h-[70vh] object-contain rounded" loading="lazy">
+              <div
+                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing flex items-center justify-center"
+                @mousedown.prevent="startPan($event)"
+                @wheel.prevent="onWheelZoom($event)"
+              >
+                <img
+                  :src="selectedFile?.url"
+                  alt="File Preview"
+                  class="pointer-events-none select-none"
+                  loading="lazy"
+                  :style="imageTransformStyle()"
+                >
+              </div>
             </template>
 
             <!-- PDF -->
@@ -176,14 +213,50 @@
                 title="PDF preview"></iframe>
             </template>
 
-            <!-- TIFF (rendered as PNG into <img>) -->
+            <!-- TIFF (render as PNG into <img>) -->
             <template x-if="isTiff(selectedFile?.name)">
-              <div class="w-full">
-                <img x-ref="tifImg"
-                     alt="TIFF Preview"
-                     class="max-w-full max-h-[70vh] object-contain bg-black/5 rounded" />
-                <div x-show="tifLoading" class="text-xs text-gray-500 mt-2">Rendering TIFF…</div>
-                <div x-show="tifError" class="text-xs text-red-600 mt-2" x-text="tifError"></div>
+              <div
+                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing flex items-center justify-center"
+                @mousedown.prevent="startPan($event)"
+                @wheel.prevent="onWheelZoom($event)"
+              >
+                <img
+                  x-ref="tifImg"
+                  alt="TIFF Preview"
+                  class="pointer-events-none select-none"
+                  :style="imageTransformStyle()"
+                />
+                <div x-show="tifLoading" class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
+                  Rendering TIFF…
+                </div>
+                <div x-show="tifError" class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded" x-text="tifError"></div>
+              </div>
+            </template>
+
+            <!-- HPGL -->
+            <template x-if="isHpgl(selectedFile?.name)">
+              <div
+                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing flex items-center justify-center"
+                @mousedown.prevent="startPan($event)"
+                @wheel.prevent="onWheelZoom($event)"
+              >
+                <canvas
+                  x-ref="hpglCanvas"
+                  class="pointer-events-none select-none"
+                  :style="imageTransformStyle()"
+                ></canvas>
+
+                <div
+                  x-show="hpglLoading"
+                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
+                >
+                  Rendering HPGL…
+                </div>
+                <div
+                  x-show="hpglError"
+                  class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
+                  x-text="hpglError"
+                ></div>
               </div>
             </template>
 
@@ -220,7 +293,15 @@
             </template>
 
             <!-- FALLBACK -->
-            <template x-if="!isImage(selectedFile?.name) && !isPdf(selectedFile?.name) && !isTiff(selectedFile?.name) && !isCad(selectedFile?.name)">
+            <template
+              x-if="
+                !isImage(selectedFile?.name)
+                && !isPdf(selectedFile?.name)
+                && !isTiff(selectedFile?.name)
+                && !isCad(selectedFile?.name)
+                && !isHpgl(selectedFile?.name)
+              "
+            >
               <div class="text-center">
                 <i class="fa-solid fa-file text-6xl text-gray-400 dark:text-gray-500"></i>
                 <p class="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400">Preview Unavailable</p>
@@ -376,7 +457,7 @@
 <!-- Alpine collapse (untuk x-collapse) -->
 <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 
-<!-- UTIF.js untuk render TIFF (v2, API klasik) -->
+<!-- UTIF.js untuk render TIFF (v2 classic API) -->
 <script src="https://unpkg.com/utif@2.0.1/UTIF.js"></script>
 
 <!-- ES Module shims + Import Map untuk Three.js (module) -->
@@ -470,20 +551,18 @@
   function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') {
     renderToast({ icon: 'success', title, text });
   }
-
   function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') {
     BaseToast.update({ timer: 3400 });
     renderToast({ icon: 'error', title, text });
     BaseToast.update({ timer: 2600 });
   }
-
   function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') {
     renderToast({ icon: 'warning', title, text });
   }
-
   function toastInfo(title = 'Informasi', text = '') {
     renderToast({ icon: 'info', title, text });
   }
+
   window.toastSuccess = toastSuccess;
   window.toastError = toastError;
   window.toastWarning = toastWarning;
@@ -509,6 +588,67 @@
       // TIFF state
       tifLoading: false,
       tifError: '',
+
+      // HPGL state
+      hpglLoading: false,
+      hpglError: '',
+
+      // ZOOM + PAN untuk image / TIFF / HPGL
+      imageZoom: 1,
+      minZoom: 0.5,
+      maxZoom: 4,
+      zoomStep: 0.25,
+      panX: 0,
+      panY: 0,
+      isPanning: false,
+      panStartX: 0,
+      panStartY: 0,
+      panOriginX: 0,
+      panOriginY: 0,
+
+      zoomIn() {
+        this.imageZoom = Math.min(this.imageZoom + this.zoomStep, this.maxZoom);
+      },
+      zoomOut() {
+        this.imageZoom = Math.max(this.imageZoom - this.zoomStep, this.minZoom);
+      },
+      resetZoom() {
+        this.imageZoom = 1;
+        this.panX = 0;
+        this.panY = 0;
+      },
+      onWheelZoom(e) {
+        const delta = e.deltaY;
+        const step = this.zoomStep;
+
+        if (delta < 0) {
+          // scroll ke atas = zoom in
+          this.imageZoom = Math.min(this.imageZoom + step, this.maxZoom);
+        } else if (delta > 0) {
+          // scroll ke bawah = zoom out
+          this.imageZoom = Math.max(this.imageZoom - step, this.minZoom);
+        }
+      },
+      startPan(e) {
+        this.isPanning = true;
+        this.panStartX = e.clientX;
+        this.panStartY = e.clientY;
+        this.panOriginX = this.panX;
+        this.panOriginY = this.panY;
+      },
+      onPan(e) {
+        if (!this.isPanning) return;
+        const dx = e.clientX - this.panStartX;
+        const dy = e.clientY - this.panStartY;
+        this.panX = this.panOriginX + dx;
+        this.panY = this.panOriginY + dy;
+      },
+      endPan() {
+        this.isPanning = false;
+      },
+      imageTransformStyle() {
+        return `transform: translate(${this.panX}px, ${this.panY}px) scale(${this.imageZoom}); transform-origin: center center;`;
+      },
 
       // CAD viewer state
       iges: {
@@ -544,6 +684,9 @@
       isTiff(name) {
         return ['tif', 'tiff'].includes(this.extOf(name));
       },
+      isHpgl(name) {
+        return ['plt', 'hpgl', 'hpg', 'prn'].includes(this.extOf(name));
+      },
       isCad(name) {
         return ['igs', 'iges', 'stp', 'step'].includes(this.extOf(name));
       },
@@ -551,7 +694,7 @@
         return u;
       },
 
-      /* ===== TIFF renderer: render ke <img> seperti JPG ===== */
+      /* ===== TIFF renderer: convert ke PNG dataURL & taruh ke <img> ===== */
       async renderTiff(url) {
         if (!url || typeof window.UTIF === 'undefined') return;
 
@@ -563,7 +706,6 @@
           if (!resp.ok) throw new Error('Gagal mengambil file TIFF');
           const buf = await resp.arrayBuffer();
 
-          // cari object UTIF yang valid
           const U =
             (window.UTIF && typeof window.UTIF.decode === 'function') ? window.UTIF :
             (window.UTIF && window.UTIF.UTIF && typeof window.UTIF.UTIF.decode === 'function') ? window.UTIF.UTIF :
@@ -573,6 +715,7 @@
 
           const ifds = U.decode(buf);
           if (!ifds || !ifds.length) throw new Error('TIFF tidak memiliki frame');
+
           const first = ifds[0];
 
           if (typeof U.decodeImage === 'function') {
@@ -585,27 +728,149 @@
           const w = first.width;
           const h = first.height;
 
-          // offscreen canvas
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          canvas.width = w;
-          canvas.height = h;
+          const off = document.createElement('canvas');
+          const ctx = off.getContext('2d');
+          off.width = w;
+          off.height = h;
 
           const imgData = ctx.createImageData(w, h);
           imgData.data.set(rgba);
           ctx.putImageData(imgData, 0, 0);
 
-          await this.$nextTick();
-          const imgEl = this.$refs.tifImg;
-          if (!imgEl) throw new Error('Elemen img TIFF tidak ditemukan');
+          const dataUrl = off.toDataURL('image/png');
 
-          // jadikan PNG base64, tampil seperti JPG/PNG biasa
-          imgEl.src = canvas.toDataURL('image/png');
+          await this.$nextTick();
+          const img = this.$refs.tifImg;
+          if (img) img.src = dataUrl;
         } catch (e) {
           console.error(e);
           this.tifError = e?.message || 'Gagal render TIFF';
         } finally {
           this.tifLoading = false;
+        }
+      },
+
+      /* ===== HPGL renderer: parse PU/PD/PA & gambar ke canvas (hi-res) ===== */
+      async renderHpgl(url) {
+        if (!url) return;
+
+        this.hpglLoading = true;
+        this.hpglError = '';
+
+        try {
+          const resp = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+          if (!resp.ok) throw new Error('Gagal mengambil file HPGL');
+          const text = await resp.text();
+
+          // buang spasi & pecah per ';'
+          const commands = text.replace(/\s+/g, '').split(';');
+
+          let penDown = false;
+          let x = 0, y = 0;
+          const segments = [];
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+          const addPoint = (nx, ny) => {
+            if (penDown) {
+              segments.push({ x1: x, y1: y, x2: nx, y2: ny });
+              minX = Math.min(minX, x, nx);
+              minY = Math.min(minY, y, ny);
+              maxX = Math.max(maxX, x, nx);
+              maxY = Math.max(maxY, y, ny);
+            } else {
+              minX = Math.min(minX, nx);
+              minY = Math.min(minY, ny);
+              maxX = Math.max(maxX, nx);
+              maxY = Math.max(maxY, ny);
+            }
+            x = nx;
+            y = ny;
+          };
+
+          for (const raw of commands) {
+            if (!raw) continue;
+            const cmd = raw.toUpperCase();
+            const op = cmd.slice(0, 2);
+            const argsStr = cmd.slice(2);
+
+            const parseCoords = () => {
+              if (!argsStr) return [];
+              return argsStr.split(',').map(Number).filter(v => !isNaN(v));
+            };
+
+            if (op === 'IN') {
+              penDown = false;
+              x = 0;
+              y = 0;
+            } else if (op === 'SP') {
+              // abaikan warna
+            } else if (op === 'PU') {
+              penDown = false;
+              const coords = parseCoords();
+              for (let i = 0; i < coords.length; i += 2) {
+                addPoint(coords[i], coords[i + 1]);
+              }
+            } else if (op === 'PD') {
+              penDown = true;
+              const coords = parseCoords();
+              for (let i = 0; i < coords.length; i += 2) {
+                addPoint(coords[i], coords[i + 1]);
+              }
+            } else if (op === 'PA') {
+              const coords = parseCoords();
+              for (let i = 0; i < coords.length; i += 2) {
+                addPoint(coords[i], coords[i + 1]);
+              }
+            }
+          }
+
+          await this.$nextTick();
+          const canvas = this.$refs.hpglCanvas;
+          if (!canvas) throw new Error('Canvas HPGL tidak ditemukan');
+
+          const parent = canvas.parentElement;
+          const w = parent.clientWidth || 800;
+          const h = parent.clientHeight || 500;
+
+          // ==== HIGH-RES CANVAS (supaya pas di-zoom tetap tajam) ====
+          const dpr = window.devicePixelRatio || 1;
+          const logicalScale = 4 * dpr; // bisa diubah 3/5 sesuai kebutuhan
+          canvas.width = w * logicalScale;
+          canvas.height = h * logicalScale;
+          canvas.style.width = w + 'px';
+          canvas.style.height = h + 'px';
+
+          const ctx = canvas.getContext('2d');
+          ctx.setTransform(logicalScale, 0, 0, logicalScale, 0, 0);
+          ctx.clearRect(0, 0, w, h);
+          ctx.lineWidth = 1 / logicalScale;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.strokeStyle = '#000';
+
+          if (!segments.length) return;
+
+          const dx = maxX - minX || 1;
+          const dy = maxY - minY || 1;
+          const scale = 0.9 * Math.min(w / dx, h / dy); // padding 10%
+          const offX = (w - dx * scale) / 2 - minX * scale;
+          const offY = (h - dy * scale) / 2 + maxY * scale; // Y dibalik
+
+          ctx.beginPath();
+          for (const s of segments) {
+            const sx = s.x1 * scale + offX;
+            const sy = -s.y1 * scale + offY;
+            const ex = s.x2 * scale + offX;
+            const ey = -s.y2 * scale + offY;
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(ex, ey);
+          }
+          ctx.stroke();
+        } catch (e) {
+          console.error(e);
+          this.hpglError = e?.message || 'Gagal render HPGL';
+        } finally {
+          this.hpglLoading = false;
         }
       },
 
@@ -754,7 +1019,6 @@
         if (mode === 'shaded-edges') {
           this._setPolygonOffset(root, true, 1, 1);
           this._toggleEdges(root, true, 0x000000);
-          return;
         }
       },
 
@@ -882,11 +1146,27 @@
 
       selectFile(file) {
         if (this.isCad(this.selectedFile?.name)) this.disposeCad();
+
         if (this.isTiff(this.selectedFile?.name)) {
           this.tifError = '';
           this.tifLoading = false;
           if (this.$refs.tifImg) this.$refs.tifImg.src = '';
         }
+
+        if (this.isHpgl(this.selectedFile?.name)) {
+          this.hpglError = '';
+          this.hpglLoading = false;
+          if (this.$refs.hpglCanvas) {
+            const c = this.$refs.hpglCanvas;
+            const ctx = c.getContext('2d');
+            ctx && ctx.clearRect(0, 0, c.width, c.height);
+          }
+        }
+
+        // reset zoom & pan setiap ganti file
+        this.imageZoom = 1;
+        this.panX = 0;
+        this.panY = 0;
 
         this.selectedFile = { ...file };
 
@@ -895,6 +1175,8 @@
             this.renderTiff(file.url);
           } else if (this.isCad(file?.name)) {
             this.renderCadOcct(file.url);
+          } else if (this.isHpgl(file?.name)) {
+            this.renderHpgl(file.url);
           }
         });
       },
@@ -951,9 +1233,7 @@
           });
           const text = await response.text();
           let result = {};
-          try {
-            result = JSON.parse(text);
-          } catch {}
+          try { result = JSON.parse(text); } catch {}
           if (!response.ok) {
             if (response.status === 409) throw new Error(result.message || 'Revision has already been approved by someone else.');
             if (response.status === 403) throw new Error(result.message || 'You do not have permission to approve.');
@@ -996,9 +1276,7 @@
           });
           const text = await response.text();
           let result = {};
-          try {
-            result = JSON.parse(text);
-          } catch {}
+          try { result = JSON.parse(text); } catch {}
           if (!response.ok) {
             if (response.status === 403) throw new Error(result.message || 'You do not have permission to reject.');
             if (response.status === 422) throw new Error(result.message || 'Revision is not in a state that can be rejected.');
@@ -1033,9 +1311,7 @@
           });
           const text = await response.text();
           let result = {};
-          try {
-            result = JSON.parse(text);
-          } catch {}
+          try { result = JSON.parse(text); } catch {}
           if (!response.ok) {
             if (response.status === 403) throw new Error(result.message || 'You do not have permission to rollback.');
             if (response.status === 422) throw new Error(result.message || 'Revision is not in a state that can be rolled back.');
@@ -1073,15 +1349,13 @@
           const scene = new THREE.Scene();
           scene.background = null;
           const wrap = this.$refs.igesWrap;
-          const width = wrap?.clientWidth || 800, height = wrap?.clientHeight || 500;
+          const width = wrap?.clientWidth || 800;
+          const height = wrap?.clientHeight || 500;
 
           const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 10000);
           camera.position.set(250, 200, 250);
 
-          const renderer = new THREE.WebGLRenderer({
-            antialias: true,
-            alpha: true
-          });
+          const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
           renderer.setPixelRatio(window.devicePixelRatio || 1);
           renderer.setSize(width, height);
           wrap.appendChild(renderer.domElement);

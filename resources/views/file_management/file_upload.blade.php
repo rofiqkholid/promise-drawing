@@ -249,12 +249,32 @@
             return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
         }
 
-        function formatDate(dt) {
+        function formatDateTime(dt) {
             if (!dt) return '-';
             try {
                 const d = new Date(dt);
                 if (isNaN(d.getTime())) return dt;
                 return d.toLocaleString();
+            } catch (e) { return dt; }
+        }
+
+        function formatDateOnly(dt) {
+            if (!dt) return '-';
+            try {
+                const datePart = dt.split('T')[0];
+                const parts = datePart.split('-');
+
+                if (parts.length === 3 && parts[0].length === 4) {
+                    const year = parts[0];
+                    const month = parseInt(parts[1], 10);
+                    const day = parseInt(parts[2], 10);
+
+                    return `${day}/${month}/${year}`;
+                } else {
+                    const d = new Date(dt);
+                    if (isNaN(d.getTime())) return dt;
+                    return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+                }
             } catch (e) { return dt; }
         }
 
@@ -314,19 +334,43 @@
         function renderActivityLogs(logs) {
             const container = $('#activity-log-content');
             container.empty();
-            if (!logs || logs.length === 0) {
+
+            if (!logs || !logs.length) {
                 container.html(
                     '<p class="italic text-center text-gray-500 dark:text-gray-400">No activity yet. This panel will display recent package activities and approvals.</p>'
                 );
                 return;
             }
+
+            container.off('click', '.log-toggle-btn').on('click', '.log-toggle-btn', function() {
+                const target = $(this).data('target');
+                const $targetEl = $(target);
+
+                if ($targetEl.hasClass('hidden')) {
+                    $targetEl.removeClass('hidden');
+                    $(this).html('Hide additional details <i class="fa-solid fa-chevron-up fa-xs ml-1"></i>');
+                } else {
+                    $targetEl.addClass('hidden');
+                    $(this).html('Show additional details <i class="fa-solid fa-chevron-down fa-xs ml-1"></i>');
+                }
+            });
+
             logs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-            const createDetailRow = (key, val) => {
+            const createPrimaryDetail = (key, val) => {
                 if (val === null || val === undefined || val === '') return '';
-                const formattedVal = (key === 'Note') ? `"${val}"` : val;
-                const valClass = (key === 'Note') ? 'italic' : '';
-                return `<div class="text-xs ${valClass}"><span class="font-semibold text-gray-600 dark:text-gray-400">${key}:</span> <span class="text-gray-800 dark:text-gray-200">${formattedVal}</span></div>`;
+                return `<div class="text-xs"><span class="font-semibold text-gray-600 dark:text-gray-400">${key}:</span> <span class="text-gray-800 dark:text-gray-200">${val}</span></div>`;
+            };
+            const createPrimaryNote = (note) => {
+                if (note === null || note === undefined || note === '') return '';
+                return `<div class="text-xs mt-1 italic"><span class="font-semibold text-gray-600 dark:text-gray-400">Note:</span> <span class="text-gray-800 dark:text-gray-200">"${note}"</span></div>`;
+            };
+            const createCollapsibleItem = (key, val) => {
+                if (val === null || val === undefined || val === '') return '';
+                return `<div class="text-xs flex justify-between items-center space-x-2">
+                            <span class="text-gray-500 dark:text-gray-400">${key}</span>
+                            <span class="font-medium text-gray-800 dark:text-gray-200 text-right">${val}</span>
+                        </div>`;
             };
 
             logs.forEach((l, index) => {
@@ -334,64 +378,65 @@
                 const revisionNo = m.revision_no !== undefined ? `rev${m.revision_no}` : '';
 
                 const activity = {
-                    UPLOAD: {
-                        icon: 'fa-upload',
-                        color: 'bg-blue-500',
-                        title: 'Draft Saved'
-                    },
-                    SUBMIT_APPROVAL: {
-                        icon: 'fa-paper-plane',
-                        color: 'bg-yellow-500',
-                        title: 'Approval Submitted'
-                    },
-                    APPROVE: {
-                        icon: 'fa-check-double',
-                        color: 'bg-green-500',
-                        title: 'Package Approved'
-                    },
-                    REJECT: {
-                        icon: 'fa-times-circle',
-                        color: 'bg-red-500',
-                        title: 'Package Rejected'
-                    },
-                    default: {
-                        icon: 'fa-info-circle',
-                        color: 'bg-gray-500',
-                        title: l.activity_code
-                    }
+                    UPLOAD: { icon: 'fa-upload', color: 'bg-blue-500', title: 'Draft Saved / Uploaded' },
+                    SUBMIT_APPROVAL: { icon: 'fa-paper-plane', color: 'bg-yellow-500', title: 'Approval Submitted' },
+                    APPROVE: { icon: 'fa-check-double', color: 'bg-green-500', title: 'Package Approved' },
+                    DEVICE_CONFIRM: { icon: 'fa-check', color: 'bg-teal-500', title: 'Device Confirmed' },
+                    LDEVICE_CONFIRM: { icon: 'fa-check', color: 'bg-teal-500', title: 'Device Confirmed (L)' }, // <-- BARU
+                    REVISE_CONFIRM: { icon: 'fa-pen-to-square', color: 'bg-purple-500', title: 'Revision Confirmed' }, // <-- BARU
+                    REJECT: { icon: 'fa-times-circle', color: 'bg-red-500', title: 'Package Rejected' },
+                    ROLLBACK: { icon: 'fa-undo', color: 'bg-orange-500', title: 'Revision Rolled Back' },
+                    default: { icon: 'fa-info-circle', color: 'bg-gray-500', title: l.activity_code }
                 };
 
                 const { icon, color, title } = activity[l.activity_code] || activity.default;
 
                 const timeAgo = l.created_at ? formatTimeAgo(new Date(l.created_at)) : '';
+                const fullTimestamp = l.created_at ? formatDateTime(l.created_at) : '';
                 const userLabel = l.user_name ? `${l.user_name}` : (l.user_id ? `User #${l.user_id}` : 'System');
 
-                let detailsHtml = '';
-                let rows = [];
+                const logId = `log-details-${l.id}`;
+
+                let alwaysVisibleHtml = '';
+                let collapsibleHtml = '';
 
                 if (l.activity_code === 'UPLOAD') {
-                    rows = [
-                        createDetailRow("ECN", m.ecn_no),
-                        createDetailRow("Label", m.revision_label),
-                        createDetailRow("Part No", m.part_no),
-                        createDetailRow("Customer", m.customer_code),
-                        createDetailRow("Model", m.model_name),
-                        createDetailRow("Doc Group", m.doctype_group),
-                        createDetailRow("Sub-Category", m.doctype_subcategory),
-                        createDetailRow("Note", m.note)
-                    ];
-                } else if (l.activity_code === 'SUBMIT_APPROVAL') {
-                    rows = [
-                        createDetailRow("ECN", m.ecn_no),
-                        createDetailRow("Label", m.revision_label)
-                    ];
-                } else if (m.note) {
-                    rows = [createDetailRow("Note", m.note)];
+                    alwaysVisibleHtml = [
+                        createPrimaryDetail("ECN", m.ecn_no),
+                        createPrimaryDetail("Label", m.revision_label),
+                        createPrimaryNote(m.note)
+                    ].filter(Boolean).join('');
+
+                    const productInfo = [
+                        createCollapsibleItem("Customer", m.customer_code),
+                        createCollapsibleItem("Model", m.model_name),
+                        createCollapsibleItem("Part No", m.part_no)
+                    ].filter(Boolean).join('');
+
+                    const docInfo = [
+                        createCollapsibleItem("Doc Group", m.doctype_group),
+                        createCollapsibleItem("Sub-Category", m.doctype_subcategory)
+                    ].filter(Boolean).join('');
+
+                    collapsibleHtml = [
+                        productInfo,
+                        docInfo ? `<div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700/50 space-y-1">${docInfo}</div>` : ''
+                    ].filter(Boolean).join('');
+
+                } else if (['SUBMIT_APPROVAL', 'DEVICE_CONFIRM', 'LDEVICE_CONFIRM', 'REVISE_CONFIRM'].includes(l.activity_code)) {
+                    alwaysVisibleHtml = [
+                        createPrimaryDetail("ECN", m.ecn_no),
+                        createPrimaryDetail("Label", m.revision_label),
+                        createPrimaryDetail("Previous Status", m.previous_status),
+                        createPrimaryNote(m.note)
+                    ].filter(Boolean).join('');
+
+                } else {
+                    alwaysVisibleHtml = createPrimaryNote(m.note);
                 }
 
-                detailsHtml = rows.filter(Boolean).join('');
-
                 const isLast = index === logs.length - 1;
+
                 const el = $(`
                     <div class="relative">
                         ${!isLast ? '<div class="absolute left-5 top-5 -ml-px h-full w-0.5 bg-gray-300 dark:bg-gray-700"></div>' : ''}
@@ -405,10 +450,24 @@
                                         ${title}
                                         ${revisionNo ? `<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">${revisionNo}</span>` : ''}
                                     </p>
-                                    <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">${timeAgo}</span>
+                                    <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                        ${fullTimestamp} | ${timeAgo}
+                                    </span>
                                 </div>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">by <strong>${userLabel}</strong></p>
-                                ${detailsHtml ? `<div class="mt-2 space-y-1 p-3 bg-gray-100 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700/50">${detailsHtml}</div>` : ''}
+
+                                ${alwaysVisibleHtml ? `<div class="mt-2 space-y-1">${alwaysVisibleHtml}</div>` : ''}
+
+                                ${collapsibleHtml ? `
+                                    <div class="mt-2">
+                                        <button class="log-toggle-btn text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline" data-target="#${logId}">
+                                            Show additional details <i class="fa-solid fa-chevron-down fa-xs ml-1"></i>
+                                        </button>
+                                        <div id="${logId}" class="hidden mt-2 space-y-2 p-3 bg-gray-100 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700/50">
+                                            ${collapsibleHtml}
+                                        </div>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
@@ -447,11 +506,14 @@
                     const docgroupName = pkg.docgroup_name ?? pkg.docgroupName ?? '-';
                     const subcatName = pkg.subcategory_name ?? pkg.subcategoryName ?? '-';
                     const partGroup = pkg.code_part_group ?? pkg.codePartGroup ?? '-';
-                    const createdAt = formatDate(pkg.created_at ?? pkg.revision_created_at ?? pkg.createdAt);
-                    const updatedAt = formatDate(pkg.updated_at ?? pkg.updatedAt);
+                    const createdAt = formatDateTime(pkg.created_at ?? pkg.revision_created_at ?? pkg.createdAt);
+                    const updatedAt = formatDateTime(pkg.updated_at ?? pkg.updatedAt);
+                    const receiptDate = formatDateOnly(pkg.receipt_date);
                     const revisionStatus = pkg.revision_status ?? pkg.revisionStatus ?? pkg.status ?? '-';
                     const revisionNote = pkg.revision_note ?? pkg.note ?? '';
-                    const isObsolete = pkg.is_obsolete || pkg.isObsolete ? true : false;
+                    const isObsolete = (pkg.is_obsolete === 1 || pkg.is_obsolete === '1');
+                    const ecnNo = pkg.ecn_no ?? '-';
+                    const revisionLabel = pkg.revision_label_name ?? '-';
 
                     const overlay = document.createElement('div');
                     overlay.id = 'package-details-modal';
@@ -461,7 +523,7 @@
                     });
 
                     const dialog = document.createElement('div');
-                    dialog.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-2xl w-full overflow-hidden';
+                    dialog.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-4xl w-full overflow-hidden';
                     dialog.setAttribute('role', 'dialog');
                     dialog.setAttribute('aria-modal', 'true');
                     dialog.innerHTML = `
@@ -483,24 +545,37 @@
                         <div class="p-5 max-h-[70vh] overflow-y-auto space-y-6">
                             <!-- Revision & Status -->
                             <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700">
-                                <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">Revision & Status</h4>
-                                <dl class="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-2 text-sm">
-                                    <div class="sm:col-span-1">
-                                        <dt class="text-gray-500">Revision No.</dt>
-                                        <dd class="font-semibold text-gray-900 dark:text-gray-100">${revisionNo}</dd>
-                                    </div>
-                                    <div class="sm:col-span-1">
-                                        <dt class="text-gray-500">Status</dt>
-                                        <dd class="font-semibold">
-                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${revisionStatus === 'Approved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : (revisionStatus === 'Rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300')}">${revisionStatus}</span>
-                                        </dd>
-                                    </div>
-                                    <div class="sm:col-span-1">
-                                        <dt class="text-gray-500">Obsolete</dt>
-                                        <dd class="font-semibold text-gray-900 dark:text-gray-100">${isObsolete ? '<span class="text-red-500">No</span>' : 'Yes'}</dd>
-                                    </div>
-                                </dl>
-                            </div>
+                            <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">Revision & Status</h4>
+                            <dl class="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-2 text-sm">
+                                <div class="sm:col-span-1">
+                                    <dt class="text-gray-500">Revision No.</dt>
+                                    <dd class="font-semibold text-gray-900 dark:text-gray-100">${revisionNo}</dd>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <dt class="text-gray-500">Revision Label</dt>
+                                    <dd class="font-semibold text-gray-900 dark:text-gray-100">${revisionLabel}</dd>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <dt class="text-gray-500">ECN No.</dt>
+                                    <dd class="font-semibold text-gray-900 dark:text-gray-100">${ecnNo}</dd>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <dt class="text-gray-500">Status</dt>
+                                    <dd class="font-semibold">
+                                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
+                                            ${revisionStatus === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' :
+                                            (revisionStatus === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' :
+                                            (revisionStatus === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' :
+                                            'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300'))}
+                                        ">${revisionStatus}</span>
+                                    </dd>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <dt class="text-gray-500">Obsolete</dt>
+                                    <dd class="font-semibold text-gray-900 dark:text-gray-100">${isObsolete ? '<span class="text-red-500 font-bold">Yes</span>' : 'No'}</dd>
+                                </div>
+                            </dl>
+                        </div>
 
                             <!-- Details Grid -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -542,8 +617,9 @@
                                 <div class="space-y-3">
                                     <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Timestamps</h4>
                                     <dl class="text-sm space-y-2">
-                                        <div class="flex justify-between"><dt class="text-gray-500">Created At</dt><dd class="font-medium text-gray-800 dark:text-gray-200">${createdAt}</dd></div>
-                                        <div class="flex justify-between"><dt class="text-gray-500">Last Updated</dt><dd class="font-medium text-gray-800 dark:text-gray-200">${updatedAt}</dd></div>
+                                        <div class="flex justify-between"><dt class="text-gray-500">Receipt Date</dt><dd class="font-medium text-gray-800 dark:text-gray-200 text-right">${receiptDate}</dd></div>
+                                        <div class="flex justify-between"><dt class="text-gray-500">Created At</dt><dd class="font-medium text-gray-800 dark:text-gray-200 text-right">${createdAt}</dd></div>
+                                        <div class="flex justify-between"><dt class="text-gray-500">Last Updated</dt><dd class="font-medium text-gray-800 dark:text-gray-200 text-right">${updatedAt}</dd></div>
                                     </dl>
                                 </div>
                             </div>

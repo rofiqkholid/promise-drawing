@@ -50,13 +50,13 @@
         <div class="flex-1 flex flex-col pl-20">
             @include('layouts.header')
 
-            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 pb-20">
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 pb-20 pt-24">
                 @yield('content')
             </main>
 
         </div>
     </div>
-    <div class="fixed bottom-0 left-0 right-0 z-10 pl-20">
+    <div class="bottom-0 left-0 right-0 pl-20">
         @include('layouts.footer')
     </div>
 
