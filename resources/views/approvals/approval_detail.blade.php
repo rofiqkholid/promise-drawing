@@ -110,7 +110,12 @@
             x-text="`${pkg.activityLogs?.length || 0} events`"></span>
         </div>
 
-        <div class="p-2 space-y-2" role="log" aria-label="Activity Log">
+       <div
+  class="p-2 space-y-2"
+  :class="(pkg.activityLogs?.length || 0) > 3 ? 'max-h-64 overflow-y-auto pr-1' : ''"
+  role="log"
+  aria-label="Activity Log"
+>
           <template x-for="(item, idx) in (pkg.activityLogs || [])" :key="idx">
             <div class="flex items-start gap-3 p-3 rounded-md bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700">
               <div class="mt-0.5">
@@ -135,8 +140,10 @@
           </template>
 
           <template x-if="(pkg.activityLogs || []).length === 0">
-            <p class="p-3 text-center text-xs text-gray-500 dark:text-gray-400">No activity yet for this package.</p>
-          </template>
+    <p class="p-3 text-center text-xs text-gray-500 dark:text-gray-400">
+      No activity yet for this package.
+    </p>
+  </template>
         </div>
       </div>
 

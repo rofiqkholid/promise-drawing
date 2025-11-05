@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Models\Customers;
 use App\Models\Models;
 use App\Models\DoctypeGroups;
@@ -396,6 +397,7 @@ class ExportController extends Controller
 
         $zip = new ZipArchive();
         if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
+            Log::error('Could not create zip file at: ' - $zipFilePath);
             abort(500, 'Could not create zip file. Check server permissions for storage/app/public.');
         }
 
@@ -416,7 +418,7 @@ class ExportController extends Controller
                 $zip->addFile($filePath, $pathInZip);
                 $filesAddedCount++;
             } else {
-                \Log::warning('File not found and skipped for zipping: ' . $filePath);
+                Log::warning('File not found and skipped for zipping: ' . $filePath);
             }
         }
         $zip->close();
@@ -463,7 +465,7 @@ class ExportController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Failed to create download activity log', [
+            Log::error('Failed to create download activity log', [
                 'error' => $e->getMessage(),
                 'revision_id' => $revision->id,
             ]);

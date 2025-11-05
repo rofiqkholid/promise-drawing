@@ -379,7 +379,7 @@ public function showDetail(string $id)
         }
     }
 
-    // 2. Query pakai revisionId (angka)
+    // 2. Ambil data revisi
     $revision = DB::table('doc_package_revisions as dpr')
         ->where('dpr.id', $revisionId)
         ->first();
@@ -388,14 +388,28 @@ public function showDetail(string $id)
         abort(404, 'Approval request not found.');
     }
 
+    // 3. Ambil info package + uploader
     $package = DB::table('doc_packages as dp')
         ->join('customers as c', 'dp.customer_id', '=', 'c.id')
         ->join('models as m', 'dp.model_id', '=', 'm.id')
         ->join('products as p', 'dp.product_id', '=', 'p.id')
+        // SESUAIKAN kalau kolom user-nya beda (misal dp.created_user_id)
+        ->leftJoin('users as u', 'u.id', '=', 'dp.created_by')
         ->where('dp.id', $revision->package_id)
-        ->select('c.code as customer', 'm.name as model', 'p.part_no')
+        ->select(
+            'c.code as customer',
+            'm.name as model',
+            'p.part_no',
+            'dp.created_at',
+            'u.name as uploader_name'
+        )
         ->first();
 
+    if (!$package) {
+        abort(404, 'Package not found.');
+    }
+
+    // 4. File per kategori
     $files = DB::table('doc_package_revision_files')
         ->where('revision_id', $revisionId)
         ->select('id', 'filename as name', 'category', 'storage_path')
@@ -409,14 +423,37 @@ public function showDetail(string $id)
         })
         ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
+    // 5. Activity logs dari tabel activity_logs
     $logs = $this->buildApprovalLogs($revision->package_id, $revisionId);
 
+    // 6. Inject fallback log "uploaded" kalau belum ada
+    $uploaderName   = $package->uploader_name ?? 'System';
+    $uploadedAt     = optional($package->created_at);
+    $hasUploadedLog = $logs->contains(fn($log) => ($log['action'] ?? '') === 'uploaded');
+
+    if ($uploadedAt && !$hasUploadedLog) {
+        $logs->push([
+            'id'      => 0,
+            'action'  => 'uploaded',
+            'user'    => $uploaderName,
+            'note'    => 'Package uploaded',
+            'time'    => $uploadedAt->format('Y-m-d H:i'),
+            'time_ts' => $uploadedAt->timestamp,
+        ]);
+
+        // supaya urutannya tetap terbaru di atas
+        $logs = $logs->sortByDesc('time_ts')->values();
+    }
+
+    // 7. Data yang dikirim ke Blade
     $detail = [
         'metadata' => [
-            'customer' => $package->customer,
-            'model'    => $package->model,
-            'part_no'  => $package->part_no,
-            'revision' => 'Rev-' . $revision->revision_no,
+            'customer'    => $package->customer,
+            'model'       => $package->model,
+            'part_no'     => $package->part_no,
+            'revision'    => 'Rev-' . $revision->revision_no,
+            'uploader'    => $uploaderName,
+            'uploaded_at' => $uploadedAt ? $uploadedAt->format('Y-m-d H:i') : null,
         ],
         'status'       => match ($revision->revision_status) {
             'pending'  => 'Waiting',
@@ -436,6 +473,7 @@ public function showDetail(string $id)
         'detail'     => $detail,
     ]);
 }
+
 
 
    public function approve(Request $request, string $id)

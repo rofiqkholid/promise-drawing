@@ -65,7 +65,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/file-manager.share', function () {
         return view('file_management.share');
-    })->middleware(['auth', 'check.menu:4'])->name('file-manager.share');
+    })->middleware(['auth', 'check.menu:29'])->name('file-manager.share');
 
 
     Route::get('/file-manager.export/{id}', [ExportController::class, 'showDetail'])->middleware(['auth', 'check.menu:4'])->name('file-manager.export.detail');
@@ -307,8 +307,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/export/list', [ExportController::class, 'listExportableFiles'])->middleware(['auth'])->name('api.export.list');
 
-    Route::get('/download/file/{file_id}', [ExportController::class, 'downloadFile'])->middleware('check.menu:4')->name('api.export.download-file');
-    Route::get('/download/package/{revision_id}', [ExportController::class, 'downloadPackage'])->middleware('check.menu:4')->name('api.export.download-package');
+    Route::get('/file-manager.export/download-package/{id}', [ExportController::class, 'downloadPackage'])
+     ->name('file-manager.export.download-package');
+    Route::get('/download/file/{file_id}', [ExportController::class, 'downloadFile'])
+     ->name('file-manager.export.download-file');
     #End region
 
     #region Approval
