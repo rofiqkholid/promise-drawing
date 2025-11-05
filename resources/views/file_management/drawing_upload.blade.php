@@ -124,7 +124,7 @@
                                                                     'text-yellow-600 dark:text-yellow-400': revisionStatus === 'pending',
                                                                     'text-gray-700 dark:text-gray-300': revisionStatus === 'draft'
                                                                 }"
-                                    x-text="revisionStatus.charAt(0).toUpperCase() + revisionStatus.slice(1)"></strong>.
+                                    x-text="revisionStatus ? revisionStatus.charAt(0).toUpperCase() + revisionStatus.slice(1) : ''"></strong>.
                             </p>
                         </div>
                     </div>
@@ -532,6 +532,7 @@
             receipt_date: '',
             revision_label_id: null,
             note: '',
+            revisionStatus: null,
 
             originalDraftData: {
                 ecn_no: '',

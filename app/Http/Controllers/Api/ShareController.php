@@ -179,11 +179,11 @@ class ShareController extends Controller
                 'pa.decided_by'
             )
             ->selectRaw("
-                ROW_NUMBER() OVER (
-                    PARTITION BY pa.revision_id
-                    ORDER BY COALESCE(pa.decided_at, pa.requested_at) DESC, pa.id DESC
-                ) as rn
-            ");
+            ROW_NUMBER() OVER (
+                PARTITION BY pa.revision_id
+                ORDER BY COALESCE(pa.decided_at, pa.requested_at) DESC, pa.id DESC
+            ) as rn
+        ");
 
         $query = DB::table('doc_package_revisions as dpr')
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
@@ -228,7 +228,6 @@ class ShareController extends Controller
                 );
             }
         }
-
         if ($searchValue !== '') {
             $query->where(function ($q) use ($searchValue) {
                 $q->where('c.code', 'like', "%{$searchValue}%")
@@ -236,15 +235,15 @@ class ShareController extends Controller
                     ->orWhere('p.part_no', 'like', "%{$searchValue}%")
                     ->orWhere('dsc.name', 'like', "%{$searchValue}%")
                     ->orWhereRaw("
-                    CONCAT(
-                        c.code,' ',
-                        m.name,' ',
-                        dtg.name,' ',
-                        COALESCE(dsc.name,''),' ',
-                        COALESCE(p.part_no,''),' ',
-                        dpr.revision_no
-                    ) LIKE ?
-                ", ["%{$searchValue}%"]);
+                CONCAT(
+                    c.code,' ',
+                    m.name,' ',
+                    dtg.name,' ',
+                    COALESCE(dsc.name,''),' ',
+                    COALESCE(p.part_no,''),' ',
+                    dpr.revision_no
+                ) LIKE ?
+            ", ["%{$searchValue}%"]);
             });
         }
 
@@ -259,15 +258,15 @@ class ShareController extends Controller
             'p.part_no',
             'dpr.revision_no as revision',
             DB::raw("
-                CASE COALESCE(pa.decision, dpr.revision_status)
-                    WHEN 'pending'  THEN 'Waiting'
-                    WHEN 'waiting'  THEN 'Waiting'  
-                    WHEN 'approved' THEN 'Approved'
-                    WHEN 'rejected' THEN 'Rejected'
-                    ELSE COALESCE(pa.decision, dpr.revision_status)
-                END as status
-            "),
-            'dp.share_to as share_to',
+            CASE COALESCE(pa.decision, dpr.revision_status)
+                WHEN 'pending'  THEN 'Waiting'
+                WHEN 'waiting'  THEN 'Waiting'  
+                WHEN 'approved' THEN 'Approved'
+                WHEN 'rejected' THEN 'Rejected'
+                ELSE COALESCE(pa.decision, dpr.revision_status)
+            END as status
+        "),
+            'dp.share_to as share_to', 
             'pa.requested_at as request_date',
             'pa.decided_at   as decision_date'
         );
@@ -293,11 +292,37 @@ class ShareController extends Controller
             ->take($length)
             ->get();
 
+        $roleMap = DB::table('roles')->pluck('role_name', 'id')->all();
+
+        $data->transform(function ($item) use ($roleMap) {
+
+            if (empty($item->share_to)) {
+                $item->share_to = ''; 
+                return $item;
+            }
+
+            $roleIds = json_decode($item->share_to);
+
+            if (empty($roleIds) || !is_array($roleIds)) {
+                $item->share_to = 'Invalid Share Data';
+                return $item;
+            }
+
+            $roleNames = [];
+            foreach ($roleIds as $id) {
+                $roleNames[] = $roleMap[$id] ?? "Unknown (ID: {$id})";
+            }
+
+            $item->share_to = implode(', ', $roleNames);
+
+            return $item;
+        });
+
         return response()->json([
             "draw"            => (int) $request->get('draw'),
             "recordsTotal"    => $recordsTotal,
             "recordsFiltered" => $recordsFiltered,
-            "data"            => $data,
+            "data"            => $data, 
         ]);
     }
 

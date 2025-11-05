@@ -443,7 +443,7 @@ public function showDetail(string $id)
         $userId = Auth::user()->id ?? 1;
 
         try {
-        $revision_id = decrypt($id);   // decrypt hash
+        $revision_id = decrypt($id);   
     } catch (DecryptException $e) {
         return response()->json(['message' => 'Invalid revision.'], 404);
     }
