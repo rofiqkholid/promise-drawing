@@ -52,7 +52,7 @@ class ExportController extends Controller
         return response()->json([
             'cards' => [
                 'total' => $total,
-                'approved' => $total, // All are approved
+                'approved' => $total,
             ],
             'metrics' => [
                 'approval_rate'  => 100.0,
@@ -64,13 +64,13 @@ class ExportController extends Controller
 
     public function filters(Request $request): JsonResponse
     {
+        // ====== MODE SELECT2 (server-side) ======
         if ($request->filled('select2')) {
             $field   = $request->get('select2');   // 'customer' | 'model' | 'doc_type' | 'category'
             $q       = trim($request->get('q', ''));
             $page    = max(1, (int)$request->get('page', 1));
             $perPage = 20;
 
-            // dependent params
             $customerCode = $request->get('customer_code');
             $docTypeName  = $request->get('doc_type');
 
@@ -157,7 +157,6 @@ class ExportController extends Controller
         // doc types
         $docTypes = DoctypeGroups::orderBy('name')->get(['id', 'name']);
 
-        // resolve doc_type
         $docTypeName = $request->get('doc_type');
         $docTypeId   = null;
         if ($docTypeName && $docTypeName !== 'All') {
@@ -184,8 +183,19 @@ class ExportController extends Controller
         $length = $request->get('length', 10);
         $searchValue = $request->get('search')['value'] ?? '';
         $orderColumnIndex = $request->get('order')[0]['column'] ?? 0;
-        $orderColumnName = $request->get('columns')[$orderColumnIndex]['name'] ?? 'dpr.created_at';
         $orderDir = $request->get('order')[0]['dir'] ?? 'desc';
+
+        $columnMap = [
+            'Package Info' => 'c.code',
+            'Revision' => 'dpr.revision_no',
+            'ecn_no' => 'dpr.ecn_no',
+            'doctype_group' => 'dtg.name',
+            'doctype_subcategory' => 'dsc.name',
+            'part_group' => 'pg.code_part_group',
+            'uploaded_at' => 'dpr.created_at'
+        ];
+
+        $orderColumnName = $columnMap[$request->get('columns')[$orderColumnIndex]['name']] ?? 'dpr.created_at';
 
         $query = DB::table('doc_package_revisions as dpr')
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
@@ -194,6 +204,8 @@ class ExportController extends Controller
             ->join('products as p', 'dp.product_id', '=', 'p.id')
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+            ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
             ->where('dpr.revision_status', '=', 'approved');
 
         $recordsTotal = $query->count();
@@ -226,16 +238,23 @@ class ExportController extends Controller
             'dpr.id',
             'c.code as customer',
             'm.name as model',
-            'dtg.name as doc_type',
-            'dsc.name as category',
             'p.part_no',
-            'dpr.revision_no as revision',
-            'dpr.created_at'
+            'dpr.revision_no',
+            'crl.label as revision_label_name',
+            'dpr.ecn_no',
+            'dtg.name as doctype_group',
+            'dsc.name as doctype_subcategory',
+            'pg.code_part_group as part_group',
+            DB::raw("FORMAT(dpr.created_at, 'yyyy-MM-dd HH:mm:ss') as uploaded_at")
         )
             ->orderBy($orderColumnName, $orderDir)
             ->skip($start)
             ->take($length)
-            ->get();
+            ->get()
+            ->map(function($row) {
+                $row->id = str_replace('=', '-', encrypt($row->id));
+                return $row;
+            });
 
         return response()->json([
             "draw" => intval($request->get('draw')),
@@ -247,6 +266,14 @@ class ExportController extends Controller
 
     public function showDetail($id)
     {
+        $originalEncryptedId = $id;
+
+        try {
+            $id = decrypt(str_replace('-', '=', $id));
+        } catch (\Exception $e) {
+            abort(404, 'Exportable file not found or not approved.');
+        }
+
         // $id = revision_id
         $revision = DB::table('doc_package_revisions as dpr')
             ->where('dpr.id', $id)
@@ -287,11 +314,12 @@ class ExportController extends Controller
                 'revision' => 'Rev-' . $revision->revision_no,
             ],
             'files'        => $files,
+            // No activity logs for export detail
         ];
 
         return view('file_management.file_export_detail', [
-            'exportId' => $id,
-            'detail'     => $detail,
+            'exportId' => $originalEncryptedId,
+            'detail'   => $detail,
         ]);
     }
 
@@ -312,7 +340,7 @@ class ExportController extends Controller
             abort(403, 'Access denied. File is not part of an approved revision.');
         }
 
-        $path = Storage::disk('local')->path($file->storage_path);
+        $path = Storage::disk('datacenter')->path($file->storage_path);
 
         if (!file_exists($path)) {
             abort(404, 'File not found on server storage.');
@@ -323,8 +351,14 @@ class ExportController extends Controller
 
     public function downloadPackage($revision_id)
     {
+        try {
+            $decrypted_id = decrypt(str_replace('-', '=', $revision_id));
+        } catch (\Exception $e) {
+            abort(404, 'Package not found or not approved.');
+        }
+
         $revision = DB::table('doc_package_revisions')
-            ->where('id', $revision_id)
+            ->where('id', $decrypted_id)
             ->where('revision_status', '=', 'approved')
             ->first();
 
@@ -332,26 +366,107 @@ class ExportController extends Controller
             abort(404, 'Package not found or not approved.');
         }
 
-        $files = DocPackageRevisionFile::where('revision_id', $revision_id)->get();
+        $package = DB::table('doc_packages as dp')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->where('dp.id', $revision->package_id)
+            ->select('c.code as customer', 'm.name as model', 'p.part_no', 'dp.part_group_id') // Tambahkan part_group_id
+            ->first();
+
+        if (!$package) {
+            abort(404, 'Associated package details not found.');
+        }
+
+        $files = DocPackageRevisionFile::where('revision_id', $decrypted_id)->get();
 
         if ($files->isEmpty()) {
             abort(404, 'No files found for this package revision.');
         }
 
-        $zipFileName = 'package_rev_' . $revision->revision_no . '_' . now()->format('Ymd_His') . '.zip';
+        // Buat nama file zip kustom
+        $customer = \Illuminate\Support\Str::slug($package->customer);
+        $model = \Illuminate\Support\Str::slug($package->model);
+        $partNo = \Illuminate\Support\Str::slug($package->part_no);
+        $ecn = \Illuminate\Support\Str::slug($revision->ecn_no);
+        $timestamp = now()->format('Ymd-His');
+
+        $zipFileName = "{$customer}-{$model}-{$partNo}-{$ecn}-{$timestamp}.zip";
         $zipFilePath = storage_path('app/public/' . $zipFileName);
 
-        $zip = new \ZipArchive();
-        if ($zip->open($zipFilePath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === TRUE) {
-            foreach ($files as $file) {
-                $filePath = Storage::disk('local')->path($file->storage_path);
-                if (file_exists($filePath)) {
-                    $zip->addFile($filePath, $file->filename);
+        $zip = new ZipArchive();
+        if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
+            abort(500, 'Could not create zip file. Check server permissions for storage/app/public.');
+        }
+
+        $filesAddedCount = 0;
+        foreach ($files as $file) {
+            $filePath = Storage::disk('datacenter')->path($file->storage_path);
+
+            if (file_exists($filePath)) {
+                $category = strtolower(trim($file->category));
+                $folderInZip = 'ecn';
+                if ($category === '2d') {
+                    $folderInZip = '2d';
+                } elseif ($category === '3d') {
+                    $folderInZip = '3d';
                 }
+
+                $pathInZip = $folderInZip . '/' . $file->filename;
+                $zip->addFile($filePath, $pathInZip);
+                $filesAddedCount++;
+            } else {
+                \Log::warning('File not found and skipped for zipping: ' . $filePath);
             }
-            $zip->close();
-        } else {
-            abort(500, 'Could not create zip file.');
+        }
+        $zip->close();
+
+        if ($filesAddedCount === 0) {
+            unlink($zipFilePath);
+            abort(404, 'No physical files were found to add to the zip package.');
+        }
+
+        try {
+            $labelName = null;
+            if (!empty($revision->revision_label_id)) {
+                $labelName = DB::table('customer_revision_labels')
+                    ->where('id', $revision->revision_label_id)
+                    ->value('label');
+            }
+
+            $partGroupCode = null;
+            if ($package && !empty($package->part_group_id)) {
+                $partGroupCode = DB::table('part_groups')
+                    ->where('id', $package->part_group_id)
+                    ->value('code_part_group');
+            }
+
+            $metaLogData = [
+                'part_no' => $package->part_no,
+                'customer_code' => $package->customer,
+                'model_name' => $package->model,
+                'part_group_code' => $partGroupCode,
+                'package_id' => $revision->package_id,
+                'revision_no' => $revision->revision_no,
+                'ecn_no' => $revision->ecn_no,
+                'revision_label' => $labelName,
+                'downloaded_file' => $zipFileName
+            ];
+
+            ActivityLog::create([
+                'user_id' => Auth::user()->id,
+                'activity_code' => 'DOWNLOAD',
+                'scope_type' => 'revision',
+                'scope_id' => $revision->package_id,
+                'revision_id' => $revision->id,
+                'meta' => $metaLogData,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Failed to create download activity log', [
+                'error' => $e->getMessage(),
+                'revision_id' => $revision->id,
+            ]);
         }
 
         return response()->download($zipFilePath)->deleteFileAfterSend(true);

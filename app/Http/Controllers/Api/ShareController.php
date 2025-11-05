@@ -250,7 +250,7 @@ class ShareController extends Controller
         $recordsFiltered = (clone $query)->count();
 
         $query->select(
-            'dp.id',
+            'dpr.id',
             'c.code as customer',
             'm.name as model',
             'dtg.name as doc_type',
@@ -266,7 +266,7 @@ class ShareController extends Controller
                 ELSE COALESCE(pa.decision, dpr.revision_status)
             END as status
         "),
-            'dp.share_to as share_to', 
+            'dpr.share_to as share_to',
             'pa.requested_at as request_date',
             'pa.decided_at   as decision_date'
         );
@@ -297,14 +297,14 @@ class ShareController extends Controller
         $data->transform(function ($item) use ($roleMap) {
 
             if (empty($item->share_to)) {
-                $item->share_to = ''; 
+                $item->share_to = '';
                 return $item;
             }
 
             $roleIds = json_decode($item->share_to);
 
             if (empty($roleIds) || !is_array($roleIds)) {
-                $item->share_to = 'Invalid Share Data';
+                $item->share_to = 'Not yet distributed';
                 return $item;
             }
 
@@ -322,19 +322,16 @@ class ShareController extends Controller
             "draw"            => (int) $request->get('draw'),
             "recordsTotal"    => $recordsTotal,
             "recordsFiltered" => $recordsFiltered,
-            "data"            => $data, 
+            "data"            => $data,
         ]);
     }
 
     public function saveShare(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'package_id' => 'required|integer|exists:doc_packages,id',
-            'role_ids'   => 'required|array|min:1',
-            'role_ids.*' => 'required|integer|exists:roles,id',
-        ], [
-            'role_ids.required' => 'Please select at least one role to share with.',
-            'role_ids.min'      => 'Please select at least one role to share with.',
+            'package_id' => 'required|integer|exists:doc_package_revisions,id',
+            'role_ids'   => 'array|min:1',
+            'role_ids.*' => 'integer|exists:roles,id',
         ]);
 
         if ($validator->fails()) {
@@ -343,7 +340,7 @@ class ShareController extends Controller
 
         $roleId = json_encode($request->input('role_ids'));
 
-        $updateSuccess = DB::table('doc_packages')
+        $updateSuccess = DB::table('doc_package_revisions')
             ->where('id', $request->input('package_id'))
             ->update([
                 'share_to'   => $roleId,

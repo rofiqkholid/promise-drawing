@@ -585,7 +585,7 @@
 
       downloadPackage() {
         if (this.exportId) {
-            window.location.href = `/download/package/${this.exportId}`;
+            window.location.href = `/file-manager.export/download-package/${this.exportId}`;
         } else {
             toastError('Error', 'Package ID not found for download.');
         }

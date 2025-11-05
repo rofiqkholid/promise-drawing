@@ -11,7 +11,7 @@
       <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Find and download your files from the Data Center.</p>
     </div>
 
-    <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:mt-0">
+    <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4 sm:mt-0">
       {{-- Card Total Document --}}
       <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
         <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-full">
@@ -83,13 +83,15 @@
       <table id="exportTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead class="bg-gray-50 dark:bg-gray-700/50">
           <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customer</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Model</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Doc Type</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Part No</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Revision</th>
+            <th class="py-3 px-4 text-left ...">No</th>
+            <th class="py-3 px-4 text-left ...">Package Info</th>
+            <th class="py-3 px-4 text-left ...">Revision</th>
+            <th class="py-3 px-4 text-left ...">ECN No</th>
+            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Doc Group</th>
+            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sub-Category</th>
+            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Part Group</th>
+            <th class="py-3 px-4 text-left ...">Uploaded At</th>
+            <th class="py-3 px-4 text-center ...">Action</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
@@ -220,14 +222,52 @@ $(function () {
         }
       },
       order: [[ 1, 'asc' ]],
+
+      createdRow: function(row, data, dataIndex) {
+        $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer');
+      },
+
       columns: [
-        { data: null, orderable: false, searchable: false },
-        { data: 'customer', name: 'c.code' },
-        { data: 'model',    name: 'm.name' },
-        { data: 'doc_type', name: 'dtg.name' },
-        { data: 'category', name: 'category' },
-        { data: 'part_no',  name: 'p.part_no' },
-        { data: 'revision', name: 'dpr.revision_no' },
+        { data: null, name: 'No', orderable: false, searchable: false },
+        {
+            data: null,
+            name: 'Package Info',
+            searchable: true,
+            orderable: false,
+            render: function(data, type, row) {
+                return `${row.customer} - ${row.model} - ${row.part_no}`;
+            }
+        },
+        {
+            data: null,
+            name: 'Revision',
+            searchable: true,
+            orderable: false,
+            render: function(data, type, row) {
+                let revStr = `Rev${row.revision_no}`;
+                if (row.revision_label_name) {
+                    return `${row.revision_label_name} - ${revStr}`;
+                }
+                return revStr;
+            }
+        },
+        {data: 'ecn_no', name: 'ecn_no', searchable: true},
+        {data: 'doctype_group', name: 'doctype_group', searchable: true, orderable: true},
+        {data: 'doctype_subcategory', name: 'doctype_subcategory', searchable: true, orderable: true},
+        {data: 'part_group', name: 'part_group', searchable: true, orderable: true},
+        {data: 'uploaded_at', name: 'uploaded_at', searchable: true},
+        {
+            data: null,
+            name: 'Info',
+            orderable: false,
+            searchable: false,
+            render: function(data, type, row) {
+                const detailUrl = `/file-manager.export/${encodeURIComponent(row.id)}`;
+                let viewButton = `<a href="${detailUrl}" class="text-blue-600 hover:text-blue-900 dark:hover:text-blue-300 dark:text-blue-400 transition-colors" title="Details"><i class="fa-solid fa-eye fa-lg"></i></a>`;
+                let downloadButton = `<a href="/file-manager.export/download-package/${row.id}" class="ml-4 text-green-600 hover:text-green-900 dark:hover:text-green-300 dark:text-green-400 transition-colors" title="Download Package"><i class="fa-solid fa-download fa-lg"></i></a>`;
+                return `<div class="text-center">${viewButton}${downloadButton}</div>`;
+            }
+        }
       ],
       responsive: true,
       dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
@@ -238,6 +278,16 @@ $(function () {
       table.column(0, { page: 'current' }).nodes().each(function (cell, i) {
         cell.innerHTML = i + 1 + info.start;
       });
+    });
+
+    $('#exportTable tbody').on('click', 'tr', function (e) {
+      if ($(e.target).closest('button').length || $(e.target).closest('a').length) return;
+
+      const data = table.row(this).data();
+      if (!data || !data.id) return;
+
+      const encryptedId = encodeURIComponent(data.id);
+      window.location.href = `/file-manager.export/${encryptedId}`;
     });
   }
 
@@ -256,19 +306,38 @@ $(function () {
       if (table) table.ajax.reload(null, true);
       loadKPI();
     });
-
-    $('#exportTable tbody').on('click', 'tr', function () {
-      const row = table.row(this).data();
-      if (row && row.id) window.location.href = `/file-manager.export/${row.id}`;
-    }).on('mouseenter', 'tr', function () {
-      $(this).css('cursor', 'pointer');
-    });
   }
 
   // start
   initTable();
   loadKPI();
   bindHandlers();
+
+    @include('partials._package_details')
 });
 </script>
+@endpush
+
+@push('styles')
+    <style>
+        #activity-log-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        #activity-log-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #activity-log-content::-webkit-scrollbar-thumb {
+            background-color: #d1d5db;
+            border-radius: 20px;
+        }
+        .dark #activity-log-content::-webkit-scrollbar-thumb {
+            background-color: #4b5563;
+        }
+        #activity-log-content:hover::-webkit-scrollbar-thumb {
+            background-color: #93c5fd;
+        }
+        .dark #activity-log-content:hover::-webkit-scrollbar-thumb {
+            background-color: #60a5fa;
+        }
+    </style>
 @endpush

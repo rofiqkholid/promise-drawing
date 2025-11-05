@@ -240,6 +240,7 @@
             }
         }
 
+        
         // Modal utilities
         function bytesToSize(bytes) {
             if (!bytes && bytes !== 0) return '0 Bytes';
@@ -285,7 +286,6 @@
                 modal.remove();
             }
         }
-
 
         function detectTheme() {
             const isDark = document.documentElement.classList.contains('dark');
@@ -382,8 +382,8 @@
                     SUBMIT_APPROVAL: { icon: 'fa-paper-plane', color: 'bg-yellow-500', title: 'Approval Submitted' },
                     APPROVE: { icon: 'fa-check-double', color: 'bg-green-500', title: 'Package Approved' },
                     DEVICE_CONFIRM: { icon: 'fa-check', color: 'bg-teal-500', title: 'Device Confirmed' },
-                    LDEVICE_CONFIRM: { icon: 'fa-check', color: 'bg-teal-500', title: 'Device Confirmed (L)' }, // <-- BARU
-                    REVISE_CONFIRM: { icon: 'fa-pen-to-square', color: 'bg-purple-500', title: 'Revision Confirmed' }, // <-- BARU
+                    LDEVICE_CONFIRM: { icon: 'fa-check', color: 'bg-teal-500', title: 'Device Confirmed (L)' },
+                    REVISE_CONFIRM: { icon: 'fa-pen-to-square', color: 'bg-purple-500', title: 'Revision Confirmed' },
                     REJECT: { icon: 'fa-times-circle', color: 'bg-red-500', title: 'Package Rejected' },
                     ROLLBACK: { icon: 'fa-undo', color: 'bg-orange-500', title: 'Revision Rolled Back' },
                     default: { icon: 'fa-info-circle', color: 'bg-gray-500', title: l.activity_code }
@@ -435,6 +435,7 @@
                     alwaysVisibleHtml = createPrimaryNote(m.note);
                 }
 
+
                 const isLast = index === logs.length - 1;
 
                 const el = $(`
@@ -476,7 +477,7 @@
             });
         }
 
-        function openPackageDetails(id) {
+        window.openPackageDetails = function(id) {
             const existing = document.getElementById('package-details-modal');
             if (existing) existing.remove();
 
@@ -543,7 +544,6 @@
                         </div>
 
                         <div class="p-5 max-h-[70vh] overflow-y-auto space-y-6">
-                            <!-- Revision & Status -->
                             <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700">
                             <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3">Revision & Status</h4>
                             <dl class="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-2 text-sm">
@@ -577,9 +577,7 @@
                             </dl>
                         </div>
 
-                            <!-- Details Grid -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- Product Info -->
                                 <div class="space-y-3">
                                     <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Product Information</h4>
                                     <dl class="text-sm space-y-2">
@@ -588,7 +586,6 @@
                                         <div class="flex justify-between"><dt class="text-gray-500">Part No.</dt><dd class="font-medium text-gray-800 dark:text-gray-200 text-right">${partNo}</dd></div>
                                     </dl>
                                 </div>
-                                <!-- Document Info -->
                                 <div class="space-y-3">
                                     <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">Document Classification</h4>
                                     <dl class="text-sm space-y-2">
@@ -599,13 +596,11 @@
                                 </div>
                             </div>
 
-                            <!-- Revision Note -->
                             <div>
                                 <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-2">Revision Note</h4>
                                 <div class="p-3 rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">${revisionNote || '<span class="italic text-gray-400">No note provided.</span>'}</div>
                             </div>
 
-                            <!-- File & Date Info -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-3">
                                     <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2">File Summary</h4>
@@ -624,7 +619,6 @@
                                 </div>
                             </div>
 
-                            <!-- Activity Log -->
                             <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700">
                                 <h4 class="text-base font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
                                     <i class="fa-solid fa-clipboard-list mr-2 text-blue-500"></i>

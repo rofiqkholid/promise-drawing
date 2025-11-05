@@ -1620,7 +1620,7 @@
 </script>
 @endsection
 
-
+@push('style')
 <style>
     .opacity-50 {
         opacity: 0.5;
@@ -1816,3 +1816,4 @@
         background-color: #450a0a;
     }
 </style>
+@endpush

@@ -113,7 +113,11 @@ class UploadController extends Controller
 
     public function getPackageDetails(Request $request, $id): JsonResponse
     {
-        $revisionId = (int) decrypt(str_replace('-', '=', $id));
+        try {
+            $revisionId = (int) decrypt(str_replace('-', '=', $id));
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Invalid package ID'], 400);
+        }
 
         $rev = DB::table('doc_package_revisions as r')
             ->leftJoin('doc_packages as p', 'r.package_id', '=', 'p.id')
@@ -178,5 +182,81 @@ class UploadController extends Controller
             ->first();
 
         return response()->json($kpiStats);
+    }
+
+    public function getExportDetail($id)
+    {
+        try {
+            $revisionId = (int) decrypt(str_replace('-', '=', $id));
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Invalid package ID'], 400);
+        }
+
+        $rev = DB::table('doc_package_revisions as r')
+            ->leftJoin('doc_packages as p', 'r.package_id', '=', 'p.id')
+            ->leftJoin('customers as c', 'p.customer_id', '=', 'c.id')
+            ->leftJoin('models as m', 'p.model_id', '=', 'm.id')
+            ->leftJoin('products as pr', 'p.product_id', '=', 'pr.id')
+            ->leftJoin('doctype_groups as dg', 'p.doctype_group_id', '=', 'dg.id')
+            ->leftJoin('doctype_subcategories as sc', 'p.doctype_subcategory_id', '=', 'sc.id')
+            ->leftJoin('part_groups as pg', 'p.part_group_id', '=', 'pg.id')
+            ->leftJoin('customer_revision_labels as crl', 'r.revision_label_id', '=', 'crl.id')
+            ->select(
+                'r.id as id', 'r.receipt_date', 'r.package_id as package_id', 'p.package_no as package_no',
+                'r.revision_no as revision_no', 'r.revision_status as revision_status', 'r.note as revision_note',
+                'r.ecn_no as ecn_no',
+                'r.revision_label_id as revision_label_id',
+                'crl.label as revision_label_name',
+                'r.is_obsolete as is_obsolete', 'r.created_by as revision_created_by', 'r.created_at as created_at', 'r.updated_at as updated_at',
+                'p.project_status_id', 'p.created_by as package_created_by',
+                'c.id as customer_id','c.name as customer_name','c.code as customer_code',
+                'm.id as model_id','m.name as model_name',
+                'pr.id as product_id','pr.part_no as part_no',
+                'dg.id as docgroup_id','dg.name as docgroup_name',
+                'sc.id as subcategory_id','sc.name as subcategory_name',
+                'pg.id as part_group_id','pg.code_part_group'
+            )
+            ->where('r.id', $revisionId)
+            ->first();
+
+        if (!$rev) {
+            return response()->json(['error' => 'Revision not found'], 404);
+        }
+
+        $agg = DB::table('doc_package_revision_files')
+            ->where('revision_id', $revisionId)
+            ->select(DB::raw('count(*) as total_files, sum(file_size) as total_bytes'))
+            ->first();
+
+        $file_list = DB::table('doc_package_revision_files')
+            ->where('revision_id', $revisionId)
+            ->get(['id', 'filename as name', 'category', 'file_size as size'])
+            ->groupBy('category')->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
+
+        $exportId = str_replace('=', '-', encrypt($rev->id));
+        
+        $detail = [
+            'metadata' => [
+                'customer' => $rev->customer_code ?? '-',
+                'model' => $rev->model_name ?? '-',
+                'part_no' => $rev->part_no ?? '-',
+                'revision' => "Rev{$rev->revision_no}" . ($rev->revision_label_name ? " ({$rev->revision_label_name})" : ''),
+                'ecn_no' => $rev->ecn_no ?? '-',
+                'receipt_date' => $rev->receipt_date,
+                'status' => $rev->revision_status ?? 'draft',
+                'is_obsolete' => $rev->is_obsolete,
+                'note' => $rev->revision_note ?? '',
+                'docgroup' => $rev->docgroup_name ?? '-',
+                'subcategory' => $rev->subcategory_name ?? '-',
+                'part_group' => $rev->code_part_group ?? '-'
+            ],
+            'files' => $file_list,
+            'summary' => [
+                'total_files' => (int) ($agg->total_files ?? 0),
+                'total_bytes' => (int) ($agg->total_bytes ?? 0),
+            ]
+        ];
+
+        return view('file_management.file_export_detail', compact('exportId', 'detail'));
     }
 }

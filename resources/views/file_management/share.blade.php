@@ -530,11 +530,6 @@
 
                 $shareError.hide().text('');
 
-                if (selectedRoleIds.length === 0) {
-                    $shareError.text('Please select at least one role.').show();
-                    return;
-                }
-
                 if (!packageId) {
                     $shareError.text('Package ID not found. Please reload the page.').show();
                     return;
