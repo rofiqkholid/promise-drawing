@@ -16,6 +16,7 @@ use Illuminate\Encryption\Encrypter;
 use Illuminate\Support\Facades\Crypt;
 use App\Models\ActivityLog;
 use Carbon\Carbon;
+use App\Models\CustomerRevisionLabel;
 
 class DrawingUploadController extends Controller
 {
@@ -649,6 +650,20 @@ class DrawingUploadController extends Controller
             'results' => $formattedGroups,
             'total_count' => $totalCount,
         ]);
+    }
+
+    public function getCustomerRevisionLabels(Request $request, $customerId)
+    {
+        $labels = CustomerRevisionLabel::where('customer_id', $customerId)
+            ->where('is_active', 1)
+            ->orderBy('sort_order', 'asc')
+            ->get(['id', 'label as text']);
+
+        if ($labels->isEmpty()) {
+            return response()->json(['has_labels' => false, 'labels' => []]);
+        }
+
+        return response()->json(['has_labels' => true, 'labels' => $labels]);
     }
 
     private function ensurePackage(array $ids, array $labels): int

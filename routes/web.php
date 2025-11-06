@@ -27,6 +27,7 @@ use App\Http\Controllers\Api\DrawingUploadController;
 use App\Http\Controllers\Api\CustomerRevisionLabelController;
 use App\Http\Controllers\Api\PackageFormatController;
 use App\Http\Controllers\Api\FilePreviewController;
+use App\Http\Controllers\Api\ReceiptController;
 use App\Http\Controllers\Api\ShareController;
 use Illuminate\Support\Facades\Auth;
 
@@ -67,9 +68,9 @@ Route::middleware(['auth'])->group(function () {
         return view('file_management.share');
     })->middleware(['auth', 'check.menu:29'])->name('file-manager.share');
 
-    Route::get('/file-manager.receipt', function () {
-        return view('file_management.receipt');
-    })->middleware(['auth', 'check.menu:30'])->name('file-manager.receipt');
+    Route::get('/receipt', function () {
+        return view('receipt.receipt');
+    })->middleware(['auth', 'check.menu:30'])->name('receipt');
 
 
     Route::get('/file-manager.export/{id}', [ExportController::class, 'showDetail'])->middleware(['auth', 'check.menu:4'])->name('file-manager.export.detail');
@@ -284,20 +285,20 @@ Route::middleware(['auth'])->group(function () {
     Route::post('upload.getDocumentGroupData', [DrawingUploadController::class, 'getDocumentGroupData'])->name('upload.getDocumentGroupData');
     Route::post('upload.getSubCategoryData', [DrawingUploadController::class, 'getSubCategoryData'])->name('upload.getSubCategoryData');
     Route::post('upload.getPartGroupData', [DrawingUploadController::class, 'getPartGroupData'])->name('upload.getPartGroupData');
+    Route::get('/upload/drawing/get-revision-labels/{customerId}', [DrawingUploadController::class, 'getCustomerRevisionLabels'])->name('upload.drawing.get-labels');
     Route::post('upload.getProjectStatusData', [DrawingUploadController::class, 'getProjectStatusData'])->name('upload.getProjectStatusData');
 
     Route::get('/upload/drawing/allowed-extensions', [DrawingUploadController::class, 'getPublicAllowedExtensions'])->name('upload.drawing.allowed-extensions');
-    Route::get('/upload/drawing/get-revision-labels/{customerId}', [CustomerRevisionLabelController::class, 'getLabelsForCustomer'])->name('upload.drawing.get-labels');
     Route::post('/upload/drawing/check-revision-status', [DrawingUploadController::class, 'checkRevisionStatus'])->name('upload.drawing.check-status');
     Route::post('/upload/drawing/check-conflicts', [DrawingUploadController::class, 'checkConflicts'])
-        ->name('upload.drawing.check-conflicts');
+    ->name('upload.drawing.check-conflicts');
 
     Route::post('/upload/drawing/sync', [DrawingUploadController::class, 'syncLegacyData'])->name('upload.drawing.sync-legacy');
     Route::post('/upload/drawing/store', [DrawingUploadController::class, 'store'])->name('upload.drawing.store');
     Route::post('/upload/drawing/activity-logs', [DrawingUploadController::class, 'activityLogs'])->name('upload.drawing.activity-logs');
     Route::post('/upload/drawing/request-approval', [DrawingUploadController::class, 'requestApproval'])->name('upload.drawing.request-approval');
     Route::post('/upload/drawing/revise-confirm', [DrawingUploadController::class, 'reviseConfirmed'])->middleware(['auth'])
-        ->name('upload.drawing.revise-confirm');
+    ->name('upload.drawing.revise-confirm');
 
     Route::get('/files/kpi', [UploadController::class, 'getKpiStats'])->name('api.files.kpi-stats');
     Route::get('/files/list', [UploadController::class, 'listFiles'])->name('api.files.list');
@@ -312,9 +313,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/export/list', [ExportController::class, 'listExportableFiles'])->middleware(['auth'])->name('api.export.list');
 
     Route::get('/file-manager.export/download-package/{id}', [ExportController::class, 'downloadPackage'])
-     ->name('file-manager.export.download-package');
+        ->name('file-manager.export.download-package');
     Route::get('/download/file/{file_id}', [ExportController::class, 'downloadFile'])
-     ->name('file-manager.export.download-file');
+        ->name('file-manager.export.download-file');
     #End region
 
     #region Approval
@@ -365,8 +366,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/share/list', [ShareController::class, 'listPackage'])->name('share.list');
     Route::get('/share/filters', [ShareController::class, 'choiseFilter'])->name('share.filters');
     Route::post('/share/save', [ShareController::class, 'saveShare'])->name('share.save');
+    #end region
 
 
+    #region Receipt
+    Route::get('/receipts/filters', [ReceiptController::class, 'choiseFilter'])->name('receipts.filters');
+    Route::get('/receipts/kpi', [ReceiptController::class, 'choiseFilter'])->name('receipts.kpi');
+    Route::get('/receipts/list', [ReceiptController::class, 'receiptList'])->name('receipts.list');
+    Route::get('/receipts/{id}', [ReceiptController::class, 'showDetail'])->name('receipts.detail');
 
     #end region
 
