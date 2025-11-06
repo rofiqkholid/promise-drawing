@@ -7,42 +7,43 @@
 <div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900" x-data="{ modalOpen: false }">
   <div class="sm:flex sm:items-center sm:justify-between">
     <div>
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Export Files</h2>
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Download Files</h2>
       <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Find and download your files from the Data Center.</p>
     </div>
 
     <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4 sm:mt-0">
-      {{-- Card Total Document --}}
       <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
         <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-full">
           <i class="fa-solid fa-box-archive fa-lg"></i>
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Document</p>
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Packages</p>
           <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
             <span id="cardTotal">0</span>
           </p>
         </div>
       </div>
+
       <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-full">
-          <i class="fa-solid fa-circle-check fa-lg"></i>
+        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-yellow-500 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/50 rounded-full">
+          <i class="fa-solid fa-layer-group fa-lg"></i>
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Approved</p>
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Revisions</p>
           <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            <span id="cardApproved">0</span>
+            <span id="cardTotalRevisions">0</span>
           </p>
         </div>
       </div>
+
       <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-yellow-500 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/50 rounded-full">
-          <i class="fa-solid fa-clock fa-lg"></i>
+        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-full">
+          <i class="fa-solid fa-cloud-arrow-down fa-lg"></i>
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Waiting</p>
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Download</p>
           <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            <span id="cardWaiting">0</span>
+            <span id="cardDownload">0</span>
           </p>
         </div>
       </div>
@@ -85,7 +86,7 @@
           <tr>
             <th class="py-3 px-4 text-left ...">No</th>
             <th class="py-3 px-4 text-left ...">Package Info</th>
-            <th class="py-3 px-4 text-left ...">Revision</th>
+            <th class="py-3 px-4 text-left ...">Current Revision</th>
             <th class="py-3 px-4 text-left ...">ECN No</th>
             <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Doc Group</th>
             <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sub-Category</th>
@@ -187,7 +188,7 @@ $(function () {
 
   function loadKPI() {
     const params = getCurrentFilters();
-    $('#cardTotal, #cardWaiting, #cardApproved, #cardRejected').text('…');
+    $('#cardTotal, #cardDownload, #cardTotalRevisions').text('…');
 
     $.ajax({
       url: '{{ route("api.export.kpi") }}',
@@ -196,13 +197,12 @@ $(function () {
       success: function (res) {
         const c = res.cards || {};
         $('#cardTotal').text(c.total ?? 0);
-        $('#cardWaiting').text(c.waiting ?? 0);
-        $('#cardApproved').text(c.approved ?? 0);
-        $('#cardRejected').text(c.rejected ?? 0);
+        $('#cardDownload').text(c.total_download ?? 0);
+        $('#cardTotalRevisions').text(c.total_revisions ?? 0);
       },
       error: function (xhr) {
         console.error('KPI error', xhr.responseText);
-        $('#cardTotal, #cardWaiting, #cardApproved, #cardRejected').text('0');
+        $('#cardTotal, #cardDownload, #cardTotalRevisions').text('0');
       }
     });
   }
@@ -223,7 +223,7 @@ $(function () {
           d.category  = f.category;
         }
       },
-      order: [[ 1, 'asc' ]],
+      order: [[ 7, 'desc' ]],
 
       createdRow: function(row, data, dataIndex) {
         $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer');
@@ -766,49 +766,157 @@ $(function () {
   // Download confirmation functions
   let countdownInterval;
   let packageIdToDownload;
+  let downloadAbortController = null;
 
   window.confirmDownload = function(packageId) {
     packageIdToDownload = packageId;
-    
+    const t = detectTheme();
+
     Swal.fire({
       title: 'Confirm Download',
-      text: "Your file will be prepared by the server. Your browser will appear to 'load' until the file is ready. Please wait.",
+      text: "This package will be prepared on the server first. Do you want to continue?",
       icon: 'info',
+      iconColor: t.icon.info,
+      background: t.bg,
+      color: t.fg,
+      customClass: { popup: 'swal2-popup border' },
+      didOpen: (popup) => {
+          const p = popup.querySelector('.swal2-popup');
+          if (p) p.style.borderColor = t.border;
+      },
       showCancelButton: true,
-      confirmButtonText: 'Yes (5)',
+      confirmButtonText: 'Yes, Prepare It!',
       cancelButtonText: 'Cancel',
       confirmButtonColor: '#2563eb',
-      cancelButtonColor: '#d33',
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      didOpen: () => {
-        const confirmButton = Swal.getConfirmButton();
-        confirmButton.disabled = true;
-        let remaining = 5;
-        
-        confirmButton.innerHTML = `Yes (${remaining})`;
-        
-        countdownInterval = setInterval(() => {
-          remaining--;
-          if (remaining > 0) {
-            confirmButton.innerHTML = `Yes (${remaining})`;
-          } else {
-            clearInterval(countdownInterval);
-            confirmButton.innerHTML = 'Yes, start download!';
-            confirmButton.disabled = false;
-          }
-        }, 1000);
-      },
-      willClose: () => {
-        clearInterval(countdownInterval);
-      }
+      cancelButtonColor: '#6b7280',
     }).then((result) => {
-      if (result.isConfirmed) {
-        // Proceed with download
-        if (packageIdToDownload) {
-          window.location.href = `/file-manager.export/download-package/${packageIdToDownload}`;
-        }
+      if (!result.isConfirmed) {
+          return;
       }
+
+      if (downloadAbortController) {
+          downloadAbortController.abort('New download started');
+      }
+      downloadAbortController = new AbortController();
+      const signal = downloadAbortController.signal;
+
+      const t_prep = detectTheme();
+      Swal.fire({
+          title: 'Preparing your file...',
+          text: 'This may take a moment. Please wait.',
+          icon: 'info',
+          iconColor: t_prep.icon.info,
+          background: t_prep.bg,
+          color: t_prep.fg,
+          customClass: { popup: 'swal2-popup border' },
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          showCancelButton: true,
+          cancelButtonText: 'Cancel',
+          showConfirmButton: false,
+          didOpen: (popup) => {
+              Swal.showLoading();
+              const p = popup.querySelector('.swal2-popup');
+              if (p) p.style.borderColor = t_prep.border;
+          },
+      }).then((modalResult) => {
+          if (modalResult.dismiss === Swal.DismissReason.cancel) {
+              if (downloadAbortController) {
+                  downloadAbortController.abort('User canceled preparing');
+              }
+          }
+      });
+
+      fetch(`/api/export/prepare-zip/${packageIdToDownload}`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': '{{ csrf_token() }}'
+          },
+          signal: signal
+      })
+      .then(response => {
+          if (signal.aborted) {
+              throw new Error('Aborted');
+          }
+          if (!response.ok) {
+              return response.json().then(err => {
+                  throw new Error(err.message || 'Server error. Could not prepare file.');
+              });
+          }
+          return response.json();
+      })
+      .then(data => {
+          if (signal.aborted) return;
+          downloadAbortController = null;
+
+          if (data.success && data.download_url) {
+              const t_ready = detectTheme();
+              Swal.fire({
+                  title: 'File is Ready!',
+                  text: `Your file (${data.file_name}) has been prepared.`,
+                  icon: 'success',
+                  iconColor: t_ready.icon.success,
+                  background: t_ready.bg,
+                  color: t_ready.fg,
+                  customClass: { popup: 'swal2-popup border' },
+                  didOpen: (popup) => {
+                      const p = popup.querySelector('.swal2-popup');
+                      if (p) p.style.borderColor = t_ready.border;
+                  },
+                  confirmButtonText: '<i class="fa-solid fa-download mr-1"></i> Download Now',
+                  confirmButtonColor: '#28a745',
+                  allowOutsideClick: false,
+                  showCancelButton: true,
+                  cancelButtonText: 'Close',
+                  cancelButtonColor: '#6b7280',
+              }).then((dlResult) => {
+                  if (dlResult.isConfirmed) {
+                      window.location.href = data.download_url;
+                  }
+              });
+          } else {
+              throw new Error(data.message || 'Failed to prepare file response.');
+          }
+      })
+      .catch(error => {
+          if (error.name === 'AbortError' || error.message === 'Aborted') {
+              console.log('File preparation canceled by user.');
+              const t_cancel = detectTheme();
+              Swal.fire({
+                  title: 'Canceled',
+                  text: 'File preparation was canceled.',
+                  icon: 'info',
+                  iconColor: t_cancel.icon.info,
+                  background: t_cancel.bg,
+                  color: t_cancel.fg,
+                  customClass: { popup: 'swal2-popup border' },
+                  didOpen: (popup) => {
+                      const p = popup.querySelector('.swal2-popup');
+                      if (p) p.style.borderColor = t_cancel.border;
+                  },
+                  confirmButtonColor: '#2563eb',
+              });
+              return;
+          }
+
+          downloadAbortController = null;
+          const t_err = detectTheme();
+          Swal.fire({
+              title: 'An Error Occurred',
+              text: error.message || 'Could not prepare the file. Please try again.',
+              icon: 'error',
+              iconColor: t_err.icon.error,
+              background: t_err.bg,
+              color: t_err.fg,
+              customClass: { popup: 'swal2-popup border' },
+              didOpen: (popup) => {
+                  const p = popup.querySelector('.swal2-popup');
+                  if (p) p.style.borderColor = t_err.border;
+              },
+              confirmButtonColor: '#2563eb',
+          });
+      });
     });
   };
 

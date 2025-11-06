@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use App\Models\Customers;
 use App\Models\Models;
@@ -25,7 +26,16 @@ class ExportController extends Controller
 {
     public function kpi(Request $req)
     {
+        $latestRevisionsSubquery = DB::table('doc_package_revisions')
+            ->select('package_id', DB::raw('MAX(revision_no) as max_revision_no'))
+            ->where('revision_status', '=', 'approved')
+            ->groupBy('package_id');
+
         $q = DB::table('doc_package_revisions as dpr')
+            ->joinSub($latestRevisionsSubquery, 'latest_revs', function ($join) {
+                $join->on('dpr.package_id', '=', 'latest_revs.package_id')
+                     ->on('dpr.revision_no', '=', 'latest_revs.max_revision_no');
+            })
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
@@ -34,26 +44,54 @@ class ExportController extends Controller
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
             ->where('dpr.revision_status', '=', 'approved');
 
-        // FILTER
+        $downloadQuery = DB::table('activity_logs as al')
+            ->join('doc_package_revisions as dpr', 'al.revision_id', '=', 'dpr.id')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->where('al.activity_code', '=', 'DOWNLOAD');
+
+        $totalRevisionsQuery = DB::table('doc_package_revisions as dpr')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('products as p', 'dp.product_id', '=', 'p.id') // Join products
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->where('dpr.revision_status', '=', 'approved');
+
         if ($req->filled('customer') && $req->customer !== 'All') {
             $q->where('c.code', $req->customer);
+            $downloadQuery->where('c.code', $req->customer);
+            $totalRevisionsQuery->where('c.code', $req->customer);
         }
         if ($req->filled('model') && $req->model !== 'All') {
             $q->where('m.name', $req->model);
+            $downloadQuery->where('m.name', $req->model);
+            $totalRevisionsQuery->where('m.name', $req->model);
         }
         if ($req->filled('doc_type') && $req->doc_type !== 'All') {
             $q->where('dtg.name', $req->doc_type);
+            $downloadQuery->where('dtg.name', $req->doc_type);
+            $totalRevisionsQuery->where('dtg.name', $req->doc_type);
         }
         if ($req->filled('category') && $req->category !== 'All') {
             $q->where('dsc.name', $req->category);
+            $downloadQuery->where('dsc.name', $req->category);
+            $totalRevisionsQuery->where('dsc.name', $req->category);
         }
 
-        $total = $q->count();
+        $totalApprovedPackages = $q->count();
+        $totalDownloads = $downloadQuery->count();
+        $totalApprovedRevisions = $totalRevisionsQuery->count();
 
         return response()->json([
             'cards' => [
-                'total' => $total,
-                'approved' => $total,
+                'total' => $totalApprovedPackages,
+                'total_download' => $totalDownloads,
+                'total_revisions' => $totalApprovedRevisions
             ],
             'metrics' => [
                 'approval_rate'  => 100.0,
@@ -198,7 +236,16 @@ class ExportController extends Controller
 
         $orderColumnName = $columnMap[$request->get('columns')[$orderColumnIndex]['name']] ?? 'dpr.created_at';
 
+        $latestRevisionsSubquery = DB::table('doc_package_revisions')
+            ->select('package_id', DB::raw('MAX(revision_no) as max_revision_no'))
+            ->where('revision_status', '=', 'approved')
+            ->groupBy('package_id');
+
         $query = DB::table('doc_package_revisions as dpr')
+            ->joinSub($latestRevisionsSubquery, 'latest_revs', function ($join) {
+                $join->on('dpr.package_id', '=', 'latest_revs.package_id')
+                     ->on('dpr.revision_no', '=', 'latest_revs.max_revision_no');
+            })
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
@@ -285,6 +332,21 @@ class ExportController extends Controller
             abort(404, 'Exportable file not found or not approved.');
         }
 
+        $revisionList = DB::table('doc_package_revisions as dpr')
+            ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
+            ->where('dpr.package_id', $revision->package_id)
+            ->where('dpr.revision_status', '=', 'approved')
+            ->orderBy('dpr.revision_no', 'desc')
+            ->select('dpr.id', 'dpr.revision_no', 'crl.label')
+            ->get()
+            ->map(function ($rev) {
+                $labelText = $rev->label ? " ({$rev->label})" : "";
+                return [
+                    'id'   => str_replace('=', '-', encrypt($rev->id)),
+                    'text' => "Rev-{$rev->revision_no}{$labelText}"
+                ];
+            });
+
         // Metadata Paket
         $package = DB::table('doc_packages as dp')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
@@ -321,6 +383,66 @@ class ExportController extends Controller
         return view('file_management.file_export_detail', [
             'exportId' => $originalEncryptedId,
             'detail'   => $detail,
+            'revisionList' => $revisionList,
+        ]);
+    }
+
+    public function getRevisionDetailJson(Request $request, $id)
+    {
+        $originalEncryptedId = $id;
+        try {
+            $decrypted_id = decrypt(str_replace('-', '=', $id));
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Invalid revision ID.'], 404);
+        }
+
+        $revision = DB::table('doc_package_revisions as dpr')
+            ->where('dpr.id', $decrypted_id)
+            ->where('dpr.revision_status', '=', 'approved')
+            ->first();
+
+        if (!$revision) {
+            return response()->json(['success' => false, 'message' => 'Exportable revision not found.'], 404);
+        }
+
+        // --- Membangun ulang struktur data yang sama dengan 'showDetail' ---
+
+        $package = DB::table('doc_packages as dp')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->where('dp.id', $revision->package_id)
+            ->select('c.code as customer', 'm.name as model', 'p.part_no')
+            ->first();
+
+        $files = DB::table('doc_package_revision_files')
+            ->where('revision_id', $decrypted_id)
+            ->select('id', 'filename as name', 'category', 'storage_path')
+            ->get()
+            ->groupBy('category')
+            ->map(function ($items) {
+                return $items->map(function ($item) {
+                    $url = URL::signedRoute('preview.file', ['id' => $item->id]);
+                    return ['name' => $item->name, 'url' => $url, 'file_id' => $item->id];
+                });
+            })
+            ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
+
+        // 'detail' ini memiliki struktur yang sama dengan variabel $detail di showDetail
+        $detail = [
+            'metadata' => [
+                'customer' => $package->customer,
+                'model'    => $package->model,
+                'part_no'  => $package->part_no,
+                'revision' => 'Rev-' . $revision->revision_no, // Nomor revisi yang baru
+            ],
+            'files' => $files, // Daftar file yang baru
+        ];
+
+        return response()->json([
+            'success'  => true,
+            'pkg'      => $detail,
+            'exportId' => $originalEncryptedId // ID terenkripsi yang baru untuk tombol "Download All"
         ]);
     }
 
@@ -350,12 +472,12 @@ class ExportController extends Controller
         return response()->download($path, $file->filename);
     }
 
-    public function downloadPackage($revision_id)
+    public function preparePackageZip($revision_id)
     {
         try {
             $decrypted_id = decrypt(str_replace('-', '=', $revision_id));
         } catch (\Exception $e) {
-            abort(404, 'Package not found or not approved.');
+            return response()->json(['success' => false, 'message' => 'Package not found or not approved.'], 404);
         }
 
         $revision = DB::table('doc_package_revisions')
@@ -364,7 +486,7 @@ class ExportController extends Controller
             ->first();
 
         if (!$revision) {
-            abort(404, 'Package not found or not approved.');
+            return response()->json(['success' => false, 'message' => 'Package not found or not approved.'], 404);
         }
 
         $package = DB::table('doc_packages as dp')
@@ -372,33 +494,32 @@ class ExportController extends Controller
             ->join('models as m', 'dp.model_id', '=', 'm.id')
             ->join('products as p', 'dp.product_id', '=', 'p.id')
             ->where('dp.id', $revision->package_id)
-            ->select('c.code as customer', 'm.name as model', 'p.part_no', 'dp.part_group_id') // Tambahkan part_group_id
+            ->select('c.code as customer', 'm.name as model', 'p.part_no', 'dp.part_group_id')
             ->first();
 
         if (!$package) {
-            abort(404, 'Associated package details not found.');
+            return response()->json(['success' => false, 'message' => 'Associated package details not found.'], 404);
         }
 
         $files = DocPackageRevisionFile::where('revision_id', $decrypted_id)->get();
 
         if ($files->isEmpty()) {
-            abort(404, 'No files found for this package revision.');
+            return response()->json(['success' => false, 'message' => 'No files found for this package revision.'], 404);
         }
 
-        // Buat nama file zip kustom
-        $customer = \Illuminate\Support\Str::slug($package->customer);
-        $model = \Illuminate\Support\Str::slug($package->model);
-        $partNo = \Illuminate\Support\Str::slug($package->part_no);
-        $ecn = \Illuminate\Support\Str::slug($revision->ecn_no);
+        $customer = Str::slug($package->customer);
+        $model = Str::slug($package->model);
+        $partNo = Str::slug($package->part_no);
+        $ecn = Str::slug($revision->ecn_no);
         $timestamp = now()->format('Ymd-His');
 
-        $zipFileName = "{$customer}-{$model}-{$partNo}-{$ecn}-{$timestamp}.zip";
+        $zipFileName = "{$customer}-{$model}-{$partNo}-{$ecn}-{$timestamp}-" . Str::random(5) . ".zip";
         $zipFilePath = storage_path('app/public/' . $zipFileName);
 
         $zip = new ZipArchive();
         if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
-            Log::error('Could not create zip file at: ' - $zipFilePath);
-            abort(500, 'Could not create zip file. Check server permissions for storage/app/public.');
+            Log::error('Could not create zip file', ['path' => $zipFilePath]);
+            return response()->json(['success' => false, 'message' => 'Could not create zip file on server.'], 500);
         }
 
         $filesAddedCount = 0;
@@ -424,51 +545,105 @@ class ExportController extends Controller
         $zip->close();
 
         if ($filesAddedCount === 0) {
-            unlink($zipFilePath);
-            abort(404, 'No physical files were found to add to the zip package.');
+            if (file_exists($zipFilePath)) {
+                unlink($zipFilePath);
+            }
+            return response()->json(['success' => false, 'message' => 'No physical files were found to add to the zip package.'], 404);
         }
 
-        try {
-            $labelName = null;
-            if (!empty($revision->revision_label_id)) {
-                $labelName = DB::table('customer_revision_labels')
-                    ->where('id', $revision->revision_label_id)
-                    ->value('label');
+        $downloadUrl = URL::temporarySignedRoute(
+            'export.get-zip',
+            now()->addMinutes(5),
+            [
+                'file_name' => $zipFileName,
+                'rev_id'    => $revision_id
+            ]
+        );
+
+        return response()->json([
+            'success'      => true,
+            'message'      => 'File prepared successfully.',
+            'download_url' => $downloadUrl,
+            'file_name'    => $zipFileName
+        ]);
+    }
+
+    public function getPreparedZip(Request $request, $file_name)
+    {
+        if (!$request->hasValidSignature()) {
+            abort(403, 'Invalid or expired download link.');
+        }
+
+        $safe_filename = basename($file_name);
+        $zipFilePath = storage_path('app/public/' . $safe_filename);
+
+        if (!file_exists($zipFilePath)) {
+            Log::warning('Prepared zip file not found for download.', ['path' => $zipFilePath]);
+            abort(404, 'File not found. It may have expired or already been downloaded.');
+        }
+
+        $encrypted_rev_id = $request->get('rev_id');
+        $decrypted_id = null;
+        if ($encrypted_rev_id) {
+            try {
+                $decrypted_id = decrypt(str_replace('-', '=', $encrypted_rev_id));
+            } catch (\Exception $e) {
+                Log::warning('Could not decrypt rev_id for logging in getPreparedZip', ['rev_id' => $encrypted_rev_id]);
             }
+        }
 
-            $partGroupCode = null;
-            if ($package && !empty($package->part_group_id)) {
-                $partGroupCode = DB::table('part_groups')
-                    ->where('id', $package->part_group_id)
-                    ->value('code_part_group');
+        if ($decrypted_id && Auth::check()) {
+            try {
+                $revision = DB::table('doc_package_revisions')->where('id', $decrypted_id)->first();
+                $package = null;
+                if ($revision) {
+                    $package = DB::table('doc_packages as dp')
+                        ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+                        ->join('models as m', 'dp.model_id', '=', 'm.id')
+                        ->join('products as p', 'dp.product_id', '=', 'p.id')
+                        ->where('dp.id', $revision->package_id)
+                        ->select('c.code as customer', 'm.name as model', 'p.part_no', 'dp.part_group_id')
+                        ->first();
+                }
+
+                if ($revision && $package) {
+                    $labelName = null;
+                    if (!empty($revision->revision_label_id)) {
+                        $labelName = DB::table('customer_revision_labels')->where('id', $revision->revision_label_id)->value('label');
+                    }
+                    $partGroupCode = null;
+                    if (!empty($package->part_group_id)) {
+                        $partGroupCode = DB::table('part_groups')->where('id', $package->part_group_id)->value('code_part_group');
+                    }
+
+                    $metaLogData = [
+                        'part_no' => $package->part_no,
+                        'customer_code' => $package->customer,
+                        'model_name' => $package->model,
+                        'part_group_code' => $partGroupCode,
+                        'package_id' => $revision->package_id,
+                        'revision_no' => $revision->revision_no,
+                        'ecn_no' => $revision->ecn_no,
+                        'revision_label' => $labelName,
+                        'downloaded_file' => $safe_filename
+                    ];
+
+                    ActivityLog::create([
+                        'user_id' => Auth::user()->id,
+                        'activity_code' => 'DOWNLOAD',
+                        'scope_type' => 'revision',
+                        'scope_id' => $revision->package_id,
+                        'revision_id' => $revision->id,
+                        'meta' => $metaLogData,
+                    ]);
+                }
+
+            } catch (\Exception $e) {
+                Log::error('Failed to create download activity log in getPreparedZip', [
+                    'error' => $e->getMessage(),
+                    'revision_id' => $decrypted_id,
+                ]);
             }
-
-            $metaLogData = [
-                'part_no' => $package->part_no,
-                'customer_code' => $package->customer,
-                'model_name' => $package->model,
-                'part_group_code' => $partGroupCode,
-                'package_id' => $revision->package_id,
-                'revision_no' => $revision->revision_no,
-                'ecn_no' => $revision->ecn_no,
-                'revision_label' => $labelName,
-                'downloaded_file' => $zipFileName
-            ];
-
-            ActivityLog::create([
-                'user_id' => Auth::user()->id,
-                'activity_code' => 'DOWNLOAD',
-                'scope_type' => 'revision',
-                'scope_id' => $revision->package_id,
-                'revision_id' => $revision->id,
-                'meta' => $metaLogData,
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to create download activity log', [
-                'error' => $e->getMessage(),
-                'revision_id' => $revision->id,
-            ]);
         }
 
         return response()->download($zipFilePath)->deleteFileAfterSend(true);

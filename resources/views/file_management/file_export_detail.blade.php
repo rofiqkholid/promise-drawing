@@ -6,8 +6,16 @@
 
 <div class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen" x-data="exportDetail()" x-init="init()">
 
+    <div x-show="isLoadingRevision" x-transition
+           class="absolute inset-0 bg-gray-100/75 dark:bg-gray-900/75 z-10 flex items-center justify-center rounded-lg">
+          <div class="flex items-center gap-3 px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+              <div class="w-6 h-6 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Loading Revision...</span>
+          </div>
+    </div>
+
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6 items-start">
-    <div class="lg:col-span-4 space-y-6">
+    <div class="lg:col-span-4 space-y-6 relative">
 
       <!-- ===== Meta Card ===== -->
       <div x-ref="metaCard"
@@ -51,6 +59,35 @@
         </div>
       </div>
 
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <h2 class="text-lg lg:text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+            <i class="fa-solid fa-history mr-2 text-blue-600"></i>
+            Revision History
+          </h2>
+        </div>
+
+        <div class="p-4 space-y-2">
+          <label for="revision-selector" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            View approved revision:
+          </label>
+          <select id="revision-selector"
+                  x-model="selectedRevisionId"
+                  @change="onRevisionChange()"
+                  :disabled="isLoadingRevision"
+                  class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:opacity-50 disabled:bg-gray-100 dark:disabled:bg-gray-700">
+
+            <template x-for="revision in revisionList" :key="revision.id">
+              <option :value="revision.id" x-text="revision.text"></option>
+            </template>
+
+            <template x-if="revisionList.length === 0">
+              <option value="" disabled>No other revisions found</option>
+            </template>
+          </select>
+        </div>
+      </div>
+
       <!-- ===== File Groups (2D / 3D / ECN) ===== -->
       @php
         function renderFileGroup($title, $icon, $category) {
@@ -91,7 +128,6 @@
       {{ renderFileGroup('2D Drawings', 'fa-drafting-compass', '2d') }}
       {{ renderFileGroup('3D Models', 'fa-cubes', '3d') }}
       {{ renderFileGroup('ECN / Documents', 'fa-file-lines', 'ecn') }}
-
     </div>
 
     <div class="lg:col-span-8">
@@ -188,9 +224,7 @@
         </div>
       </div>
     </div>
-    <!-- ================= /RIGHT COLUMN ================= -->
   </div>
-  <!-- ================= /MAIN LAYOUT ================= -->
 </div>
 
 <style>
@@ -283,6 +317,9 @@
     return {
       exportId: JSON.parse(`@json($exportId)`),
       pkg: JSON.parse(`@json($detail)`),
+      revisionList: JSON.parse(`@json($revisionList ?? [])`),
+      selectedRevisionId: JSON.parse(`@json($exportId)`),
+      isLoadingRevision: false,
 
       selectedFile: null,
       openSections: [],
@@ -574,21 +611,209 @@
         else if (this.isCad(file?.name)) this.renderCadOcct(file.url);
       },
 
-      /* ===== Download ===== */
-      downloadFile(file) {
-        if (file && file.file_id) {
-            window.location.href = `/download/file/${file.file_id}`;
-        } else {
-            toastError('Error', 'File ID not found for download.');
-        }
+      onRevisionChange() {
+          if (this.selectedRevisionId === this.exportId) {
+              return;
+          }
+
+          this.isLoadingRevision = true;
+          this.selectedFile = null;
+          this.disposeCad();
+          this.tifError = ''; this.tifLoading = false;
+
+          const routeUrl = `/api/export/revision-detail/${this.selectedRevisionId}`;
+
+          fetch(routeUrl, {
+              method: 'GET',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                  'X-CSRF-TOKEN': '{{ csrf_token() }}'
+              }
+          })
+          .then(response => {
+              if (!response.ok) {
+                  return response.json().then(err => {
+                      throw new Error(err.message || `Error ${response.status}`);
+                  });
+              }
+              return response.json();
+          })
+          .then(data => {
+              if (data.success) {
+                  this.pkg = data.pkg;
+                  this.exportId = data.exportId;
+                  toastSuccess('Revision Loaded', `Displaying ${data.pkg.metadata.revision}.`);
+              } else {
+                  throw new Error(data.message || 'Failed to load revision data.');
+              }
+          })
+          .catch(error => {
+              console.error('Failed to load revision:', error);
+              toastError('Load Failed', error.message);
+              this.selectedRevisionId = this.exportId;
+          })
+          .finally(() => {
+              this.isLoadingRevision = false;
+          });
       },
 
+      /* ===== Download ===== */
       downloadPackage() {
-        if (this.exportId) {
-            window.location.href = `/file-manager.export/download-package/${this.exportId}`;
-        } else {
+        if (!this.exportId) {
             toastError('Error', 'Package ID not found for download.');
+            return;
         }
+
+        const packageIdToDownload = this.exportId;
+        const t = detectTheme();
+
+        Swal.fire({
+          title: 'Confirm Download',
+          text: "This package will be prepared on the server first. Do you want to continue?",
+          icon: 'info',
+          iconColor: t.icon.info,
+          background: t.bg,
+          color: t.fg,
+          customClass: { popup: 'swal2-popup border' },
+          didOpen: (popup) => {
+              const p = popup.querySelector('.swal2-popup');
+              if (p) p.style.borderColor = t.border;
+          },
+          showCancelButton: true,
+          confirmButtonText: 'Yes, Prepare It!',
+          cancelButtonText: 'Cancel',
+          confirmButtonColor: '#2563eb',
+          cancelButtonColor: '#6b7280',
+        }).then((result) => {
+          if (!result.isConfirmed) {
+            return;
+          }
+
+          if (this._downloadAbortController) {
+              this._downloadAbortController.abort('New download started');
+          }
+          this._downloadAbortController = new AbortController();
+          const signal = this._downloadAbortController.signal;
+
+          const t_prep = detectTheme();
+          Swal.fire({
+              title: 'Preparing your file...',
+              text: 'This may take a moment. Please wait.',
+              icon: 'info',
+              iconColor: t_prep.icon.info,
+              background: t_prep.bg,
+              color: t_prep.fg,
+              customClass: { popup: 'swal2-popup border' },
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              showCancelButton: true,
+              cancelButtonText: 'Cancel',
+              showConfirmButton: false,
+              didOpen: (popup) => {
+                  Swal.showLoading();
+                  const p = popup.querySelector('.swal2-popup');
+                  if (p) p.style.borderColor = t_prep.border;
+              },
+          }).then((modalResult) => {
+              if (modalResult.dismiss === Swal.DismissReason.cancel) {
+                  if (this._downloadAbortController) {
+                      this._downloadAbortController.abort('User canceled preparing');
+                  }
+              }
+          });
+
+          fetch(`/api/export/prepare-zip/${packageIdToDownload}`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRF-TOKEN': '{{ csrf_token() }}'
+              },
+              signal: signal
+          })
+          .then(response => {
+              if (signal.aborted) {
+                  throw new Error('Aborted');
+              }
+              if (!response.ok) {
+                  return response.json().then(err => {
+                      throw new Error(err.message || 'Server error. Could not prepare file.');
+                  });
+              }
+              return response.json();
+          })
+          .then(data => {
+              if (signal.aborted) return;
+              this._downloadAbortController = null;
+
+              if (data.success && data.download_url) {
+                  const t_ready = detectTheme();
+                  Swal.fire({
+                      title: 'File is Ready!',
+                      text: `Your file (${data.file_name}) has been prepared.`,
+                      icon: 'success',
+                      iconColor: t_ready.icon.success,
+                      background: t_ready.bg,
+                      color: t_ready.fg,
+                      customClass: { popup: 'swal2-popup border' },
+                      didOpen: (popup) => {
+                          const p = popup.querySelector('.swal2-popup');
+                          if (p) p.style.borderColor = t_ready.border;
+                      },
+                      confirmButtonText: '<i class="fa-solid fa-download mr-1"></i> Download Now',
+                      confirmButtonColor: '#28a745',
+                      allowOutsideClick: false,
+                      showCancelButton: true,
+                      cancelButtonText: 'Close',
+                      cancelButtonColor: '#6b7280',
+                  }).then((dlResult) => {
+                      if (dlResult.isConfirmed) {
+                          window.location.href = data.download_url;
+                      }
+                  });
+              } else {
+                  throw new Error(data.message || 'Failed to prepare file response.');
+              }
+          })
+          .catch(error => {
+              if (error.name === 'AbortError' || error.message === 'Aborted') {
+                  console.log('File preparation canceled by user.');
+                  const t_cancel = detectTheme();
+                  Swal.fire({
+                      title: 'Canceled',
+                      text: 'File preparation was canceled.',
+                      icon: 'info',
+                      iconColor: t_cancel.icon.info,
+                      background: t_cancel.bg,
+                      color: t_cancel.fg,
+                      customClass: { popup: 'swal2-popup border' },
+                      didOpen: (popup) => {
+                          const p = popup.querySelector('.swal2-popup');
+                          if (p) p.style.borderColor = t_cancel.border;
+                      },
+                      confirmButtonColor: '#2563eb',
+                  });
+                  return;
+              }
+
+              this._downloadAbortController = null;
+              const t_err = detectTheme();
+              Swal.fire({
+                  title: 'An Error Occurred',
+                  text: error.message || 'Could not prepare the file. Please try again.',
+                  icon: 'error',
+                  iconColor: t_err.icon.error,
+                  background: t_err.bg,
+                  color: t_err.fg,
+                  customClass: { popup: 'swal2-popup border' },
+                  didOpen: (popup) => {
+                      const p = popup.querySelector('.swal2-popup');
+                      if (p) p.style.borderColor = t_err.border;
+                  },
+                  confirmButtonColor: '#2563eb',
+              });
+          });
+        });
       },
 
       /* ===== render CAD via occt-import-js ===== */

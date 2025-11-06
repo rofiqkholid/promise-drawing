@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\QueryException;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Contracts\Encryption\DecryptException;
+use App\Exports\ApprovalSummaryExport;
 use App\Models\Customers;
 use App\Models\Models;
 use App\Models\DoctypeGroups;
@@ -18,9 +21,9 @@ use App\Models\DocPackageRevisionFile;
 use App\Models\DocTypeSubCategories;
 use App\Models\ActivityLog;
 use App\Models\User;
-use App\Exports\ApprovalSummaryExport;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Contracts\Encryption\DecryptException;
+use App\Models\StampFormat;
+
+
 
 
 
@@ -388,6 +391,19 @@ class ApprovalController extends Controller
             abort(404, 'Approval request not found.');
         }
 
+        // --- Tambahan: data untuk stamp ---
+        $receiptDate = $revision->receipt_date
+            ? Carbon::parse($revision->receipt_date)
+            : null;
+
+        // "Date Upload" di stamp = created_at di doc_package_revisions
+        $uploadDateRevision = $revision->created_at
+            ? Carbon::parse($revision->created_at)
+            : null;
+
+        $isObsolete = (bool)($revision->is_obsolete ?? 0);
+        // --- /Tambahan ---
+
         // 3. Ambil info package + uploader
         $package = DB::table('doc_packages as dp')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
@@ -463,16 +479,33 @@ class ApprovalController extends Controller
             },
             'files'        => $files,
             'activityLogs' => $logs,
+
+            // --- Tambahan: block khusus untuk stamp di preview 2D ---
+            'stamp'        => [
+                // dari doc_package_revisions.receipt_date
+                'receipt_date' => $receiptDate?->toDateString(),
+                // dari doc_package_revisions.created_at
+                'upload_date'  => $uploadDateRevision?->toDateString(),
+                // untuk nanti munculkan badge OBSOLETE di UI
+                'is_obsolete'  => $isObsolete,
+            ],
+            // --- /Tambahan ---
         ];
 
         // selalu kirim hash baru ke Blade untuk dipakai approve/reject
         $hash = encrypt($revisionId);
 
+        // --- Tambahan: ambil format label stamp (prefix/suffix) dari master ---
+        $stampFormat = StampFormat::where('is_active', true)->first();
+        // --- /Tambahan ---
+
         return view('approvals.approval_detail', [
-            'approvalId' => $hash,
-            'detail'     => $detail,
+            'approvalId'  => $hash,
+            'detail'      => $detail,
+            'stampFormat' => $stampFormat, // dikirim ke Blade
         ]);
     }
+
 
 
 

@@ -344,7 +344,7 @@ class ShareController extends Controller
             ->where('id', $request->input('package_id'))
             ->update([
                 'share_to'   => $roleId,
-                'updated_at' => now()
+                'shared_at' => now()
             ]);
 
         if ($updateSuccess) {

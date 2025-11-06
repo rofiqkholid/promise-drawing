@@ -10,8 +10,7 @@
   x-init="init()"
   @mousemove.window="onPan($event)"
   @mouseup.window="endPan()"
-  @mouseleave.window="endPan()"
->
+  @mouseleave.window="endPan()">
 
   <!-- ================= MAIN LAYOUT: LEFT STACK + RIGHT PREVIEW ================= -->
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6 items-start">
@@ -110,12 +109,11 @@
             x-text="`${pkg.activityLogs?.length || 0} events`"></span>
         </div>
 
-       <div
-  class="p-2 space-y-2"
-  :class="(pkg.activityLogs?.length || 0) > 3 ? 'max-h-64 overflow-y-auto pr-1' : ''"
-  role="log"
-  aria-label="Activity Log"
->
+        <div
+          class="p-2 space-y-2"
+          :class="(pkg.activityLogs?.length || 0) > 3 ? 'max-h-64 overflow-y-auto pr-1' : ''"
+          role="log"
+          aria-label="Activity Log">
           <template x-for="(item, idx) in (pkg.activityLogs || [])" :key="idx">
             <div class="flex items-start gap-3 p-3 rounded-md bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700">
               <div class="mt-0.5">
@@ -140,10 +138,10 @@
           </template>
 
           <template x-if="(pkg.activityLogs || []).length === 0">
-    <p class="p-3 text-center text-xs text-gray-500 dark:text-gray-400">
-      No activity yet for this package.
-    </p>
-  </template>
+            <p class="p-3 text-center text-xs text-gray-500 dark:text-gray-400">
+              No activity yet for this package.
+            </p>
+          </template>
         </div>
       </div>
 
@@ -176,40 +174,87 @@
 
           <!-- ZOOM TOOLBAR untuk JPG/PNG/TIFF/HPGL -->
           <div x-show="isImage(selectedFile?.name) || isTiff(selectedFile?.name) || isHpgl(selectedFile?.name)"
-               class="mb-3 flex items-center justify-end gap-2 text-xs text-gray-700 dark:text-gray-200">
+            class="mb-3 flex items-center justify-end gap-2 text-xs text-gray-700 dark:text-gray-200">
             <span x-text="Math.round(imageZoom * 100) + '%'"></span>
             <button @click="zoomOut()"
-                    class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+              class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
               -
             </button>
             <button @click="resetZoom()"
-                    class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+              class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
               Fit
             </button>
             <button @click="zoomIn()"
-                    class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+              class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
               +
             </button>
           </div>
 
           <!-- PREVIEW AREA (image/pdf/tiff/cad) -->
-          <div class="preview-area bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center w-full">
+          <div class="preview-area bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center w-full relative">
 
             <!-- IMAGE (JPG/PNG/...) -->
             <template x-if="isImage(selectedFile?.name)">
               <div
-                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing flex items-center justify-center"
+                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
                 @mousedown.prevent="startPan($event)"
-                @wheel.prevent="onWheelZoom($event)"
-              >
-                <img
-                  :src="selectedFile?.url"
-                  alt="File Preview"
-                  class="pointer-events-none select-none"
-                  loading="lazy"
-                  :style="imageTransformStyle()"
-                >
-              </div>
+                @wheel.prevent="onWheelZoom($event)">
+                <div class="w-full h-full flex items-center justify-center">
+                  <div
+                    class="relative inline-block"
+                    :style="imageTransformStyle()">
+                    <img
+                      :src="selectedFile?.url"
+                      alt="File Preview"
+                      class="block pointer-events-none select-none max-w-full max-h-[70vh]"
+                      loading="lazy">
+
+                    <!-- STAMP ORIGINAL (kanan bawah, skala 0.45) -->
+                    <div
+                      x-show="pkg.stamp"
+                      class="absolute bottom-4 right-4 origin-bottom-right"
+                      style="transform: scale(0.45); transform-origin: bottom right;">
+                      <div
+                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+               text-[10px] text-blue-700 flex flex-col items-center
+               justify-between px-2 py-1"
+                        style="background-color: transparent;">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine()"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                            x-text="stampCenterOriginal()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine()"></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- STAMP OBSOLETE (kiri bawah, skala 0.45) -->
+                    <div
+                      x-show="pkg.stamp?.is_obsolete"
+                      class="absolute bottom-4 left-4 origin-bottom-left"
+                      style="transform: scale(0.45); transform-origin: bottom left;">
+                      <div
+                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+               text-[10px] text-blue-700 flex flex-col items-center
+               justify-between px-2 py-1"
+                        style="background-color: transparent;">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine()"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                            x-text="stampCenterObsolete()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine()"></span>
+                        </div>
+                      </div>
+                    </div>
+
             </template>
 
             <!-- PDF -->
@@ -221,49 +266,150 @@
             </template>
 
             <!-- TIFF (render as PNG into <img>) -->
+            <!-- TIFF (render as PNG into <img>) -->
             <template x-if="isTiff(selectedFile?.name)">
               <div
-                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing flex items-center justify-center"
+                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
                 @mousedown.prevent="startPan($event)"
-                @wheel.prevent="onWheelZoom($event)"
-              >
-                <img
-                  x-ref="tifImg"
-                  alt="TIFF Preview"
-                  class="pointer-events-none select-none"
-                  :style="imageTransformStyle()"
-                />
-                <div x-show="tifLoading" class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
+                @wheel.prevent="onWheelZoom($event)">
+                <div class="w-full h-full flex items-center justify-center">
+                  <!-- wrapper yang di-zoom + pan -->
+                  <div class="relative inline-block" :style="imageTransformStyle()">
+                    <img
+                      x-ref="tifImg"
+                      alt="TIFF Preview"
+                      class="block pointer-events-none select-none max-w-full max-h-[70vh]" />
+
+                    <!-- STAMP ORIGINAL (kanan bawah) -->
+                    <div
+                      x-show="pkg.stamp"
+                      class="absolute bottom-4 right-4 origin-bottom-right"
+                      style="transform: scale(0.45); transform-origin: bottom right;">
+                      <div
+                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                   text-[10px] text-blue-700 flex flex-col items-center
+                   justify-between px-2 py-1"
+                        style="background-color: transparent;">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine()"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                            x-text="stampCenterOriginal()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine()"></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- STAMP OBSOLETE (kiri bawah) -->
+                    <div
+                      x-show="pkg.stamp?.is_obsolete"
+                      class="absolute bottom-4 left-4 origin-bottom-left"
+                      style="transform: scale(0.45); transform-origin: bottom left;">
+                      <div
+                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                   text-[10px] text-blue-700 flex flex-col items-center
+                   justify-between px-2 py-1"
+                        style="background-color: transparent;">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine()"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                            x-text="stampCenterObsolete()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine()"></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- status render -->
+                <div
+                  x-show="tifLoading"
+                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
                   Rendering TIFF…
                 </div>
-                <div x-show="tifError" class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded" x-text="tifError"></div>
+                <div
+                  x-show="tifError"
+                  class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
+                  x-text="tifError"></div>
               </div>
             </template>
+
 
             <!-- HPGL -->
             <template x-if="isHpgl(selectedFile?.name)">
               <div
-                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing flex items-center justify-center"
+                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
                 @mousedown.prevent="startPan($event)"
-                @wheel.prevent="onWheelZoom($event)"
-              >
-                <canvas
-                  x-ref="hpglCanvas"
-                  class="pointer-events-none select-none"
-                  :style="imageTransformStyle()"
-                ></canvas>
+                @wheel.prevent="onWheelZoom($event)">
+                <div class="relative w-full h-full flex items-center justify-center" :style="imageTransformStyle()">
+                  <canvas
+                    x-ref="hpglCanvas"
+                    class="pointer-events-none select-none"></canvas>
+
+                  <!-- STAMP ORIGINAL (kanan bawah, skala 0.45) -->
+                  <div
+                    x-show="pkg.stamp"
+                    class="absolute bottom-4 right-4 origin-bottom-right"
+                    style="transform: scale(0.45); transform-origin: bottom right;">
+                    <div
+                      class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                 text-[10px] text-blue-700 flex flex-col items-center
+                 justify-between px-2 py-1"
+                      style="background-color: transparent;">
+                      <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                        <span x-text="stampTopLine()"></span>
+                      </div>
+                      <div class="flex-1 flex items-center justify-center">
+                        <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                          x-text="stampCenterOriginal()"></span>
+                      </div>
+                      <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                        <span x-text="stampBottomLine()"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- STAMP OBSOLETE (kiri bawah, skala 0.45) -->
+                  <div
+                    x-show="pkg.stamp?.is_obsolete"
+                    class="absolute bottom-4 left-4 origin-bottom-left"
+                    style="transform: scale(0.45); transform-origin: bottom left;">
+                    <div
+                      class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                 text-[10px] text-blue-700 flex flex-col items-center
+                 justify-between px-2 py-1"
+                      style="background-color: transparent;">
+                      <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                        <span x-text="stampTopLine()"></span>
+                      </div>
+                      <div class="flex-1 flex items-center justify-center">
+                        <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                          x-text="stampCenterObsolete()"></span>
+                      </div>
+                      <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                        <span x-text="stampBottomLine()"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
 
                 <div
                   x-show="hpglLoading"
-                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
-                >
+                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
                   Rendering HPGL…
                 </div>
                 <div
                   x-show="hpglError"
                   class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
-                  x-text="hpglError"
-                ></div>
+                  x-text="hpglError"></div>
               </div>
             </template>
 
@@ -307,8 +453,7 @@
                 && !isTiff(selectedFile?.name)
                 && !isCad(selectedFile?.name)
                 && !isHpgl(selectedFile?.name)
-              "
-            >
+              ">
               <div class="text-center">
                 <i class="fa-solid fa-file text-6xl text-gray-400 dark:text-gray-500"></i>
                 <p class="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400">Preview Unavailable</p>
@@ -530,7 +675,11 @@
     }
   });
 
-  function renderToast({ icon = 'success', title = 'Success', text = '' } = {}) {
+  function renderToast({
+    icon = 'success',
+    title = 'Success',
+    text = ''
+  } = {}) {
     const t = detectTheme();
     BaseToast.fire({
       icon,
@@ -556,18 +705,41 @@
   }
 
   function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') {
-    renderToast({ icon: 'success', title, text });
+    renderToast({
+      icon: 'success',
+      title,
+      text
+    });
   }
+
   function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') {
-    BaseToast.update({ timer: 3400 });
-    renderToast({ icon: 'error', title, text });
-    BaseToast.update({ timer: 2600 });
+    BaseToast.update({
+      timer: 3400
+    });
+    renderToast({
+      icon: 'error',
+      title,
+      text
+    });
+    BaseToast.update({
+      timer: 2600
+    });
   }
+
   function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') {
-    renderToast({ icon: 'warning', title, text });
+    renderToast({
+      icon: 'warning',
+      title,
+      text
+    });
   }
+
   function toastInfo(title = 'Informasi', text = '') {
-    renderToast({ icon: 'info', title, text });
+    renderToast({
+      icon: 'info',
+      title,
+      text
+    });
   }
 
   window.toastSuccess = toastSuccess;
@@ -580,6 +752,7 @@
     return {
       approvalId: JSON.parse(`@json($approvalId)`),
       pkg: JSON.parse(`@json($detail)`),
+      stampFormat: JSON.parse(`@json($stampFormat)`),
 
       selectedFile: null,
       openSections: [],
@@ -629,10 +802,8 @@
         const step = this.zoomStep;
 
         if (delta < 0) {
-          // scroll ke atas = zoom in
           this.imageZoom = Math.min(this.imageZoom + step, this.maxZoom);
         } else if (delta > 0) {
-          // scroll ke bawah = zoom out
           this.imageZoom = Math.max(this.imageZoom - step, this.minZoom);
         }
       },
@@ -701,7 +872,43 @@
         return u;
       },
 
-      /* ===== TIFF renderer: convert ke PNG dataURL & taruh ke <img> ===== */
+      // (opsional) helper tambahan kalau mau dipakai di tempat lain
+      isStampable(name) {
+        return this.isImage(name) || this.isPdf(name) || this.isTiff(name) || this.isHpgl(name);
+      },
+
+      formatStampDate(d) {
+        return d || '';
+      },
+
+      // teks tengah stamp ORIGINAL
+      stampCenterOriginal() {
+        return 'ORIGINAL';
+      },
+      // teks tengah stamp OBSOLETE
+      stampCenterObsolete() {
+        return 'OBSOLETE';
+      },
+
+      stampTopLine() {
+        const d = this.pkg?.stamp?.receipt_date;
+        if (!d) return '';
+        const label = (this.stampFormat && this.stampFormat.prefix) ?
+          this.stampFormat.prefix :
+          'DATE RECEIVED';
+        return `${label} : ${this.formatStampDate(d)}`;
+      },
+
+      stampBottomLine() {
+        const d = this.pkg?.stamp?.upload_date;
+        if (!d) return '';
+        const label = (this.stampFormat && this.stampFormat.suffix) ?
+          this.stampFormat.suffix :
+          'DATE UPLOADED';
+        return `${label} : ${this.formatStampDate(d)}`;
+      },
+
+      /* ===== TIFF renderer ===== */
       async renderTiff(url) {
         if (!url || typeof window.UTIF === 'undefined') return;
 
@@ -709,7 +916,10 @@
         this.tifError = '';
 
         try {
-          const resp = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+          const resp = await fetch(url, {
+            cache: 'no-store',
+            credentials: 'same-origin'
+          });
           if (!resp.ok) throw new Error('Gagal mengambil file TIFF');
           const buf = await resp.arrayBuffer();
 
@@ -757,7 +967,7 @@
         }
       },
 
-      /* ===== HPGL renderer: parse PU/PD/PA & gambar ke canvas (hi-res) ===== */
+      /* ===== HPGL renderer ===== */
       async renderHpgl(url) {
         if (!url) return;
 
@@ -765,21 +975,32 @@
         this.hpglError = '';
 
         try {
-          const resp = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+          const resp = await fetch(url, {
+            cache: 'no-store',
+            credentials: 'same-origin'
+          });
           if (!resp.ok) throw new Error('Gagal mengambil file HPGL');
           const text = await resp.text();
 
-          // buang spasi & pecah per ';'
           const commands = text.replace(/\s+/g, '').split(';');
 
           let penDown = false;
-          let x = 0, y = 0;
+          let x = 0,
+            y = 0;
           const segments = [];
-          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          let minX = Infinity,
+            minY = Infinity,
+            maxX = -Infinity,
+            maxY = -Infinity;
 
           const addPoint = (nx, ny) => {
             if (penDown) {
-              segments.push({ x1: x, y1: y, x2: nx, y2: ny });
+              segments.push({
+                x1: x,
+                y1: y,
+                x2: nx,
+                y2: ny
+              });
               minX = Math.min(minX, x, nx);
               minY = Math.min(minY, y, ny);
               maxX = Math.max(maxX, x, nx);
@@ -809,9 +1030,7 @@
               penDown = false;
               x = 0;
               y = 0;
-            } else if (op === 'SP') {
-              // abaikan warna
-            } else if (op === 'PU') {
+            } else if (op === 'SP') {} else if (op === 'PU') {
               penDown = false;
               const coords = parseCoords();
               for (let i = 0; i < coords.length; i += 2) {
@@ -839,9 +1058,8 @@
           const w = parent.clientWidth || 800;
           const h = parent.clientHeight || 500;
 
-          // ==== HIGH-RES CANVAS (supaya pas di-zoom tetap tajam) ====
           const dpr = window.devicePixelRatio || 1;
-          const logicalScale = 4 * dpr; // bisa diubah 3/5 sesuai kebutuhan
+          const logicalScale = 4 * dpr;
           canvas.width = w * logicalScale;
           canvas.height = h * logicalScale;
           canvas.style.width = w + 'px';
@@ -859,9 +1077,9 @@
 
           const dx = maxX - minX || 1;
           const dy = maxY - minY || 1;
-          const scale = 0.9 * Math.min(w / dx, h / dy); // padding 10%
+          const scale = 0.9 * Math.min(w / dx, h / dy);
           const offX = (w - dx * scale) / 2 - minX * scale;
-          const offY = (h - dy * scale) / 2 + maxY * scale; // Y dibalik
+          const offY = (h - dy * scale) / 2 + maxY * scale;
 
           ctx.beginPath();
           for (const s of segments) {
@@ -911,7 +1129,11 @@
         try {
           cancelAnimationFrame(this.iges.animId || 0);
           if (this._onIgesResize) window.removeEventListener('resize', this._onIgesResize);
-          const { renderer, scene, controls } = this.iges || {};
+          const {
+            renderer,
+            scene,
+            controls
+          } = this.iges || {};
           controls?.dispose?.();
           scene?.traverse?.(o => {
             o.geometry?.dispose?.();
@@ -922,7 +1144,8 @@
           });
           renderer?.dispose?.();
           const wrap = this.$refs.igesWrap;
-          if (wrap) while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+          if (wrap)
+            while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
         } catch {}
         this.iges = {
           renderer: null,
@@ -1073,7 +1296,11 @@
         }
       },
       _pickPoint(ev) {
-        const { THREE, camera, rootModel } = this.iges;
+        const {
+          THREE,
+          camera,
+          rootModel
+        } = this.iges;
         const rect = this.iges.renderer.domElement.getBoundingClientRect();
         const mouse = new THREE.Vector2(
           ((ev.clientX - rect.left) / rect.width) * 2 - 1,
@@ -1118,7 +1345,8 @@
 
         const updateLabel = () => {
           const mid = a.clone().add(b).multiplyScalar(0.5).project(this.iges.camera);
-          const w = wrap.clientWidth, h = wrap.clientHeight;
+          const w = wrap.clientWidth,
+            h = wrap.clientHeight;
           const x = (mid.x * 0.5 + 0.5) * w;
           const y = (-mid.y * 0.5 + 0.5) * h;
           lbl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
@@ -1170,12 +1398,13 @@
           }
         }
 
-        // reset zoom & pan setiap ganti file
         this.imageZoom = 1;
         this.panX = 0;
         this.panY = 0;
 
-        this.selectedFile = { ...file };
+        this.selectedFile = {
+          ...file
+        };
 
         this.$nextTick(() => {
           if (this.isTiff(file?.name)) {
@@ -1240,7 +1469,9 @@
           });
           const text = await response.text();
           let result = {};
-          try { result = JSON.parse(text); } catch {}
+          try {
+            result = JSON.parse(text);
+          } catch {}
           if (!response.ok) {
             if (response.status === 409) throw new Error(result.message || 'Revision has already been approved by someone else.');
             if (response.status === 403) throw new Error(result.message || 'You do not have permission to approve.');
@@ -1279,11 +1510,15 @@
               'Accept': 'application/json',
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
-            body: JSON.stringify({ note: this.rejectNote })
+            body: JSON.stringify({
+              note: this.rejectNote
+            })
           });
           const text = await response.text();
           let result = {};
-          try { result = JSON.parse(text); } catch {}
+          try {
+            result = JSON.parse(text);
+          } catch {}
           if (!response.ok) {
             if (response.status === 403) throw new Error(result.message || 'You do not have permission to reject.');
             if (response.status === 422) throw new Error(result.message || 'Revision is not in a state that can be rejected.');
@@ -1318,7 +1553,9 @@
           });
           const text = await response.text();
           let result = {};
-          try { result = JSON.parse(text); } catch {}
+          try {
+            result = JSON.parse(text);
+          } catch {}
           if (!response.ok) {
             if (response.status === 403) throw new Error(result.message || 'You do not have permission to rollback.');
             if (response.status === 422) throw new Error(result.message || 'Revision is not in a state that can be rolled back.');
@@ -1347,7 +1584,9 @@
 
         try {
           const THREE = await import('three');
-          const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+          const {
+            OrbitControls
+          } = await import('three/addons/controls/OrbitControls.js');
           const bvh = await import('three-mesh-bvh');
           THREE.Mesh.prototype.raycast = bvh.acceleratedRaycast;
           THREE.BufferGeometry.prototype.computeBoundsTree = bvh.computeBoundsTree;
@@ -1362,7 +1601,10 @@
           const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 10000);
           camera.position.set(250, 200, 250);
 
-          const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+          const renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true
+          });
           renderer.setPixelRatio(window.devicePixelRatio || 1);
           renderer.setSize(width, height);
           wrap.appendChild(renderer.domElement);
@@ -1379,15 +1621,43 @@
           const controls = new OrbitControls(camera, renderer.domElement);
           controls.enableDamping = true;
 
-          const resp = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+          const resp = await fetch(url, {
+            cache: 'no-store',
+            credentials: 'same-origin'
+          });
           if (!resp.ok) throw new Error('Gagal mengambil file CAD');
           const buffer = await resp.arrayBuffer();
           const file = new Uint8Array(buffer);
 
+          console.log('CAD size (bytes):', file.byteLength);
+
+          // untuk cek apakah yang diterima HTML (misal halaman login/error)
+          try {
+            const head = new TextDecoder().decode(file.slice(0, 80));
+            console.log('CAD head preview:', head);
+          } catch (e) {}
+
+
           const occt = await window.occtimportjs();
           const ext = (url.split('?')[0].split('#')[0].split('.').pop() || '').toLowerCase();
-          const res = (ext === 'stp' || ext === 'step') ? occt.ReadStepFile(file, null) : occt.ReadIgesFile(file, null);
-          if (!res?.success) throw new Error('OCCT gagal mem-parsing file');
+          const params = {
+            linearUnit: 'millimeter',
+            linearDeflectionType: 'bounding_box_ratio',
+            linearDeflection: 0.1,
+            angularDeflection: 0.1,
+          };
+
+          const res = (ext === 'stp' || ext === 'step') ?
+            occt.ReadStepFile(file, params) :
+            occt.ReadIgesFile(file, params);
+
+          console.log('OCCT result:', res);
+
+          if (!res || !res.success) {
+            const msg = res?.error || res?.message || 'File bukan STEP/IGES yang valid atau tidak didukung OCCT.';
+            throw new Error('OCCT gagal mem-parsing file: ' + msg);
+          }
+
 
           const group = this._buildThreeFromOcct(res, THREE);
           scene.add(group);

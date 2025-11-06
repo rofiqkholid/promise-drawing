@@ -305,17 +305,18 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/files/{id}', [UploadController::class, 'getPackageDetails'])->name('api.files.detail');
     #End region
 
-    //Export
+     //Export
     Route::get('/export/kpi', [ExportController::class, 'kpi'])->middleware(['auth'])->name('api.export.kpi');
 
     Route::get('/export/filters', [ExportController::class, 'filters'])->middleware(['auth'])->name('api.export.filters');
 
     Route::get('/export/list', [ExportController::class, 'listExportableFiles'])->middleware(['auth'])->name('api.export.list');
 
-    Route::get('/file-manager.export/download-package/{id}', [ExportController::class, 'downloadPackage'])
-        ->name('file-manager.export.download-package');
-    Route::get('/download/file/{file_id}', [ExportController::class, 'downloadFile'])
-        ->name('file-manager.export.download-file');
+    Route::get('/download/file/{file_id}', [ExportController::class, 'downloadFile'])->name('file-manager.export.download-file');
+    Route::post('/api/export/prepare-zip/{revision_id}', [ExportController::class, 'preparePackageZip'])->name('export.prepare-zip');
+    Route::get('/api/export/get-zip/{file_name}', [App\Http\Controllers\Api\ExportController::class, 'getPreparedZip'])->name('export.get-zip');
+
+    Route::get('/api/export/revision-detail/{id}', [App\Http\Controllers\Api\ExportController::class, 'getRevisionDetailJson'])->name('api.export.revision-detail')->middleware('auth');
     #End region
 
     #region Approval
@@ -370,7 +371,7 @@ Route::middleware(['auth'])->group(function () {
 
 
     #region Receipt
-    Route::get('/receipts/filters', [ReceiptController::class, 'choiseFilter'])->name('receipts.filters');
+    Route::get('/receipts/filters', [ReceiptController::class, 'receiptFilters'])->name('receipts.filters');
     Route::get('/receipts/kpi', [ReceiptController::class, 'choiseFilter'])->name('receipts.kpi');
     Route::get('/receipts/list', [ReceiptController::class, 'receiptList'])->name('receipts.list');
     Route::get('/receipts/{id}', [ReceiptController::class, 'showDetail'])->name('receipts.detail');

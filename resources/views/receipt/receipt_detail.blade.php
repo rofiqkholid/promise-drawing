@@ -4,13 +4,8 @@
 
 @section('content')
 
-<div
-    class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen"
-    x-data="receiptDetail()"
-    x-init="init()"
-    @mousemove.window="onPan($event)"
-    @mouseup.window="endPan()"
-    @mouseleave.window="endPan()">
+{{-- Mengganti 'exportDetail' menjadi 'receiptDetail' --}}
+<div class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen" x-data="receiptDetail()" x-init="init()">
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6 items-start">
         <div class="lg:col-span-4 space-y-6">
@@ -21,12 +16,12 @@
                     <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 md:justify-between">
                         <h2 class="text-lg lg:text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
                             <i class="fa-solid fa-file-invoice mr-2 text-blue-600"></i>
-                            Receipt Detail
+                            Package Metadata
                         </h2>
 
                         @php
-                        $backUrl = url()->previous();
-                        $backUrl = ($backUrl && $backUrl !== url()->current()) ? $backUrl : route('receipts');
+                        // Mengganti backUrl ke route('receipts')
+                        $backUrl = route('receipt');
                         @endphp
                         <a href="{{ $backUrl }}"
                             class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
@@ -42,6 +37,16 @@
                         :title="metaLine()"></p>
                 </div>
 
+                <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
+                    <button
+                        @click="downloadPackage()"
+                        class="inline-flex items-center text-sm px-3 py-2 rounded-md
+                        bg-blue-600 text-white hover:bg-blue-700
+                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                        <i class="fa-solid fa-download mr-2"></i>
+                        Download All Files
+                    </button>
+                </div>
             </div>
 
             @php
@@ -58,9 +63,19 @@
                 </button>
                 <div x-show="openSections.includes('{{$category}}')" x-collapse class="p-2 max-h-72 overflow-y-auto">
                     <template x-for="file in (pkg.files['{{$category}}'] || [])" :key="file.name">
-                        <div @click="selectFile(file)" :class="{'bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-medium': selectedFile && selectedFile.name === file.name}" class="flex items-center p-3 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200" role="button" tabindex="0" @keydown.enter="selectFile(file)">
-                            <i class="fa-solid fa-file text-gray-500 dark:text-gray-400 mr-3 transition-colors group-hover:text-blue-500"></i>
-                            <span class="text-sm text-gray-900 dark:text-gray-100 truncate" x-text="file.name"></span>
+                        <div @click="selectFile(file)"
+                            :class="{'bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-medium': selectedFile && selectedFile.name === file.name}"
+                            class="flex items-center justify-between p-3 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                            role="button" tabindex="0" @keydown.enter="selectFile(file)">
+
+                            <div class="flex items-center min-w-0 pr-2">
+                                <i class="fa-solid fa-file text-gray-500 dark:text-gray-400 mr-3"></i>
+                                <span class="text-sm text-gray-900 dark:text-gray-100 truncate" x-text="file.name"></span>
+                            </div>
+
+                            <button @click.stop="downloadFile(file)" class="flex-shrink-0 text-xs inline-flex items-center gap-1 px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded">
+                                <i class="fa-solid fa-download"></i>
+                            </button>
                         </div>
                     </template>
                     <template x-if="(pkg.files['{{$category}}'] || []).length === 0">
@@ -75,6 +90,7 @@
             {{ renderFileGroup('ECN / Documents', 'fa-file-lines', 'ecn') }}
 
         </div>
+
         <div class="lg:col-span-8">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div x-show="!selectedFile" x-cloak class="flex flex-col items-center justify-center h-96 p-6 bg-gray-50 dark:bg-gray-900/50 text-center">
@@ -87,7 +103,7 @@
                     <div class="mb-4 flex items-center justify-between">
                         <div>
                             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate" x-text="selectedFile?.name"></h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Last updated: {{ now()->format('M d, Y H:i') }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Revision: <span x-text="pkg.metadata.revision"></span></p>
                         </div>
                         <a x-show="selectedFile?.url" :href="selectedFile?.url" target="_blank" rel="noopener"
                             class="inline-flex items-center px-3 py-1.5 text-xs text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -95,37 +111,10 @@
                         </a>
                     </div>
 
-                    <div x-show="isImage(selectedFile?.name) || isTiff(selectedFile?.name) || isHpgl(selectedFile?.name)"
-                        class="mb-3 flex items-center justify-end gap-2 text-xs text-gray-700 dark:text-gray-200">
-                        <span x-text="Math.round(imageZoom * 100) + '%'"></span>
-                        <button @click="zoomOut()"
-                            class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-                            -
-                        </button>
-                        <button @click="resetZoom()"
-                            class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-                            Fit
-                        </button>
-                        <button @click="zoomIn()"
-                            class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-                            +
-                        </button>
-                    </div>
-
                     <div class="preview-area bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center w-full">
 
                         <template x-if="isImage(selectedFile?.name)">
-                            <div
-                                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing flex items-center justify-center"
-                                @mousedown.prevent="startPan($event)"
-                                @wheel.prevent="onWheelZoom($event)">
-                                <img
-                                    :src="selectedFile?.url"
-                                    alt="File Preview"
-                                    class="pointer-events-none select-none"
-                                    loading="lazy"
-                                    :style="imageTransformStyle()">
-                            </div>
+                            <img :src="selectedFile?.url" alt="File Preview" class="max-w-full max-h-[70vh] object-contain rounded" loading="lazy">
                         </template>
 
                         <template x-if="isPdf(selectedFile?.name)">
@@ -136,41 +125,10 @@
                         </template>
 
                         <template x-if="isTiff(selectedFile?.name)">
-                            <div
-                                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing flex items-center justify-center"
-                                @mousedown.prevent="startPan($event)"
-                                @wheel.prevent="onWheelZoom($event)">
-                                <img
-                                    x-ref="tifImg"
-                                    alt="TIFF Preview"
-                                    class="pointer-events-none select-none"
-                                    :style="imageTransformStyle()" />
-                                <div x-show="tifLoading" class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
-                                    Rendering TIFF…
-                                </div>
-                                <div x-show="tifError" class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded" x-text="tifError"></div>
-                            </div>
-                        </template>
-
-                        <template x-if="isHpgl(selectedFile?.name)">
-                            <div
-                                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing flex items-center justify-center"
-                                @mousedown.prevent="startPan($event)"
-                                @wheel.prevent="onWheelZoom($event)">
-                                <canvas
-                                    x-ref="hpglCanvas"
-                                    class="pointer-events-none select-none"
-                                    :style="imageTransformStyle()"></canvas>
-
-                                <div
-                                    x-show="hpglLoading"
-                                    class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
-                                    Rendering HPGL…
-                                </div>
-                                <div
-                                    x-show="hpglError"
-                                    class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
-                                    x-text="hpglError"></div>
+                            <div class="w-full">
+                                <canvas x-ref="tifCanvas" class="w-full max-h-[70vh] object-contain bg-black/5 rounded"></canvas>
+                                <div x-show="tifLoading" class="text-xs text-gray-500 mt-2">Rendering TIFF…</div>
+                                <div x-show="tifError" class="text-xs text-red-600 mt-2" x-text="tifError"></div>
                             </div>
                         </template>
 
@@ -204,14 +162,7 @@
                             </div>
                         </template>
 
-                        <template
-                            x-if="
-                                !isImage(selectedFile?.name)
-                                && !isPdf(selectedFile?.name)
-                                && !isTiff(selectedFile?.name)
-                                && !isCad(selectedFile?.name)
-                                && !isHpgl(selectedFile?.name)
-                            ">
+                        <template x-if="!isImage(selectedFile?.name) && !isPdf(selectedFile?.name) && !isTiff(selectedFile?.name) && !isCad(selectedFile?.name)">
                             <div class="text-center">
                                 <i class="fa-solid fa-file text-6xl text-gray-400 dark:text-gray-500"></i>
                                 <p class="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400">Preview Unavailable</p>
@@ -248,102 +199,157 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 
-<script src="https://unpkg.com/utif@2.0.1/UTIF.js"></script>
+<script src="https://unpkg.com/utif@3.1.0/dist/UTIF.min.js"></script>
 
 <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
 <script type="importmap">
     {
-    "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-      "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
-    }
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+    "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
   }
+}
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
 
 <script>
-    /* ========== Toast Utilities (Dihapus) ========== */
+    /* ========== Toast Utilities ========== */
+    function detectTheme() {
+        const isDark = document.documentElement.classList.contains('dark');
+        return isDark ? {
+            mode: 'dark',
+            bg: 'rgba(30, 41, 59, 0.95)',
+            fg: '#E5E7EB',
+            border: 'rgba(71, 85, 105, 0.5)',
+            progress: 'rgba(255,255,255,.9)',
+            icon: {
+                success: '#22c55e',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            }
+        } : {
+            mode: 'light',
+            bg: 'rgba(255, 255, 255, 0.98)',
+            fg: '#0f172a',
+            border: 'rgba(226, 232, 240, 1)',
+            progress: 'rgba(15,23,42,.8)',
+            icon: {
+                success: '#16a34a',
+                error: '#dc2626',
+                warning: '#d97706',
+                info: '#2563eb'
+            }
+        };
+    }
+    const BaseToast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2600,
+        timerProgressBar: true,
+        showClass: {
+            popup: 'swal2-animate-toast-in'
+        },
+        hideClass: {
+            popup: 'swal2-animate-toast-out'
+        },
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+        }
+    });
 
-    /* ========== Alpine Component ========== */
+    function renderToast({
+        icon = 'success',
+        title = 'Success',
+        text = ''
+    } = {}) {
+        const t = detectTheme();
+        BaseToast.fire({
+            icon,
+            title,
+            text,
+            iconColor: t.icon[icon] || t.icon.success,
+            background: t.bg,
+            color: t.fg,
+            customClass: {
+                popup: 'swal2-toast border',
+                title: '',
+                timerProgressBar: ''
+            },
+            didOpen: (toast) => {
+                const bar = toast.querySelector('.swal2-timer-progress-bar');
+                if (bar) bar.style.background = t.progress;
+                const popup = toast.querySelector('.swal2-popup');
+                if (popup) popup.style.borderColor = t.border;
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+    }
+
+    function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') {
+        renderToast({
+            icon: 'success',
+            title,
+            text
+        });
+    }
+
+    function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') {
+        BaseToast.update({
+            timer: 3400
+        });
+        renderToast({
+            icon: 'error',
+            title,
+            text
+        });
+        BaseToast.update({
+            timer: 2600
+        });
+    }
+
+    function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') {
+        renderToast({
+            icon: 'warning',
+            title,
+            text
+        });
+    }
+
+    function toastInfo(title = 'Informasi', text = '') {
+        renderToast({
+            icon: 'info',
+            title,
+            text
+        });
+    }
+    window.toastSuccess = toastSuccess;
+    window.toastError = toastError;
+    window.toastWarning = toastWarning;
+    window.toastInfo = toastInfo;
+
+    // Mengganti nama fungsi
     function receiptDetail() {
         return {
-            // Ganti $approvalId menjadi $receiptId (pastikan dikirim dari controller)
+            // Mengganti exportId menjadi receiptId (pastikan controller mengirim $receiptId)
             receiptId: JSON.parse(`@json($receiptId)`),
             pkg: JSON.parse(`@json($detail)`),
 
             selectedFile: null,
             openSections: [],
 
-            // modal state (Dihapus)
-
             // TIFF state
             tifLoading: false,
             tifError: '',
-
-            // HPGL state
-            hpglLoading: false,
-            hpglError: '',
-
-            // ZOOM + PAN untuk image / TIFF / HPGL
-            imageZoom: 1,
-            minZoom: 0.5,
-            maxZoom: 4,
-            zoomStep: 0.25,
-            panX: 0,
-            panY: 0,
-            isPanning: false,
-            panStartX: 0,
-            panStartY: 0,
-            panOriginX: 0,
-            panOriginY: 0,
-
-            zoomIn() {
-                this.imageZoom = Math.min(this.imageZoom + this.zoomStep, this.maxZoom);
-            },
-            zoomOut() {
-                this.imageZoom = Math.max(this.imageZoom - this.zoomStep, this.minZoom);
-            },
-            resetZoom() {
-                this.imageZoom = 1;
-                this.panX = 0;
-                this.panY = 0;
-            },
-            onWheelZoom(e) {
-                const delta = e.deltaY;
-                const step = this.zoomStep;
-
-                if (delta < 0) {
-                    // scroll ke atas = zoom in
-                    this.imageZoom = Math.min(this.imageZoom + step, this.maxZoom);
-                } else if (delta > 0) {
-                    // scroll ke bawah = zoom out
-                    this.imageZoom = Math.max(this.imageZoom - step, this.minZoom);
-                }
-            },
-            startPan(e) {
-                this.isPanning = true;
-                this.panStartX = e.clientX;
-                this.panStartY = e.clientY;
-                this.panOriginX = this.panX;
-                this.panOriginY = this.panY;
-            },
-            onPan(e) {
-                if (!this.isPanning) return;
-                const dx = e.clientX - this.panStartX;
-                const dy = e.clientY - this.panStartY;
-                this.panX = this.panOriginX + dx;
-                this.panY = this.panOriginY + dy;
-            },
-            endPan() {
-                this.isPanning = false;
-            },
-            imageTransformStyle() {
-                return `transform: translate(${this.panX}px, ${this.panY}px) scale(${this.imageZoom}); transform-origin: center center;`;
-            },
 
             // CAD viewer state
             iges: {
@@ -379,9 +385,6 @@
             isTiff(name) {
                 return ['tif', 'tiff'].includes(this.extOf(name));
             },
-            isHpgl(name) {
-                return ['plt', 'hpgl', 'hpg', 'prn'].includes(this.extOf(name));
-            },
             isCad(name) {
                 return ['igs', 'iges', 'stp', 'step'].includes(this.extOf(name));
             },
@@ -389,13 +392,11 @@
                 return u;
             },
 
-            /* ===== TIFF renderer: convert ke PNG dataURL & taruh ke <img> ===== */
+            /* ===== TIFF renderer ===== */
             async renderTiff(url) {
-                if (!url || typeof window.UTIF === 'undefined') return;
-
+                if (!url || !window.UTIF) return;
                 this.tifLoading = true;
                 this.tifError = '';
-
                 try {
                     const resp = await fetch(url, {
                         cache: 'no-store',
@@ -403,184 +404,25 @@
                     });
                     if (!resp.ok) throw new Error('Gagal mengambil file TIFF');
                     const buf = await resp.arrayBuffer();
-
-                    const U =
-                        (window.UTIF && typeof window.UTIF.decode === 'function') ? window.UTIF :
-                        (window.UTIF && window.UTIF.UTIF && typeof window.UTIF.UTIF.decode === 'function') ? window.UTIF.UTIF :
-                        null;
-
-                    if (!U) throw new Error('Library UTIF tidak sesuai (decode() tidak ditemukan)');
-
-                    const ifds = U.decode(buf);
-                    if (!ifds || !ifds.length) throw new Error('TIFF tidak memiliki frame');
-
+                    const ifds = UTIF.decode(buf);
+                    UTIF.decodeImages(buf, ifds);
+                    if (!ifds?.length) throw new Error('TIFF tidak memiliki frame');
                     const first = ifds[0];
-
-                    if (typeof U.decodeImage === 'function') {
-                        U.decodeImage(buf, first);
-                    } else if (typeof U.decodeImages === 'function') {
-                        U.decodeImages(buf, ifds);
-                    }
-
-                    const rgba = U.toRGBA8(first);
-                    const w = first.width;
-                    const h = first.height;
-
-                    const off = document.createElement('canvas');
-                    const ctx = off.getContext('2d');
-                    off.width = w;
-                    off.height = h;
-
-                    const imgData = ctx.createImageData(w, h);
-                    imgData.data.set(rgba);
+                    const rgba = UTIF.toRGBA8(first);
+                    const w = first.width,
+                        h = first.height;
+                    const canvas = this.$refs.tifCanvas;
+                    if (!canvas) throw new Error('Canvas TIFF tidak ditemukan');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const imgData = new ImageData(new Uint8ClampedArray(rgba), w, h);
                     ctx.putImageData(imgData, 0, 0);
-
-                    const dataUrl = off.toDataURL('image/png');
-
-                    await this.$nextTick();
-                    const img = this.$refs.tifImg;
-                    if (img) img.src = dataUrl;
                 } catch (e) {
                     console.error(e);
                     this.tifError = e?.message || 'Gagal render TIFF';
                 } finally {
                     this.tifLoading = false;
-                }
-            },
-
-            /* ===== HPGL renderer: parse PU/PD/PA & gambar ke canvas (hi-res) ===== */
-            async renderHpgl(url) {
-                if (!url) return;
-
-                this.hpglLoading = true;
-                this.hpglError = '';
-
-                try {
-                    const resp = await fetch(url, {
-                        cache: 'no-store',
-                        credentials: 'same-origin'
-                    });
-                    if (!resp.ok) throw new Error('Gagal mengambil file HPGL');
-                    const text = await resp.text();
-
-                    // buang spasi & pecah per ';'
-                    const commands = text.replace(/\s+/g, '').split(';');
-
-                    let penDown = false;
-                    let x = 0,
-                        y = 0;
-                    const segments = [];
-                    let minX = Infinity,
-                        minY = Infinity,
-                        maxX = -Infinity,
-                        maxY = -Infinity;
-
-                    const addPoint = (nx, ny) => {
-                        if (penDown) {
-                            segments.push({
-                                x1: x,
-                                y1: y,
-                                x2: nx,
-                                y2: ny
-                            });
-                            minX = Math.min(minX, x, nx);
-                            minY = Math.min(minY, y, ny);
-                            maxX = Math.max(maxX, x, nx);
-                            maxY = Math.max(maxY, y, ny);
-                        } else {
-                            minX = Math.min(minX, nx);
-                            minY = Math.min(minY, ny);
-                            maxX = Math.max(maxX, nx);
-                            maxY = Math.max(maxY, ny);
-                        }
-                        x = nx;
-                        y = ny;
-                    };
-
-                    for (const raw of commands) {
-                        if (!raw) continue;
-                        const cmd = raw.toUpperCase();
-                        const op = cmd.slice(0, 2);
-                        const argsStr = cmd.slice(2);
-
-                        const parseCoords = () => {
-                            if (!argsStr) return [];
-                            return argsStr.split(',').map(Number).filter(v => !isNaN(v));
-                        };
-
-                        if (op === 'IN') {
-                            penDown = false;
-                            x = 0;
-                            y = 0;
-                        } else if (op === 'SP') {
-                            // abaikan warna
-                        } else if (op === 'PU') {
-                            penDown = false;
-                            const coords = parseCoords();
-                            for (let i = 0; i < coords.length; i += 2) {
-                                addPoint(coords[i], coords[i + 1]);
-                            }
-                        } else if (op === 'PD') {
-                            penDown = true;
-                            const coords = parseCoords();
-                            for (let i = 0; i < coords.length; i += 2) {
-                                addPoint(coords[i], coords[i + 1]);
-                            }
-                        } else if (op === 'PA') {
-                            const coords = parseCoords();
-                            for (let i = 0; i < coords.length; i += 2) {
-                                addPoint(coords[i], coords[i + 1]);
-                            }
-                        }
-                    }
-
-                    await this.$nextTick();
-                    const canvas = this.$refs.hpglCanvas;
-                    if (!canvas) throw new Error('Canvas HPGL tidak ditemukan');
-
-                    const parent = canvas.parentElement;
-                    const w = parent.clientWidth || 800;
-                    const h = parent.clientHeight || 500;
-
-                    // ==== HIGH-RES CANVAS (supaya pas di-zoom tetap tajam) ====
-                    const dpr = window.devicePixelRatio || 1;
-                    const logicalScale = 4 * dpr; // bisa diubah 3/5 sesuai kebutuhan
-                    canvas.width = w * logicalScale;
-                    canvas.height = h * logicalScale;
-                    canvas.style.width = w + 'px';
-                    canvas.style.height = h + 'px';
-
-                    const ctx = canvas.getContext('2d');
-                    ctx.setTransform(logicalScale, 0, 0, logicalScale, 0, 0);
-                    ctx.clearRect(0, 0, w, h);
-                    ctx.lineWidth = 1 / logicalScale;
-                    ctx.lineCap = 'round';
-                    ctx.lineJoin = 'round';
-                    ctx.strokeStyle = '#000';
-
-                    if (!segments.length) return;
-
-                    const dx = maxX - minX || 1;
-                    const dy = maxY - minY || 1;
-                    const scale = 0.9 * Math.min(w / dx, h / dy); // padding 10%
-                    const offX = (w - dx * scale) / 2 - minX * scale;
-                    const offY = (h - dy * scale) / 2 + maxY * scale; // Y dibalik
-
-                    ctx.beginPath();
-                    for (const s of segments) {
-                        const sx = s.x1 * scale + offX;
-                        const sy = -s.y1 * scale + offY;
-                        const ex = s.x2 * scale + offX;
-                        const ey = -s.y2 * scale + offY;
-                        ctx.moveTo(sx, sy);
-                        ctx.lineTo(ex, ey);
-                    }
-                    ctx.stroke();
-                } catch (e) {
-                    console.error(e);
-                    this.hpglError = e?.message || 'Gagal render HPGL';
-                } finally {
-                    this.hpglLoading = false;
                 }
             },
 
@@ -655,7 +497,8 @@
             /* ===== Meta line formatter ===== */
             metaLine() {
                 const m = this.pkg?.metadata || {};
-                return [m.customer, m.model, m.part_no, m.revision, this.pkg?.status]
+                // urutan: Customer - Model - Part No - Revision
+                return [m.customer, m.model, m.part_no, m.revision]
                     .filter(v => v && String(v).trim().length > 0)
                     .join(' - ');
             },
@@ -734,6 +577,7 @@
                 if (mode === 'shaded-edges') {
                     this._setPolygonOffset(root, true, 1, 1);
                     this._toggleEdges(root, true, 0x000000);
+                    return;
                 }
             },
 
@@ -801,10 +645,12 @@
                 const THREE = this.iges.THREE;
                 const group = new THREE.Group();
 
+                // line
                 const geom = new THREE.BufferGeometry().setFromPoints([a, b]);
                 const line = new THREE.Line(geom, new THREE.LineBasicMaterial({}));
                 group.add(line);
 
+                // end points
                 const s = Math.max(0.4, a.distanceTo(b) / 160);
                 const sg = new THREE.SphereGeometry(s, 16, 16);
                 const sm = new THREE.MeshBasicMaterial({});
@@ -815,6 +661,7 @@
                 s2.position.copy(b);
                 group.add(s2);
 
+                // label (DOM)
                 const wrap = this.$refs.igesWrap;
                 const lbl = document.createElement('div');
                 lbl.className = 'measure-label';
@@ -847,7 +694,6 @@
 
             /* ===== Lifecycle ===== */
             init() {
-                // Hapus event listener 'Escape' karena modal sudah tidak ada
                 window.addEventListener('beforeunload', () => this.disposeCad());
             },
 
@@ -860,46 +706,37 @@
 
             selectFile(file) {
                 if (this.isCad(this.selectedFile?.name)) this.disposeCad();
-
                 if (this.isTiff(this.selectedFile?.name)) {
                     this.tifError = '';
                     this.tifLoading = false;
-                    if (this.$refs.tifImg) this.$refs.tifImg.src = '';
                 }
-
-                if (this.isHpgl(this.selectedFile?.name)) {
-                    this.hpglError = '';
-                    this.hpglLoading = false;
-                    if (this.$refs.hpglCanvas) {
-                        const c = this.$refs.hpglCanvas;
-                        const ctx = c.getContext('2d');
-                        ctx && ctx.clearRect(0, 0, c.width, c.height);
-                    }
-                }
-
-                // reset zoom & pan setiap ganti file
-                this.imageZoom = 1;
-                this.panX = 0;
-                this.panY = 0;
 
                 this.selectedFile = {
                     ...file
                 };
 
-                this.$nextTick(() => {
-                    if (this.isTiff(file?.name)) {
-                        this.renderTiff(file.url);
-                    } else if (this.isCad(file?.name)) {
-                        this.renderCadOcct(file.url);
-                    } else if (this.isHpgl(file?.name)) {
-                        this.renderHpgl(file.url);
-                    }
-                });
+                if (this.isTiff(file?.name)) this.renderTiff(file.url);
+                else if (this.isCad(file?.name)) this.renderCadOcct(file.url);
             },
 
-            // Fungsi addPkgActivity, isWaiting, approve/reject/rollback (Dihapus)
+            /* ===== Download ===== */
+            downloadFile(file) {
+                if (file && file.file_id) {
+                    // Rute ini diasumsikan generik dan tidak perlu diubah
+                    window.location.href = `/download/file/${file.file_id}`;
+                } else {
+                    toastError('Error', 'File ID not found for download.');
+                }
+            },
 
-            /* ===== render CAD via occt-import-js ===== */
+            downloadPackage() {
+                if (this.receiptId) {
+                    window.location.href = `/receipts/download-package/${this.receiptId}`;
+                } else {
+                    toastError('Error', 'Package ID not found for download.');
+                }
+            },
+
             async renderCadOcct(url) {
                 if (!url) return;
                 this.disposeCad();
@@ -916,11 +753,12 @@
                     THREE.BufferGeometry.prototype.computeBoundsTree = bvh.computeBoundsTree;
                     THREE.BufferGeometry.prototype.disposeBoundsTree = bvh.disposeBoundsTree;
 
+                    // scene & camera
                     const scene = new THREE.Scene();
                     scene.background = null;
                     const wrap = this.$refs.igesWrap;
-                    const width = wrap?.clientWidth || 800;
-                    const height = wrap?.clientHeight || 500;
+                    const width = wrap?.clientWidth || 800,
+                        height = wrap?.clientHeight || 500;
 
                     const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 10000);
                     camera.position.set(250, 200, 250);
@@ -935,6 +773,7 @@
                     wrap.style.position = 'relative';
                     wrap.style.overflow = 'hidden';
 
+                    // lights
                     const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
                     hemi.position.set(0, 200, 0);
                     scene.add(hemi);
@@ -942,9 +781,11 @@
                     dir.position.set(150, 200, 100);
                     scene.add(dir);
 
+                    // controls
                     const controls = new OrbitControls(camera, renderer.domElement);
                     controls.enableDamping = true;
 
+                    // fetch file
                     const resp = await fetch(url, {
                         cache: 'no-store',
                         credentials: 'same-origin'
@@ -953,14 +794,17 @@
                     const buffer = await resp.arrayBuffer();
                     const file = new Uint8Array(buffer);
 
-                    const occt = await window.occtimportjs();
+                    // parse dengan occt
+                    const occt = await window.occtimportjs(); // dari <script> CDN
                     const ext = (url.split('?')[0].split('#')[0].split('.').pop() || '').toLowerCase();
                     const res = (ext === 'stp' || ext === 'step') ? occt.ReadStepFile(file, null) : occt.ReadIgesFile(file, null);
                     if (!res?.success) throw new Error('OCCT gagal mem-parsing file');
 
+                    // build meshes -> scene
                     const group = this._buildThreeFromOcct(res, THREE);
                     scene.add(group);
 
+                    // simpan refs
                     this.iges.rootModel = group;
                     this.iges.scene = scene;
                     this.iges.camera = camera;
@@ -968,8 +812,10 @@
                     this.iges.controls = controls;
                     this.iges.THREE = THREE;
 
+                    // cache material asli
                     this._cacheOriginalMaterials(group, THREE);
 
+                    // auto-fit kamera
                     const box = new THREE.Box3().setFromObject(group);
                     const size = new THREE.Vector3();
                     box.getSize(size);
@@ -984,6 +830,7 @@
                     controls.target.copy(center);
                     controls.update();
 
+                    // render loop + update label measure
                     const animate = () => {
                         controls.update();
                         renderer.render(scene, camera);
@@ -993,6 +840,7 @@
                     };
                     animate();
 
+                    // resize
                     this._onIgesResize = () => {
                         const w = this.$refs.igesWrap?.clientWidth || 800;
                         const h = this.$refs.igesWrap?.clientHeight || 500;
@@ -1002,6 +850,7 @@
                     };
                     window.addEventListener('resize', this._onIgesResize);
 
+                    // default style
                     this.setDisplayStyle('shaded-edges');
 
                 } catch (e) {

@@ -18,31 +18,159 @@ use Illuminate\Contracts\Encryption\DecryptException;
 
 class ReceiptController extends Controller
 {
+
+    public function receiptFilters(Request $request): JsonResponse
+    {
+        if ($request->filled('select2')) {
+            $field   = $request->get('select2');
+            $q       = trim($request->get('q', ''));
+            $page    = max(1, (int)$request->get('page', 1));
+            $perPage = 20;
+
+            $customerCode = $request->get('customer_code');
+            $docTypeName  = $request->get('doc_type');
+
+            $total = 0;
+            $items = collect();
+
+            switch ($field) {
+                case 'customer':
+                    $builder = DB::table('customers as c')
+                        ->selectRaw('c.code AS id, c.code AS text')
+                        ->when($q, fn($x) => $x->where(function ($w) use ($q) {
+                            $w->where('c.code', 'like', "%{$q}%")
+                                ->orWhere('c.name', 'like', "%{$q}%");
+                        }))
+                        ->orderBy('c.code');
+
+                    $total = (clone $builder)->count();
+                    $items = $builder->forPage($page, $perPage)->get();
+                    break;
+
+                case 'model':
+                    $builder = DB::table('models as m')
+                        ->join('customers as c', 'm.customer_id', '=', 'c.id')
+                        ->selectRaw('m.name AS id, m.name AS text')
+                        ->when($customerCode && $customerCode !== 'All', fn($x) => $x->where('c.code', $customerCode))
+                        ->when($q, fn($x) => $x->where('m.name', 'like', "%{$q}%"))
+                        ->orderBy('m.name');
+
+                    $total = (clone $builder)->count();
+                    $items = $builder->forPage($page, $perPage)->get();
+                    break;
+
+                case 'doc_type':
+                    $builder = DB::table('doctype_groups as dtg')
+                        ->selectRaw('dtg.name AS id, dtg.name AS text')
+                        ->when($q, fn($x) => $x->where('dtg.name', 'like', "%{$q}%"))
+                        ->orderBy('dtg.name');
+
+                    $total = (clone $builder)->count();
+                    $items = $builder->forPage($page, $perPage)->get();
+                    break;
+
+                case 'category':
+                    $builder = DB::table('doctype_subcategories as dsc')
+                        ->join('doctype_groups as dtg', 'dsc.doctype_group_id', '=', 'dtg.id')
+                        ->selectRaw('dsc.name AS id, dsc.name AS text')
+                        ->when($docTypeName && $docTypeName !== 'All', fn($x) => $x->where('dtg.name', $docTypeName))
+                        ->when($q, fn($x) => $x->where('dsc.name', 'like', "%{$q}%"))
+                        ->orderBy('dsc.name');
+
+                    $total = (clone $builder)->count();
+                    $items = $builder->forPage($page, $perPage)->get();
+                    break;
+
+                // Blok 'case status' telah dihapus
+
+                default:
+                    return response()->json(['results' => [], 'pagination' => ['more' => false]]);
+            }
+
+            if ($page === 1) {
+                $items = collect([['id' => 'All', 'text' => 'All']])->merge($items);
+            }
+
+            $effectiveTotal = $total + ($page === 1 ? 1 : 0);
+            $more = ($effectiveTotal > $page * $perPage);
+
+            return response()->json([
+                'results'    => array_values($items->toArray()),
+                'pagination' => ['more' => $more]
+            ]);
+        }
+
+        $customerId = $request->integer('customer_id') ?: null;
+        if (!$customerId && $request->filled('customer_code')) {
+            $customerId = Customers::where('code', $request->get('customer_code'))->value('id');
+        }
+
+        $models = $customerId
+            ? Models::where('customer_id', $customerId)->orderBy('name')->get(['id', 'name'])
+            : Models::orderBy('name')->get(['id', 'name']);
+
+        $docTypes = DoctypeGroups::orderBy('name')->get(['id', 'name']);
+
+        $docTypeName = $request->get('doc_type');
+        $docTypeId   = null;
+        if ($docTypeName && $docTypeName !== 'All') {
+            $docTypeId = DoctypeGroups::where('name', $docTypeName)->value('id');
+        }
+
+        $categories = DocTypeSubCategories::when($docTypeId, function ($q) use ($docTypeId) {
+            $q->where('doctype_group_id', $docTypeId);
+        })
+            ->orderBy('name')
+            ->get(['name']);
+
+        return response()->json([
+            'customers'  => Customers::orderBy('code')->get(['id', 'code']),
+            'models'     => $models,
+            'doc_types'  => $docTypes,
+            'categories' => $categories,
+        ]);
+    }
+
     public function receiptList(Request $request): JsonResponse
     {
+        $userId = Auth::user()->id ?? 1;
+        $userRole = DB::table('user_roles')->where('user_id', $userId)->first();
+
+        if (!$userRole) {
+            return response()->json([
+                "draw"            => (int) $request->get('draw'),
+                "recordsTotal"    => 0,
+                "recordsFiltered" => 0,
+                "data"            => [],
+            ]);
+        }
+
+        $userRoleId = (string) $userRole->role_id;
+
         $start       = (int) $request->get('start', 0);
         $length      = (int) $request->get('length', 10);
         $searchValue = $request->get('search')['value'] ?? '';
 
         $orderColumnIndex = (int) ($request->get('order')[0]['column'] ?? 0);
         $orderDir         = $request->get('order')[0]['dir'] ?? 'desc';
-        $orderColumnName  = $request->get('columns')[$orderColumnIndex]['name'] ?? 'dpr.created_at';
+        $orderColumnName  = $request->get('columns')[$orderColumnIndex]['name'] ?? 'dpr.shared_at';
 
+        // DIUBAH: Select dan Order By di dalam subquery
         $latestPa = DB::table('package_approvals as pa')
             ->select(
                 'pa.id',
                 'pa.revision_id',
                 'pa.requested_at',
-                'pa.decided_at',
+                // 'pa.decided_at', // <-- Dihapus
                 'pa.decision',
                 'pa.decided_by'
             )
             ->selectRaw("
-                ROW_NUMBER() OVER (
-                  PARTITION BY pa.revision_id
-                  ORDER BY COALESCE(pa.decided_at, pa.requested_at) DESC, pa.id DESC
-                ) as rn
-            ");
+            ROW_NUMBER() OVER (
+                PARTITION BY pa.revision_id
+                ORDER BY pa.requested_at DESC, pa.id DESC 
+            ) as rn
+        "); // <-- COALESCE(pa.decided_at, ...) dihapus
 
         $query = DB::table('doc_package_revisions as dpr')
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
@@ -50,16 +178,24 @@ class ReceiptController extends Controller
             ->join('models as m', 'dp.model_id', '=', 'm.id')
             ->join('products as p', 'dp.product_id', '=', 'p.id')
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', 'dsc.id')
             ->leftJoinSub($latestPa, 'pa', function ($join) {
                 $join->on('pa.revision_id', '=', 'dpr.id')
                     ->where('pa.rn', '=', 1);
             })
-            ->where('dpr.revision_status', '<>', 'draft');
+            ->where('dpr.revision_status', '<>', 'draft')
+            ->where('dpr.revision_status', 'approved')
+            ->whereNotNull('dpr.share_to');
+
+        $query->where(function ($q) use ($userRoleId) {
+            $q->where(function ($sub) use ($userRoleId) {
+                $sub->whereRaw("ISJSON(dpr.share_to) > 0")
+                    ->whereJsonContains('dpr.share_to', $userRoleId);
+            });
+        });
 
         $recordsTotal = (clone $query)->count();
 
-        // Filters
         if ($request->filled('customer') && $request->customer !== 'All') {
             $query->where('c.code', $request->customer);
         }
@@ -72,22 +208,6 @@ class ReceiptController extends Controller
         if ($request->filled('category') && $request->category !== 'All') {
             $query->where('dsc.name', $request->category);
         }
-        if ($request->filled('status') && $request->status !== 'All') {
-            // front-end kirim Waiting/Approved/Rejected
-            $statusMap = [
-                'Waiting'  => ['pending', 'waiting'], // waiting = data lama
-                'Approved' => ['approved'],
-                'Rejected' => ['rejected'],
-            ];
-            $vals = $statusMap[$request->status] ?? [];
-            if ($vals) {
-                $placeholders = implode(',', array_fill(0, count($vals), '?'));
-                $query->whereRaw(
-                    "COALESCE(pa.decision, dpr.revision_status) IN ($placeholders)",
-                    $vals
-                );
-            }
-        }
 
         if ($searchValue !== '') {
             $query->where(function ($q) use ($searchValue) {
@@ -96,15 +216,15 @@ class ReceiptController extends Controller
                     ->orWhere('p.part_no', 'like', "%{$searchValue}%")
                     ->orWhere('dsc.name', 'like', "%{$searchValue}%")
                     ->orWhereRaw("
-                    CONCAT(
-                        c.code,' ',
-                        m.name,' ',
-                        dtg.name,' ',
-                        COALESCE(dsc.name,''),' ',
-                        COALESCE(p.part_no,''),' ',
-                        dpr.revision_no
-                    ) LIKE ?
-                  ", ["%{$searchValue}%"]);
+                CONCAT(
+                    c.code,' ',
+                    m.name,' ',
+                    dtg.name,' ',
+                    COALESCE(dsc.name,''),' ',
+                    COALESCE(p.part_no,''),' ',
+                    dpr.revision_no
+                ) LIKE ?
+            ", ["%{$searchValue}%"]);
             });
         }
 
@@ -118,32 +238,22 @@ class ReceiptController extends Controller
             'dsc.name as category',
             'p.part_no',
             'dpr.revision_no as revision',
-            DB::raw("
-                CASE COALESCE(pa.decision, dpr.revision_status)
-                    WHEN 'pending'  THEN 'Waiting'
-                    WHEN 'waiting'  THEN 'Waiting'  
-                    WHEN 'approved' THEN 'Approved'
-                    WHEN 'rejected' THEN 'Rejected'
-                    ELSE COALESCE(pa.decision, dpr.revision_status)
-                END as status
-            "),
-            'pa.requested_at as request_date',
-            'pa.decided_at   as decision_date'
+            'dpr.shared_at as request_date'
+            // 'pa.decided_at  as decision_date' // <-- Dihapus
         );
 
+        // DIUBAH: Whitelist diperbarui
         $orderWhitelist = [
-            'dpr.created_at',
-            'dpr.updated_at',
-            'pa.requested_at',
-            'pa.decided_at',
-            'dpr.revision_status',
+            'dpr.shared_at',
+            // 'pa.decided_at', // <-- Dihapus
             'c.code',
             'm.name',
             'dtg.name',
             'dsc.name',
             'p.part_no',
         ];
-        $orderBy       = in_array($orderColumnName, $orderWhitelist, true) ? $orderColumnName : 'pa.requested_at';
+
+        $orderBy = in_array($orderColumnName, $orderWhitelist, true) ? $orderColumnName : 'dpr.shared_at';
         $orderDirection = in_array(strtolower($orderDir), ['asc', 'desc'], true) ? $orderDir : 'desc';
 
         $data = $query
@@ -153,7 +263,7 @@ class ReceiptController extends Controller
             ->get();
 
         $data = $data->map(function ($row) {
-            $row->hash = encrypt($row->id);  // hash terenkripsi untuk dipakai di Blade
+            $row->hash = encrypt($row->id);
             return $row;
         });
 
@@ -167,12 +277,9 @@ class ReceiptController extends Controller
 
     public function showDetail(string $id)
     {
-        // 1. Tentukan revisionId sebenarnya
         if (ctype_digit($id)) {
-            // URL lama /approval/92
             $revisionId = (int) $id;
         } else {
-            // URL baru /approval/{hash}
             try {
                 $revisionId = decrypt($id);
             } catch (DecryptException $e) {
@@ -180,7 +287,6 @@ class ReceiptController extends Controller
             }
         }
 
-        // 2. Ambil data revisi
         $revision = DB::table('doc_package_revisions as dpr')
             ->where('dpr.id', $revisionId)
             ->first();
@@ -189,12 +295,10 @@ class ReceiptController extends Controller
             abort(404, 'Approval request not found.');
         }
 
-        // 3. Ambil info package + uploader
         $package = DB::table('doc_packages as dp')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
             ->join('products as p', 'dp.product_id', '=', 'p.id')
-            // SESUAIKAN kalau kolom user-nya beda (misal dp.created_user_id)
             ->leftJoin('users as u', 'u.id', '=', 'dp.created_by')
             ->where('dp.id', $revision->package_id)
             ->select(
@@ -210,7 +314,6 @@ class ReceiptController extends Controller
             abort(404, 'Package not found.');
         }
 
-        // 4. File per kategori
         $files = DB::table('doc_package_revision_files')
             ->where('revision_id', $revisionId)
             ->select('id', 'filename as name', 'category', 'storage_path')
@@ -224,10 +327,8 @@ class ReceiptController extends Controller
             })
             ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
-        // 5. Activity logs dari tabel activity_logs
         $logs = $this->buildApprovalLogs($revision->package_id, $revisionId);
 
-        // 6. Inject fallback log "uploaded" kalau belum ada
         $uploaderName   = $package->uploader_name ?? 'System';
         $uploadedAt     = optional($package->created_at);
         $hasUploadedLog = $logs->contains(fn($log) => ($log['action'] ?? '') === 'uploaded');
@@ -242,11 +343,9 @@ class ReceiptController extends Controller
                 'time_ts' => $uploadedAt->timestamp,
             ]);
 
-            // supaya urutannya tetap terbaru di atas
             $logs = $logs->sortByDesc('time_ts')->values();
         }
 
-        // 7. Data yang dikirim ke Blade
         $detail = [
             'metadata' => [
                 'customer'    => $package->customer,
@@ -266,7 +365,6 @@ class ReceiptController extends Controller
             'activityLogs' => $logs,
         ];
 
-        // selalu kirim hash baru ke Blade untuk dipakai approve/reject
         $hash = encrypt($revisionId);
 
         return view('receipt.receipt_detail', [
@@ -274,6 +372,7 @@ class ReceiptController extends Controller
             'detail'     => $detail,
         ]);
     }
+
     private function buildApprovalLogs(int $packageId, ?int $revisionId)
     {
         $q = DB::table('activity_logs as al')
