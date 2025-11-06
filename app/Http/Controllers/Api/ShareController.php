@@ -295,13 +295,12 @@ class ShareController extends Controller
         $roleMap = DB::table('roles')->pluck('role_name', 'id')->all();
 
         $data->transform(function ($item) use ($roleMap) {
-
             if (empty($item->share_to)) {
-                $item->share_to = '';
+                $item->share_to = 'Not yet distributed';
                 return $item;
             }
 
-            $roleIds = json_decode($item->share_to);
+            $roleIds = json_decode($item->share_to, true);
 
             if (empty($roleIds) || !is_array($roleIds)) {
                 $item->share_to = 'Not yet distributed';
@@ -317,6 +316,7 @@ class ShareController extends Controller
 
             return $item;
         });
+
 
         return response()->json([
             "draw"            => (int) $request->get('draw'),
