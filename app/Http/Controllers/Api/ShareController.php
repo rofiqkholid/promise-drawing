@@ -11,8 +11,9 @@ use App\Models\DoctypeGroups;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ShareNotification;
 
 class ShareController extends Controller
 {
@@ -326,6 +327,8 @@ class ShareController extends Controller
         ]);
     }
 
+
+
     public function saveShare(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -338,19 +341,38 @@ class ShareController extends Controller
             return response()->json(['message' => $validator->errors()->first()], 422);
         }
 
-        $roleId = json_encode($request->input('role_ids'));
+        $roleIds = $request->input('role_ids');
+        $roleIdJson = json_encode($roleIds);
 
         $updateSuccess = DB::table('doc_package_revisions')
             ->where('id', $request->input('package_id'))
             ->update([
-                'share_to'   => $roleId,
-                'shared_at' => now()
+                'share_to'  => $roleIdJson,
+                'shared_at' => now(),
             ]);
 
-        if ($updateSuccess) {
-            return response()->json(['message' => 'Package shared successfully!']);
-        } else {
+        if (!$updateSuccess) {
             return response()->json(['message' => 'Package not found or no changes were made.'], 404);
         }
+
+        $users = DB::table('users')
+            ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
+            ->whereIn('user_roles.role_id', $roleIds)
+            ->select('users.email', 'users.name')
+            ->distinct()
+            ->get();
+
+        if ($users->isEmpty()) {
+            return response()->json(['message' => 'No users found for the selected roles.']);
+        }
+
+        foreach ($users as $user) {
+            Mail::to($user->email)->send(new ShareNotification(
+                $user->name,
+                $request->input('package_id')
+            ));
+        }
+
+        return response()->json(['message' => 'Package shared and emails sent successfully!']);
     }
 }

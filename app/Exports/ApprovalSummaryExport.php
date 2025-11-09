@@ -25,8 +25,16 @@ class ApprovalSummaryExport implements FromArray, WithTitle, ShouldAutoSize, Wit
         return [
             ['Summary Upload per Item'], // A1
             [],                          // A2
-            ['Customer', 'Model', 'Part Num', 'Part Name',
-             'File name', 'Doc Type', 'Category', 'Part Group'], // A3:H3
+            [
+                'Customer',
+                'Model',
+                'Part Num',
+                'Part Name',
+                'File name',
+                'Doc Type',
+                'Category',
+                'Part Group'
+            ], // A3:H3
             ...$this->rows,              // data mulai baris 4
         ];
     }
@@ -37,45 +45,47 @@ class ApprovalSummaryExport implements FromArray, WithTitle, ShouldAutoSize, Wit
     }
 
     public function registerEvents(): array
-    {
-        return [
-            AfterSheet::class => function (AfterSheet $event) {
+{
+    return [
+        AfterSheet::class => function (AfterSheet $event) {
 
-                // ==== Judul di tengah ====
-                $event->sheet->mergeCells('A1:H1');
-                $event->sheet->getStyle('A1')->getAlignment()
-                    ->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $event->sheet->getStyle('A1')->getFont()->setBold(true);
+            // ==== Judul di tengah (tanpa warna) ====
+            $event->sheet->mergeCells('A1:H1');
+            $event->sheet->getStyle('A1')->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+            $event->sheet->getStyle('A1')->getFont()->setBold(true);
 
-                // ==== Border all untuk tabel (header + data) ====
-                $lastRow   = 3 + count($this->rows); // header di baris 3
-                $cellRange = "A3:H{$lastRow}";
+            // ==== HEADER (Customer .. Part Group) -> SATU-SATUNYA yang dikasih warna ====
+            $event->sheet->getStyle('A2:H2')->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                ],
+                'alignment' => [
+                    'horizontal' => Alignment::HORIZONTAL_CENTER,
+                    'vertical'   => Alignment::VERTICAL_CENTER,
+                ],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'color'    => ['argb' => 'FFD9EAD3'], // warna bebas Tuan pilih
+                ],
+            ]);
 
-                $event->sheet->getStyle($cellRange)->applyFromArray([
-                    'borders' => [
-                        'allBorders' => [
-                            'borderStyle' => Border::BORDER_THIN,
-                            'color'       => ['argb' => 'FF000000'],
-                        ],
+            // ==== Border all untuk tabel (header + data) ====
+            $lastRow   = 2 + count($this->rows); // header di baris 3
+            $cellRange = "A2:H{$lastRow}";
+
+            $event->sheet->getStyle($cellRange)->applyFromArray([
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => Border::BORDER_THIN,
+                        'color'       => ['argb' => 'FF000000'],
                     ],
-                ]);
+                ],
+            ]);
 
-                // ==== Warna untuk baris pemisah (baris kosong antar Customer/Model) ====
-                // data pertama di Excel = baris 4, index 0 di $this->rows
-                foreach ($this->rows as $i => $row) {
-                    // kalau semua kolom kosong -> ini separator
-                    if (trim(implode('', array_map('strval', $row))) === '') {
-                        $excelRow = 4 + $i; // baris di sheet
-                        $event->sheet->getStyle("A{$excelRow}:H{$excelRow}")
-                            ->applyFromArray([
-                                'fill' => [
-                                    'fillType' => Fill::FILL_SOLID,
-                                    'color'    => ['argb' => 'FFEFEFEF'], // abu-abu muda
-                                ],
-                            ]);
-                    }
-                }
-            },
-        ];
-    }
+            // >>> tidak ada lagi pewarnaan baris pemisah <<<
+        },
+    ];
+}
+
 }

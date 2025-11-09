@@ -250,6 +250,7 @@ class ApprovalController extends Controller
             ->join('models as m', 'dp.model_id', '=', 'm.id')
             ->join('products as p', 'dp.product_id', '=', 'p.id')
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
             ->leftJoinSub($latestPa, 'pa', function ($join) {
                 $join->on('pa.revision_id', '=', 'dpr.id')
@@ -295,16 +296,20 @@ class ApprovalController extends Controller
                     ->orWhere('m.name', 'like', "%{$searchValue}%")
                     ->orWhere('p.part_no', 'like', "%{$searchValue}%")
                     ->orWhere('dsc.name', 'like', "%{$searchValue}%")
+                    ->orWhere('pg.code_part_group', 'like', "%{$searchValue}%")
+                    ->orWhere('dpr.ecn_no', 'like', "%{$searchValue}%")
                     ->orWhereRaw("
-                    CONCAT(
-                        c.code,' ',
-                        m.name,' ',
-                        dtg.name,' ',
-                        COALESCE(dsc.name,''),' ',
-                        COALESCE(p.part_no,''),' ',
-                        dpr.revision_no
-                    ) LIKE ?
-                  ", ["%{$searchValue}%"]);
+    CONCAT(
+      c.code,' ',
+      m.name,' ',
+      dtg.name,' ',
+      COALESCE(dsc.name,''),' ',
+      COALESCE(pg.code_part_group,''),' ',
+      COALESCE(p.part_no,''),' ',
+      COALESCE(dpr.ecn_no,''),' ',
+      dpr.revision_no
+    ) LIKE ?
+  ", ["%{$searchValue}%"]);
             });
         }
 
@@ -317,6 +322,8 @@ class ApprovalController extends Controller
             'dtg.name as doc_type',
             'dsc.name as category',
             'p.part_no',
+            'pg.code_part_group as part_group',
+            'dpr.ecn_no as ecn_no',
             'dpr.revision_no as revision',
             DB::raw("
                 CASE COALESCE(pa.decision, dpr.revision_status)
@@ -342,7 +349,10 @@ class ApprovalController extends Controller
             'dtg.name',
             'dsc.name',
             'p.part_no',
+            'pg.code_part_group', // <--
+            'dpr.ecn_no',         // <--
         ];
+
         $orderBy       = in_array($orderColumnName, $orderWhitelist, true) ? $orderColumnName : 'pa.requested_at';
         $orderDirection = in_array(strtolower($orderDir), ['asc', 'desc'], true) ? $orderDir : 'desc';
 
@@ -409,7 +419,9 @@ class ApprovalController extends Controller
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
             ->join('products as p', 'dp.product_id', '=', 'p.id')
-            // SESUAIKAN kalau kolom user-nya beda (misal dp.created_user_id)
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
             ->leftJoin('users as u', 'u.id', '=', 'dp.created_by')
             ->where('dp.id', $revision->package_id)
             ->select(
@@ -417,9 +429,13 @@ class ApprovalController extends Controller
                 'm.name as model',
                 'p.part_no',
                 'dp.created_at',
-                'u.name as uploader_name'
+                'u.name as uploader_name',
+                'dtg.name as doc_type',
+                'dsc.name as category',
+                'pg.code_part_group as part_group'
             )
             ->first();
+
 
         if (!$package) {
             abort(404, 'Package not found.');
@@ -466,6 +482,10 @@ class ApprovalController extends Controller
             'metadata' => [
                 'customer'    => $package->customer,
                 'model'       => $package->model,
+                'part_group'  => $package->part_group,
+                'doc_type'    => $package->doc_type,
+                'category'    => $package->category,
+                'ecn_no'      => $revision->ecn_no ?? null,
                 'part_no'     => $package->part_no,
                 'revision'    => 'Rev-' . $revision->revision_no,
                 'uploader'    => $uploaderName,
@@ -482,14 +502,10 @@ class ApprovalController extends Controller
 
             // --- Tambahan: block khusus untuk stamp di preview 2D ---
             'stamp'        => [
-                // dari doc_package_revisions.receipt_date
                 'receipt_date' => $receiptDate?->toDateString(),
-                // dari doc_package_revisions.created_at
                 'upload_date'  => $uploadDateRevision?->toDateString(),
-                // untuk nanti munculkan badge OBSOLETE di UI
                 'is_obsolete'  => $isObsolete,
             ],
-            // --- /Tambahan ---
         ];
 
         // selalu kirim hash baru ke Blade untuk dipakai approve/reject
@@ -497,12 +513,11 @@ class ApprovalController extends Controller
 
         // --- Tambahan: ambil format label stamp (prefix/suffix) dari master ---
         $stampFormat = StampFormat::where('is_active', true)->first();
-        // --- /Tambahan ---
 
         return view('approvals.approval_detail', [
             'approvalId'  => $hash,
             'detail'      => $detail,
-            'stampFormat' => $stampFormat, // dikirim ke Blade
+            'stampFormat' => $stampFormat,
         ]);
     }
 
@@ -899,8 +914,9 @@ class ApprovalController extends Controller
                 $join->on('pa.revision_id', '=', 'dpr.id')
                     ->where('pa.rn', '=', 1);
             })
-            ->where('dpr.revision_status', '<>', 'draft');
-
+            ->where('dpr.revision_status', '<>', 'draft')
+            // Hanya revision yang jadi current di package
+            ->whereColumn('dp.current_revision_id', 'dpr.id');
 
         // === filter (sama seperti list) ===
         if ($request->filled('customer') && $request->customer !== 'All') {
@@ -921,6 +937,7 @@ class ApprovalController extends Controller
 
         // === ambil data dasar ===
         $rowsDb = $query->select(
+            'dp.id as package_id',
             'c.code as customer',
             'm.name as model',
             'p.part_no',
@@ -928,7 +945,6 @@ class ApprovalController extends Controller
             'f.filename as file_name',
             'dtg.name as doctype',
             'dsc.name as category',
-            'dp.part_group_id as part_group',
             'pg.code_part_group as part_group'
         )
             ->orderBy('c.code')
@@ -937,33 +953,29 @@ class ApprovalController extends Controller
             ->orderBy('f.filename')
             ->get();
 
-        // === bentuk rows: group per (customer, model) seperti contoh Excel ===
+        // === bentuk rows: 1 blok = 1 package ===
         $rows = [];
 
-        // groupBy per kombinasi customer + model
-        $grouped = $rowsDb->groupBy(function ($r) {
-            return $r->customer . '||' . $r->model;
-        });
+        // groupBy per package
+        $grouped = $rowsDb->groupBy('package_id');
 
-        foreach ($grouped as $key => $items) {
-            [$customer, $model] = explode('||', $key);
+        foreach ($grouped as $packageId => $items) {
             $firstRow = true;
-
             foreach ($items as $r) {
                 $rows[] = [
-                    $firstRow ? $customer : '',
-                    $firstRow ? $model    : '',
-                    $r->part_no,
+                    $firstRow ? $r->customer   : '',
+                    $firstRow ? $r->model      : '',
+                    $firstRow ? $r->part_no    : '',
                     $r->part_name,
                     $r->file_name,
                     $r->doctype,
                     $r->category,
-                    $r->part_group,
+                    $firstRow ? $r->part_group : '', // kalau mau muncul sekali di header
                 ];
                 $firstRow = false;
             }
 
-            // baris kosong pemisah antar group
+            // baris kosong pemisah antar package
             $rows[] = ['', '', '', '', '', '', '', ''];
         }
 

@@ -15,6 +15,8 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    'mail_from' => env('MAIL_FROM_NAME', 'PROMISE'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

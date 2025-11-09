@@ -20,16 +20,14 @@
       <!-- ===== Meta Card ===== -->
       <div x-ref="metaCard"
            class="self-start bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <!-- Header -->
         <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 md:justify-between">
             <h2 class="text-lg lg:text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
               <i class="fa-solid fa-file-invoice mr-2 text-blue-600"></i>
-              Package Metadata
+              Package Info
             </h2>
-
             @php
-              $backUrl = route('file-manager.export');
+              $backUrl = route('file-manager.export'); //
             @endphp
             <a href="{{ $backUrl }}"
                class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
@@ -39,14 +37,74 @@
           </div>
         </div>
 
-        <!-- Body: single line with dashes -->
-        <div class="p-4">
-          <p class="text-sm text-gray-900 dark:text-gray-100 truncate"
-             x-text="metaLine()"
-             :title="metaLine()"></p>
+        <div class="p-4 space-y-4" x-data="{ openClassification: false }">
+
+            <div>
+                <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Package</label>
+                <div class="flex items-start justify-between gap-2 mt-0.5">
+
+                    <div class="flex-grow flex items-center gap-x-2 gap-y-1 flex-wrap min-w-0">
+                        <p class="text-sm text-gray-900 dark:text-gray-100"
+                           x-text="metaLine()"
+                           :title="metaLine()">
+                        </p>
+
+                        <span class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold
+                                     bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                              x-text="revisionBadgeText()"
+                              :title="revisionBadgeText()">
+                        </span>
+                    </div>
+
+                    <button @click="openClassification = !openClassification"
+                            class="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 p-1 rounded-full transition-transform"
+                            :class="{'rotate-180': openClassification}"
+                            title="Toggle classification details">
+                        <i class="fa-solid fa-chevron-down fa-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div x-show="openClassification" x-collapse class="pl-2 ml-1 border-l-2 border-gray-200 dark:border-gray-700">
+                <dl class="space-y-2 text-sm" x-if="pkg.classification">
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Doc. Group</dt>
+                        <dd class="font-medium text-gray-900 dark:text-gray-100" x-text="pkg.classification.doctype_group"></dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Sub-Category</dt>
+                        <dd class="font-medium text-gray-900 dark:text-gray-100" x-text="pkg.classification.doctype_subcategory"></dd>
+                    </div>
+                    <div>
+                        <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Part Group</dt>
+                        <dd class="font-medium text-gray-900 dark:text-gray-100" x-text="pkg.classification.part_group"></dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <label for="revision-selector" class="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                    <i class="fa-solid fa-history fa-sm mr-1"></i>
+                    Revision History
+                </label>
+                <select id="revision-selector"
+                        x-model="selectedRevisionId"
+                        @change="onRevisionChange()"
+                        :disabled="isLoadingRevision"
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:opacity-50 disabled:bg-gray-100 dark:disabled:bg-gray-700">
+
+                  <template x-for="revision in revisionList" :key="revision.id">
+                    <option :value="revision.id" x-text="revision.text"></option>
+                  </template>
+
+                  <template x-if="revisionList.length === 0">
+                    <option value="" disabled>No other revisions found</option>
+                  </template>
+                </select>
+            </div>
         </div>
 
-        <!-- Footer (Download All) -->
+
         <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
             <button
                 @click="downloadPackage()"
@@ -56,35 +114,6 @@
                 <i class="fa-solid fa-download mr-2"></i>
                 Download All Files
             </button>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <h2 class="text-lg lg:text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-            <i class="fa-solid fa-history mr-2 text-blue-600"></i>
-            Revision History
-          </h2>
-        </div>
-
-        <div class="p-4 space-y-2">
-          <label for="revision-selector" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            View approved revision:
-          </label>
-          <select id="revision-selector"
-                  x-model="selectedRevisionId"
-                  @change="onRevisionChange()"
-                  :disabled="isLoadingRevision"
-                  class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:opacity-50 disabled:bg-gray-100 dark:disabled:bg-gray-700">
-
-            <template x-for="revision in revisionList" :key="revision.id">
-              <option :value="revision.id" x-text="revision.text"></option>
-            </template>
-
-            <template x-if="revisionList.length === 0">
-              <option value="" disabled>No other revisions found</option>
-            </template>
-          </select>
         </div>
       </div>
 
@@ -417,11 +446,18 @@
 
       /* ===== Meta line formatter ===== */
       metaLine() {
+            const m = this.pkg?.metadata || {};
+            return [m.customer, m.model, m.part_no]
+              .filter(v => v && String(v).trim().length > 0)
+              .join(' - ');
+          },
+
+        revisionBadgeText() {
         const m = this.pkg?.metadata || {};
-        // urutan: Customer - Model - Part No - Revision
-        return [m.customer, m.model, m.part_no, m.revision]
-          .filter(v => v && String(v).trim().length > 0)
-          .join(' - ');
+        if (m.revision_label && String(m.revision_label).trim().length > 0) {
+          return `${m.revision} | ${m.revision_label}`;
+        }
+        return m.revision || '';
       },
 
       /* ===== Display Styles / Edges ===== */

@@ -324,8 +324,10 @@ class ExportController extends Controller
 
         // $id = revision_id
         $revision = DB::table('doc_package_revisions as dpr')
+            ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
             ->where('dpr.id', $id)
             ->where('dpr.revision_status', '=', 'approved')
+            ->select('dpr.*', 'crl.label as revision_label')
             ->first();
 
         if (!$revision) {
@@ -352,8 +354,18 @@ class ExportController extends Controller
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
             ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
             ->where('dp.id', $revision->package_id)
-            ->select('c.code as customer', 'm.name as model', 'p.part_no')
+            ->select(
+                'c.code as customer',
+                'm.name as model',
+                'p.part_no',
+                'dtg.name as doctype_group',
+                'dsc.name as doctype_subcategory',
+                'pg.code_part_group as part_group'
+            )
             ->first();
 
         $files = DB::table('doc_package_revision_files')
@@ -375,9 +387,14 @@ class ExportController extends Controller
                 'model'    => $package->model,
                 'part_no'  => $package->part_no,
                 'revision' => 'Rev-' . $revision->revision_no,
+                'revision_label' => $revision->revision_label ?? null
+            ],
+            'classification' => [
+                'doctype_group' => $package->doctype_group,
+                'doctype_subcategory' => $package->doctype_subcategory ?? '-',
+                'part_group' => $package->part_group ?? '-',
             ],
             'files'        => $files,
-            // No activity logs for export detail
         ];
 
         return view('file_management.file_export_detail', [
@@ -397,22 +414,32 @@ class ExportController extends Controller
         }
 
         $revision = DB::table('doc_package_revisions as dpr')
+            ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
             ->where('dpr.id', $decrypted_id)
             ->where('dpr.revision_status', '=', 'approved')
+            ->select('dpr.*', 'crl.label as revision_label')
             ->first();
 
         if (!$revision) {
             return response()->json(['success' => false, 'message' => 'Exportable revision not found.'], 404);
         }
 
-        // --- Membangun ulang struktur data yang sama dengan 'showDetail' ---
-
         $package = DB::table('doc_packages as dp')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
             ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
             ->where('dp.id', $revision->package_id)
-            ->select('c.code as customer', 'm.name as model', 'p.part_no')
+            ->select(
+                'c.code as customer',
+                'm.name as model',
+                'p.part_no',
+                'dtg.name as doctype_group',
+                'dsc.name as doctype_subcategory',
+                'pg.code_part_group as part_group'
+            )
             ->first();
 
         $files = DB::table('doc_package_revision_files')
@@ -428,21 +455,26 @@ class ExportController extends Controller
             })
             ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
-        // 'detail' ini memiliki struktur yang sama dengan variabel $detail di showDetail
         $detail = [
             'metadata' => [
                 'customer' => $package->customer,
                 'model'    => $package->model,
                 'part_no'  => $package->part_no,
-                'revision' => 'Rev-' . $revision->revision_no, // Nomor revisi yang baru
+                'revision' => 'Rev-' . $revision->revision_no,
+                'revision_label' => $revision->revision_label ?? null
             ],
-            'files' => $files, // Daftar file yang baru
+            'classification' => [
+                'doctype_group' => $package->doctype_group,
+                'doctype_subcategory' => $package->doctype_subcategory ?? '-',
+                'part_group' => $package->part_group ?? '-',
+            ],
+            'files' => $files,
         ];
 
         return response()->json([
             'success'  => true,
             'pkg'      => $detail,
-            'exportId' => $originalEncryptedId // ID terenkripsi yang baru untuk tombol "Download All"
+            'exportId' => $originalEncryptedId
         ]);
     }
 

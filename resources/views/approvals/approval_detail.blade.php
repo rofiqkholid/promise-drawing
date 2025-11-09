@@ -42,9 +42,10 @@
 
         <!-- Body: single line with dashes -->
         <div class="p-4">
-          <p class="text-sm text-gray-900 dark:text-gray-100 truncate"
-            x-text="metaLine()"
-            :title="metaLine()"></p>
+          <p class="text-xs md:text-sm text-gray-900 dark:text-gray-100 whitespace-normal break-words leading-snug"
+    x-text="metaLine()"
+    :title="metaLine()"></p>
+
         </div>
 
         <!-- Footer (Approve / Reject / Rollback) -->
@@ -173,7 +174,7 @@
           </div>
 
           <!-- ZOOM TOOLBAR untuk JPG/PNG/TIFF/HPGL -->
-          <div x-show="isImage(selectedFile?.name) || isTiff(selectedFile?.name) || isHpgl(selectedFile?.name)"
+          <div x-show="isImage(selectedFile?.name) || isTiff(selectedFile?.name) || isHpgl(selectedFile?.name) || isPdf(selectedFile?.name)"
             class="mb-3 flex items-center justify-end gap-2 text-xs text-gray-700 dark:text-gray-200">
             <span x-text="Math.round(imageZoom * 100) + '%'"></span>
             <button @click="zoomOut()"
@@ -216,8 +217,8 @@
                       style="transform: scale(0.45); transform-origin: bottom right;">
                       <div
                         class="w-56 h-40 border-2 border-blue-600 rounded-sm
-               text-[10px] text-blue-700 flex flex-col items-center
-               justify-between px-2 py-1"
+                   text-[10px] text-blue-700 flex flex-col items-center
+                   justify-between px-2 py-1"
                         style="background-color: transparent;">
                         <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                           <span x-text="stampTopLine()"></span>
@@ -239,8 +240,8 @@
                       style="transform: scale(0.45); transform-origin: bottom left;">
                       <div
                         class="w-56 h-40 border-2 border-blue-600 rounded-sm
-               text-[10px] text-blue-700 flex flex-col items-center
-               justify-between px-2 py-1"
+                   text-[10px] text-blue-700 flex flex-col items-center
+                   justify-between px-2 py-1"
                         style="background-color: transparent;">
                         <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                           <span x-text="stampTopLine()"></span>
@@ -254,18 +255,87 @@
                         </div>
                       </div>
                     </div>
-
+                  </div>
+                </div>
+              </div>
             </template>
 
             <!-- PDF -->
+            <!-- PDF via pdf.js + canvas -->
             <template x-if="isPdf(selectedFile?.name)">
-              <iframe
-                :src="pdfSrc(selectedFile?.url)"
-                class="w-full h-[70vh] rounded-md border border-gray-200 dark:border-gray-700"
-                title="PDF preview"></iframe>
+              <div
+                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                @mousedown.prevent="startPan($event)"
+                @wheel.prevent="onWheelZoom($event)">
+                <div class="w-full h-full flex items-center justify-center">
+                  <div class="relative inline-block" :style="imageTransformStyle()">
+                    <canvas
+                      x-ref="pdfCanvas"
+                      class="block pointer-events-none select-none max-w-full max-h-[70vh]">
+                    </canvas>
+
+                    <!-- STAMP ORIGINAL (kanan bawah, skala 0.45) -->
+                    <div
+                      x-show="pkg.stamp"
+                      class="absolute bottom-4 right-4 origin-bottom-right"
+                      style="transform: scale(0.45); transform-origin: bottom right;">
+                      <div
+                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                   text-[10px] text-blue-700 flex flex-col items-center
+                   justify-between px-2 py-1"
+                        style="background-color: transparent;">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine()"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                            x-text="stampCenterOriginal()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine()"></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- STAMP OBSOLETE (kiri bawah, skala 0.45) -->
+                    <div
+                      x-show="pkg.stamp?.is_obsolete"
+                      class="absolute bottom-4 left-4 origin-bottom-left"
+                      style="transform: scale(0.45); transform-origin: bottom left;">
+                      <div
+                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                   text-[10px] text-blue-700 flex flex-col items-center
+                   justify-between px-2 py-1"
+                        style="background-color: transparent;">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine()"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                            x-text="stampCenterObsolete()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine()"></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- status render PDF -->
+                <div
+                  x-show="pdfLoading"
+                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
+                  Rendering PDF…
+                </div>
+                <div
+                  x-show="pdfError"
+                  class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
+                  x-text="pdfError"></div>
+              </div>
             </template>
 
-            <!-- TIFF (render as PNG into <img>) -->
+
             <!-- TIFF (render as PNG into <img>) -->
             <template x-if="isTiff(selectedFile?.name)">
               <div
@@ -612,6 +682,15 @@
 <!-- UTIF.js untuk render TIFF (v2 classic API) -->
 <script src="https://unpkg.com/utif@2.0.1/UTIF.js"></script>
 
+<!-- pdf.js 2.x (lebih stabil untuk UMD) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script>
+  if (window['pdfjsLib']) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+  }
+</script>
+
 <!-- ES Module shims + Import Map untuk Three.js (module) -->
 <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
 <script type="importmap">
@@ -749,6 +828,8 @@
 
   /* ========== Alpine Component ========== */
   function approvalDetail() {
+     // <- private variable, tidak ikut diproxy Alpine
+  let pdfDoc = null;
     return {
       approvalId: JSON.parse(`@json($approvalId)`),
       pkg: JSON.parse(`@json($detail)`),
@@ -772,6 +853,14 @@
       // HPGL state
       hpglLoading: false,
       hpglError: '',
+
+      // PDF state
+      pdfLoading: false,
+      pdfError: '',
+      pdfPageNum: 1,
+      pdfNumPages: 1,
+      pdfScale: 1.0,
+
 
       // ZOOM + PAN untuk image / TIFF / HPGL
       imageZoom: 1,
@@ -868,14 +957,52 @@
       isCad(name) {
         return ['igs', 'iges', 'stp', 'step'].includes(this.extOf(name));
       },
-      pdfSrc(u) {
-        return u;
-      },
 
-      // (opsional) helper tambahan kalau mau dipakai di tempat lain
-      isStampable(name) {
-        return this.isImage(name) || this.isPdf(name) || this.isTiff(name) || this.isHpgl(name);
-      },
+      findFileByNameInsensitive(name) {
+  if (!name) return null;
+  const target = name.toLowerCase();
+  const groups = this.pkg.files || {};
+
+  for (const key of Object.keys(groups)) {
+    const list = groups[key] || [];
+    for (const f of list) {
+      const n = (f.name || '').toLowerCase();
+      if (n === target || n.endsWith('/' + target) || n.endsWith('\\' + target)) {
+        return f;
+      }
+    }
+  }
+  return null;
+},
+
+_findIgesSibling(mainFile) {
+  if (!mainFile) return null;
+  const name = mainFile.name || '';
+  const base = name.replace(/\.(stp|step)$/i, '');
+
+  const candidates = [];
+  if (base) {
+    candidates.push(base + '.igs', base + '.iges');
+  }
+  // banyak STEP CATIA pakai nama temp.igs
+  candidates.push('temp.igs', 'temp.iges');
+
+  // 1) coba nama kandidat di semua group
+  for (const cand of candidates) {
+    const f = this.findFileByNameInsensitive(cand);
+    if (f) return f;
+  }
+
+  // 2) fallback: ambil IGES apa pun yang ada di paket
+  const groups = this.pkg.files || {};
+  for (const key of Object.keys(groups)) {
+    const list = groups[key] || [];
+    const hit = list.find(f => /\.(igs|iges)$/i.test(f.name || ''));
+    if (hit) return hit;
+  }
+
+  return null;
+},
 
       formatStampDate(d) {
         return d || '';
@@ -966,6 +1093,66 @@
           this.tifLoading = false;
         }
       },
+
+      /* ===== PDF renderer (pdf.js) ===== */
+      async renderPdf(url) {
+        if (!url || !window['pdfjsLib']) return;
+
+        this.pdfLoading = true;
+        this.pdfError = '';
+        pdfDoc = null;
+        this.pdfPageNum = 1;
+        this.pdfScale = 1.0;
+
+        try {
+          await this.$nextTick();
+          const canvas = this.$refs.pdfCanvas;
+          if (!canvas) throw new Error('Canvas PDF tidak ditemukan');
+
+          // versi 2.x: cukup kirim string URL
+          const loadingTask = window.pdfjsLib.getDocument(url);
+
+
+          const pdf = await loadingTask.promise;
+          pdfDoc = pdf;
+          this.pdfNumPages = pdf.numPages;
+
+          await this.renderPdfPage();
+        } catch (e) {
+          console.error(e);
+          this.pdfError = e?.message || 'Gagal render PDF';
+        } finally {
+          this.pdfLoading = false;
+        }
+      },
+
+      async renderPdfPage() {
+        if (!pdfDoc) return;
+        try {
+          const page = await pdfDoc.getPage(this.pdfPageNum);
+          const viewport = page.getViewport({
+            scale: this.pdfScale
+          });
+
+          await this.$nextTick();
+          const canvas = this.$refs.pdfCanvas;
+          if (!canvas) return;
+          const ctx = canvas.getContext('2d');
+
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          const renderContext = {
+            canvasContext: ctx,
+            viewport
+          };
+          await page.render(renderContext).promise;
+        } catch (e) {
+          console.error(e);
+          this.pdfError = e?.message || 'Gagal render halaman PDF';
+        }
+      },
+
 
       /* ===== HPGL renderer ===== */
       async renderHpgl(url) {
@@ -1169,11 +1356,22 @@
 
       /* ===== Meta line formatter ===== */
       metaLine() {
-        const m = this.pkg?.metadata || {};
-        return [m.customer, m.model, m.part_no, m.revision, this.pkg?.status]
-          .filter(v => v && String(v).trim().length > 0)
-          .join(' - ');
-      },
+  const m = this.pkg?.metadata || {};
+  return [
+    m.customer,      // customer
+    m.model,         // model
+    m.part_no,       // part no
+    m.part_group,    // part group
+    m.doc_type,      // doc type
+    m.category,      // category
+    m.ecn_no,        // ecn no
+    m.revision,      // rev
+    this.pkg?.status // status
+  ]
+    .filter(v => v && String(v).trim().length > 0)
+    .join(' - ');
+},
+
 
       /* ===== Display Styles / Edges ===== */
       _oriMats: new Map(),
@@ -1397,6 +1595,17 @@
             ctx && ctx.clearRect(0, 0, c.width, c.height);
           }
         }
+        if (this.isPdf(this.selectedFile?.name)) {
+          this.pdfError = '';
+          this.pdfLoading = false;
+          pdfDoc = null; 
+          if (this.$refs.pdfCanvas) {
+            const c = this.$refs.pdfCanvas;
+            const ctx = c.getContext('2d');
+            ctx && ctx.clearRect(0, 0, c.width, c.height);
+          }
+        }
+
 
         this.imageZoom = 1;
         this.panX = 0;
@@ -1410,9 +1619,11 @@
           if (this.isTiff(file?.name)) {
             this.renderTiff(file.url);
           } else if (this.isCad(file?.name)) {
-            this.renderCadOcct(file.url);
+            this.renderCadOcct(file); 
           } else if (this.isHpgl(file?.name)) {
             this.renderHpgl(file.url);
+          } else if (this.isPdf(file?.name)) {
+            this.renderPdf(file.url);
           }
         });
       },
@@ -1575,143 +1786,160 @@
         }
       },
 
-      /* ===== render CAD via occt-import-js ===== */
-      async renderCadOcct(url) {
-        if (!url) return;
-        this.disposeCad();
-        this.iges.loading = true;
-        this.iges.error = '';
+/* ===== render CAD via occt-import-js (STEP/IGES + fallback IGES) ===== */
+async renderCadOcct(fileObj) {
+  const url = fileObj?.url;
+  if (!url) return;
 
-        try {
-          const THREE = await import('three');
-          const {
-            OrbitControls
-          } = await import('three/addons/controls/OrbitControls.js');
-          const bvh = await import('three-mesh-bvh');
-          THREE.Mesh.prototype.raycast = bvh.acceleratedRaycast;
-          THREE.BufferGeometry.prototype.computeBoundsTree = bvh.computeBoundsTree;
-          THREE.BufferGeometry.prototype.disposeBoundsTree = bvh.disposeBoundsTree;
+  this.disposeCad();
+  this.iges.loading = true;
+  this.iges.error  = '';
 
-          const scene = new THREE.Scene();
-          scene.background = null;
-          const wrap = this.$refs.igesWrap;
-          const width = wrap?.clientWidth || 800;
-          const height = wrap?.clientHeight || 500;
+  try {
+    const THREE = await import('three');
+    const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+    const bvh = await import('three-mesh-bvh');
 
-          const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 10000);
-          camera.position.set(250, 200, 250);
+    THREE.Mesh.prototype.raycast = bvh.acceleratedRaycast;
+    THREE.BufferGeometry.prototype.computeBoundsTree   = bvh.computeBoundsTree;
+    THREE.BufferGeometry.prototype.disposeBoundsTree   = bvh.disposeBoundsTree;
 
-          const renderer = new THREE.WebGLRenderer({
-            antialias: true,
-            alpha: true
-          });
-          renderer.setPixelRatio(window.devicePixelRatio || 1);
-          renderer.setSize(width, height);
-          wrap.appendChild(renderer.domElement);
-          wrap.style.position = 'relative';
-          wrap.style.overflow = 'hidden';
+    const scene = new THREE.Scene();
+    scene.background = null;
 
-          const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
-          hemi.position.set(0, 200, 0);
-          scene.add(hemi);
-          const dir = new THREE.DirectionalLight(0xffffff, 0.9);
-          dir.position.set(150, 200, 100);
-          scene.add(dir);
+    const wrap   = this.$refs.igesWrap;
+    const width  = wrap?.clientWidth  || 800;
+    const height = wrap?.clientHeight || 500;
 
-          const controls = new OrbitControls(camera, renderer.domElement);
-          controls.enableDamping = true;
+    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 10000);
+    camera.position.set(250, 200, 250);
 
-          const resp = await fetch(url, {
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(window.devicePixelRatio || 1);
+    renderer.setSize(width, height);
+    wrap.appendChild(renderer.domElement);
+    wrap.style.position = 'relative';
+    wrap.style.overflow = 'hidden';
+
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
+    hemi.position.set(0, 200, 0);
+    scene.add(hemi);
+
+    const dir = new THREE.DirectionalLight(0xffffff, 0.9);
+    dir.position.set(150, 200, 100);
+    scene.add(dir);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    // --- baca file yang dipilih (STEP / IGES) ---
+    const resp = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
+    if (!resp.ok) throw new Error('Gagal mengambil file CAD');
+    const mainBuf = new Uint8Array(await resp.arrayBuffer());
+
+    console.log('CAD size (bytes):', mainBuf.byteLength);
+
+    const occt   = await window.occtimportjs();
+    const ext    = (url.split('?')[0].split('#')[0].split('.').pop() || '').toLowerCase();
+    const params = {
+      linearUnit: 'millimeter',
+      linearDeflectionType: 'bounding_box_ratio',
+      linearDeflection: 0.1,
+      angularDeflection: 0.1,
+    };
+
+    let res = null;
+
+    if (ext === 'stp' || ext === 'step') {
+      // 1) coba parse STEP
+      res = occt.ReadStepFile(mainBuf, params);
+      console.log('OCCT STEP result:', res);
+
+      // 2) kalau gagal → fallback ke IGES dari paket
+      if (!res || !res.success) {
+        console.warn('STEP gagal, coba fallback ke IGES...');
+        const igesFile = this._findIgesSibling(fileObj);
+        if (igesFile?.url) {
+          console.log('Fallback IGES file:', igesFile.name, igesFile.url);
+          const igResp = await fetch(igesFile.url, {
             cache: 'no-store',
             credentials: 'same-origin'
           });
-          if (!resp.ok) throw new Error('Gagal mengambil file CAD');
-          const buffer = await resp.arrayBuffer();
-          const file = new Uint8Array(buffer);
-
-          console.log('CAD size (bytes):', file.byteLength);
-
-          // untuk cek apakah yang diterima HTML (misal halaman login/error)
-          try {
-            const head = new TextDecoder().decode(file.slice(0, 80));
-            console.log('CAD head preview:', head);
-          } catch (e) {}
-
-
-          const occt = await window.occtimportjs();
-          const ext = (url.split('?')[0].split('#')[0].split('.').pop() || '').toLowerCase();
-          const params = {
-            linearUnit: 'millimeter',
-            linearDeflectionType: 'bounding_box_ratio',
-            linearDeflection: 0.1,
-            angularDeflection: 0.1,
-          };
-
-          const res = (ext === 'stp' || ext === 'step') ?
-            occt.ReadStepFile(file, params) :
-            occt.ReadIgesFile(file, params);
-
-          console.log('OCCT result:', res);
-
-          if (!res || !res.success) {
-            const msg = res?.error || res?.message || 'File bukan STEP/IGES yang valid atau tidak didukung OCCT.';
-            throw new Error('OCCT gagal mem-parsing file: ' + msg);
-          }
-
-
-          const group = this._buildThreeFromOcct(res, THREE);
-          scene.add(group);
-
-          this.iges.rootModel = group;
-          this.iges.scene = scene;
-          this.iges.camera = camera;
-          this.iges.renderer = renderer;
-          this.iges.controls = controls;
-          this.iges.THREE = THREE;
-
-          this._cacheOriginalMaterials(group, THREE);
-
-          const box = new THREE.Box3().setFromObject(group);
-          const size = new THREE.Vector3();
-          box.getSize(size);
-          const center = new THREE.Vector3();
-          box.getCenter(center);
-          const maxDim = Math.max(size.x, size.y, size.z) || 100;
-          const fitDist = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360));
-          camera.position.copy(center.clone().add(new THREE.Vector3(1, 1, 1).normalize().multiplyScalar(fitDist * 1.6)));
-          camera.near = Math.max(maxDim / 100, 0.1);
-          camera.far = Math.max(maxDim * 100, 1000);
-          camera.updateProjectionMatrix();
-          controls.target.copy(center);
-          controls.update();
-
-          const animate = () => {
-            controls.update();
-            renderer.render(scene, camera);
-            const g = this.iges.measure.group;
-            if (g) g.children.forEach(ch => ch.userData?.update?.());
-            this.iges.animId = requestAnimationFrame(animate);
-          };
-          animate();
-
-          this._onIgesResize = () => {
-            const w = this.$refs.igesWrap?.clientWidth || 800;
-            const h = this.$refs.igesWrap?.clientHeight || 500;
-            camera.aspect = w / h;
-            camera.updateProjectionMatrix();
-            renderer.setSize(w, h);
-          };
-          window.addEventListener('resize', this._onIgesResize);
-
-          this.setDisplayStyle('shaded-edges');
-
-        } catch (e) {
-          console.error(e);
-          this.iges.error = e?.message || 'Failed to render CAD file';
-        } finally {
-          this.iges.loading = false;
+          if (!igResp.ok) throw new Error('Gagal mengambil file IGES fallback');
+          const igBuf = new Uint8Array(await igResp.arrayBuffer());
+          res = occt.ReadIgesFile(igBuf, params);
+          console.log('OCCT IGES fallback result:', res);
         }
-      },
+      }
+    } else {
+      // kalau yang dipilih memang IGES langsung parse sebagai IGES
+      res = occt.ReadIgesFile(mainBuf, params);
+      console.log('OCCT IGES result:', res);
+    }
+
+    if (!res || !res.success) {
+      const msg = res?.error || res?.message || 'File bukan STEP/IGES yang valid atau tidak didukung OCCT.';
+      throw new Error('OCCT gagal mem-parsing file: ' + msg);
+    }
+
+    // --- build mesh & fit camera ---
+    const group = this._buildThreeFromOcct(res, THREE);
+    scene.add(group);
+
+    this.iges.rootModel = group;
+    this.iges.scene     = scene;
+    this.iges.camera    = camera;
+    this.iges.renderer  = renderer;
+    this.iges.controls  = controls;
+    this.iges.THREE     = THREE;
+
+    this._cacheOriginalMaterials(group, THREE);
+
+    const box   = new THREE.Box3().setFromObject(group);
+    const size  = new THREE.Vector3();
+    const center= new THREE.Vector3();
+    box.getSize(size);
+    box.getCenter(center);
+
+    const maxDim  = Math.max(size.x, size.y, size.z) || 100;
+    const fitDist = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360));
+    camera.position.copy(
+      center.clone().add(new THREE.Vector3(1, 1, 1).normalize().multiplyScalar(fitDist * 1.6))
+    );
+    camera.near = Math.max(maxDim / 100, 0.1);
+    camera.far  = Math.max(maxDim * 100, 1000);
+    camera.updateProjectionMatrix();
+    controls.target.copy(center);
+    controls.update();
+
+    const animate = () => {
+      controls.update();
+      renderer.render(scene, camera);
+      const g = this.iges.measure.group;
+      if (g) g.children.forEach(ch => ch.userData?.update?.());
+      this.iges.animId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    this._onIgesResize = () => {
+      const w = this.$refs.igesWrap?.clientWidth || 800;
+      const h = this.$refs.igesWrap?.clientHeight || 500;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    };
+    window.addEventListener('resize', this._onIgesResize);
+
+    this.setDisplayStyle('shaded-edges');
+  } catch (e) {
+    console.error(e);
+    this.iges.error = e?.message || 'Failed to render CAD file';
+  } finally {
+    this.iges.loading = false;
+  }
+},
+
+
     }
   }
 </script>

@@ -66,26 +66,26 @@
   {{-- Filter section --}}
   <div class="mt-8 bg-white dark:bg-gray-800 p-7 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
     <div class="flex items-center justify-between mb-4">
-  <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">Filters</h3>
-  <div class="flex items-center gap-2">
-    <button id="btnDownloadSummary"
-      type="button"
-      class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-green-500
+      <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">Filters</h3>
+      <div class="flex items-center gap-2">
+        <button id="btnDownloadSummary"
+          type="button"
+          class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-green-500
              bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200
              hover:bg-green-100 dark:hover:bg-green-900/60">
-      <i class="fa-solid fa-file-excel"></i>
-      Download Summary
-    </button>
+          <i class="fa-solid fa-file-excel"></i>
+          Download Summary
+        </button>
 
-    <button id="btnResetFilters"
-      type="button"
-      class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600
+        <button id="btnResetFilters"
+          type="button"
+          class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600
              bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
-      <i class="fa-solid fa-rotate-left"></i>
-      Reset Filters
-    </button>
-  </div>
-</div>
+          <i class="fa-solid fa-rotate-left"></i>
+          Reset Filters
+        </button>
+      </div>
+    </div>
 
 
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-5">
@@ -139,11 +139,11 @@
 
     // --- helper: reset Select2 ke "All" (pasti sukses untuk AJAX mode) ---
     function resetSelect2ToAll($el) {
-      $el.empty(); 
+      $el.empty();
       const opt = new Option('All', 'All', true, true);
       $el.append(opt);
-      $el.trigger('change'); 
-      $el.trigger('select2:select'); 
+      $el.trigger('change');
+      $el.trigger('select2:select');
     }
 
     // --- Select2 AJAX (server-side) helper ---
@@ -160,7 +160,7 @@
           cache: true,
           data: function(params) {
             const p = {
-              select2: field, 
+              select2: field,
               q: params.term || '',
               page: params.page || 1
             };
@@ -308,9 +308,11 @@
               const parts = [
                 row.customer,
                 row.model,
+                row.part_no,
                 row.doc_type,
                 row.category,
-                row.part_no,
+                row.part_group,
+                row.ecn_no,
                 revTxt
               ].filter(Boolean);
 
@@ -409,23 +411,23 @@
         loadKPI();
       });
 
-       $('#btnDownloadSummary').on('click', function() {
-    const f = getCurrentFilters();
-    const query = $.param(f);
-    window.location.href = '{{ route("approvals.summary") }}?' + query;
-  });
+      $('#btnDownloadSummary').on('click', function() {
+        const f = getCurrentFilters();
+        const query = $.param(f);
+        window.location.href = '{{ route("approvals.summary") }}?' + query;
+      });
 
       // klik row -> detail
       $('#approvalTable tbody').on('click', 'tr', function() {
-  const row = table.row(this).data();
+        const row = table.row(this).data();
 
-  // asumsi controller approvals.list mengirimkan field "hash" (encrypt(id))
-  if (row && row.hash) {
-    window.location.href = `{{ url('/approval') }}/${encodeURIComponent(row.hash)}`;
-  }
-}).on('mouseenter', 'tr', function() {
-  $(this).css('cursor', 'pointer');
-});
+        // asumsi controller approvals.list mengirimkan field "hash" (encrypt(id))
+        if (row && row.hash) {
+          window.location.href = `{{ url('/approval') }}/${encodeURIComponent(row.hash)}`;
+        }
+      }).on('mouseenter', 'tr', function() {
+        $(this).css('cursor', 'pointer');
+      });
     }
 
     // start
