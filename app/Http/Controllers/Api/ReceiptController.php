@@ -153,13 +153,11 @@ class ReceiptController extends Controller
         $orderDir         = $request->get('order')[0]['dir'] ?? 'desc';
         $orderColumnName  = $request->get('columns')[$orderColumnIndex]['name'] ?? 'dpr.shared_at';
 
-        // DIUBAH: Select dan Order By di dalam subquery
         $latestPa = DB::table('package_approvals as pa')
             ->select(
                 'pa.id',
                 'pa.revision_id',
                 'pa.requested_at',
-                // 'pa.decided_at', // <-- Dihapus
                 'pa.decision',
                 'pa.decided_by'
             )
@@ -168,7 +166,7 @@ class ReceiptController extends Controller
                 PARTITION BY pa.revision_id
                 ORDER BY pa.requested_at DESC, pa.id DESC 
             ) as rn
-        "); // <-- COALESCE(pa.decided_at, ...) dihapus
+        ");
 
         $query = DB::table('doc_package_revisions as dpr')
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
@@ -237,13 +235,10 @@ class ReceiptController extends Controller
             'p.part_no',
             'dpr.revision_no as revision',
             'dpr.shared_at as request_date'
-            // 'pa.decided_at  as decision_date' // <-- Dihapus
         );
 
-        // DIUBAH: Whitelist diperbarui
         $orderWhitelist = [
             'dpr.shared_at',
-            // 'pa.decided_at', // <-- Dihapus
             'c.code',
             'm.name',
             'dtg.name',

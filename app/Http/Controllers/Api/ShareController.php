@@ -347,7 +347,6 @@ class ShareController extends Controller
         $roleIds   = $request->input('role_ids');
         $roleIdJson = json_encode($roleIds);
 
-        // update package
         $updateSuccess = DB::table('doc_package_revisions')
             ->where('id', $packageId)
             ->update([
@@ -359,7 +358,6 @@ class ShareController extends Controller
             return response()->json(['message' => 'Package not found or no changes were made.'], 404);
         }
 
-        // ambil semua user berdasarkan role
         $users = DB::table('users')
             ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
             ->whereIn('user_roles.role_id', $roleIds)
@@ -371,11 +369,9 @@ class ShareController extends Controller
             return response()->json(['message' => 'No users found for the selected roles.']);
         }
 
-        // encrypt package id sebelum dikirim ke email
         $encryptedId = Crypt::encryptString($packageId);
 
         foreach ($users as $user) {
-            // Enkripsi id package
             $encryptedId = Crypt::encrypt($request->input('package_id'));
 
             Mail::to($user->email)->send(new ShareNotification(
