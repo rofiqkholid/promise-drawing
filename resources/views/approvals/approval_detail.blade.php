@@ -149,7 +149,7 @@
     </div>
     <!-- ================= /LEFT COLUMN ================= -->
 
-    <!-- ================= RIGHT COLUMN (lg:span 8) — Preview ================= -->
+    <!-- ================= RIGHT COLUMN (lg:span 8) Preview ================= -->
     <div class="lg:col-span-8">
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
         <!-- No File Selected -->

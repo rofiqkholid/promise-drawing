@@ -10,8 +10,6 @@ use App\Models\Customers;
 use App\Models\DoctypeGroups;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Contracts\Encryption\DecryptException;

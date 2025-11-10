@@ -745,17 +745,15 @@
             },
 
             initSelect2(propName, placeholder, url, additionalData = {}) {
-                const el = $(`#${propName}`);
-                if (el.hasClass("select2-hidden-accessible")) {
-                    el.select2('destroy');
-                }
+            const el = $(`#${propName}`);
+            if (el.hasClass("select2-hidden-accessible")) {
+                el.select2('destroy');
+            }
 
-                const isDisabled = this.isReadOnly;
-
-                el.prop('disabled', isDisabled).select2({
-                    width: '100%',
-                    placeholder: placeholder,
-                    ajax: {
+            el.select2({
+                width: '100%',
+                placeholder: placeholder,
+                ajax: {
                         url: url,
                         method: 'POST',
                         dataType: 'json',
@@ -780,12 +778,10 @@
                     el.select2('destroy');
                 }
 
-                const isDisabled = this.isReadOnly;
-
                 var option = new Option(data.text, data.id, true, true);
                 el.append(option).trigger('change');
 
-                el.prop('disabled', isDisabled).select2({
+                el.select2({
                     width: '100%',
                     placeholder: placeholder,
                     ajax: {
@@ -844,7 +840,7 @@
                             ecn_no: this.ecn_no,
                             receipt_date: this.receipt_date,
                             note: this.note || '',
-                            revision_label_id: this.revision_label_id
+                            revision_label_id: this.revision_label_id || ''
                         };
 
                         this.customer = pkg.customer_id;
@@ -1407,10 +1403,10 @@
                             ecn_no: this.ecn_no,
                             receipt_date: this.receipt_date,
                             note: this.note || '',
-                            revision_label_id: this.revision_label_id
+                            revision_label_id: this.revision_label_id || ''
                         };
 
-                        this.enableMetadataEditing(false);
+                        // this.enableMetadataEditing(false);
                         this.checkRevisionStatus();
                     },
                     error: (xhr) => {
@@ -1425,14 +1421,6 @@
                     complete: () => {
                         this.isUploading = false;
                     }
-                });
-            },
-            enableMetadataEditing(allow) {
-                const selectors = ['#customer', '#model', '#partNo', '#docType', '#category',
-                    '#partGroup'
-                ];
-                selectors.forEach(s => {
-                    $(s).prop('disabled', !allow).trigger('change.select2');
                 });
             },
             requestApproval() {

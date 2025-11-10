@@ -19,6 +19,7 @@ use App\Models\DocPackageRevisionFile;
 use App\Models\DocTypeSubCategories;
 use App\Models\ActivityLog;
 use App\Models\User;
+use App\Models\StampFormat;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
@@ -368,6 +369,16 @@ class ExportController extends Controller
             )
             ->first();
 
+        $receiptDate = $revision->receipt_date
+            ? Carbon::parse($revision->receipt_date)
+            : null;
+
+        $uploadDateRevision = $revision->created_at
+            ? Carbon::parse($revision->created_at)
+            : null;
+
+        $isObsolete = (bool)($revision->is_obsolete ?? 0);
+
         $files = DB::table('doc_package_revision_files')
             ->where('revision_id', $id)
             ->select('id', 'filename as name', 'category', 'storage_path')
@@ -395,12 +406,21 @@ class ExportController extends Controller
                 'part_group' => $package->part_group ?? '-',
             ],
             'files'        => $files,
+
+            'stamp'        => [
+                'receipt_date' => $receiptDate?->toDateString(),
+                'upload_date'  => $uploadDateRevision?->toDateString(),
+                'is_obsolete'  => $isObsolete,
+            ],
         ];
+
+        $stampFormat = StampFormat::where('is_active', true)->first();
 
         return view('file_management.file_export_detail', [
             'exportId' => $originalEncryptedId,
             'detail'   => $detail,
             'revisionList' => $revisionList,
+            'stampFormat' => $stampFormat,
         ]);
     }
 
@@ -442,6 +462,16 @@ class ExportController extends Controller
             )
             ->first();
 
+        $receiptDate = $revision->receipt_date
+            ? Carbon::parse($revision->receipt_date)
+            : null;
+
+        $uploadDateRevision = $revision->created_at
+            ? Carbon::parse($revision->created_at)
+            : null;
+
+        $isObsolete = (bool)($revision->is_obsolete ?? 0);
+
         $files = DB::table('doc_package_revision_files')
             ->where('revision_id', $decrypted_id)
             ->select('id', 'filename as name', 'category', 'storage_path')
@@ -469,12 +499,21 @@ class ExportController extends Controller
                 'part_group' => $package->part_group ?? '-',
             ],
             'files' => $files,
+
+            'stamp'        => [
+                'receipt_date' => $receiptDate?->toDateString(),
+                'upload_date'  => $uploadDateRevision?->toDateString(),
+                'is_obsolete'  => $isObsolete,
+            ],
         ];
+
+        $stampFormat = StampFormat::where('is_active', true)->first();
 
         return response()->json([
             'success'  => true,
             'pkg'      => $detail,
-            'exportId' => $originalEncryptedId
+            'exportId' => $originalEncryptedId,
+            'stampFormat' => $stampFormat,
         ]);
     }
 

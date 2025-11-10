@@ -9,6 +9,7 @@ use App\Models\DocTypeSubCategories;
 use App\Models\Customers;
 use App\Models\DoctypeGroups;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\JsonResponse;
@@ -329,6 +330,7 @@ class ShareController extends Controller
 
 
 
+
     public function saveShare(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -341,11 +343,13 @@ class ShareController extends Controller
             return response()->json(['message' => $validator->errors()->first()], 422);
         }
 
-        $roleIds = $request->input('role_ids');
+        $packageId = $request->input('package_id');
+        $roleIds   = $request->input('role_ids');
         $roleIdJson = json_encode($roleIds);
 
+        // update package
         $updateSuccess = DB::table('doc_package_revisions')
-            ->where('id', $request->input('package_id'))
+            ->where('id', $packageId)
             ->update([
                 'share_to'  => $roleIdJson,
                 'shared_at' => now(),
@@ -355,6 +359,7 @@ class ShareController extends Controller
             return response()->json(['message' => 'Package not found or no changes were made.'], 404);
         }
 
+        // ambil semua user berdasarkan role
         $users = DB::table('users')
             ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
             ->whereIn('user_roles.role_id', $roleIds)
@@ -366,12 +371,19 @@ class ShareController extends Controller
             return response()->json(['message' => 'No users found for the selected roles.']);
         }
 
+        // encrypt package id sebelum dikirim ke email
+        $encryptedId = Crypt::encryptString($packageId);
+
         foreach ($users as $user) {
+            // Enkripsi id package
+            $encryptedId = Crypt::encrypt($request->input('package_id'));
+
             Mail::to($user->email)->send(new ShareNotification(
                 $user->name,
-                $request->input('package_id')
+                $encryptedId
             ));
         }
+
 
         return response()->json(['message' => 'Package shared and emails sent successfully!']);
     }

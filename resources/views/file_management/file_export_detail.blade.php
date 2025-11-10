@@ -182,28 +182,299 @@
             </a>
           </div>
 
-          <!-- PREVIEW AREA (image/pdf/tiff/cad) -->
-          <div class="preview-area bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center w-full">
+          <!-- ZOOM TOOLBAR untuk JPG/PNG/TIFF/HPGL -->
+          <div x-show="isImage(selectedFile?.name) || isTiff(selectedFile?.name) || isHpgl(selectedFile?.name) || isPdf(selectedFile?.name)"
+            class="mb-3 flex items-center justify-end gap-2 text-xs text-gray-700 dark:text-gray-200">
+            <span x-text="Math.round(imageZoom * 100) + '%'"></span>
+            <button @click="zoomOut()"
+              class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+              -
+            </button>
+            <button @click="resetZoom()"
+              class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+              Fit
+            </button>
+            <button @click="zoomIn()"
+              class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+              +
+            </button>
+          </div>
 
-            <!-- IMAGE -->
+          <!-- PREVIEW AREA (image/pdf/tiff/cad) -->
+          <div class="preview-area bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center w-full relative">
+
+            <!-- IMAGE (JPG/PNG/...) -->
             <template x-if="isImage(selectedFile?.name)">
-              <img :src="selectedFile?.url" alt="File Preview" class="max-w-full max-h-[70vh] object-contain rounded" loading="lazy">
+              <div
+                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                @mousedown.prevent="startPan($event)"
+                @wheel.prevent="onWheelZoom($event)">
+                <div class="w-full h-full flex items-center justify-center">
+                  <div
+                    class="relative inline-block"
+                    :style="imageTransformStyle()">
+                    <img
+                      :src="selectedFile?.url"
+                      alt="File Preview"
+                      class="block pointer-events-none select-none max-w-full max-h-[70vh]"
+                      loading="lazy">
+
+                    <!-- STAMP ORIGINAL (kanan bawah, skala 0.45) -->
+                    <div
+                      x-show="pkg.stamp"
+                      class="absolute bottom-4 right-4 origin-bottom-right"
+                      style="transform: scale(0.45); transform-origin: bottom right;">
+                      <div
+                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                   text-[10px] text-blue-700 flex flex-col items-center
+                   justify-between px-2 py-1"
+                        style="background-color: transparent;">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine()"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                            x-text="stampCenterOriginal()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine()"></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- STAMP OBSOLETE (kiri bawah, skala 0.45) -->
+                    <div
+                      x-show="pkg.stamp?.is_obsolete"
+                      class="absolute bottom-4 left-4 origin-bottom-left"
+                      style="transform: scale(0.45); transform-origin: bottom left;">
+                      <div
+                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                   text-[10px] text-blue-700 flex flex-col items-center
+                   justify-between px-2 py-1"
+                        style="background-color: transparent;">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine()"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                            x-text="stampCenterObsolete()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine()"></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </template>
 
             <!-- PDF -->
             <template x-if="isPdf(selectedFile?.name)">
-              <iframe
-                :src="pdfSrc(selectedFile?.url)"
-                class="w-full h-[70vh] rounded-md border border-gray-200 dark:border-gray-700"
-                title="PDF preview"></iframe>
+              <div
+                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                @mousedown.prevent="startPan($event)"
+                @wheel.prevent="onWheelZoom($event)">
+                <div class="w-full h-full flex items-center justify-center">
+                  <div class="relative inline-block" :style="imageTransformStyle()">
+                    <iframe
+                      :src="pdfSrc(selectedFile?.url)"
+                      class="block pointer-events-none select-none max-w-full max-h-[70vh] border-0"
+                      title="PDF preview"></iframe>
+
+                    <!-- STAMP ORIGINAL (kanan bawah, skala 0.45) -->
+                    <div
+                      x-show="pkg.stamp"
+                      class="absolute bottom-4 right-4 origin-bottom-right"
+                      style="transform: scale(0.45); transform-origin: bottom right;">
+                      <div
+                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                   text-[10px] text-blue-700 flex flex-col items-center
+                   justify-between px-2 py-1"
+                        style="background-color: transparent;">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine()"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                            x-text="stampCenterOriginal()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine()"></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- STAMP OBSOLETE (kiri bawah, skala 0.45) -->
+                    <div
+                      x-show="pkg.stamp?.is_obsolete"
+                      class="absolute bottom-4 left-4 origin-bottom-left"
+                      style="transform: scale(0.45); transform-origin: bottom left;">
+                      <div
+                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                   text-[10px] text-blue-700 flex flex-col items-center
+                   justify-between px-2 py-1"
+                        style="background-color: transparent;">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine()"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                            x-text="stampCenterObsolete()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine()"></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </template>
 
             <!-- TIFF -->
             <template x-if="isTiff(selectedFile?.name)">
-              <div class="w-full">
-                <canvas x-ref="tifCanvas" class="w-full max-h-[70vh] object-contain bg-black/5 rounded"></canvas>
-                <div x-show="tifLoading" class="text-xs text-gray-500 mt-2">Rendering TIFF…</div>
-                <div x-show="tifError" class="text-xs text-red-600 mt-2" x-text="tifError"></div>
+              <div
+                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                @mousedown.prevent="startPan($event)"
+                @wheel.prevent="onWheelZoom($event)">
+                <div class="w-full h-full flex items-center justify-center">
+                  <!-- wrapper yang di-zoom + pan -->
+                  <div class="relative inline-block" :style="imageTransformStyle()">
+                    <canvas
+                      x-ref="tifCanvas"
+                      class="block pointer-events-none select-none max-w-full max-h-[70vh]">
+                    </canvas>
+
+                    <!-- STAMP ORIGINAL (kanan bawah) -->
+                    <div
+                      x-show="pkg.stamp"
+                      class="absolute bottom-4 right-4 origin-bottom-right"
+                      style="transform: scale(0.45); transform-origin: bottom right;">
+                      <div
+                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                   text-[10px] text-blue-700 flex flex-col items-center
+                   justify-between px-2 py-1"
+                        style="background-color: transparent;">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine()"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                            x-text="stampCenterOriginal()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine()"></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- STAMP OBSOLETE (kiri bawah) -->
+                    <div
+                      x-show="pkg.stamp?.is_obsolete"
+                      class="absolute bottom-4 left-4 origin-bottom-left"
+                      style="transform: scale(0.45); transform-origin: bottom left;">
+                      <div
+                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                   text-[10px] text-blue-700 flex flex-col items-center
+                   justify-between px-2 py-1"
+                        style="background-color: transparent;">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine()"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                            x-text="stampCenterObsolete()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine()"></span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- status render -->
+                <div
+                  x-show="tifLoading"
+                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
+                  Rendering TIFF…
+                </div>
+                <div
+                  x-show="tifError"
+                  class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
+                  x-text="tifError"></div>
+              </div>
+            </template>
+
+            <!-- HPGL -->
+            <template x-if="isHpgl(selectedFile?.name)">
+              <div
+                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                @mousedown.prevent="startPan($event)"
+                @wheel.prevent="onWheelZoom($event)">
+                <div class="relative w-full h-full flex items-center justify-center" :style="imageTransformStyle()">
+                  <canvas
+                    x-ref="hpglCanvas"
+                    class="pointer-events-none select-none"></canvas>
+
+                  <!-- STAMP ORIGINAL (kanan bawah, skala 0.45) -->
+                  <div
+                    x-show="pkg.stamp"
+                    class="absolute bottom-4 right-4 origin-bottom-right"
+                    style="transform: scale(0.45); transform-origin: bottom right;">
+                    <div
+                      class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                 text-[10px] text-blue-700 flex flex-col items-center
+                 justify-between px-2 py-1"
+                      style="background-color: transparent;">
+                      <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                        <span x-text="stampTopLine()"></span>
+                      </div>
+                      <div class="flex-1 flex items-center justify-center">
+                        <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                          x-text="stampCenterOriginal()"></span>
+                      </div>
+                      <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                        <span x-text="stampBottomLine()"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- STAMP OBSOLETE (kiri bawah, skala 0.45) -->
+                  <div
+                    x-show="pkg.stamp?.is_obsolete"
+                    class="absolute bottom-4 left-4 origin-bottom-left"
+                    style="transform: scale(0.45); transform-origin: bottom left;">
+                    <div
+                      class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                 text-[10px] text-blue-700 flex flex-col items-center
+                 justify-between px-2 py-1"
+                      style="background-color: transparent;">
+                      <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                        <span x-text="stampTopLine()"></span>
+                      </div>
+                      <div class="flex-1 flex items-center justify-center">
+                        <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                          x-text="stampCenterObsolete()"></span>
+                      </div>
+                      <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                        <span x-text="stampBottomLine()"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div
+                  x-show="hpglLoading"
+                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
+                  Rendering HPGL…
+                </div>
+                <div
+                  x-show="hpglError"
+                  class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
+                  x-text="hpglError"></div>
               </div>
             </template>
 
@@ -240,7 +511,7 @@
             </template>
 
             <!-- FALLBACK -->
-            <template x-if="!isImage(selectedFile?.name) && !isPdf(selectedFile?.name) && !isTiff(selectedFile?.name) && !isCad(selectedFile?.name)">
+            <template x-if="!isImage(selectedFile?.name) && !isPdf(selectedFile?.name) && !isTiff(selectedFile?.name) && !isCad(selectedFile?.name) && !isHpgl(selectedFile?.name)">
               <div class="text-center">
                 <i class="fa-solid fa-file text-6xl text-gray-400 dark:text-gray-500"></i>
                 <p class="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400">Preview Unavailable</p>
@@ -349,12 +620,104 @@
       revisionList: JSON.parse(`@json($revisionList ?? [])`),
       selectedRevisionId: JSON.parse(`@json($exportId)`),
       isLoadingRevision: false,
+      stampFormat: JSON.parse(`@json($stampFormat ?? null)`),
 
       selectedFile: null,
       openSections: [],
 
+      // ZOOM + PAN untuk image / TIFF / HPGL
+      imageZoom: 1,
+      minZoom: 0.5,
+      maxZoom: 4,
+      zoomStep: 0.25,
+      panX: 0,
+      panY: 0,
+      isPanning: false,
+      panStartX: 0,
+      panStartY: 0,
+      panOriginX: 0,
+      panOriginY: 0,
+
+      zoomIn() {
+        this.imageZoom = Math.min(this.imageZoom + this.zoomStep, this.maxZoom);
+      },
+      zoomOut() {
+        this.imageZoom = Math.max(this.imageZoom - this.zoomStep, this.minZoom);
+      },
+      resetZoom() {
+        this.imageZoom = 1;
+        this.panX = 0;
+        this.panY = 0;
+      },
+      onWheelZoom(e) {
+        const delta = e.deltaY;
+        const step = this.zoomStep;
+
+        if (delta < 0) {
+          this.imageZoom = Math.min(this.imageZoom + step, this.maxZoom);
+        } else if (delta > 0) {
+          this.imageZoom = Math.max(this.imageZoom - step, this.minZoom);
+        }
+      },
+      startPan(e) {
+        this.isPanning = true;
+        this.panStartX = e.clientX;
+        this.panStartY = e.clientY;
+        this.panOriginX = this.panX;
+        this.panOriginY = this.panY;
+      },
+      onPan(e) {
+        if (!this.isPanning) return;
+        const dx = e.clientX - this.panStartX;
+        const dy = e.clientY - this.panStartY;
+        this.panX = this.panOriginX + dx;
+        this.panY = this.panOriginY + dy;
+      },
+      endPan() {
+        this.isPanning = false;
+      },
+      imageTransformStyle() {
+        return `transform: translate(${this.panX}px, ${this.panY}px) scale(${this.imageZoom}); transform-origin: center center;`;
+      },
+
+      // Stamp functions
+      formatStampDate(d) {
+        return d || '';
+      },
+
+      // teks tengah stamp ORIGINAL
+      stampCenterOriginal() {
+        return 'ORIGINAL';
+      },
+      // teks tengah stamp OBSOLETE
+      stampCenterObsolete() {
+        return 'OBSOLETE';
+      },
+
+      stampTopLine() {
+        const d = this.pkg?.stamp?.receipt_date;
+        if (!d) return '';
+        const label = (this.stampFormat && this.stampFormat.prefix) ?
+          this.stampFormat.prefix :
+          'DATE RECEIVED';
+        return `${label} : ${this.formatStampDate(d)}`;
+      },
+
+      stampBottomLine() {
+        const d = this.pkg?.stamp?.upload_date;
+        if (!d) return '';
+        const label = (this.stampFormat && this.stampFormat.suffix) ?
+          this.stampFormat.suffix :
+          'DATE UPLOADED';
+        return `${label} : ${this.formatStampDate(d)}`;
+      },
+
       // TIFF state
       tifLoading: false, tifError: '',
+
+      // HPGL state
+      hpglLoading: false,
+      hpglError: '',
 
       // CAD viewer state
       iges: {
@@ -371,6 +734,7 @@
       isImage(name) { return ['png','jpg','jpeg','webp','gif','bmp'].includes(this.extOf(name)); },
       isPdf(name)   { return this.extOf(name) === 'pdf'; },
       isTiff(name)  { return ['tif','tiff'].includes(this.extOf(name)); },
+      isHpgl(name)  { return ['plt', 'hpgl', 'hpg', 'prn'].includes(this.extOf(name)); },
       isCad(name)   { return ['igs','iges','stp','step'].includes(this.extOf(name)); },
       pdfSrc(u) { return u; },
 
@@ -395,6 +759,138 @@
           ctx.putImageData(imgData, 0, 0);
         } catch (e) { console.error(e); this.tifError = e?.message || 'Gagal render TIFF'; }
         finally { this.tifLoading = false; }
+      },
+
+      /* ===== HPGL renderer ===== */
+      async renderHpgl(url) {
+        if (!url) return;
+
+        this.hpglLoading = true;
+        this.hpglError = '';
+
+        try {
+          const resp = await fetch(url, {
+            cache: 'no-store',
+            credentials: 'same-origin'
+          });
+          if (!resp.ok) throw new Error('Gagal mengambil file HPGL');
+          const text = await resp.text();
+
+          const commands = text.replace(/\s+/g, '').split(';');
+
+          let penDown = false;
+          let x = 0,
+            y = 0;
+          const segments = [];
+          let minX = Infinity,
+            minY = Infinity,
+            maxX = -Infinity,
+            maxY = -Infinity;
+
+          const addPoint = (nx, ny) => {
+            if (penDown) {
+              segments.push({
+                x1: x,
+                y1: y,
+                x2: nx,
+                y2: ny
+              });
+              minX = Math.min(minX, x, nx);
+              minY = Math.min(minY, y, ny);
+              maxX = Math.max(maxX, x, nx);
+              maxY = Math.max(maxY, y, ny);
+            } else {
+              minX = Math.min(minX, nx);
+              minY = Math.min(minY, ny);
+              maxX = Math.max(maxX, nx);
+              maxY = Math.max(maxY, ny);
+            }
+            x = nx;
+            y = ny;
+          };
+
+          for (const raw of commands) {
+            if (!raw) continue;
+            const cmd = raw.toUpperCase();
+            const op = cmd.slice(0, 2);
+            const argsStr = cmd.slice(2);
+
+            const parseCoords = () => {
+              if (!argsStr) return [];
+              return argsStr.split(',').map(Number).filter(v => !isNaN(v));
+            };
+
+            if (op === 'IN') {
+              penDown = false;
+              x = 0;
+              y = 0;
+            } else if (op === 'SP') {} else if (op === 'PU') {
+              penDown = false;
+              const coords = parseCoords();
+              for (let i = 0; i < coords.length; i += 2) {
+                addPoint(coords[i], coords[i + 1]);
+              }
+            } else if (op === 'PD') {
+              penDown = true;
+              const coords = parseCoords();
+              for (let i = 0; i < coords.length; i += 2) {
+                addPoint(coords[i], coords[i + 1]);
+              }
+            } else if (op === 'PA') {
+              const coords = parseCoords();
+              for (let i = 0; i < coords.length; i += 2) {
+                addPoint(coords[i], coords[i + 1]);
+              }
+            }
+          }
+
+          await this.$nextTick();
+          const canvas = this.$refs.hpglCanvas;
+          if (!canvas) throw new Error('Canvas HPGL tidak ditemukan');
+
+          const parent = canvas.parentElement;
+          const w = parent.clientWidth || 800;
+          const h = parent.clientHeight || 500;
+
+          const dpr = window.devicePixelRatio || 1;
+          const logicalScale = 4 * dpr;
+          canvas.width = w * logicalScale;
+          canvas.height = h * logicalScale;
+          canvas.style.width = w + 'px';
+          canvas.style.height = h + 'px';
+
+          const ctx = canvas.getContext('2d');
+          ctx.setTransform(logicalScale, 0, 0, logicalScale, 0, 0);
+          ctx.clearRect(0, 0, w, h);
+          ctx.lineWidth = 1 / logicalScale;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.strokeStyle = '#000';
+
+          if (!segments.length) return;
+
+          const dx = maxX - minX || 1;
+          const dy = maxY - minY || 1;
+          const scale = 0.9 * Math.min(w / dx, h / dy);
+          const offX = (w - dx * scale) / 2 - minX * scale;
+          const offY = (h - dy * scale) / 2 + maxY * scale;
+
+          ctx.beginPath();
+          for (const s of segments) {
+            const sx = s.x1 * scale + offX;
+            const sy = -s.y1 * scale + offY;
+            const ex = s.x2 * scale + offX;
+            const ey = -s.y2 * scale + offY;
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(ex, ey);
+          }
+          ctx.stroke();
+        } catch (e) {
+          console.error(e);
+          this.hpglError = e?.message || 'Gagal render HPGL';
+        } finally {
+          this.hpglLoading = false;
+        }
       },
 
       /* ===== OCCT result -> THREE meshes ===== */
@@ -627,7 +1123,15 @@
 
       /* ===== Lifecycle ===== */
       init() {
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            // Handle escape key if needed
+          }
+        });
         window.addEventListener('beforeunload', () => this.disposeCad());
+        window.addEventListener('mousemove', (e) => this.onPan(e));
+        window.addEventListener('mouseup', () => this.endPan());
+        window.addEventListener('mouseleave', () => this.endPan());
       },
 
       /* ===== UI ===== */
@@ -640,11 +1144,21 @@
       selectFile(file) {
         if (this.isCad(this.selectedFile?.name)) this.disposeCad();
         if (this.isTiff(this.selectedFile?.name)) { this.tifError = ''; this.tifLoading = false; }
+        if (this.isHpgl(this.selectedFile?.name)) {
+          this.hpglError = '';
+          this.hpglLoading = false;
+        }
+
+        // Reset zoom and pan when selecting a new file
+        this.imageZoom = 1;
+        this.panX = 0;
+        this.panY = 0;
 
         this.selectedFile = { ...file };
 
         if (this.isTiff(file?.name)) this.renderTiff(file.url);
         else if (this.isCad(file?.name)) this.renderCadOcct(file.url);
+        else if (this.isHpgl(file?.name)) this.renderHpgl(file.url);
       },
 
       onRevisionChange() {
@@ -656,6 +1170,7 @@
           this.selectedFile = null;
           this.disposeCad();
           this.tifError = ''; this.tifLoading = false;
+          this.hpglError = ''; this.hpglLoading = false;
 
           const routeUrl = `/api/export/revision-detail/${this.selectedRevisionId}`;
 
@@ -679,6 +1194,7 @@
               if (data.success) {
                   this.pkg = data.pkg;
                   this.exportId = data.exportId;
+                  this.stampFormat = data.stampFormat || null;
                   toastSuccess('Revision Loaded', `Displaying ${data.pkg.metadata.revision}.`);
               } else {
                   throw new Error(data.message || 'Failed to load revision data.');
