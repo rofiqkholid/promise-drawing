@@ -79,11 +79,9 @@
                 </p>
 
                 <div>
-                    <label for="selectRoles" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select Roles</label>
-                    <div class="mt-1">
-                        <select id="selectRoles" name="roles[]" multiple="multiple" style="width: 100%;"></select>
-                    </div>
-                    <p id="shareError" class="text-red-500 text-sm mt-2" style="display: none;"></p>
+                    <label for="roleListContainer" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select to Share</label>
+                    <div class="relative mt-1"> <select id="roleListContainer" name="roleListContainer" class="w-full"></select> </div>
+                    <div id="selectedRolesContainer" class="mt-2"></div>
                 </div>
 
                 <input type="hidden" id="hiddenPackageId" value="">
@@ -452,7 +450,7 @@
             });
 
             const $shareModal = $('#shareModal');
-            const $selectRoles = $('#selectRoles');
+            const $roleListContainer = $('#roleListContainer');
             const $hiddenPackageId = $('#hiddenPackageId');
             const $shareError = $('#shareError');
             const $btnSaveShare = $('#btnSaveShare');
@@ -468,57 +466,88 @@
                 }
             });
 
-            $selectRoles.select2({
-                width: '100%',
-                dropdownParent: $shareModal, // Penting agar dropdown muncul di dalam modal
-                placeholder: 'Select one or more roles',
-                allowClear: true,
-                multiple: true, // Mengizinkan multiple select
-                ajax: {
-                    url: '{{ route("share.getRoles") }}', // Menggunakan endpoint yang sama
-                    dataType: 'json',
-                    delay: 250,
-                    cache: true,
-                    data: function(params) {
-                        return {
-                            q: params.term || '', // Menambahkan parameter pencarian
-                            page: params.page || 1
-                        };
-                    },
-                    processResults: function(data, params) {
-                        // Asumsi 'data' adalah array: [{id: 1, role_name: 'Admin'}, ...]
-                        var results = $.map(data, function(role) {
+            let selectedRoles = [];
+
+            function loadRoles() {
+                $roleListContainer.empty();
+                $roleListContainer.select2({
+                    dropdownParent: $('#shareModal'),
+                    width: '100%',
+                    placeholder: 'Select roles...',
+                    allowClear: true,
+                    ajax: {
+                        url: "{{ route('share.getRoles') }}",
+                        method: 'GET',
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
                             return {
-                                _message: "Selanjutnya, saya bisa membantu Anda mengoptimalkan endpoint `share.getRoles` agar mendukung pencarian sisi server dan paginasi untuk performa yang lebih baik jika Anda memiliki sangat banyak *roles*.",
-                                text: role.role_name,
-                                id: role.id
-                            }
-                        });
-
-                        // Pencarian sisi klien jika 'q' ada
-                        if (params.term) {
-                            _message: "Selanjutnya, saya bisa membantu Anda mengoptimalkan endpoint `share.getRoles` agar mendukung pencarian sisi server dan paginasi untuk performa yang lebih baik jika Anda memiliki sangat banyak *roles*.",
-                            results = results.filter(function(r) {
-                                return r.text.toUpperCase().indexOf(params.term.toUpperCase()) !== -1;
-                            });
-                        }
-
-                        return {
-                            results: results,
-                            pagination: {
-                                more: false
-                            } // Asumsi tidak ada paginasi dari endpoint
-                        };
+                                q: params.term || '',
+                                page: params.page || 1
+                            };
+                        },
+                        processResults: function(data) {
+                            const formatted = data.map(item => ({
+                                id: item.id,
+                                text: item.role_name
+                            }));
+                            return {
+                                results: formatted
+                            };
+                        },
+                        cache: true
                     }
-                },
-                templateResult: function(item) {
-                    if (item.loading) return item.text;
-                    return $('<div class="text-sm">' + (item.text || item.id) + '</div>');
-                },
-                templateSelection: function(item) {
-                    return item.text || item.id;
-                }
+                });
+
+                // Event ketika user memilih role
+                $roleListContainer.on('select2:select', function(e) {
+                    const data = e.params.data;
+                    const exists = selectedRoles.find(r => r.id === data.id);
+
+                    if (!exists) {
+                        selectedRoles.push(data);
+                        renderSelectedRoles();
+                    }
+
+                    // reset dropdown supaya bisa pilih lagi
+                    $roleListContainer.val(null).trigger('change');
+                });
+            }
+
+            function renderSelectedRoles() {
+                const $container = $('#selectedRolesContainer');
+                $container.empty();
+
+                selectedRoles.forEach(role => {
+                    const item = $(`
+                    <div class="flex items-center justify-between 
+                                bg-gray-200 dark:bg-gray-700 
+                                text-gray-700 dark:text-gray-200 
+                                px-3 py-2 rounded-md mb-1 transition-colors">
+                        <span class="text-sm">${role.text}</span>
+                        <button 
+                            type="button" 
+                            class="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-gray-300 
+                                remove-role transition"
+                            data-id="${role.id}">
+                            &times;
+                        </button>
+                    </div>
+                `);
+
+                    $container.append(item);
+                });
+            }
+            $(document).on('click', '.remove-role', function() {
+                const id = $(this).data('id');
+                $(this).parent().fadeOut(150, function() {
+                    selectedRoles = selectedRoles.filter(r => r.id != id);
+                    renderSelectedRoles();
+                });
             });
+
+
+
 
             $('#approvalTable tbody').on('click', '.btn-share', function(e) {
                 e.stopPropagation();
@@ -528,8 +557,7 @@
                 $hiddenPackageId.val(packageId);
                 $btnSaveShare.prop('disabled', false).text('Share');
 
-                $selectRoles.val(null).trigger('change');
-                $shareError.hide().text('');
+                loadRoles();
 
                 $shareModal.show();
             });
@@ -538,12 +566,17 @@
                 const $this = $(this);
                 const packageId = $hiddenPackageId.val();
 
-               const selectedRoleIds = $selectRoles.val(); // Cara baru dengan Select2
+                const selectedRoleIds = selectedRoles.map(r => r.id);
 
                 $shareError.hide().text('');
 
                 if (!packageId) {
                     $shareError.text('Package ID not found. Please reload the page.').show();
+                    return;
+                }
+
+                if (selectedRoleIds.length === 0) {
+                    $shareError.text('Please select at least one role.').show();
                     return;
                 }
 
@@ -559,9 +592,7 @@
                     dataType: 'json',
                     success: function(response) {
                         $shareModal.hide();
-
                         toastSuccess('Package shared successfully!', '');
-
                         if (table) table.ajax.reload(null, false);
                     },
                     error: function(xhr) {
