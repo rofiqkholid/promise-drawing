@@ -545,6 +545,7 @@ class ExportController extends Controller
 
     public function preparePackageZip($revision_id)
     {
+        set_time_limit(0);
         try {
             $decrypted_id = decrypt(str_replace('-', '=', $revision_id));
         } catch (\Exception $e) {
@@ -608,6 +609,10 @@ class ExportController extends Controller
 
                 $pathInZip = $folderInZip . '/' . $file->filename;
                 $zip->addFile($filePath, $pathInZip);
+                $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
+                if (in_array($ext, ['jpg', 'jpeg', 'png', 'hpgl', 'tif', 'pdf', 'zip', 'rar', 'step', 'stp', 'igs', 'iges', 'catpart', 'catproduct'])) {
+                    $zip->setCompressionName($pathInZip, ZipArchive::CM_STORE);
+                }
                 $filesAddedCount++;
             } else {
                 Log::warning('File not found and skipped for zipping: ' . $filePath);
@@ -641,6 +646,8 @@ class ExportController extends Controller
 
     public function getPreparedZip(Request $request, $file_name)
     {
+        set_time_limit(0);
+
         if (!$request->hasValidSignature()) {
             abort(403, 'Invalid or expired download link.');
         }

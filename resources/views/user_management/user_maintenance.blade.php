@@ -5,7 +5,6 @@
 @section('content')
 <div class="p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
 
-  {{-- Header --}}
   <div class="sm:flex sm:items-center sm:justify-between mb-6">
     <div>
       <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">User Maintenance</h2>
@@ -20,7 +19,6 @@
     </div>
   </div>
 
-  {{-- SECTION: LIST (landing) --}}
   <section id="listSection" class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
     <div class="p-4 md:p-6">
       <table id="usersTable" class="min-w-full w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -39,7 +37,6 @@
     </div>
   </section>
 
-  {{-- SECTION: FORM (Add/Edit) --}}
   <section id="formSection" class="hidden">
     <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
       <div class="p-4 md:p-6">
@@ -113,7 +110,6 @@
           </div>
         </form>
 
-        {{-- === USER ROLES (edit only) === --}}
         <section id="roleSection" class="mt-6 hidden">
           <div class=" dark:bg-gray-800  overflow-hidden">
             <div class="p-4 md:p-6">
@@ -141,7 +137,6 @@
           </div>
         </section>
 
-        {{-- === MENU ACCESS PER USER (edit only) === --}}
         <section id="userMenuSection" class="mt-6 hidden">
           <div class=" dark:bg-gray-800  overflow-hidden">
             <div class="p-4 md:p-6">
@@ -157,6 +152,16 @@
               </p>
 
               <div id="userMenuContent" class="mt-4 hidden">
+                <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div class="flex flex-wrap gap-4 items-center">
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Select All:</span>
+                    <button type="button" id="selectAllView" class="text-xs px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200 rounded hover:bg-blue-200 dark:hover:bg-blue-700">View</button>
+                    <button type="button" id="selectAllUpload" class="text-xs px-3 py-1 bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200 rounded hover:bg-green-200 dark:hover:bg-green-700">Upload</button>
+                    <button type="button" id="selectAllDownload" class="text-xs px-3 py-1 bg-purple-100 text-purple-700 dark:bg-purple-800 dark:text-purple-200 rounded hover:bg-purple-200 dark:hover:bg-purple-700">Download</button>
+                    <button type="button" id="selectAllDelete" class="text-xs px-3 py-1 bg-red-100 text-red-700 dark:bg-red-800 dark:text-red-200 rounded hover:bg-red-200 dark:hover:bg-red-700">Delete</button>
+                    <button type="button" id="selectAllEnable" class="text-xs px-3 py-1 bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-500">Enable All</button>
+                  </div>
+                </div>
                 <div id="userMenuList" class="space-y-2"></div>
                 <div class="flex justify-end mt-4">
                   <button type="button" id="saveUserMenusBtn"
@@ -178,7 +183,6 @@
 
 @push('style')
 <style>
-  /* kecilkan kontrol DataTables */
   div.dataTables_length label {
     font-size: 0.75rem;
   }
@@ -217,7 +221,6 @@
   $(function() {
     const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-    /* ========= Toast ========= */
     const isDark = () => document.documentElement.classList.contains('dark');
 
     function themeToast(icon, title) {
@@ -239,7 +242,6 @@
       });
     }
 
-    /* ========= Busy helpers ========= */
     const spinnerSVG = `
     <svg class="animate-spin -ml-1 mr-2 h-4 w-4 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -270,14 +272,13 @@
       }
     });
 
-    /* ========= Sections & State ========= */
     const $list = $('#listSection');
     const $form = $('#formSection');
     const $formEl = $('#userForm');
     const $methodSpoof = $('#methodSpoof');
     const $pwd = $('#f_password');
     const $pwdHint = $('#pwdHint');
-    let editingId = null; // null = ADD mode
+    let editingId = null;
 
     function showList() {
       $form.addClass('hidden');
@@ -290,7 +291,6 @@
       $('#f_status').val('1');
       $pwd.prop('required', true);
       $pwdHint.text('(required)');
-      // hide role & user menu panels
       showRoleSection(false);
       toggleRoleSectionEnabled(false);
       setUserMenuVisible(false);
@@ -302,7 +302,6 @@
       $form.removeClass('hidden');
     }
 
-    // ===== Role panel =====
     function showRoleSection(show) {
       show ? $('#roleSection').removeClass('hidden') : $('#roleSection').addClass('hidden');
     }
@@ -317,7 +316,6 @@
       }
     }
 
-    // ===== User Menu panel =====
     function setUserMenuVisible(show) {
       show ? $('#userMenuSection').removeClass('hidden') : $('#userMenuSection').addClass('hidden');
     }
@@ -332,7 +330,6 @@
       }
     }
 
-    // === Roles ===
     function loadRolesForUser(userId) {
       return $.get("{{ route('role.data') }}", {
           user_id: userId,
@@ -354,7 +351,6 @@
         });
     }
 
-    // === User Menus (GATED PERMISSIONS) ===
     function loadMenusForUser(userId) {
       if (!userId) return;
       return $.get(`{{ route('role-menu.byUser', ':id') }}`.replace(':id', userId))
@@ -396,7 +392,6 @@
             </div>
           `);
 
-            // Gating: disable permission ketika menu belum enable
             row.find('.perm').prop('disabled', !enabled);
             row.find('.perm-group').toggleClass('opacity-50', !enabled);
 
@@ -405,21 +400,37 @@
         });
     }
 
-    // Handler: toggle menu-enable -> atur permission
     $(document).on('change', '.menu-row .menu-enable', function() {
       const $row = $(this).closest('.menu-row');
       const enabled = $(this).is(':checked');
 
       if (!enabled) {
-        // OFF -> clear semua permission
         $row.find('.perm').prop('checked', false);
       }
-      // enable/disable permission + efek visual
       $row.find('.perm').prop('disabled', !enabled);
       $row.find('.perm-group').toggleClass('opacity-50', !enabled);
     });
 
-    // ===== Modes =====
+    $('#selectAllView').on('click', function() {
+      $('.menu-row .menu-enable:checked').closest('.menu-row').find('.perm-view').prop('checked', true);
+    });
+
+    $('#selectAllUpload').on('click', function() {
+      $('.menu-row .menu-enable:checked').closest('.menu-row').find('.perm-upload').prop('checked', true);
+    });
+
+    $('#selectAllDownload').on('click', function() {
+      $('.menu-row .menu-enable:checked').closest('.menu-row').find('.perm-download').prop('checked', true);
+    });
+
+    $('#selectAllDelete').on('click', function() {
+      $('.menu-row .menu-enable:checked').closest('.menu-row').find('.perm-delete').prop('checked', true);
+    });
+
+    $('#selectAllEnable').on('click', function() {
+      $('.menu-row .menu-enable').prop('checked', true).trigger('change');
+    });
+
     function enterAddMode() {
       editingId = null;
       $('#formTitle').text('Add New User');
@@ -446,18 +457,15 @@
       $pwd.val('').prop('required', false);
       $pwdHint.text('(optional)');
 
-      // show & load roles
       showRoleSection(true);
       toggleRoleSectionEnabled(true);
       loadRolesForUser(editingId).catch(() => themeToast('error', 'Failed to load roles'));
 
-      // show & load user menus (gated)
       setUserMenuVisible(true);
       toggleUserMenuEnabled(true);
       loadMenusForUser(editingId).catch(() => themeToast('error', 'Failed to load menus'));
     }
 
-    /* ========= DataTable ========= */
     const table = $('#usersTable').DataTable({
       processing: true,
       serverSide: true,
@@ -488,8 +496,7 @@
         {
           data: 'is_active',
           render: v => String(v) === '1' ?
-            `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>` :
-            `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>`
+            `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>` : `<span class="inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>`
         },
         {
           data: null,
@@ -515,9 +522,6 @@
       autoWidth: false,
     });
 
-    /* ========= Handlers ========= */
-
-    // Add New -> form
     $('#add-button').on('click', function() {
       const $btn = $(this);
       if (!beginBusy($btn, 'Opening...')) return;
@@ -526,12 +530,10 @@
       endBusy($btn);
     });
 
-    // Back / Cancel -> list
     $('#backToList, #cancelForm').on('click', function() {
       showList();
     });
 
-    // Edit
     $(document).on('click', '.edit-button', function() {
       const $btn = $(this);
       if (!beginBusy($btn, 'Loading...')) return;
@@ -548,7 +550,6 @@
       });
     });
 
-    // Delete
     $(document).on('click', '.delete-button', function() {
       const id = $(this).data('id');
       Swal.fire({
@@ -582,7 +583,6 @@
       });
     });
 
-    // Save (Create/Update)
     $('#userForm').on('submit', function(e) {
       e.preventDefault();
       const $btn = $('#saveForm');
@@ -594,7 +594,7 @@
 
       $.ajax({
           url: $(this).attr('action'),
-          method: 'POST', // spoof PUT via _method
+          method: 'POST',
           headers: {
             'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json'
@@ -651,7 +651,6 @@
         .always(() => endBusy($btn));
     });
 
-    // Save Roles
     $('#saveRolesBtn').on('click', function() {
       if (!editingId) return;
       const $btn = $(this);
@@ -678,7 +677,6 @@
         .always(() => endBusy($btn));
     });
 
-    // Save Menu Access (enabled diambil HANYA dari menu-enable)
     $('#saveUserMenusBtn').on('click', function() {
       if (!editingId) return;
       const $btn = $(this);
@@ -687,7 +685,7 @@
       const payload = $('.menu-row').map(function() {
         const $r = $(this);
         const id = $r.data('id');
-        const en = $r.find('.menu-enable').is(':checked') ? 1 : 0; // gating ketat
+        const en = $r.find('.menu-enable').is(':checked') ? 1 : 0;
         const get = cls => $r.find(cls).is(':checked') ? 1 : 0;
         return {
           menu_id: id,
@@ -716,7 +714,6 @@
         .always(() => endBusy($btn));
     });
 
-    // Init
     showList();
   });
 </script>

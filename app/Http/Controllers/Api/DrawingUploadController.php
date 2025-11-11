@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Crypt;
 use App\Models\ActivityLog;
 use Carbon\Carbon;
 use App\Models\CustomerRevisionLabel;
+use App\Models\FileExtensions;
 
 class DrawingUploadController extends Controller
 {
@@ -755,7 +756,19 @@ class DrawingUploadController extends Controller
 
     public function getPublicAllowedExtensions(): JsonResponse
     {
-        return response()->json($this->getAllowedExtensions());
+        $validationMap = $this->getAllowedExtensions();
+
+        $allExtensions = FileExtensions::get(['code', 'icon', 'icon_mime']);
+        $iconMap = $allExtensions
+            ->mapWithKeys(fn(FileExtensions $ext) => [
+                strtolower($ext->code) => $ext->icon_src
+            ])
+            ->filter();
+
+        return response()->json([
+            'validation' => $validationMap,
+            'icons' => $iconMap
+        ]);
     }
 
     protected function getAllowedExtensions()
@@ -1120,5 +1133,92 @@ class DrawingUploadController extends Controller
         DB::commit();
 
         return response()->json(['message' => 'Revision confirmed successfully.', 'status' => 'success', 'read-only' => 'true'], 200);
+    }
+
+    public function destroyRevision(Request $request, $id): JsonResponse
+    {
+        $revisionId = (int) $id;
+
+        DB::beginTransaction();
+        try {
+            $revision = DB::table('doc_package_revisions')
+                ->where('id', $revisionId)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$revision) {
+                throw new \Exception('Draft revision not found.', 404);
+            }
+
+            if ($revision->revision_status !== 'draft') {
+                throw new \Exception('Only draft revisions can be deleted.', 422);
+            }
+
+            $package = DB::table('doc_packages')->where('id', $revision->package_id)->first();
+            if (!$package) {
+                throw new \Exception('Associated package not found.', 500);
+            }
+
+            // Tentukan Path Folder
+            $packageIdsArray = [
+                'customer_id' => $package->customer_id,
+                'model_id' => $package->model_id,
+                'product_id' => $package->product_id,
+                'doctype_group_id' => $package->doctype_group_id,
+                'doctype_subcategory_id' => $package->doctype_subcategory_id,
+                'part_group_id' => $package->part_group_id,
+            ];
+            $metaBase = $this->buildMetaBaseFromDb($revision, $packageIdsArray);
+            $revFolder = PathBuilder::revisionFolderName($metaBase);
+            $root = PathBuilder::root($metaBase);
+            $revisionPath = $root . '/' . $revFolder;
+
+            // Hapus file
+            DB::table('doc_package_revision_files')->where('revision_id', $revisionId)->delete();
+            // Hapus revisi
+            DB::table('doc_package_revisions')->where('id', $revisionId)->delete();
+
+            $remainingRevisions = DB::table('doc_package_revisions')
+                ->where('package_id', $revision->package_id)
+                ->count();
+
+            if ($remainingRevisions === 0) {
+                DB::table('doc_packages')->where('id', $revision->package_id)->delete();
+                Log::info("Package deleted (last revision was draft)", ['package_id' => $revision->package_id]);
+            }
+
+            if (Storage::disk($this->disk)->exists($revisionPath)) {
+                Storage::disk($this->disk)->deleteDirectory($revisionPath);
+            }
+
+            // ActivityLog::create([
+            //     'user_id' => $this->getAuthUserInt(),
+            //     'activity_code' => 'DELETE_DRAFT',
+            //     'scope_type' => 'revision',
+            //     'scope_id' => $revision->package_id,
+            //     'revision_id' => $revisionId,
+            //     'meta' => $metaBase,
+            // ]);
+
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Draft revision and all associated files have been deleted.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to delete draft revision', [
+                'error' => $e->getMessage(),
+                'revision_id' => $revisionId
+            ]);
+
+            $statusCode = $e->getCode() >= 400 ? $e->getCode() : 500;
+            return response()->json([
+                'message' => $e->getMessage()
+            ], $statusCode);
+        }
     }
 }

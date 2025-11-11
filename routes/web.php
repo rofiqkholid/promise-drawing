@@ -291,21 +291,21 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/upload/drawing/allowed-extensions', [DrawingUploadController::class, 'getPublicAllowedExtensions'])->name('upload.drawing.allowed-extensions');
     Route::post('/upload/drawing/check-revision-status', [DrawingUploadController::class, 'checkRevisionStatus'])->name('upload.drawing.check-status');
     Route::post('/upload/drawing/check-conflicts', [DrawingUploadController::class, 'checkConflicts'])
-    ->name('upload.drawing.check-conflicts');
+        ->name('upload.drawing.check-conflicts');
 
     Route::post('/upload/drawing/sync', [DrawingUploadController::class, 'syncLegacyData'])->name('upload.drawing.sync-legacy');
     Route::post('/upload/drawing/store', [DrawingUploadController::class, 'store'])->name('upload.drawing.store');
     Route::post('/upload/drawing/activity-logs', [DrawingUploadController::class, 'activityLogs'])->name('upload.drawing.activity-logs');
     Route::post('/upload/drawing/request-approval', [DrawingUploadController::class, 'requestApproval'])->name('upload.drawing.request-approval');
     Route::post('/upload/drawing/revise-confirm', [DrawingUploadController::class, 'reviseConfirmed'])->middleware(['auth'])
-    ->name('upload.drawing.revise-confirm');
+        ->name('upload.drawing.revise-confirm');
 
     Route::get('/files/kpi', [UploadController::class, 'getKpiStats'])->name('api.files.kpi-stats');
     Route::get('/files/list', [UploadController::class, 'listFiles'])->name('api.files.list');
     Route::get('/files/{id}', [UploadController::class, 'getPackageDetails'])->name('api.files.detail');
     #End region
 
-     //Export
+    //Export
     Route::get('/export/kpi', [ExportController::class, 'kpi'])->middleware(['auth'])->name('api.export.kpi');
 
     Route::get('/export/filters', [ExportController::class, 'filters'])->middleware(['auth'])->name('api.export.filters');
@@ -327,6 +327,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/approvals/{id}/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
     Route::post('/approvals/{id}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
     Route::post('/approvals/{id}/rollback', [ApprovalController::class, 'rollback'])->name('approvals.rollback');
+    Route::post('/approvals/files/{fileId}/stamp-positions', [ApprovalController::class, 'updateFileStampPosition'])->name('approvals.files.updateStamp');
+
     Route::get('/approvals/kpi', [ApprovalController::class, 'kpi'])->name('approvals.kpi');
 
 

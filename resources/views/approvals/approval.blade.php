@@ -87,7 +87,6 @@
       </div>
     </div>
 
-
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-5">
       @foreach(['Customer', 'Model', 'Document Type', 'Category', 'Status'] as $label)
       <div>
@@ -111,15 +110,12 @@
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Package Data</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Receipt Date</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Request Date</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Decision Date</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
           </tr>
         </thead>
-
-
-
-
 
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
         </tbody>
@@ -171,13 +167,9 @@
           },
           processResults: function(data, params) {
             params.page = params.page || 1;
-            // Pastikan "All" selalu ada di hasil (paling atas)
             const results = Array.isArray(data.results) ? data.results.slice() : [];
             if (!results.some(r => r.id === 'All')) {
-              results.unshift({
-                id: 'All',
-                text: 'All'
-              });
+              results.unshift({ id: 'All', text: 'All' });
             }
             return {
               results,
@@ -208,7 +200,7 @@
     }));
     makeSelect2($('#status'), 'status');
 
-    // Dependent behavior -> set anak ke "All" (bukan null)
+    // Dependent behavior -> set anak ke "All"
     $('#customer').on('change', function() {
       resetSelect2ToAll($('#model'));
     });
@@ -249,7 +241,7 @@
       });
     }
 
-    // formatter tanggal (tetap)
+    // formatter tanggal
     function fmtDate(v) {
       if (!v) return '';
       const d = new Date(v);
@@ -262,7 +254,6 @@
       const mm = pad(d.getMinutes());
       return `${dd}-${MM}-${yyyy} ${HH}:${mm}`;
     }
-
 
     function initTable() {
       table = $('#approvalTable').DataTable({
@@ -281,9 +272,9 @@
           }
         },
 
-        // default: Request Date terbaru di atas (kolom index 2)
+        // default: Request Date terbaru di atas (kolom index 3)
         order: [
-          [2, 'desc']
+          [3, 'desc']
         ],
 
         columns: [
@@ -320,21 +311,30 @@
             }
           },
 
-
-          // Request Date (was Upload Date)
+          // Receipt Date
           {
-            data: 'request_date',
-            name: 'dpr.requested_at',
+            data: 'receipt_date',
+            name: 'dpr.receipt_date',
             render: function(v) {
               const text = fmtDate(v);
               return `<span title="${v || ''}">${text}</span>`;
             }
           },
 
-          // Decision Date (new)
+          // Request Date
+          {
+            data: 'request_date',
+            name: 'pa.requested_at',
+            render: function(v) {
+              const text = fmtDate(v);
+              return `<span title="${v || ''}">${text}</span>`;
+            }
+          },
+
+          // Decision Date
           {
             data: 'decision_date',
-            name: 'dpr.decided_at',
+            name: 'pa.decided_at',
             render: function(v, t, row) {
               if (!v || row.status === 'Waiting')
                 return '<span class="text-gray-400">—</span>';
@@ -357,17 +357,22 @@
           },
         ],
 
-        columnDefs: [{
+        columnDefs: [
+          {
             targets: 0,
             className: 'text-center w-12',
             width: '48px'
           },
           {
-            targets: 2,
+            targets: 2, // Receipt Date
             className: 'whitespace-nowrap'
           },
           {
-            targets: 3,
+            targets: 3, // Request Date
+            className: 'whitespace-nowrap'
+          },
+          {
+            targets: 4, // Decision Date
             className: 'whitespace-nowrap'
           }
         ],
@@ -382,15 +387,11 @@
       // Penomoran ulang setiap draw
       table.on('draw.dt', function() {
         const info = table.page.info();
-        table.column(0, {
-          page: 'current'
-        }).nodes().each(function(cell, i) {
+        table.column(0, { page: 'current' }).nodes().each(function(cell, i) {
           cell.innerHTML = i + 1 + info.start;
         });
       });
     }
-
-
 
     function bindHandlers() {
       // perubahan filter -> reload & refresh KPI
@@ -399,7 +400,7 @@
         loadKPI();
       });
 
-      // tombol reset -> set semua ke "All", reload table & KPI
+      // tombol reset
       $('#btnResetFilters').on('click', function() {
         resetSelect2ToAll($('#customer'));
         resetSelect2ToAll($('#model'));
@@ -420,8 +421,6 @@
       // klik row -> detail
       $('#approvalTable tbody').on('click', 'tr', function() {
         const row = table.row(this).data();
-
-        // asumsi controller approvals.list mengirimkan field "hash" (encrypt(id))
         if (row && row.hash) {
           window.location.href = `{{ url('/approval') }}/${encodeURIComponent(row.hash)}`;
         }

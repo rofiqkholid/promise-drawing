@@ -79,9 +79,9 @@
                 </p>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select Roles</label>
-                    <div id="roleListContainer" class="mt-2 max-h-48 overflow-y-auto space-y-2 border border-gray-300 dark:border-gray-600 rounded-md p-3 bg-white dark:bg-gray-700">
-                        <p class="text-gray-500 dark:text-gray-400">Loading roles...</p>
+                    <label for="selectRoles" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select Roles</label>
+                    <div class="mt-1">
+                        <select id="selectRoles" name="roles[]" multiple="multiple" style="width: 100%;"></select>
                     </div>
                     <p id="shareError" class="text-red-500 text-sm mt-2" style="display: none;"></p>
                 </div>
@@ -452,7 +452,7 @@
             });
 
             const $shareModal = $('#shareModal');
-            const $roleListContainer = $('#roleListContainer');
+            const $selectRoles = $('#selectRoles');
             const $hiddenPackageId = $('#hiddenPackageId');
             const $shareError = $('#shareError');
             const $btnSaveShare = $('#btnSaveShare');
@@ -468,44 +468,57 @@
                 }
             });
 
-            function loadRoles() {
-                $roleListContainer.html('<p class="text-gray-500 dark:text-gray-400">Loading...</p>');
-                $shareError.hide().text('');
-
-                $.ajax({
-                    url: '{{ route("share.getRoles") }}',
-                    type: 'GET',
+            $selectRoles.select2({
+                width: '100%',
+                dropdownParent: $shareModal, // Penting agar dropdown muncul di dalam modal
+                placeholder: 'Select one or more roles',
+                allowClear: true,
+                multiple: true, // Mengizinkan multiple select
+                ajax: {
+                    url: '{{ route("share.getRoles") }}', // Menggunakan endpoint yang sama
                     dataType: 'json',
-                    success: function(roles) {
-                        $roleListContainer.empty();
-
-                        if (roles && roles.length > 0) {
-                            roles.forEach(function(role) {
-                                const roleId = `role-${role.id}`;
-                                const checkboxHtml = `
-                                    <div class="relative flex items-start">
-                                        <div class="flex items-center h-5">
-                                            <input id="${roleId}" name="roles[]" value="${role.id}" type="checkbox" 
-                                                   class="role-checkbox h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-500 rounded focus:ring-blue-500 dark:bg-gray-600 dark:checked:bg-blue-500">
-                                        </div>
-                                        <div class="ml-3 text-sm">
-                                            <label for="${roleId}" class="font-medium text-gray-700 dark:text-gray-300">${role.role_name}</label>
-                                        </div>
-                                    </div>
-                                `;
-                                $roleListContainer.append(checkboxHtml);
-                            });
-                        } else {
-                            $roleListContainer.html('<p class="text-gray-500 dark:text-gray-400">No roles found</p>');
-                        }
+                    delay: 250,
+                    cache: true,
+                    data: function(params) {
+                        return {
+                            q: params.term || '', // Menambahkan parameter pencarian
+                            page: params.page || 1
+                        };
                     },
-                    error: function(xhr) {
-                        console.error('Failed to load roles:', xhr.responseText);
-                        $roleListContainer.html('<p class="text-red-500">Failed to load roles. Please try again later.</p>');
-                    }
-                });
-            }
+                    processResults: function(data, params) {
+                        // Asumsi 'data' adalah array: [{id: 1, role_name: 'Admin'}, ...]
+                        var results = $.map(data, function(role) {
+                            return {
+                                _message: "Selanjutnya, saya bisa membantu Anda mengoptimalkan endpoint `share.getRoles` agar mendukung pencarian sisi server dan paginasi untuk performa yang lebih baik jika Anda memiliki sangat banyak *roles*.",
+                                text: role.role_name,
+                                id: role.id
+                            }
+                        });
 
+                        // Pencarian sisi klien jika 'q' ada
+                        if (params.term) {
+                            _message: "Selanjutnya, saya bisa membantu Anda mengoptimalkan endpoint `share.getRoles` agar mendukung pencarian sisi server dan paginasi untuk performa yang lebih baik jika Anda memiliki sangat banyak *roles*.",
+                            results = results.filter(function(r) {
+                                return r.text.toUpperCase().indexOf(params.term.toUpperCase()) !== -1;
+                            });
+                        }
+
+                        return {
+                            results: results,
+                            pagination: {
+                                more: false
+                            } // Asumsi tidak ada paginasi dari endpoint
+                        };
+                    }
+                },
+                templateResult: function(item) {
+                    if (item.loading) return item.text;
+                    return $('<div class="text-sm">' + (item.text || item.id) + '</div>');
+                },
+                templateSelection: function(item) {
+                    return item.text || item.id;
+                }
+            });
 
             $('#approvalTable tbody').on('click', '.btn-share', function(e) {
                 e.stopPropagation();
@@ -515,7 +528,8 @@
                 $hiddenPackageId.val(packageId);
                 $btnSaveShare.prop('disabled', false).text('Share');
 
-                loadRoles();
+                $selectRoles.val(null).trigger('change');
+                $shareError.hide().text('');
 
                 $shareModal.show();
             });
@@ -524,9 +538,7 @@
                 const $this = $(this);
                 const packageId = $hiddenPackageId.val();
 
-                const selectedRoleIds = $roleListContainer.find('.role-checkbox:checked').map(function() {
-                    return $(this).val();
-                }).get();
+               const selectedRoleIds = $selectRoles.val(); // Cara baru dengan Select2
 
                 $shareError.hide().text('');
 

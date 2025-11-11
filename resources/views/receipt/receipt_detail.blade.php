@@ -4,7 +4,6 @@
 
 @section('content')
 
-{{-- Mengganti 'exportDetail' menjadi 'receiptDetail' --}}
 <div class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen" x-data="receiptDetail()" x-init="init()">
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6 items-start">
@@ -20,7 +19,6 @@
                         </h2>
 
                         @php
-                        // Mengganti backUrl ke route('receipts')
                         $backUrl = route('receipt');
                         @endphp
                         <a href="{{ $backUrl }}"

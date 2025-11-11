@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 class RoleMenu extends Model
 {
     protected $table = 'role_menu';
+    protected $primaryKey = 'role_menu_id'; 
 
-    // id sebagai PK (default Laravel), auto-increment (default)
-    // protected $primaryKey = 'id';   // opsional, default sudah 'id'
-    // public $incrementing = true;    // opsional, default true
-    public $timestamps = false;        // TIDAK pakai created_at/updated_at
+    public $incrementing = true;
+    protected $keyType = 'int';  
+
+    public $timestamps = false;
 
     protected $fillable = [
         'user_id',
@@ -25,7 +26,7 @@ class RoleMenu extends Model
     protected $casts = [
         'user_id'      => 'integer',
         'menu_id'      => 'integer',
-        'can_view'     => 'integer',   // atau 'boolean' jika ingin true/false di PHP
+        'can_view'     => 'integer',
         'can_upload'   => 'integer',
         'can_download' => 'integer',
         'can_delete'   => 'integer',

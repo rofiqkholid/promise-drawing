@@ -4,7 +4,13 @@
 
 @section('content')
 
-<div class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen" x-data="exportDetail()" x-init="init()">
+<div
+  class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen"
+  x-data="exportDetail()"
+  x-init="init()"
+  @mousemove.window="onPan($event)"
+  @mouseup.window="endPan()"
+  @mouseleave.window="endPan()">
 
     <div x-show="isLoadingRevision" x-transition
            class="absolute inset-0 bg-gray-100/75 dark:bg-gray-900/75 z-10 flex items-center justify-center rounded-lg">
@@ -17,7 +23,6 @@
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6 items-start">
     <div class="lg:col-span-4 space-y-6 relative">
 
-      <!-- ===== Meta Card ===== -->
       <div x-ref="metaCard"
            class="self-start bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
@@ -116,8 +121,6 @@
             </button>
         </div>
       </div>
-
-      <!-- ===== File Groups (2D / 3D / ECN) ===== -->
       @php
         function renderFileGroup($title, $icon, $category) {
       @endphp
@@ -138,7 +141,15 @@
                 role="button" tabindex="0" @keydown.enter="selectFile(file)">
 
                 <div class="flex items-center min-w-0 pr-2">
-                    <i class="fa-solid fa-file text-gray-500 dark:text-gray-400 mr-3"></i>
+                    <template x-if="file.icon_src">
+                      <img :src="file.icon_src"
+                        alt=""
+                        class="w-5 h-5 mr-3 object-contain" />
+                    </template>
+
+                    <template x-if="!file.icon_src">
+                      <i class="fa-solid fa-file text-gray-500 dark:text-gray-400 mr-3 transition-colors group-hover:text-blue-500"></i>
+                    </template>
                     <span class="text-sm text-gray-900 dark:text-gray-100 truncate" x-text="file.name"></span>
                 </div>
 
@@ -161,16 +172,13 @@
 
     <div class="lg:col-span-8">
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <!-- No File Selected -->
         <div x-show="!selectedFile" x-cloak class="flex flex-col items-center justify-center h-96 p-6 bg-gray-50 dark:bg-gray-900/50 text-center">
           <i class="fa-solid fa-hand-pointer text-5xl text-gray-400 dark:text-gray-500"></i>
           <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">Select a File</h3>
           <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Please choose a file from the left panel to review.</p>
         </div>
 
-        <!-- File Preview -->
         <div x-show="selectedFile" x-transition.opacity x-cloak class="p-6">
-          <!-- Header with Open in new tab -->
           <div class="mb-4 flex items-center justify-between">
             <div>
               <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate" x-text="selectedFile?.name"></h3>
@@ -182,7 +190,29 @@
             </a>
           </div>
 
-          <!-- ZOOM TOOLBAR untuk JPG/PNG/TIFF/HPGL -->
+          <div x-show="selectedFile" class="mb-3 flex flex-wrap items-center gap-2 text-xs">
+            <div class="flex items-center gap-1">
+              <span>Original:</span>
+              <select x-model="stampConfig.original"
+                class="border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 bg-white dark:bg-gray-900">
+                <option value="top-left">Top Left</option>
+                <option value="top-right">Top Right</option>
+                <option value="bottom-left">Bottom Left</option>
+                <option value="bottom-right">Bottom Right</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-1">
+              <span>Obsolete:</span>
+              <select x-model="stampConfig.obsolete"
+                class="border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 bg-white dark:bg-gray-900">
+                <option value="top-left">Top Left</option>
+                <option value="top-right">Top Right</option>
+                <option value="bottom-left">Bottom Left</option>
+                <option value="bottom-right">Bottom Right</option>
+              </select>
+            </div>
+          </div>
+
           <div x-show="isImage(selectedFile?.name) || isTiff(selectedFile?.name) || isHpgl(selectedFile?.name) || isPdf(selectedFile?.name)"
             class="mb-3 flex items-center justify-end gap-2 text-xs text-gray-700 dark:text-gray-200">
             <span x-text="Math.round(imageZoom * 100) + '%'"></span>
@@ -200,10 +230,8 @@
             </button>
           </div>
 
-          <!-- PREVIEW AREA (image/pdf/tiff/cad) -->
           <div class="preview-area bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center w-full relative">
 
-            <!-- IMAGE (JPG/PNG/...) -->
             <template x-if="isImage(selectedFile?.name)">
               <div
                 class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
@@ -219,11 +247,11 @@
                       class="block pointer-events-none select-none max-w-full max-h-[70vh]"
                       loading="lazy">
 
-                    <!-- STAMP ORIGINAL (kanan bawah, skala 0.45) -->
                     <div
                       x-show="pkg.stamp"
-                      class="absolute bottom-4 right-4 origin-bottom-right"
-                      style="transform: scale(0.45); transform-origin: bottom right;">
+                      class="absolute"
+                      :class="stampPositionClass('original')"
+                      style="transform: scale(0.45);">
                       <div
                         class="w-56 h-40 border-2 border-blue-600 rounded-sm
                    text-[10px] text-blue-700 flex flex-col items-center
@@ -242,11 +270,11 @@
                       </div>
                     </div>
 
-                    <!-- STAMP OBSOLETE (kiri bawah, skala 0.45) -->
                     <div
                       x-show="pkg.stamp?.is_obsolete"
-                      class="absolute bottom-4 left-4 origin-bottom-left"
-                      style="transform: scale(0.45); transform-origin: bottom left;">
+                      class="absolute"
+                      :class="stampPositionClass('obsolete')"
+                      style="transform: scale(0.45);">
                       <div
                         class="w-56 h-40 border-2 border-blue-600 rounded-sm
                    text-[10px] text-blue-700 flex flex-col items-center
@@ -269,7 +297,6 @@
               </div>
             </template>
 
-            <!-- PDF -->
             <template x-if="isPdf(selectedFile?.name)">
               <div
                 class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
@@ -277,16 +304,16 @@
                 @wheel.prevent="onWheelZoom($event)">
                 <div class="w-full h-full flex items-center justify-center">
                   <div class="relative inline-block" :style="imageTransformStyle()">
-                    <iframe
-                      :src="pdfSrc(selectedFile?.url)"
-                      class="block pointer-events-none select-none max-w-full max-h-[70vh] border-0"
-                      title="PDF preview"></iframe>
+                    <canvas
+                      x-ref="pdfCanvas"
+                      class="block pointer-events-none select-none max-w-full max-h-[70vh]">
+                    </canvas>
 
-                    <!-- STAMP ORIGINAL (kanan bawah, skala 0.45) -->
                     <div
                       x-show="pkg.stamp"
-                      class="absolute bottom-4 right-4 origin-bottom-right"
-                      style="transform: scale(0.45); transform-origin: bottom right;">
+                      class="absolute"
+                      :class="stampPositionClass('original')"
+                      style="transform: scale(0.45);">
                       <div
                         class="w-56 h-40 border-2 border-blue-600 rounded-sm
                    text-[10px] text-blue-700 flex flex-col items-center
@@ -305,11 +332,11 @@
                       </div>
                     </div>
 
-                    <!-- STAMP OBSOLETE (kiri bawah, skala 0.45) -->
                     <div
                       x-show="pkg.stamp?.is_obsolete"
-                      class="absolute bottom-4 left-4 origin-bottom-left"
-                      style="transform: scale(0.45); transform-origin: bottom left;">
+                      class="absolute"
+                      :class="stampPositionClass('obsolete')"
+                      style="transform: scale(0.45);">
                       <div
                         class="w-56 h-40 border-2 border-blue-600 rounded-sm
                    text-[10px] text-blue-700 flex flex-col items-center
@@ -329,28 +356,37 @@
                     </div>
                   </div>
                 </div>
+
+                <div
+                  x-show="pdfLoading"
+                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
+                  Rendering PDF…
+                </div>
+                <div
+                  x-show="pdfError"
+                  class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
+                  x-text="pdfError"></div>
               </div>
             </template>
 
-            <!-- TIFF -->
+
             <template x-if="isTiff(selectedFile?.name)">
               <div
                 class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
                 @mousedown.prevent="startPan($event)"
                 @wheel.prevent="onWheelZoom($event)">
                 <div class="w-full h-full flex items-center justify-center">
-                  <!-- wrapper yang di-zoom + pan -->
                   <div class="relative inline-block" :style="imageTransformStyle()">
-                    <canvas
-                      x-ref="tifCanvas"
-                      class="block pointer-events-none select-none max-w-full max-h-[70vh]">
-                    </canvas>
+                    <img
+                      x-ref="tifImg"
+                      alt="TIFF Preview"
+                      class="block pointer-events-none select-none max-w-full max-h-[70vh]" />
 
-                    <!-- STAMP ORIGINAL (kanan bawah) -->
                     <div
                       x-show="pkg.stamp"
-                      class="absolute bottom-4 right-4 origin-bottom-right"
-                      style="transform: scale(0.45); transform-origin: bottom right;">
+                      class="absolute"
+                      :class="stampPositionClass('original')"
+                      style="transform: scale(0.45);">
                       <div
                         class="w-56 h-40 border-2 border-blue-600 rounded-sm
                    text-[10px] text-blue-700 flex flex-col items-center
@@ -369,11 +405,11 @@
                       </div>
                     </div>
 
-                    <!-- STAMP OBSOLETE (kiri bawah) -->
                     <div
                       x-show="pkg.stamp?.is_obsolete"
-                      class="absolute bottom-4 left-4 origin-bottom-left"
-                      style="transform: scale(0.45); transform-origin: bottom left;">
+                      class="absolute"
+                      :class="stampPositionClass('obsolete')"
+                      style="transform: scale(0.45);">
                       <div
                         class="w-56 h-40 border-2 border-blue-600 rounded-sm
                    text-[10px] text-blue-700 flex flex-col items-center
@@ -394,7 +430,6 @@
                   </div>
                 </div>
 
-                <!-- status render -->
                 <div
                   x-show="tifLoading"
                   class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
@@ -407,7 +442,7 @@
               </div>
             </template>
 
-            <!-- HPGL -->
+
             <template x-if="isHpgl(selectedFile?.name)">
               <div
                 class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
@@ -418,11 +453,11 @@
                     x-ref="hpglCanvas"
                     class="pointer-events-none select-none"></canvas>
 
-                  <!-- STAMP ORIGINAL (kanan bawah, skala 0.45) -->
                   <div
                     x-show="pkg.stamp"
-                    class="absolute bottom-4 right-4 origin-bottom-right"
-                    style="transform: scale(0.45); transform-origin: bottom right;">
+                    class="absolute"
+                    :class="stampPositionClass('original')"
+                    style="transform: scale(0.45);">
                     <div
                       class="w-56 h-40 border-2 border-blue-600 rounded-sm
                  text-[10px] text-blue-700 flex flex-col items-center
@@ -441,11 +476,11 @@
                     </div>
                   </div>
 
-                  <!-- STAMP OBSOLETE (kiri bawah, skala 0.45) -->
                   <div
                     x-show="pkg.stamp?.is_obsolete"
-                    class="absolute bottom-4 left-4 origin-bottom-left"
-                    style="transform: scale(0.45); transform-origin: bottom left;">
+                    class="absolute"
+                    :class="stampPositionClass('obsolete')"
+                    style="transform: scale(0.45);">
                     <div
                       class="w-56 h-40 border-2 border-blue-600 rounded-sm
                  text-[10px] text-blue-700 flex flex-col items-center
@@ -478,12 +513,10 @@
               </div>
             </template>
 
-            <!-- CAD: IGES / STEP via occt-import-js -->
             <template x-if="isCad(selectedFile?.name)">
               <div class="w-full">
                 <div x-ref="igesWrap" class="w-full h-[70vh] rounded border border-gray-200 dark:border-gray-700 bg-black/5"></div>
 
-                <!-- TOOLBAR -->
                 <div class="mt-3 flex flex-wrap items-center gap-2">
                   <div class="inline-flex rounded-md shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
                     <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700" @click="setDisplayStyle('shaded')">Shaded</button>
@@ -510,7 +543,6 @@
               </div>
             </template>
 
-            <!-- FALLBACK -->
             <template x-if="!isImage(selectedFile?.name) && !isPdf(selectedFile?.name) && !isTiff(selectedFile?.name) && !isCad(selectedFile?.name) && !isHpgl(selectedFile?.name)">
               <div class="text-center">
                 <i class="fa-solid fa-file text-6xl text-gray-400 dark:text-gray-500"></i>
@@ -520,8 +552,7 @@
             </template>
 
           </div>
-          <!-- /PREVIEW AREA -->
-        </div>
+          </div>
       </div>
     </div>
   </div>
@@ -537,16 +568,22 @@
 @endsection
 
 @push('scripts')
-<!-- SweetAlert -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!-- Alpine collapse (untuk x-collapse) -->
 <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 
-<!-- UTIF.js untuk render TIFF -->
 <script src="https://unpkg.com/utif@3.1.0/dist/UTIF.min.js"></script>
+-->
+<script src="https://unpkg.com/utif@2.0.1/UTIF.js"></script>
 
-<!-- ES Module shims + Import Map untuk Three.js (module) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script>
+  if (window['pdfjsLib']) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+  }
+</script>
+
 <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
 <script type="importmap">
 {
@@ -558,7 +595,6 @@
 }
 </script>
 
-<!-- OCCT: parser STEP/IGES (WASM) -->
 <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
 
 <script>
@@ -614,6 +650,7 @@
 
   /* ========== Alpine Component ========== */
   function exportDetail() {
+    let pdfDoc = null;
     return {
       exportId: JSON.parse(`@json($exportId)`),
       pkg: JSON.parse(`@json($detail)`),
@@ -621,6 +658,17 @@
       selectedRevisionId: JSON.parse(`@json($exportId)`),
       isLoadingRevision: false,
       stampFormat: JSON.parse(`@json($stampFormat ?? null)`),
+
+      // ==== KONFIGURASI POSISI STAMP ====
+      stampDefaults: {
+        original: 'bottom-right',
+        obsolete: 'bottom-left',
+      },
+      stampPerFile: {}, // { [fileKey]: { original, obsolete } }
+      stampConfig: {
+        original: 'bottom-right',
+        obsolete: 'bottom-left',
+      },
 
       selectedFile: null,
       openSections: [],
@@ -712,12 +760,66 @@
         return `${label} : ${this.formatStampDate(d)}`;
       },
 
+      // ===== helper posisi stamp per file =====
+      getFileKey(file) {
+        return (file?.id ?? file?.name ?? '').toString();
+      },
+
+      loadStampConfigFor(file) {
+        const key = this.getFileKey(file);
+        if (!key) {
+          this.stampConfig = {
+            ...this.stampDefaults
+          };
+          return;
+        }
+        if (!this.stampPerFile[key]) {
+          this.stampPerFile[key] = {
+            ...this.stampDefaults
+          };
+        }
+        this.stampConfig = this.stampPerFile[key];
+      },
+
+      saveStampConfigForCurrent() {
+        const key = this.getFileKey(this.selectedFile);
+        if (!key) return;
+        this.stampPerFile[key] = {
+          ...this.stampConfig
+        };
+      },
+
+      stampPositionClass(which = 'original') {
+        const pos = (this.stampConfig && this.stampConfig[which]) || this.stampDefaults[which];
+
+        switch (pos) {
+          case 'top-left':
+            return 'top-4 left-4 origin-top-left';
+          case 'top-right':
+            return 'top-4 right-4 origin-top-right';
+          case 'bottom-left':
+            return 'bottom-4 left-4 origin-bottom-left';
+          case 'bottom-right':
+          default:
+            return 'bottom-4 right-4 origin-bottom-right';
+        }
+      },
+
       // TIFF state
       tifLoading: false, tifError: '',
 
       // HPGL state
       hpglLoading: false,
       hpglError: '',
+
+      // [!code ++]
+      // PDF state
+      pdfLoading: false,
+      pdfError: '',
+      pdfPageNum: 1,
+      pdfNumPages: 1,
+      pdfScale: 1.0,
+
 
       // CAD viewer state
       iges: {
@@ -736,29 +838,186 @@
       isTiff(name)  { return ['tif','tiff'].includes(this.extOf(name)); },
       isHpgl(name)  { return ['plt', 'hpgl', 'hpg', 'prn'].includes(this.extOf(name)); },
       isCad(name)   { return ['igs','iges','stp','step'].includes(this.extOf(name)); },
-      pdfSrc(u) { return u; },
+      // pdfSrc(u) { return u; },
+
+      findFileByNameInsensitive(name) {
+        if (!name) return null;
+        const target = name.toLowerCase();
+        const groups = this.pkg.files || {};
+
+        for (const key of Object.keys(groups)) {
+          const list = groups[key] || [];
+          for (const f of list) {
+            const n = (f.name || '').toLowerCase();
+            if (n === target || n.endsWith('/' + target) || n.endsWith('\\' + target)) {
+              return f;
+            }
+          }
+        }
+        return null;
+      },
+
+      _findIgesSibling(mainFile) {
+        if (!mainFile) return null;
+        const name = mainFile.name || '';
+        const base = name.replace(/\.(stp|step)$/i, '');
+
+        const candidates = [];
+        if (base) {
+          candidates.push(base + '.igs', base + '.iges');
+        }
+        candidates.push('temp.igs', 'temp.iges');
+
+        for (const cand of candidates) {
+          const f = this.findFileByNameInsensitive(cand);
+          if (f) return f;
+        }
+
+        const groups = this.pkg.files || {};
+        for (const key of Object.keys(groups)) {
+          const list = groups[key] || [];
+          const hit = list.find(f => /\.(igs|iges)$/i.test(f.name || ''));
+          if (hit) return hit;
+        }
+
+        return null;
+      },
 
       /* ===== TIFF renderer ===== */
+      // async renderTiff(url) {
+      //   if (!url || !window.UTIF) return;
+      //   this.tifLoading = true; this.tifError = '';
+      //   try {
+      //     const resp = await fetch(url, { cache:'no-store', credentials:'same-origin' });
+      //     if (!resp.ok) throw new Error('Gagal mengambil file TIFF');
+      //     const buf = await resp.arrayBuffer();
+      //     const ifds = UTIF.decode(buf);
+      //     UTIF.decodeImages(buf, ifds);
+      //     if (!ifds?.length) throw new Error('TIFF tidak memiliki frame');
+      //     const first = ifds[0];
+      //     const rgba = UTIF.toRGBA8(first);
+      //     const w = first.width, h = first.height;
+      //     const canvas = this.$refs.tifCanvas; if (!canvas) throw new Error('Canvas TIFF tidak ditemukan');
+      //     const ctx = canvas.getContext('2d');
+      //     canvas.width = w; canvas.height = h;
+      //     const imgData = new ImageData(new Uint8ClampedArray(rgba), w, h);
+      //     ctx.putImageData(imgData, 0, 0);
+      //   } catch (e) { console.error(e); this.tifError = e?.message || 'Gagal render TIFF'; }
+      //   finally { this.tifLoading = false; }
+      // },
       async renderTiff(url) {
-        if (!url || !window.UTIF) return;
-        this.tifLoading = true; this.tifError = '';
+        if (!url || typeof window.UTIF === 'undefined') return;
+
+        this.tifLoading = true;
+        this.tifError = '';
+
         try {
-          const resp = await fetch(url, { cache:'no-store', credentials:'same-origin' });
-          if (!resp.ok) throw new Error('Gagal mengambil file TIFF');
+          const resp = await fetch(url, {
+            cache: 'no-store',
+            credentials: 'same-origin'
+          });
+          if (!resp.ok) throw new Error('Failed to fetch TIFF file');
           const buf = await resp.arrayBuffer();
-          const ifds = UTIF.decode(buf);
-          UTIF.decodeImages(buf, ifds);
-          if (!ifds?.length) throw new Error('TIFF tidak memiliki frame');
+
+          const U =
+            (window.UTIF && typeof window.UTIF.decode === 'function') ? window.UTIF :
+            (window.UTIF && window.UTIF.UTIF && typeof window.UTIF.UTIF.decode === 'function') ? window.UTIF.UTIF :
+            null;
+
+          if (!U) throw new Error('UTIF library is not compatible (decode() not found)');
+
+          const ifds = U.decode(buf);
+          if (!ifds || !ifds.length) throw new Error('TIFF file does not contain any frame');
+
           const first = ifds[0];
-          const rgba = UTIF.toRGBA8(first);
-          const w = first.width, h = first.height;
-          const canvas = this.$refs.tifCanvas; if (!canvas) throw new Error('Canvas TIFF tidak ditemukan');
-          const ctx = canvas.getContext('2d');
-          canvas.width = w; canvas.height = h;
-          const imgData = new ImageData(new Uint8ClampedArray(rgba), w, h);
+
+          if (typeof U.decodeImage === 'function') {
+            U.decodeImage(buf, first);
+          } else if (typeof U.decodeImages === 'function') {
+            U.decodeImages(buf, ifds);
+          }
+
+          const rgba = U.toRGBA8(first);
+          const w = first.width;
+          const h = first.height;
+
+          const off = document.createElement('canvas');
+          const ctx = off.getContext('2d');
+          off.width = w;
+          off.height = h;
+
+          const imgData = ctx.createImageData(w, h);
+          imgData.data.set(rgba);
           ctx.putImageData(imgData, 0, 0);
-        } catch (e) { console.error(e); this.tifError = e?.message || 'Gagal render TIFF'; }
-        finally { this.tifLoading = false; }
+
+          const dataUrl = off.toDataURL('image/png');
+
+          await this.$nextTick();
+          const img = this.$refs.tifImg;
+          if (img) img.src = dataUrl;
+        } catch (e) {
+          console.error(e);
+          this.tifError = e?.message || 'Failed to render TIFF';
+        } finally {
+          this.tifLoading = false;
+        }
+      },
+
+      /* ===== PDF renderer (pdf.js) ===== */
+      async renderPdf(url) {
+        if (!url || !window['pdfjsLib']) return;
+
+        this.pdfLoading = true;
+        this.pdfError = '';
+        pdfDoc = null;
+        this.pdfPageNum = 1;
+        this.pdfScale = 1.0;
+
+        try {
+          await this.$nextTick();
+          const canvas = this.$refs.pdfCanvas;
+          if (!canvas) throw new Error('PDF canvas not found');
+
+          const loadingTask = window.pdfjsLib.getDocument(url);
+
+          const pdf = await loadingTask.promise;
+          pdfDoc = pdf;
+          this.pdfNumPages = pdf.numPages;
+
+          await this.renderPdfPage();
+        } catch (e) {
+          console.error(e);
+          this.pdfError = e?.message || 'Failed to render PDF';
+        } finally {
+          this.pdfLoading = false;
+        }
+      },
+
+      async renderPdfPage() {
+        if (!pdfDoc) return;
+        try {
+          const page = await pdfDoc.getPage(this.pdfPageNum);
+          const viewport = page.getViewport({
+            scale: this.pdfScale
+          });
+
+          await this.$nextTick();
+          const canvas = this.$refs.pdfCanvas;
+          if (!canvas) return;
+          const ctx = canvas.getContext('2d');
+
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          const renderContext = {
+            canvasContext: ctx,
+            viewport
+          };
+          await page.render(renderContext).promise;
+        } catch (e) {
+          console.error(e);
+          this.pdfError = e?.message || 'Failed to render PDF page';
+        }
       },
 
       /* ===== HPGL renderer ===== */
@@ -872,8 +1131,12 @@
           const dx = maxX - minX || 1;
           const dy = maxY - minY || 1;
           const scale = 0.9 * Math.min(w / dx, h / dy);
-          const offX = (w - dx * scale) / 2 - minX * scale;
-          const offY = (h - dy * scale) / 2 + maxY * scale;
+          // [!code --]
+          // const offX = (w - dx * scale) / 2 - minX * scale;
+          // const offY = (h - dy * scale) / 2 + maxY * scale;
+          // [!code ++]
+          const offX = w - dx * scale - minX * scale;
+          const offY = h + minY * scale;
 
           ctx.beginPath();
           for (const s of segments) {
@@ -900,7 +1163,7 @@
         for (let i=0; i<meshes.length; i++) {
           const m = meshes[i];
           const g = new THREE.BufferGeometry();
-          g.setAttribute('position', new THREE.Float32BufferAttribute(m.attributes.position.array, 3));
+          g.setAttribute('position', new THREE.Float3BBufferAttribute(m.attributes.position.array, 3));
           if (m.attributes.normal?.array) g.setAttribute('normal', new THREE.Float32BufferAttribute(m.attributes.normal.array, 3));
           if (m.index?.array) g.setIndex(m.index.array);
           let color = 0xcccccc;
@@ -1129,9 +1392,10 @@
           }
         });
         window.addEventListener('beforeunload', () => this.disposeCad());
-        window.addEventListener('mousemove', (e) => this.onPan(e));
-        window.addEventListener('mouseup', () => this.endPan());
-        window.addEventListener('mouseleave', () => this.endPan());
+        // [!code --]
+        // window.addEventListener('mousemove', (e) => this.onPan(e));
+        // window.addEventListener('mouseup', () => this.endPan());
+        // window.addEventListener('mouseleave', () => this.endPan());
       },
 
       /* ===== UI ===== */
@@ -1142,11 +1406,38 @@
       },
 
       selectFile(file) {
+        // [!code ++]
+        // simpan posisi stamp file sebelumnya
+        if (this.selectedFile) {
+          this.saveStampConfigForCurrent();
+        }
+
         if (this.isCad(this.selectedFile?.name)) this.disposeCad();
-        if (this.isTiff(this.selectedFile?.name)) { this.tifError = ''; this.tifLoading = false; }
+        if (this.isTiff(this.selectedFile?.name)) {
+          this.tifError = '';
+          this.tifLoading = false;
+          if (this.$refs.tifImg) this.$refs.tifImg.src = ''; // [!code update]
+        }
         if (this.isHpgl(this.selectedFile?.name)) {
           this.hpglError = '';
           this.hpglLoading = false;
+          // [!code ++]
+          if (this.$refs.hpglCanvas) {
+            const c = this.$refs.hpglCanvas;
+            const ctx = c.getContext('2d');
+            ctx && ctx.clearRect(0, 0, c.width, c.height);
+          }
+        }
+        // [!code ++]
+        if (this.isPdf(this.selectedFile?.name)) {
+          this.pdfError = '';
+          this.pdfLoading = false;
+          pdfDoc = null;
+          if (this.$refs.pdfCanvas) {
+            const c = this.$refs.pdfCanvas;
+            const ctx = c.getContext('2d');
+            ctx && ctx.clearRect(0, 0, c.width, c.height);
+          }
         }
 
         // Reset zoom and pan when selecting a new file
@@ -1156,9 +1447,26 @@
 
         this.selectedFile = { ...file };
 
-        if (this.isTiff(file?.name)) this.renderTiff(file.url);
-        else if (this.isCad(file?.name)) this.renderCadOcct(file.url);
-        else if (this.isHpgl(file?.name)) this.renderHpgl(file.url);
+        // [!code ++]
+        // load konfigurasi posisi stamp untuk file yang dipilih
+        this.loadStampConfigFor(this.selectedFile);
+
+        // [!code --]
+        // if (this.isTiff(file?.name)) this.renderTiff(file.url);
+        // else if (this.isCad(file?.name)) this.renderCadOcct(file.url);
+        // else if (this.isHpgl(file?.name)) this.renderHpgl(file.url);
+        // [!code ++]
+        this.$nextTick(() => {
+          if (this.isTiff(file?.name)) {
+            this.renderTiff(file.url);
+          } else if (this.isCad(file?.name)) {
+            this.renderCadOcct(file);
+          } else if (this.isHpgl(file?.name)) {
+            this.renderHpgl(file.url);
+          } else if (this.isPdf(file?.name)) {
+            this.renderPdf(file.url);
+          }
+        });
       },
 
       onRevisionChange() {
@@ -1171,6 +1479,8 @@
           this.disposeCad();
           this.tifError = ''; this.tifLoading = false;
           this.hpglError = ''; this.hpglLoading = false;
+          // [!code ++]
+          this.pdfError = ''; this.pdfLoading = false; pdfDoc = null;
 
           const routeUrl = `/api/export/revision-detail/${this.selectedRevisionId}`;
 
@@ -1211,6 +1521,14 @@
       },
 
       /* ===== Download ===== */
+      downloadFile(file) {
+          if (!file || !file.file_id) {
+              toastError('Error', 'File ID not found.');
+              return;
+          }
+          window.location.href = `/download/file/${file.file_id}`;
+      },
+
       downloadPackage() {
         if (!this.exportId) {
             toastError('Error', 'Package ID not found for download.');
@@ -1369,7 +1687,10 @@
       },
 
       /* ===== render CAD via occt-import-js ===== */
-      async renderCadOcct(url) {
+      // async renderCadOcct(url) {
+      //   if (!url) return;
+      async renderCadOcct(fileObj) {
+        const url = fileObj?.url;
         if (!url) return;
         this.disposeCad();
         this.iges.loading = true; this.iges.error = '';
@@ -1406,19 +1727,56 @@
           const controls = new OrbitControls(camera, renderer.domElement);
           controls.enableDamping = true;
 
-          // fetch file
-          const resp = await fetch(url, { cache: 'no-store', credentials: 'same-origin' });
-          if (!resp.ok) throw new Error('Gagal mengambil file CAD');
-          const buffer = await resp.arrayBuffer();
-          const file = new Uint8Array(buffer);
+          const resp = await fetch(url, {
+            cache: 'no-store',
+            credentials: 'same-origin'
+          });
+          if (!resp.ok) throw new Error('Failed to fetch CAD file');
+          const mainBuf = new Uint8Array(await resp.arrayBuffer());
 
-          // parse dengan occt
-          const occt = await window.occtimportjs(); // dari <script> CDN
+          console.log('CAD size (bytes):', mainBuf.byteLength);
+
+          const occt = await window.occtimportjs();
           const ext = (url.split('?')[0].split('#')[0].split('.').pop() || '').toLowerCase();
-          const res = (ext === 'stp' || ext === 'step') ? occt.ReadStepFile(file, null) : occt.ReadIgesFile(file, null);
-          if (!res?.success) throw new Error('OCCT gagal mem-parsing file');
+          const params = {
+            linearUnit: 'millimeter',
+            linearDeflectionType: 'bounding_box_ratio',
+            linearDeflection: 0.1,
+            angularDeflection: 0.1,
+          };
 
-          // build meshes -> scene
+          let res = null;
+
+          if (ext === 'stp' || ext === 'step') {
+            res = occt.ReadStepFile(mainBuf, params);
+            console.log('OCCT STEP result:', res);
+
+            if (!res || !res.success) {
+              console.warn('STEP failed, trying IGES fallback...');
+              const igesFile = this._findIgesSibling(fileObj);
+              if (igesFile?.url) {
+                console.log('Fallback IGES file:', igesFile.name, igesFile.url);
+                const igResp = await fetch(igesFile.url, {
+                  cache: 'no-store',
+                  credentials: 'same-origin'
+                });
+                if (!igResp.ok) throw new Error('Failed to fetch fallback IGES file');
+                const igBuf = new Uint8Array(await igResp.arrayBuffer());
+                res = occt.ReadIgesFile(igBuf, params);
+                console.log('OCCT IGES fallback result:', res);
+              }
+            }
+          } else {
+            res = occt.ReadIgesFile(mainBuf, params);
+            console.log('OCCT IGES result:', res);
+          }
+
+          if (!res || !res.success) {
+            const msg = res?.error || res?.message || 'File is not a valid STEP/IGES or is not supported by OCCT.';
+            throw new Error('OCCT failed to parse file: ' + msg);
+          }
+
+
           const group = this._buildThreeFromOcct(res, THREE);
           scene.add(group);
 

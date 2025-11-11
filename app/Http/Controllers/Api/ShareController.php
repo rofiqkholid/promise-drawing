@@ -329,8 +329,6 @@ class ShareController extends Controller
     }
 
 
-
-
     public function saveShare(Request $request)
     {
         $validator = Validator::make($request->all(), [

@@ -23,6 +23,13 @@
                     <i class="fa-solid fa-file-pen"></i>
                 </button>
 
+                <button type="button" @click.prevent="deleteCurrentRevision"
+                    x-show="draftSaved && revisionStatus === 'draft' && !isReadOnly"
+                    class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md shadow-sm text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:bg-red-900 dark:text-red-300 dark:border-red-700 dark:hover:bg-red-800 dark:focus:ring-offset-gray-800">
+                    <i class="fa-solid fa-trash-can"></i>
+                    Delete Draft
+                </button>
+
                 <a href="{{ url('file-manager.upload') }}"
                     class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
                     <i class="fa-solid fa-arrow-left"></i>
@@ -258,17 +265,24 @@
                                     </h5>
                                     <template x-for="fileWrapper in fileStores[cat.id].filter(f => !f.uploaded)" :key="fileWrapper._uid">
                                         <div class="file-preview-item flex items-center space-x-3 p-2 rounded-md">
-                                            <div class="file-icon text-white w-10 h-10 flex items-center justify-center rounded flex-shrink-0" :class="getFileIcon(fileWrapper.name).color">
-                                                <i class="fa-solid" :class="getFileIcon(fileWrapper.name).icon"></i>
+                                            <div x-data="{ icon: getIcon(fileWrapper.name) }"
+                                                class="file-icon text-white w-10 h-10 flex items-center justify-center rounded flex-shrink-0"
+                                                :class="icon.is_image ? 'bg-white p-0.5 border border-gray-200 dark:border-gray-700' : 'bg-gray-400 text-white'">
+                                                <template x-if="icon.is_image">
+                                                    <img :src="icon.src"
+                                                        alt="file icon"
+                                                        class="w-full h-full object-contain rounded-sm">
+                                                </template>
+                                                <template x-if="!icon.is_image">
+                                                    <i class="fa-solid fa-file"></i>
+                                                </template>
                                             </div>
                                             <div class="file-details flex-1 min-w-0">
                                                 <p class="file-name text-sm text-gray-800 dark:text-gray-200 truncate" :title="fileWrapper.name" x-text="fileWrapper.name"></p>
                                                 <p class="file-size text-xs text-gray-500 dark:text-gray-400" x-text="formatBytes(fileWrapper.size)"></p>
-
                                                 <div x-show="fileWrapper.status === 'uploading' || fileWrapper.status === 'retrying'" class="progress-bar-container mt-1">
                                                     <div class="progress-bar" :style="`width: ${fileWrapper.progress || 0}%`"></div>
                                                 </div>
-
                                                 <div class="status-container mt-1 h-5 flex items-center">
                                                     <template x-if="fileWrapper.status === 'failed'"><i class="fa-solid fa-circle-exclamation text-red-500"></i></template>
                                                     <template x-if="fileWrapper.status === 'uploading' || fileWrapper.status === 'retrying'"><i class="fa-solid fa-spinner fa-spin text-blue-500"></i></template>
@@ -297,9 +311,19 @@
                                     </h5>
                                     <template x-for="fileWrapper in fileStores[cat.id].filter(f => f.uploaded)" :key="fileWrapper._uid">
                                         <div class="file-preview-item flex items-center space-x-3 p-2 rounded-md">
-                                            <div class="file-icon text-white w-10 h-10 flex items-center justify-center rounded flex-shrink-0" :class="getFileIcon(fileWrapper.name).color">
-                                                <i class="fa-solid" :class="getFileIcon(fileWrapper.name).icon"></i>
-                                            </div>
+                                                <div class="file-icon text-white w-10 h-10 flex items-center justify-center rounded flex-shrink-0"
+                                                    :class="iconMap[fileWrapper.name.split('.').pop().toLowerCase()]
+                                                                ? 'bg-white p-0.5 border border-gray-200 dark:border-gray-700'
+                                                                : 'bg-gray-400 text-white'"> <template x-if="iconMap[fileWrapper.name.split('.').pop().toLowerCase()]">
+                                                        <img :src="iconMap[fileWrapper.name.split('.').pop().toLowerCase()]"
+                                                            alt="file icon"
+                                                            class="w-full h-full object-contain rounded-sm">
+                                                    </template>
+
+                                                    <template x-if="!iconMap[fileWrapper.name.split('.').pop().toLowerCase()]">
+                                                        <i class="fa-solid fa-file"></i> </template>
+
+                                                </div>
                                             <div class="file-details flex-1 min-w-0">
                                                 <p class="file-name text-sm text-gray-800 dark:text-gray-200 truncate" :title="fileWrapper.name" x-text="fileWrapper.name"></p>
                                                 <p class="file-size text-xs text-gray-500 dark:text-gray-400" x-text="formatBytes(fileWrapper.size)"></p>
@@ -343,11 +367,24 @@
 
 <script>
     function reviseConfirm() {
+        const t = detectTheme();
         const urlParams = new URLSearchParams(window.location.search);
         const revisionId = urlParams.get('revision_id');
 
         if (!revisionId) {
-            Swal.fire('Error', 'No revision ID found in the URL.', 'error');
+            Swal.fire({
+                title: 'Error',
+                text: 'No revision ID found in the URL.',
+                icon: 'error',
+                background: t.bg,
+                color: t.fg,
+                customClass: {
+                    popup: 'border',
+                },
+                didOpen: (popup) => {
+                    popup.style.borderColor = t.border;
+                }
+            });
             return;
         }
 
@@ -358,7 +395,15 @@
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, revise it!'
+            confirmButtonText: 'Yes, revise it!',
+            background: t.bg,
+            color: t.fg,
+            customClass: {
+                popup: 'border',
+            },
+            didOpen: (popup) => {
+                popup.style.borderColor = t.border;
+            }
         }).then((result) => {
             if (result.isConfirmed) {
                 const reviseUrl = "{{ route('upload.drawing.revise-confirm') }}";
@@ -368,8 +413,17 @@
                     title: 'Processing...',
                     text: 'Please wait while the revision is being updated.',
                     allowOutsideClick: false,
+                    background: t.bg,
+                    color: t.fg,
+                    customClass: {
+                        popup: 'border',
+                    },
                     didOpen: () => {
                         Swal.showLoading();
+                        const popup = Swal.getPopup();
+                        if (popup) {
+                            popup.style.borderColor = t.border;
+                        }
                     }
                 });
 
@@ -398,7 +452,15 @@
                         Swal.fire({
                             title: 'Success!',
                             text: data.message,
-                            icon: 'success'
+                            icon: 'success',
+                            background: t.bg,
+                            color: t.fg,
+                            customClass: {
+                                popup: 'border',
+                            },
+                            didOpen: (popup) => {
+                                popup.style.borderColor = t.border;
+                            }
                         }).then(() => {
                             const baseUrl = "{{ url('/drawing-upload') }}";
                             window.location.href = `${baseUrl}?revision_id=${revisionId}&read_only=false`;
@@ -409,7 +471,15 @@
                         Swal.fire({
                             title: 'Request Failed!',
                             text: error.message,
-                            icon: 'error'
+                            icon: 'error',
+                            background: t.bg,
+                            color: t.fg,
+                            customClass: {
+                                popup: 'border',
+                            },
+                            didOpen: (popup) => {
+                                popup.style.borderColor = t.border;
+                            }
                         });
                     });
             }
@@ -575,6 +645,7 @@
             filesToDelete: [],
 
             allowedExtensions: {},
+            iconMap: {},
             conflictFiles: [],
 
             isUploading: false,
@@ -630,11 +701,11 @@
                 } else {
                     this.initSelect2('customer', 'Select Customer',
                         "{{ route('upload.getCustomerData') }}");
-                    this.disableSelect2('model', 'Select Customer First');
-                    this.disableSelect2('partNo', 'Select Model First');
-                    this.disableSelect2('docType', 'Select Part No First');
-                    this.disableSelect2('category', 'Select Document Group First');
-                    this.disableSelect2('partGroup', 'Select Sub Category First');
+                    this.initDisabledSelect2('model', 'Select Customer First');
+                    this.initDisabledSelect2('partNo', 'Select Model First');
+                    this.initDisabledSelect2('docType', 'Select Part No First');
+                    this.initDisabledSelect2('category', 'Select Document Group First');
+                    this.initDisabledSelect2('partGroup', 'Select Sub Category First');
                     this.initRevisionLabelSelect();
                     this.fetchAllowedExtensions();
                 }
@@ -736,7 +807,8 @@
                     url: "{{ route('upload.drawing.allowed-extensions') }}",
                     method: 'GET',
                     success: (res) => {
-                        this.allowedExtensions = res;
+                        this.allowedExtensions = res.validation;
+                        this.iconMap = res.icons;
                     },
                     error: (xhr) => {
                         console.error('Failed to fetch allowed extensions.');
@@ -959,22 +1031,25 @@
                     if (el.hasClass("select2-hidden-accessible")) el.select2('destroy');
                     el.val(null).trigger('change');
                 });
-                if (propNames.includes('model')) this.disableSelect2('model',
-                    'Select Customer First');
-                if (propNames.includes('partNo')) this.disableSelect2('partNo',
-                    'Select Model First');
-                if (propNames.includes('docType')) this.disableSelect2('docType',
-                    'Select Part No First');
-                if (propNames.includes('category')) this.disableSelect2('category',
-                    'Select Document Group First');
-                if (propNames.includes('partGroup')) this.disableSelect2('partGroup',
-                    'Select Sub Category First');
 
-                this.revisionCheck.status = null;
+                if (propNames.includes('model')) this.initDisabledSelect2('model',
+                    'Select Customer First');
+                if (propNames.includes('partNo')) this.initDisabledSelect2('partNo',
+                    'Select Model First');
+                if (propNames.includes('docType')) this.initDisabledSelect2('docType',
+                    'Select Part No First');
+                if (propNames.includes('category')) this.initDisabledSelect2('category',
+                    'Select Document Group First');
+                if (propNames.includes('partGroup')) this.initDisabledSelect2('partGroup',
+                    'Select Sub Category First');
             },
 
-            disableSelect2(propName, placeholder) {
-                $(`#${propName}`).prop('disabled', true).select2({
+            initDisabledSelect2(propName, placeholder) {
+                const el = $(`#${propName}`);
+                if (el.hasClass("select2-hidden-accessible")) {
+                    el.select2('destroy');
+                }
+                el.select2({
                     width: '100%',
                     placeholder: placeholder
                 });
@@ -1208,86 +1283,18 @@
                     this.hasNewFiles = hasNewFiles;
                 }
             },
-            getFileIcon(fileName) {
+            getIcon(fileName) {
+                if (!fileName) {
+                    return { is_image: false, src: null };
+                }
+
                 const ext = fileName.split('.').pop().toLowerCase();
-                const map = {
-                    'pdf': {
-                        icon: 'fa-file-pdf',
-                        color: 'bg-red-500'
-                    },
-                    'dwg': {
-                        icon: 'fa-file-pen',
-                        color: 'bg-blue-500'
-                    },
-                    'dxf': {
-                        icon: 'fa-file-pen',
-                        color: 'bg-blue-500'
-                    },
-                    'step': {
-                        icon: 'fa-cube',
-                        color: 'bg-yellow-500'
-                    },
-                    'stp': {
-                        icon: 'fa-cube',
-                        color: 'bg-yellow-500'
-                    },
-                    'iges': {
-                        icon: 'fa-cube',
-                        color: 'bg-yellow-500'
-                    },
-                    'igs': {
-                        icon: 'fa-cube',
-                        color: 'bg-yellow-500'
-                    },
-                    'sldprt': {
-                        icon: 'fa-cube',
-                        color: 'bg-green-500'
-                    },
-                    'x_t': {
-                        icon: 'fa-cube',
-                        color: 'bg-green-500'
-                    },
-                    'doc': {
-                        icon: 'fa-file-word',
-                        color: 'bg-blue-600'
-                    },
-                    'docx': {
-                        icon: 'fa-file-word',
-                        color: 'bg-blue-600'
-                    },
-                    'xls': {
-                        icon: 'fa-file-excel',
-                        color: 'bg-green-600'
-                    },
-                    'xlsx': {
-                        icon: 'fa-file-excel',
-                        color: 'bg-green-600'
-                    },
-                    'zip': {
-                        icon: 'fa-file-archive',
-                        color: 'bg-gray-500'
-                    },
-                    'rar': {
-                        icon: 'fa-file-archive',
-                        color: 'bg-gray-500'
-                    },
-                    'png': {
-                        icon: 'fa-file-image',
-                        color: 'bg-purple-500'
-                    },
-                    'jpg': {
-                        icon: 'fa-file-image',
-                        color: 'bg-purple-500'
-                    },
-                    'jpeg': {
-                        icon: 'fa-file-image',
-                        color: 'bg-purple-500'
-                    },
-                };
-                return map[ext] || {
-                    icon: 'fa-file',
-                    color: 'bg-gray-400'
-                };
+                const iconSrc = this.iconMap[ext];
+
+                if (iconSrc) {
+                    return { is_image: true, src: iconSrc };
+                }
+                return { is_image: false, src: null };
             },
             formatBytes(bytes, decimals = 2) {
                 if (bytes === 0) return '0 Bytes';
@@ -1454,6 +1461,80 @@
                 });
             },
 
+            deleteCurrentRevision() {
+                if (!this.savedRevisionId) {
+                    toastError('Error', 'Revision ID not found.');
+                    return;
+                }
+
+                const t = detectTheme();
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You are about to permanently delete this draft. This will also delete all related files from the server. This action cannot be undone.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!',
+                    background: t.bg,
+                    color: t.fg
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const deleteUrl = `{{ url('/upload/drawing/revision') }}/${this.savedRevisionId}`;
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                        Swal.fire({
+                            title: 'Deleting...',
+                            text: 'Please wait while the draft is being removed.',
+                            allowOutsideClick: false,
+                            background: t.bg,
+                            color: t.fg,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        fetch(deleteUrl, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(errorData => {
+                                    throw new Error(errorData.message || `Server Error: ${response.status}`);
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            Swal.fire({
+                                title: 'Deleted!',
+                                text: data.message,
+                                icon: 'success',
+                                background: t.bg,
+                                color: t.fg
+                            }).then(() => {
+                                window.location.href = "{{ route('file-manager.upload') }}";
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                title: 'Request Failed!',
+                                text: error.message,
+                                icon: 'error',
+                                background: t.bg,
+                                color: t.fg
+                            });
+                        });
+                    }
+                });
+            },
 
             showConflictModal() {
                 const t = detectTheme();

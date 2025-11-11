@@ -22,6 +22,7 @@ use App\Models\DocTypeSubCategories;
 use App\Models\ActivityLog;
 use App\Models\User;
 use App\Models\StampFormat;
+use App\Models\FileExtensions;
 
 
 
@@ -238,11 +239,11 @@ class ApprovalController extends Controller
                 'pa.decided_by'
             )
             ->selectRaw("
-                ROW_NUMBER() OVER (
-                  PARTITION BY pa.revision_id
-                  ORDER BY COALESCE(pa.decided_at, pa.requested_at) DESC, pa.id DESC
-                ) as rn
-            ");
+            ROW_NUMBER() OVER (
+              PARTITION BY pa.revision_id
+              ORDER BY COALESCE(pa.decided_at, pa.requested_at) DESC, pa.id DESC
+            ) as rn
+        ");
 
         $query = DB::table('doc_package_revisions as dpr')
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
@@ -274,9 +275,8 @@ class ApprovalController extends Controller
             $query->where('dsc.name', $request->category);
         }
         if ($request->filled('status') && $request->status !== 'All') {
-            // front-end kirim Waiting/Approved/Rejected
             $statusMap = [
-                'Waiting'  => ['pending', 'waiting'], // waiting = data lama
+                'Waiting'  => ['pending', 'waiting'],
                 'Approved' => ['approved'],
                 'Rejected' => ['rejected'],
             ];
@@ -299,17 +299,17 @@ class ApprovalController extends Controller
                     ->orWhere('pg.code_part_group', 'like', "%{$searchValue}%")
                     ->orWhere('dpr.ecn_no', 'like', "%{$searchValue}%")
                     ->orWhereRaw("
-    CONCAT(
-      c.code,' ',
-      m.name,' ',
-      dtg.name,' ',
-      COALESCE(dsc.name,''),' ',
-      COALESCE(pg.code_part_group,''),' ',
-      COALESCE(p.part_no,''),' ',
-      COALESCE(dpr.ecn_no,''),' ',
-      dpr.revision_no
-    ) LIKE ?
-  ", ["%{$searchValue}%"]);
+                CONCAT(
+                  c.code,' ',
+                  m.name,' ',
+                  dtg.name,' ',
+                  COALESCE(dsc.name,''),' ',
+                  COALESCE(pg.code_part_group,''),' ',
+                  COALESCE(p.part_no,''),' ',
+                  COALESCE(dpr.ecn_no,''),' ',
+                  dpr.revision_no
+                ) LIKE ?
+              ", ["%{$searchValue}%"]);
             });
         }
 
@@ -325,15 +325,16 @@ class ApprovalController extends Controller
             'pg.code_part_group as part_group',
             'dpr.ecn_no as ecn_no',
             'dpr.revision_no as revision',
+            'dpr.receipt_date as receipt_date',   // <--- NEW
             DB::raw("
-                CASE COALESCE(pa.decision, dpr.revision_status)
-                    WHEN 'pending'  THEN 'Waiting'
-                    WHEN 'waiting'  THEN 'Waiting'  
-                    WHEN 'approved' THEN 'Approved'
-                    WHEN 'rejected' THEN 'Rejected'
-                    ELSE COALESCE(pa.decision, dpr.revision_status)
-                END as status
-            "),
+            CASE COALESCE(pa.decision, dpr.revision_status)
+                WHEN 'pending'  THEN 'Waiting'
+                WHEN 'waiting'  THEN 'Waiting'
+                WHEN 'approved' THEN 'Approved'
+                WHEN 'rejected' THEN 'Rejected'
+                ELSE COALESCE(pa.decision, dpr.revision_status)
+            END as status
+        "),
             'pa.requested_at as request_date',
             'pa.decided_at   as decision_date'
         );
@@ -343,17 +344,18 @@ class ApprovalController extends Controller
             'dpr.updated_at',
             'pa.requested_at',
             'pa.decided_at',
+            'dpr.receipt_date',      // <--- NEW
             'dpr.revision_status',
             'c.code',
             'm.name',
             'dtg.name',
             'dsc.name',
             'p.part_no',
-            'pg.code_part_group', // <--
-            'dpr.ecn_no',         // <--
+            'pg.code_part_group',
+            'dpr.ecn_no',
         ];
 
-        $orderBy       = in_array($orderColumnName, $orderWhitelist, true) ? $orderColumnName : 'pa.requested_at';
+        $orderBy        = in_array($orderColumnName, $orderWhitelist, true) ? $orderColumnName : 'pa.requested_at';
         $orderDirection = in_array(strtolower($orderDir), ['asc', 'desc'], true) ? $orderDir : 'desc';
 
         $data = $query
@@ -363,7 +365,7 @@ class ApprovalController extends Controller
             ->get();
 
         $data = $data->map(function ($row) {
-            $row->hash = encrypt($row->id);  // hash terenkripsi untuk dipakai di Blade
+            $row->hash = encrypt($row->id);
             return $row;
         });
 
@@ -374,6 +376,7 @@ class ApprovalController extends Controller
             "data"            => $data,
         ]);
     }
+
 
 
 
@@ -441,16 +444,56 @@ class ApprovalController extends Controller
             abort(404, 'Package not found.');
         }
 
-        // 4. File per kategori
-        $files = DB::table('doc_package_revision_files')
+        // 4. File per kategori + icon berdasarkan file extension
+        $fileRows = DB::table('doc_package_revision_files')
             ->where('revision_id', $revisionId)
-            ->select('id', 'filename as name', 'category', 'storage_path')
+            ->select(
+                'id',
+                'filename as name',
+                'category',
+                'storage_path',
+                'ori_position',
+                'copy_position',
+                'obslt_position'
+            )
+            ->get();
+
+
+        // daftar extension yang dipakai
+        $extList = $fileRows
+            ->map(fn($r) => strtolower(pathinfo($r->name, PATHINFO_EXTENSION)))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $extUpper = $extList->map(fn($e) => strtoupper($e));
+
+        // ambil icon dari master file_extensions
+        $extIcons = $extUpper->isEmpty()
+            ? []
+            : FileExtensions::whereIn('code', $extUpper)
             ->get()
+            ->mapWithKeys(fn(FileExtensions $m) => [strtolower($m->code) => $m->icon_src])
+            ->all();
+
+        $files = $fileRows
             ->groupBy('category')
-            ->map(function ($items) {
-                return $items->map(function ($item) {
+            ->map(function ($items) use ($extIcons) {
+                return $items->map(function ($item) use ($extIcons) {
                     $url = URL::signedRoute('preview.file', ['id' => $item->id]);
-                    return ['name' => $item->name, 'url' => $url];
+
+                    $ext = strtolower(pathinfo($item->name, PATHINFO_EXTENSION));
+                    $iconSrc = $extIcons[$ext] ?? null; // bisa null kalau tidak ada di master
+
+                    return [
+                        'id'            => $item->id,
+                        'name'          => $item->name,
+                        'url'           => $url,
+                        'icon_src'      => $iconSrc,
+                        'ori_position'  => $item->ori_position,
+                        'copy_position' => $item->copy_position,
+                        'obslt_position' => $item->obslt_position,
+                    ];
                 });
             })
             ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
@@ -521,6 +564,43 @@ class ApprovalController extends Controller
         ]);
     }
 
+    public function updateFileStampPosition(Request $request, int $fileId): JsonResponse
+{
+    // 0..5 sesuai mapping posisi yang kita sepakati
+    $data = $request->validate([
+        'ori_position'   => 'nullable|integer|min:0|max:5',
+        'copy_position'  => 'nullable|integer|min:0|max:5',
+        'obslt_position' => 'nullable|integer|min:0|max:5',
+    ]);
+
+    $file = DocPackageRevisionFile::find($fileId);
+    if (!$file) {
+        return response()->json(['message' => 'File not found.'], 404);
+    }
+
+    // hanya update field yang dikirim
+    if (array_key_exists('ori_position', $data)) {
+        $file->ori_position = $data['ori_position'];
+    }
+    if (array_key_exists('copy_position', $data)) {
+        $file->copy_position = $data['copy_position'];
+    }
+    if (array_key_exists('obslt_position', $data)) {
+        $file->obslt_position = $data['obslt_position'];
+    }
+
+    $file->save();
+
+    return response()->json([
+        'message' => 'Stamp positions updated.',
+        'data'    => [
+            'id'             => $file->id,
+            'ori_position'   => $file->ori_position,
+            'copy_position'  => $file->copy_position,
+            'obslt_position' => $file->obslt_position,
+        ],
+    ]);
+}
 
 
 
@@ -561,37 +641,65 @@ class ApprovalController extends Controller
 
             $packageId = (int) $revision->package_id;
 
-            // 3. Obsolete-kan dulu semua revisi APPROVED aktif di package yang sama
-            //    -> supaya unique index "satu active approved per package" tidak meledak
-            DB::table('doc_package_revisions')
-                ->where('package_id', $packageId)
-                ->where('id', '!=', $revisionId)
-                ->where('revision_status', 'approved')
-                ->where('is_obsolete', 0)
-                ->update([
-                    'is_obsolete' => 1,
-                    'updated_at'  => Carbon::now(),
-                ]);
-
-            // 4. Baru set revisi INI menjadi approved + aktif
-            DB::table('doc_package_revisions')
-                ->where('id', $revisionId)
-                ->update([
-                    'revision_status' => 'approved',
-                    'is_obsolete'     => 0,
-                    'updated_at'      => Carbon::now(),
-                ]);
-
-            // 5. Update doc_packages → pointing ke revisi ini
-            DB::table('doc_packages')
+            // === AMBIL CURRENT REVISION DI PACKAGE (untuk cek revisi lama/baru) ===
+            $package = DB::table('doc_packages')
                 ->where('id', $packageId)
-                ->update([
-                    'current_revision_id' => $revision->id,
-                    'current_revision_no' => $revision->revision_no,
-                    'updated_at'          => Carbon::now(),
-                ]);
+                ->lockForUpdate()
+                ->first(['current_revision_id', 'current_revision_no']);
 
-            // 6. Update package_approvals
+            $currentNo = $package->current_revision_no ?? null;
+            $revNo     = (int) $revision->revision_no;
+
+            // revisi lama = nomor revisi lebih kecil dari current
+            $isOlder = !is_null($currentNo) && $revNo < (int) $currentNo;
+
+            if (!$isOlder) {
+                // ===== BEHAVIOR LAMA: revisi baru / sama atau belum ada current =====
+                // 3. Obsolete-kan dulu semua revisi APPROVED aktif di package yang sama
+                //    -> supaya unique index "satu active approved per package" tidak meledak
+                DB::table('doc_package_revisions')
+                    ->where('package_id', $packageId)
+                    ->where('id', '!=', $revisionId)
+                    ->where('revision_status', 'approved')
+                    ->where('is_obsolete', 0)
+                    ->update([
+                        'is_obsolete' => 1,
+                        'updated_at'  => Carbon::now(),
+                    ]);
+
+                // 4. Baru set revisi INI menjadi approved + aktif
+                DB::table('doc_package_revisions')
+                    ->where('id', $revisionId)
+                    ->update([
+                        'revision_status' => 'approved',
+                        'is_obsolete'     => 0,
+                        'updated_at'      => Carbon::now(),
+                    ]);
+
+                // 5. Update doc_packages → pointing ke revisi ini
+                DB::table('doc_packages')
+                    ->where('id', $packageId)
+                    ->update([
+                        'current_revision_id' => $revision->id,
+                        'current_revision_no' => $revision->revision_no,
+                        'updated_at'          => Carbon::now(),
+                    ]);
+            } else {
+                // ===== REVISI LAMA: approve tapi jangan ganggu current_revision_id =====
+                DB::table('doc_package_revisions')
+                    ->where('id', $revisionId)
+                    ->update([
+                        'revision_status' => 'approved',
+                        'is_obsolete'     => 1, // langsung obsolete, bukan current
+                        'updated_at'      => Carbon::now(),
+                    ]);
+
+                // TIDAK:
+                // - meng-obsolete revisi approved yang lain
+                // - mengubah dp.current_revision_id / current_revision_no
+            }
+
+            // 6. Update package_approvals (tetap sama)
             DB::table('package_approvals')
                 ->where('revision_id', $revisionId)
                 ->update([
@@ -601,7 +709,7 @@ class ApprovalController extends Controller
                     'updated_at' => Carbon::now(),
                 ]);
 
-            // 7. Activity log
+            // 7. Activity log (tetap sama)
             ActivityLog::create([
                 'scope_type'    => 'package',
                 'scope_id'      => $packageId,
@@ -623,7 +731,6 @@ class ApprovalController extends Controller
                 str_contains($msg, 'IX_doc_package_revisions_one_active_approved');
 
             if ($isUniqueViolation) {
-                // Ini baru benar-benar kasus race condition approve bareng
                 return response()->json([
                     'message' => 'Revision has already been approved by someone else.',
                 ], 409);
@@ -641,6 +748,7 @@ class ApprovalController extends Controller
             ], 500);
         }
     }
+
     public function reject(Request $request, string $id)
     {
 
@@ -775,7 +883,6 @@ class ApprovalController extends Controller
 
     public function rollback(Request $request, string $id): JsonResponse
     {
-
         $userId = Auth::user()->id ?? 1;
 
         // decrypt hash -> revisionId (int)
@@ -790,7 +897,7 @@ class ApprovalController extends Controller
             $revision = DB::table('doc_package_revisions')
                 ->where('id', $revisionId)
                 ->lockForUpdate()
-                ->first(['id', 'package_id', 'revision_no', 'revision_status']);
+                ->first(['id', 'package_id', 'revision_no', 'revision_status', 'is_obsolete']);
 
             if (!$revision) {
                 DB::rollBack();
@@ -804,6 +911,13 @@ class ApprovalController extends Controller
 
             $packageId = (int) $revision->package_id;
 
+            // flag: ini revisi approved & aktif (bukan obsolete)?
+            $wasActiveApproved = (
+                $revision->revision_status === 'approved'
+                && (int) $revision->is_obsolete === 0
+            );
+
+            // 1. selalu ubah revisi ini jadi pending + obsolete
             DB::table('doc_package_revisions')
                 ->where('id', $revisionId)
                 ->update([
@@ -812,39 +926,45 @@ class ApprovalController extends Controller
                     'updated_at'      => Carbon::now(),
                 ]);
 
-            $prev = DB::table('doc_package_revisions as r')
-                ->join('package_approvals as pa', 'pa.revision_id', '=', 'r.id')
-                ->where('r.package_id', $packageId)
-                ->where('r.id', '<>', $revisionId)
-                ->where('r.revision_status', 'approved')
-                ->orderByDesc('pa.decided_at')
-                ->lockForUpdate()
-                ->first(['r.id', 'r.revision_no']);
+            // 2. HANYA kalau sebelumnya dia approved & aktif,
+            //    baru kita aktifkan approved sebelumnya
+            if ($wasActiveApproved) {
+                $prev = DB::table('doc_package_revisions as r')
+                    ->join('package_approvals as pa', 'pa.revision_id', '=', 'r.id')
+                    ->where('r.package_id', $packageId)
+                    ->where('r.id', '<>', $revisionId)
+                    ->where('r.revision_status', 'approved')
+                    ->orderByDesc('pa.decided_at')
+                    ->lockForUpdate()
+                    ->first(['r.id', 'r.revision_no']);
 
-            if ($prev) {
-                DB::table('doc_package_revisions')
-                    ->where('id', $prev->id)
-                    ->update([
-                        'is_obsolete' => 0,
-                        'updated_at'  => Carbon::now(),
-                    ]);
+                if ($prev) {
+                    DB::table('doc_package_revisions')
+                        ->where('id', $prev->id)
+                        ->update([
+                            'is_obsolete' => 0,
+                            'updated_at'  => Carbon::now(),
+                        ]);
 
-                DB::table('doc_packages')
-                    ->where('id', $packageId)
-                    ->update([
-                        'current_revision_id' => $prev->id,
-                        'current_revision_no' => $prev->revision_no,
-                        'updated_at'          => Carbon::now(),
-                    ]);
-            } else {
-                DB::table('doc_packages')
-                    ->where('id', $packageId)
-                    ->update([
-                        'current_revision_id' => null,
-                        'current_revision_no' => 0,
-                        'updated_at'          => Carbon::now(),
-                    ]);
+                    DB::table('doc_packages')
+                        ->where('id', $packageId)
+                        ->update([
+                            'current_revision_id' => $prev->id,
+                            'current_revision_no' => $prev->revision_no,
+                            'updated_at'          => Carbon::now(),
+                        ]);
+                } else {
+                    DB::table('doc_packages')
+                        ->where('id', $packageId)
+                        ->update([
+                            'current_revision_id' => null,
+                            'current_revision_no' => 0,
+                            'updated_at'          => Carbon::now(),
+                        ]);
+                }
             }
+            // kalau bukan active approved (misal obsolete / rejected),
+            // doc_packages tidak diubah sama sekali
 
             DB::table('package_approvals')
                 ->where('revision_id', $revisionId)
@@ -869,7 +989,7 @@ class ApprovalController extends Controller
 
             DB::commit();
             return response()->json([
-                'message' => 'Status dikembalikan ke Waiting. Revisi sebelumnya diaktifkan kembali.'
+                'message' => 'Status has been set back to Waiting.',
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -879,6 +999,7 @@ class ApprovalController extends Controller
             ], 500);
         }
     }
+
 
 
 
@@ -908,14 +1029,13 @@ class ApprovalController extends Controller
             ->join('products as p', 'dp.product_id', '=', 'p.id')
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-            ->leftJoin('doc_package_revision_files as f', 'f.revision_id', '=', 'dpr.id')
             ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
             ->leftJoinSub($latestPa, 'pa', function ($join) {
                 $join->on('pa.revision_id', '=', 'dpr.id')
                     ->where('pa.rn', '=', 1);
             })
             ->where('dpr.revision_status', '<>', 'draft')
-            // Hanya revision yang jadi current di package
+            // hanya revision yang jadi current di package
             ->whereColumn('dp.current_revision_id', 'dpr.id');
 
         // === filter (sama seperti list) ===
@@ -937,55 +1057,44 @@ class ApprovalController extends Controller
 
         // === ambil data dasar ===
         $rowsDb = $query->select(
-            'dp.id as package_id',
             'c.code as customer',
             'm.name as model',
             'p.part_no',
             'p.part_name as part_name',
-            'f.filename as file_name',
             'dtg.name as doctype',
             'dsc.name as category',
-            'pg.code_part_group as part_group'
+            'pg.code_part_group as part_group',
+            'dpr.created_at as upload_date'
         )
             ->orderBy('c.code')
             ->orderBy('m.name')
             ->orderBy('p.part_no')
-            ->orderBy('f.filename')
             ->get();
 
-        // === bentuk rows: 1 blok = 1 package ===
+        $generatedAt = Carbon::now(); // waktu file summary dibuat
+
+        // === bentuk rows untuk export (tanpa kolom Downloaded At) ===
         $rows = [];
+        foreach ($rowsDb as $r) {
+            $uploadDate = $r->upload_date
+                ? Carbon::parse($r->upload_date)->format('Y-m-d')
+                : '';
 
-        // groupBy per package
-        $grouped = $rowsDb->groupBy('package_id');
-
-        foreach ($grouped as $packageId => $items) {
-            $firstRow = true;
-            foreach ($items as $r) {
-                $rows[] = [
-                    $firstRow ? $r->customer   : '',
-                    $firstRow ? $r->model      : '',
-                    $firstRow ? $r->part_no    : '',
-                    $r->part_name,
-                    $r->file_name,
-                    $r->doctype,
-                    $r->category,
-                    $firstRow ? $r->part_group : '', // kalau mau muncul sekali di header
-                ];
-                $firstRow = false;
-            }
-
-            // baris kosong pemisah antar package
-            $rows[] = ['', '', '', '', '', '', '', ''];
+            $rows[] = [
+                $r->customer,
+                $r->model,
+                $r->part_no,
+                $r->part_name,
+                $r->doctype,
+                $r->category,
+                $r->part_group,
+                $uploadDate, // Upload Date
+            ];
         }
 
-        // buang baris kosong terakhir kalau ada data
-        if (!empty($rows)) {
-            array_pop($rows);
-        }
-
-        $export   = new ApprovalSummaryExport($rows);
-        $filename = 'approval-summary-' . now()->format('Ymd_His') . '.xlsx';
+        // kirim juga tanggal download ke export untuk ditaruh di judul
+        $export   = new ApprovalSummaryExport($rows, $generatedAt->format('Y-m-d H:i'));
+        $filename = 'approval-summary-' . $generatedAt->format('Ymd_His') . '.xlsx';
 
         return Excel::download($export, $filename);
     }

@@ -12,6 +12,12 @@ class DocPackageRevisionFile extends Model
 
     protected $guarded = [];
 
+     protected $casts = [
+        'ori_position'   => 'integer',
+        'copy_position'  => 'integer',
+        'obslt_position' => 'integer',
+    ];
+
     /**
      * Mendapatkan revisi induk dari file ini.
      */
