@@ -183,7 +183,9 @@
 <div id="userLinkListModal" tabindex="-1" aria-hidden="true"
     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
     <div class="relative p-4 w-full max-w-3xl h-full md:h-auto">
-        <div class="relative p-4 text-left bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+        <div
+            class="relative p-4 pt-10 pr-12 text-left bg-white rounded-lg shadow dark:bg-gray-800 sm:p-6 sm:pt-10 sm:pr-12">
+
             <button type="button"
                 class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
                 <i class="fa-solid fa-xmark w-5 h-5"></i>
@@ -220,7 +222,7 @@
     </div>
 </div>
 
-{{-- Add User Link Modal --}}
+{{-- [MODIFIED] Add User Link Modal --}}
 <div id="addUserLinkModal" tabindex="-1" aria-hidden="true"
     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
     <div class="relative p-4 w-full max-w-md h-full md:h-auto">
@@ -236,14 +238,14 @@
             <form id="addUserLinkForm" method="POST">
                 @csrf
                 <div class="mb-4">
-                    <label for="ul_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Name <span class="text-red-600">*</span></label>
-                    <input type="text" name="name" id="ul_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. John Doe" required>
-                    <p id="add-ul-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
-                <div class="mb-4">
-                    <label for="ul_email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Email <span class="text-red-600">*</span></label>
-                    <input type="email" name="email" id="ul_email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. john@example.com" required>
-                    <p id="add-ul-email-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                    <label for="ul_user_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">User <span class="text-red-600">*</span></label>
+
+                    {{-- This is the new dropdown --}}
+                    <select name="user_id" id="ul_user_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" style="width: 100%;" required>
+                        {{-- Select2 will populate this --}}
+                    </select>
+
+                    <p id="add-ul-user_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
 
                 <div class="flex items-center space-x-4 mt-6">
@@ -259,42 +261,8 @@
     </div>
 </div>
 
-{{-- Edit User Link Modal --}}
-<div id="editUserLinkModal" tabindex="-1" aria-hidden="true"
-    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
-    <div class="relative p-4 w-full max-w-md h-full md:h-auto">
-        <div class="relative p-4 text-left bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
-            <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                <i class="fa-solid fa-xmark w-5 h-5"></i>
-                <span class="sr-only">Close modal</span>
-            </button>
-            <h3 class="mb-4 text-xl text-center font-medium text-gray-900 dark:text-white">Edit User Link</h3>
-
-            <form id="editUserLinkForm" method="POST">
-                @csrf
-                @method('PUT')
-                <div class="mb-4">
-                    <label for="ul_edit_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Name <span class="text-red-600">*</span></label>
-                    <input type="text" name="name" id="ul_edit_name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
-                    <p id="edit-ul-name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
-                <div class="mb-4">
-                    <label for="ul_edit_email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Email <span class="text-red-600">*</span></label>
-                    <input type="email" name="email" id="ul_edit_email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
-                    <p id="edit-ul-email-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
-                <div class="flex items-center space-x-4 mt-6">
-                    <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">
-                        Cancel
-                    </button>
-                    <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 w-full">
-                        Save Changes
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+{{-- [REMOVED] Edit User Link Modal --}}
+{{-- This modal is no longer needed --}}
 
 {{-- Delete User Link Modal --}}
 <div id="deleteUserLinkModal" tabindex="-1" aria-hidden="true"
@@ -324,9 +292,53 @@
 
 @push('styles')
 <link href="{{ asset('assets/css/select2.css') }}" rel="stylesheet" />
+{{-- Add Select2 theme styles if needed, e.g., for dark mode --}}
+<style>
+    /* Fix Select2 in modal styling */
+    .select2-container--open {
+        z-index: 9999 !important;
+    }
+
+    /* Simple dark mode for Select2 */
+    .dark .select2-container--default .select2-selection--single,
+    .dark .select2-dropdown {
+        background-color: #374151;
+        /* gray-700 */
+        border-color: #4b5563;
+        /* gray-600 */
+        color: #f3f4f6;
+        /* gray-100 */
+    }
+
+    .dark .select2-container--default .select2-selection--single .select2-selection__rendered,
+    .dark .select2-container--default .select2-selection--single .select2-selection__arrow b {
+        color: #f3f4f6;
+        /* gray-100 */
+    }
+
+    .dark .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #3b82f6;
+        /* blue-500 */
+    }
+
+    .dark .select2-search--dropdown .select2-search__field {
+        background-color: #4b5563;
+        /* gray-600 */
+        border-color: #4b5563;
+        /* gray-600 */
+        color: #f3f4f6;
+    }
+
+    .dark .select2-results__option {
+        color: #f3f4f6;
+    }
+</style>
 @endpush
 
 @push('scripts')
+{{-- Make sure you have select2.min.js loaded in your app.blade.php or here --}}
+{{-- <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> --}}
+
 <script>
     $(document).ready(function() {
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
@@ -356,7 +368,7 @@
                         return `<button class="view-links"
                                     data-id="${row.id}" data-sname="${data}" title="View User Link List">
                                 ${data}
-                            </button>`;
+                                </button>`;
                     }
                 },
                 {
@@ -391,12 +403,12 @@
                     className: 'text-center',
                     render: function(data, type, row) {
                         return `
-                  <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
-                    <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
-                  </button>
-                  <button class="delete-button text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete" data-id="${row.id}">
-                    <i class="fa-solid fa-trash-can fa-lg m-2"></i>
-                  </button>`;
+                        <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
+                            <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
+                        </button>
+                        <button class="delete-button text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" title="Delete" data-id="${row.id}">
+                            <i class="fa-solid fa-trash-can fa-lg m-2"></i>
+                        </button>`;
                     }
                 }
             ],
@@ -418,7 +430,7 @@
         const deleteModal = $('#deleteSupplierModal');
         const userLinkListModal = $('#userLinkListModal');
         const addUserLinkModal = $('#addUserLinkModal');
-        const editUserLinkModal = $('#editUserLinkModal');
+        // const editUserLinkModal = $('#editUserLinkModal'); // <-- REMOVED
         const deleteUserLinkModal = $('#deleteUserLinkModal');
 
         const addButton = $('#add-button');
@@ -427,7 +439,7 @@
         // State vars
         let supplierIdToDelete = null;
         let currentSupplierIdForLinks = null;
-        let currentLinkIdToDelete = null;
+        let currentUserIdToUnlink = null; // Renamed from currentLinkIdToDelete
         let userLinksDT = null;
 
         // Helpers
@@ -445,10 +457,10 @@
                 if (!$btn.data('orig-html')) $btn.data('orig-html', $btn.html());
                 $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed')
                     .html(`<span class="inline-flex items-center gap-2">
-                        <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-                        </svg>${loadingText}</span>`);
+                            <svg aria-hidden="true" class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>${loadingText}</span>`);
             } else {
                 const orig = $btn.data('orig-html');
                 if (orig) $btn.html(orig);
@@ -593,7 +605,7 @@
             hideModal(deleteModal);
             hideModal(userLinkListModal);
             hideModal(addUserLinkModal);
-            hideModal(editUserLinkModal);
+            // hideModal(editUserLinkModal); // <-- REMOVED
             hideModal(deleteUserLinkModal);
         });
 
@@ -766,10 +778,13 @@
             });
         });
 
-        // ===== User Link List =====
+        // ===== [MODIFIED] User Link List =====
         function initOrReloadUserLinksDT(supplierId) {
+            // [MODIFIED] New URL
+            // [BENAR]
+            const ajaxUrl = `/master/suppliers/${supplierId}/links/data`;
             if (userLinksDT) {
-                userLinksDT.ajax.url(`/master/suppliers/${supplierId}/links/data`).load();
+                userLinksDT.ajax.url(ajaxUrl).load();
                 return;
             }
             userLinksDT = $('#userLinksTable').DataTable({
@@ -777,7 +792,7 @@
                 serverSide: true,
                 scrollX: true,
                 ajax: {
-                    url: `/master/suppliers/${supplierId}/links/data`,
+                    url: ajaxUrl, // [MODIFIED]
                     type: 'GET',
                     data: function(d) {
                         d.search = d.search.value;
@@ -788,11 +803,11 @@
                         render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1
                     },
                     {
-                        data: 'name',
+                        data: 'name', // from users table
                         name: 'name'
                     },
                     {
-                        data: 'email',
+                        data: 'email', // from users table
                         name: 'email'
                     },
                     {
@@ -801,15 +816,12 @@
                         searchable: false,
                         className: 'text-center',
                         render: function(data, type, row) {
+                            // [MODIFIED] Only show delete button. 'row.id' is now the USER_ID
                             return `
-                      <button class="edit-link-button text-gray-400 hover:text-gray-700"
-                              title="Edit" data-id="${row.id}" data-supplier="${currentSupplierIdForLinks}">
-                        <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
-                      </button>
-                      <button class="delete-link-button text-red-600 hover:text-red-900"
-                              title="Delete" data-id="${row.id}" data-supplier="${currentSupplierIdForLinks}">
-                        <i class="fa-solid fa-trash-can fa-lg m-2"></i>
-                      </button>`;
+                            <button class="delete-link-button text-red-600 hover:text-red-900"
+                                    title="Delete" data-id="${row.id}" data-supplier="${currentSupplierIdForLinks}">
+                                <i class="fa-solid fa-trash-can fa-lg m-2"></i>
+                            </button>`;
                         }
                     },
                 ],
@@ -835,21 +847,59 @@
             showModal(userLinkListModal);
         });
 
-        // Add Link button -> open add form
+        // [MODIFIED] Add Link button -> open add form
         $('#add-link-button').on('click', function() {
             if (!currentSupplierIdForLinks) return;
+
             $('#addUserLinkForm')[0].reset();
-            $('#add-ul-name-error,#add-ul-email-error').addClass('hidden');
+            $('#add-ul-user_id-error').addClass('hidden');
+
+            // [MODIFIED] Set form action
             $('#addUserLinkForm').attr('action', `/master/suppliers/${currentSupplierIdForLinks}/links`);
+            const $select = $('#ul_user_id');
+
+            // Destroy previous Select2 instance if it exists
+            if ($select.hasClass("select2-hidden-accessible")) {
+                $select.select2('destroy');
+            }
+
+            // Clear old options
+            $select.html('');
+
+            // [NEW] Initialize Select2 for the user dropdown
+            $select.select2({
+                placeholder: 'Search user...',
+                allowClear: true,
+                dropdownParent: $('#addUserLinkModal'), // Penting untuk modal
+                ajax: {
+                    // [MODIFIKASI] URL ke route 'suppliers.links.available' baru
+                    url: `/master/suppliers/${currentSupplierIdForLinks}/links/available-users`,
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            search: params.term // search term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                },
+            });
+
             showModal(addUserLinkModal);
         });
 
-        // Submit Add User Link
+        // [MODIFIED] Submit Add User Link
         $('#addUserLinkForm').on('submit', function(e) {
             e.preventDefault();
             const $form = $(this),
                 $btn = $form.find('[type="submit"]');
-            $('#add-ul-name-error,#add-ul-email-error').addClass('hidden');
+
+            $('#add-ul-user_id-error').addClass('hidden'); // [MODIFIED] error ID
             const formData = new FormData(this);
 
             $.ajax({
@@ -869,7 +919,7 @@
                     if (data.success) {
                         if (userLinksDT) userLinksDT.ajax.reload(null, false);
                         hideModal(addUserLinkModal);
-                        toastSuccess('Success', 'User link added successfully.');
+                        toastSuccess('Success', 'User linked successfully.');
                     } else {
                         toastError('Error', data.message || 'Failed to add user link.');
                     }
@@ -877,8 +927,8 @@
                 error: function(xhr) {
                     const errors = xhr.responseJSON?.errors;
                     if (errors) {
-                        if (errors.name) $('#add-ul-name-error').text(errors.name[0]).removeClass('hidden');
-                        if (errors.email) $('#add-ul-email-error').text(errors.email[0]).removeClass('hidden');
+                        // [MODIFIED] Check for user_id error
+                        if (errors.user_id) $('#add-ul-user_id-error').text(errors.user_id[0]).removeClass('hidden');
                     }
                     toastError('Error', xhr.responseJSON?.message || 'Failed to add user link.');
                 },
@@ -889,82 +939,13 @@
             });
         });
 
-        // Edit Link (open)
-        $(document).on('click', '.edit-link-button', function() {
-            const linkId = $(this).data('id');
-            const supplierId = $(this).data('supplier');
+        // [REMOVED] Edit Link (open)
 
-            $('#edit-ul-name-error,#edit-ul-email-error').addClass('hidden');
+        // [REMOVED] Edit Link (submit)
 
-            $.ajax({
-                url: `/master/suppliers/${supplierId}/links/${linkId}`,
-                method: 'GET',
-                beforeSend: function() {
-                    setButtonLoading($(`.edit-link-button[data-id="${linkId}"]`), true, '');
-                },
-                success: function(data) {
-                    $('#ul_edit_name').val(data.name || '');
-                    $('#ul_edit_email').val(data.email || '');
-                    $('#editUserLinkForm').attr('action', `/master/suppliers/${supplierId}/links/${linkId}`);
-                    showModal(editUserLinkModal);
-                },
-                error: function(xhr) {
-                    toastError('Error', xhr.responseJSON?.message || 'Failed to fetch user link.');
-                },
-                complete: function() {
-                    setButtonLoading($(`.edit-link-button[data-id="${linkId}"]`), false);
-                }
-            });
-        });
-
-        // Edit Link (submit)
-        $('#editUserLinkForm').on('submit', function(e) {
-            e.preventDefault();
-            const $form = $(this),
-                $btn = $form.find('[type="submit"]');
-            $('#edit-ul-name-error,#edit-ul-email-error').addClass('hidden');
-            const formData = new FormData(this); // @method('PUT') ada di form
-
-            $.ajax({
-                url: $form.attr('action'),
-                method: 'POST', // POST + _method=PUT
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                data: formData,
-                processData: false,
-                contentType: false,
-                beforeSend: function() {
-                    setButtonLoading($btn, true, 'Saving...');
-                    setFormBusy($form, true);
-                },
-                success: function(resp) {
-                    if (resp.success) {
-                        if (userLinksDT) userLinksDT.ajax.reload(null, false);
-                        hideModal(editUserLinkModal);
-                        toastSuccess('Success', 'User link updated successfully.');
-                    } else {
-                        toastError('Error', resp.message || 'Failed to update user link.');
-                    }
-                },
-                error: function(xhr) {
-                    const errors = xhr.responseJSON?.errors;
-                    if (errors) {
-                        if (errors.name) $('#edit-ul-name-error').text(errors.name[0]).removeClass('hidden');
-                        if (errors.email) $('#edit-ul-email-error').text(errors.email[0]).removeClass('hidden');
-                    }
-                    toastError('Error', xhr.responseJSON?.message || 'Failed to update user link.');
-                },
-                complete: function() {
-                    setButtonLoading($btn, false);
-                    setFormBusy($form, false);
-                }
-            });
-        });
-
-        // Delete Link
+        // [MODIFIED] Delete Link
         $(document).on('click', '.delete-link-button', function() {
-            currentLinkIdToDelete = $(this).data('id');
+            currentUserIdToUnlink = $(this).data('id'); // This is now USER_ID
             $('#confirmDeleteLinkButton').data('supplier', $(this).data('supplier'));
             showModal(deleteUserLinkModal);
         });
@@ -972,10 +953,11 @@
         $('#confirmDeleteLinkButton').on('click', function() {
             const supplierId = $(this).data('supplier');
             const $btn = $(this);
-            if (!currentLinkIdToDelete || !supplierId) return;
+            if (!currentUserIdToUnlink || !supplierId) return;
 
+            // [MODIFIED] New URL structure
             $.ajax({
-                url: `/master/suppliers/${supplierId}/links/${currentLinkIdToDelete}`,
+                url: `/master/suppliers/${supplierId}/users/${currentUserIdToUnlink}`,
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken
@@ -988,7 +970,7 @@
                     if (resp.success) {
                         if (userLinksDT) userLinksDT.ajax.reload(null, false);
                         hideModal(deleteUserLinkModal);
-                        currentLinkIdToDelete = null;
+                        currentUserIdToUnlink = null;
                         toastSuccess('Success', 'User link deleted successfully.');
                     } else {
                         toastError('Error', resp.message || 'Failed to delete user link.');

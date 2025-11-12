@@ -21,7 +21,7 @@ class ShareNotification extends Mailable
 
     public function build()
     {
-        return $this->subject('Dokumen Baru Dibagikan Kepada Anda')
+        return $this->subject('New Documents Shared With You')
             ->markdown('emails.share_notification', [
                 'username' => $this->username,
                 'packageId' => $this->packageId,

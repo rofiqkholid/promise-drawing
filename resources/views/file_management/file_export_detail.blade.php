@@ -49,8 +49,8 @@
                                         :title="metaLine()">
                                     </p>
 
-                                    <span class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold
-                                                         bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                                    <span
+                                        class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
                                         x-text="revisionBadgeText()" :title="revisionBadgeText()">
                                     </span>
                                 </div>
@@ -112,8 +112,8 @@
                     <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
                         <button @click="downloadPackage()"
                             class="inline-flex items-center text-sm px-3 py-2 rounded-md
-                                            bg-blue-600 text-white hover:bg-blue-700
-                                            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                                                        bg-blue-600 text-white hover:bg-blue-700
+                                                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
                             <i class="fa-solid fa-download mr-2"></i>
                             Download All Files
                         </button>
@@ -122,7 +122,7 @@
                 @php
                     function renderFileGroup($title, $icon, $category)
                     {
-                  @endphp
+                @endphp
                 <div
                     class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <button @click="toggleSection('{{$category}}')"
@@ -255,9 +255,8 @@
 
                                             <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')"
                                                 style="transform: scale(0.45);">
-                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm
-                                       text-[10px] text-blue-700 flex flex-col items-center
-                                       justify-between px-2 py-1" style="background-color: transparent;">
+                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
+                                                    style="background-color: transparent;">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine()"></span>
@@ -276,9 +275,8 @@
 
                                             <div x-show="pkg.stamp?.is_obsolete" class="absolute"
                                                 :class="stampPositionClass('obsolete')" style="transform: scale(0.45);">
-                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm
-                                       text-[10px] text-blue-700 flex flex-col items-center
-                                       justify-between px-2 py-1" style="background-color: transparent;">
+                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
+                                                    style="background-color: transparent;">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine()"></span>
@@ -310,9 +308,8 @@
 
                                             <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')"
                                                 style="transform: scale(0.45);">
-                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm
-                                       text-[10px] text-blue-700 flex flex-col items-center
-                                       justify-between px-2 py-1" style="background-color: transparent;">
+                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
+                                                    style="background-color: transparent;">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine()"></span>
@@ -331,9 +328,8 @@
 
                                             <div x-show="pkg.stamp?.is_obsolete" class="absolute"
                                                 :class="stampPositionClass('obsolete')" style="transform: scale(0.45);">
-                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm
-                                       text-[10px] text-blue-700 flex flex-col items-center
-                                       justify-between px-2 py-1" style="background-color: transparent;">
+                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
+                                                    style="background-color: transparent;">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine()"></span>
@@ -373,9 +369,8 @@
 
                                             <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')"
                                                 style="transform: scale(0.45);">
-                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm
-                                       text-[10px] text-blue-700 flex flex-col items-center
-                                       justify-between px-2 py-1" style="background-color: transparent;">
+                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
+                                                    style="background-color: transparent;">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine()"></span>
@@ -394,9 +389,8 @@
 
                                             <div x-show="pkg.stamp?.is_obsolete" class="absolute"
                                                 :class="stampPositionClass('obsolete')" style="transform: scale(0.45);">
-                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm
-                                       text-[10px] text-blue-700 flex flex-col items-center
-                                       justify-between px-2 py-1" style="background-color: transparent;">
+                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
+                                                    style="background-color: transparent;">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine()"></span>
@@ -421,7 +415,8 @@
                                     </div>
                                     <div x-show="tifError"
                                         class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
-                                        x-text="tifError"></div>
+                                        x-text="tifError">
+                                    </div>
                                 </div>
                             </template>
 
@@ -435,9 +430,8 @@
 
                                         <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')"
                                             style="transform: scale(0.45);">
-                                            <div class="w-56 h-40 border-2 border-blue-600 rounded-sm
-                                     text-[10px] text-blue-700 flex flex-col items-center
-                                     justify-between px-2 py-1" style="background-color: transparent;">
+                                            <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
+                                                style="background-color: transparent;">
                                                 <div
                                                     class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                     <span x-text="stampTopLine()"></span>
@@ -456,9 +450,8 @@
 
                                         <div x-show="pkg.stamp?.is_obsolete" class="absolute"
                                             :class="stampPositionClass('obsolete')" style="transform: scale(0.45);">
-                                            <div class="w-56 h-40 border-2 border-blue-600 rounded-sm
-                                     text-[10px] text-blue-700 flex flex-col items-center
-                                     justify-between px-2 py-1" style="background-color: transparent;">
+                                            <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
+                                                style="background-color: transparent;">
                                                 <div
                                                     class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                     <span x-text="stampTopLine()"></span>
@@ -483,7 +476,8 @@
                                     </div>
                                     <div x-show="hpglError"
                                         class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
-                                        x-text="hpglError"></div>
+                                        x-text="hpglError">
+                                    </div>
                                 </div>
                             </template>
 
@@ -572,7 +566,6 @@
     <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 
     <script src="https://unpkg.com/utif@3.1.0/dist/UTIF.min.js"></script>
-    -->
     <script src="https://unpkg.com/utif@2.0.1/UTIF.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -585,14 +578,14 @@
 
     <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
     <script type="importmap">
-                {
-                  "imports": {
-                    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-                    "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
-                  }
-                }
-                </script>
+                            {
+                              "imports": {
+                                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                                "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
+                              }
+                            }
+                            </script>
 
     <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
 

@@ -20,6 +20,7 @@ use App\Models\DocTypeSubCategories;
 use App\Models\ActivityLog;
 use App\Models\User;
 use App\Models\StampFormat;
+use App\Models\FileExtensions;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 
@@ -379,15 +380,41 @@ class ExportController extends Controller
 
         $isObsolete = (bool)($revision->is_obsolete ?? 0);
 
-        $files = DB::table('doc_package_revision_files')
+        $fileRows = DB::table('doc_package_revision_files')
             ->where('revision_id', $id)
             ->select('id', 'filename as name', 'category', 'storage_path')
+            ->get();
+
+        $extList = $fileRows
+            ->map(fn($r) => strtolower(pathinfo($r->name, PATHINFO_EXTENSION)))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $extUpper = $extList->map(fn($e) => strtoupper($e));
+
+        $extIcons = $extUpper->isEmpty()
+            ? []
+            : FileExtensions::whereIn('code', $extUpper)
             ->get()
+            ->mapWithKeys(fn(FileExtensions $m) => [strtolower($m->code) => $m->icon_src])
+            ->all();
+
+        $files = $fileRows
             ->groupBy('category')
-            ->map(function ($items) {
-                return $items->map(function ($item) {
+            ->map(function ($items) use ($extIcons) {
+                return $items->map(function ($item) use ($extIcons) {
                     $url = URL::signedRoute('preview.file', ['id' => $item->id]);
-                    return ['name' => $item->name, 'url' => $url, 'file_id' => $item->id];
+
+                    $ext = strtolower(pathinfo($item->name, PATHINFO_EXTENSION));
+                    $iconSrc = $extIcons[$ext] ?? null;
+
+                    return [
+                        'name'     => $item->name,
+                        'url'      => $url,
+                        'file_id'  => $item->id,
+                        'icon_src' => $iconSrc,
+                    ];
                 });
             })
             ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
@@ -472,15 +499,41 @@ class ExportController extends Controller
 
         $isObsolete = (bool)($revision->is_obsolete ?? 0);
 
-        $files = DB::table('doc_package_revision_files')
+        $fileRows = DB::table('doc_package_revision_files')
             ->where('revision_id', $decrypted_id)
             ->select('id', 'filename as name', 'category', 'storage_path')
+            ->get();
+
+        $extList = $fileRows
+            ->map(fn($r) => strtolower(pathinfo($r->name, PATHINFO_EXTENSION)))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $extUpper = $extList->map(fn($e) => strtoupper($e));
+
+        $extIcons = $extUpper->isEmpty()
+            ? []
+            : FileExtensions::whereIn('code', $extUpper)
             ->get()
+            ->mapWithKeys(fn(FileExtensions $m) => [strtolower($m->code) => $m->icon_src])
+            ->all();
+
+        $files = $fileRows
             ->groupBy('category')
-            ->map(function ($items) {
-                return $items->map(function ($item) {
+            ->map(function ($items) use ($extIcons) {
+                return $items->map(function ($item) use ($extIcons) {
                     $url = URL::signedRoute('preview.file', ['id' => $item->id]);
-                    return ['name' => $item->name, 'url' => $url, 'file_id' => $item->id];
+
+                    $ext = strtolower(pathinfo($item->name, PATHINFO_EXTENSION));
+                    $iconSrc = $extIcons[$ext] ?? null;
+
+                    return [
+                        'name'     => $item->name,
+                        'url'      => $url,
+                        'file_id'  => $item->id,
+                        'icon_src' => $iconSrc,
+                    ];
                 });
             })
             ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
@@ -519,6 +572,8 @@ class ExportController extends Controller
 
     public function downloadFile($file_id)
     {
+        set_time_limit(0);
+
         $file = DocPackageRevisionFile::find($file_id);
 
         if (!$file) {
@@ -585,7 +640,7 @@ class ExportController extends Controller
         $ecn = Str::slug($revision->ecn_no);
         $timestamp = now()->format('Ymd-His');
 
-        $zipFileName = "{$customer}-{$model}-{$partNo}-{$ecn}-{$timestamp}-" . Str::random(5) . ".zip";
+        $zipFileName = strtoupper("{$customer}-{$model}-{$partNo}-{$ecn}-{$timestamp}") . ".zip";
         $zipFilePath = storage_path('app/public/' . $zipFileName);
 
         $zip = new ZipArchive();
@@ -609,6 +664,8 @@ class ExportController extends Controller
 
                 $pathInZip = $folderInZip . '/' . $file->filename;
                 $zip->addFile($filePath, $pathInZip);
+
+                // OPTIMASI: Jangan kompres file yang sudah terkompresi
                 $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
                 if (in_array($ext, ['jpg', 'jpeg', 'png', 'hpgl', 'tif', 'pdf', 'zip', 'rar', 'step', 'stp', 'igs', 'iges', 'catpart', 'catproduct'])) {
                     $zip->setCompressionName($pathInZip, ZipArchive::CM_STORE);

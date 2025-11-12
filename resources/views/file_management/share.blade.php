@@ -476,7 +476,7 @@
                     placeholder: 'Select roles...',
                     allowClear: true,
                     ajax: {
-                        url: "{{ route('share.getRoles') }}",
+                        url: "{{ route('share.getSuppliers') }}",
                         method: 'GET',
                         dataType: 'json',
                         delay: 250,
@@ -489,7 +489,7 @@
                         processResults: function(data) {
                             const formatted = data.map(item => ({
                                 id: item.id,
-                                text: item.role_name
+                                text: item.code
                             }));
                             return {
                                 results: formatted

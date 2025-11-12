@@ -284,7 +284,7 @@
                       :class="stampPositionClass('original')">
                       <div
                        :class="stampOriginClass('original')"
-                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
            text-[10px] text-blue-700 flex flex-col items-center
            justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
@@ -308,7 +308,7 @@
                       :class="stampPositionClass('copy')">
                       <div
                         :class="stampOriginClass('copy')"
-                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
            text-[10px] text-blue-700 flex flex-col items-center
            justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
@@ -334,7 +334,7 @@
                       :class="stampPositionClass('obsolete')">
                       <div
                       :class="stampOriginClass('obsolete')"
-                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
                    text-[10px] text-blue-700 flex flex-col items-center
                    justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
@@ -375,7 +375,7 @@
                       :class="stampPositionClass('original')">
                       <div
                        :class="stampOriginClass('original')"
-                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
            text-[10px] text-blue-700 flex flex-col items-center
            justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
@@ -399,7 +399,7 @@
                       :class="stampPositionClass('copy')">
                       <div
                         :class="stampOriginClass('copy')"
-                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
            text-[10px] text-blue-700 flex flex-col items-center
            justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
@@ -423,7 +423,7 @@
                       :class="stampPositionClass('obsolete')">
                       <div
                       :class="stampOriginClass('obsolete')"
-                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
                    text-[10px] text-blue-700 flex flex-col items-center
                    justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
@@ -476,7 +476,7 @@
                       :class="stampPositionClass('original')">
                       <div
                        :class="stampOriginClass('original')"
-                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
            text-[10px] text-blue-700 flex flex-col items-center
            justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
@@ -500,7 +500,7 @@
                       :class="stampPositionClass('copy')">
                       <div
                         :class="stampOriginClass('copy')"
-                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
            text-[10px] text-blue-700 flex flex-col items-center
            justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
@@ -524,7 +524,7 @@
                       :class="stampPositionClass('obsolete')">
                       <div
                       :class="stampOriginClass('obsolete')"
-                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
                    text-[10px] text-blue-700 flex flex-col items-center
                    justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
@@ -574,7 +574,7 @@
                       :class="stampPositionClass('original')">
                       <div
                        :class="stampOriginClass('original')"
-                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
            text-[10px] text-blue-700 flex flex-col items-center
            justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
@@ -598,7 +598,7 @@
                       :class="stampPositionClass('copy')">
                       <div
                         :class="stampOriginClass('copy')"
-                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
            text-[10px] text-blue-700 flex flex-col items-center
            justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
@@ -622,7 +622,7 @@
                       :class="stampPositionClass('obsolete')">
                       <div
                       :class="stampOriginClass('obsolete')"
-                        class="w-56 h-40 border-2 border-blue-600 rounded-sm
+                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
                    text-[10px] text-blue-700 flex flex-col items-center
                    justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Suppliers; // <-- TAMBAHKAN BARIS INI
+
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -40,5 +42,14 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(\App\Models\Role::class, 'user_roles', 'user_id', 'role_id')
             ->withTimestamps(); // created_at & updated_at di pivot otomatis
+    }
+    public function suppliers()
+    {
+        return $this->belongsToMany(
+            Suppliers::class,
+            'user_supplier', 
+            'user_id',      
+            'supplier_id'    
+        );
     }
 }

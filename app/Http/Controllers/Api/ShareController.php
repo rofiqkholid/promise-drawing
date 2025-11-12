@@ -18,12 +18,12 @@ use App\Mail\ShareNotification;
 
 class ShareController extends Controller
 {
-    public function getRoles()
+    public function getSuppliers()
     {
         try {
-            $roles = DB::table('roles')
-                ->select('id', 'role_name')
-                ->orderBy('role_name', 'asc')
+            $roles = DB::table('suppliers')
+                ->select('id', 'code')
+                ->orderBy('code', 'asc')
                 ->get();
 
             return response()->json($roles);
@@ -294,7 +294,7 @@ class ShareController extends Controller
             ->take($length)
             ->get();
 
-        $roleMap = DB::table('roles')->pluck('role_name', 'id')->all();
+        $roleMap = DB::table('suppliers')->pluck('code', 'id')->all();
 
         $data->transform(function ($item) use ($roleMap) {
             if (empty($item->share_to)) {
@@ -333,8 +333,7 @@ class ShareController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'package_id' => 'required|integer|exists:doc_package_revisions,id',
-            'role_ids'   => 'array|min:1',
-            'role_ids.*' => 'integer|exists:roles,id',
+            
         ]);
 
         if ($validator->fails()) {
@@ -357,8 +356,8 @@ class ShareController extends Controller
         }
 
         $users = DB::table('users')
-            ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
-            ->whereIn('user_roles.role_id', $roleIds)
+            ->join('user_supplier', 'users.id', '=', 'user_supplier.user_id')
+            ->whereIn('user_supplier.supplier_id', $roleIds)
             ->select('users.email', 'users.name')
             ->distinct()
             ->get();

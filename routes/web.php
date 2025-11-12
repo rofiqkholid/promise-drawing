@@ -169,12 +169,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('master/suppliers', SuppliersController::class)->names('suppliers')->except(['create', 'edit']);
     Route::get('/suppliers/data', [SuppliersController::class, 'data'])->name('suppliers.data');
     Route::get('/master/suppliers/{supplier}/links/data', [SuppliersController::class, 'linksData'])->name('suppliers.links.data');
+    Route::get('/master/suppliers/{supplier}/links/available-users', [SuppliersController::class, 'getAvailableUsers'])->name('suppliers.links.available');
     Route::post('/master/suppliers/{supplier}/links', [SuppliersController::class, 'storeLink'])->name('suppliers.links.store');
-    Route::get('/master/suppliers/{supplier}/links/{link}', [SuppliersController::class, 'showLink'])->name('suppliers.links.show');
-    Route::put('/master/suppliers/{supplier}/links/{link}', [SuppliersController::class, 'updateLink'])->name('suppliers.links.update');
-    Route::delete('/master/suppliers/{supplier}/links/{link}', [SuppliersController::class, 'destroyLink'])->name('suppliers.links.destroy');
-    #End region
-
+    Route::delete('/master/suppliers/{supplier}/users/{user}', [SuppliersController::class, 'destroyLink']);
+    
     #Region Customers
     Route::resource('master/customers', CustomersController::class)->names('customers')->except(['create', 'edit']);
     Route::get('/customers/data', [CustomersController::class, 'data'])->name('customers.data');
@@ -365,7 +363,7 @@ Route::middleware(['auth'])->group(function () {
     #end region
 
     #region Share
-    Route::get('/share/get-roles', [ShareController::class, 'getRoles'])->name('share.getRoles');
+    Route::get('/share/get-suppliers', [ShareController::class, 'getSuppliers'])->name('share.getSuppliers');
     Route::get('/share/list', [ShareController::class, 'listPackage'])->name('share.list');
     Route::get('/share/filters', [ShareController::class, 'choiseFilter'])->name('share.filters');
     Route::post('/share/save', [ShareController::class, 'saveShare'])->name('share.save');
