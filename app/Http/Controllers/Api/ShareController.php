@@ -333,7 +333,7 @@ class ShareController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'package_id' => 'required|integer|exists:doc_package_revisions,id',
-            
+            'supplier_ids' => 'nullable|array'
         ]);
 
         if ($validator->fails()) {
@@ -341,8 +341,30 @@ class ShareController extends Controller
         }
 
         $packageId = $request->input('package_id');
-        $roleIds   = $request->input('role_ids');
+        $roleIds   = $request->input('supplier_ids', []);
         $roleIdJson = json_encode($roleIds);
+
+        $packageDetails = DB::table('doc_package_revisions as dpr')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('products as p', 'dp.product_id', '=', 'p.id')
+            ->where('dpr.id', $packageId)
+            ->select(
+                'c.code as customer',
+                'm.name as model',
+                'dsc.name as category',
+                'dtg.name as doc_type',
+                'p.part_no',
+                'dpr.revision_no'
+            )
+            ->first();
+
+        if (!$packageDetails) {
+            return response()->json(['message' => 'Package details not found.'], 404);
+        }
 
         $updateSuccess = DB::table('doc_package_revisions')
             ->where('id', $packageId)
@@ -355,28 +377,64 @@ class ShareController extends Controller
             return response()->json(['message' => 'Package not found or no changes were made.'], 404);
         }
 
-        $users = DB::table('users')
+        if (empty($roleIds)) {
+            return response()->json(['message' => 'Package sharing updated (no recipients).']);
+        }
+
+        $userSuppliers = DB::table('users')
             ->join('user_supplier', 'users.id', '=', 'user_supplier.user_id')
+            ->join('suppliers', 'user_supplier.supplier_id', '=', 'suppliers.id')
             ->whereIn('user_supplier.supplier_id', $roleIds)
-            ->select('users.email', 'users.name')
-            ->distinct()
+            ->select('users.id', 'users.email', 'users.name', 'suppliers.name as supplier_code')
             ->get();
 
-        if ($users->isEmpty()) {
-            return response()->json(['message' => 'No users found for the selected roles.']);
+        if ($userSuppliers->isEmpty()) {
+            return response()->json(['message' => 'Package shared, but no users found for the selected suppliers.']);
+        }
+
+        $usersToEmail = [];
+        foreach ($userSuppliers as $us) {
+            if (!isset($usersToEmail[$us->id])) {
+                $usersToEmail[$us->id] = [
+                    'name' => $us->name,
+                    'email' => $us->email,
+                    'supplier_codes' => []
+                ];
+            }
+            if (!in_array($us->supplier_code, $usersToEmail[$us->id]['supplier_codes'])) {
+                $usersToEmail[$us->id]['supplier_codes'][] = $us->supplier_code;
+            }
         }
 
         $encryptedId = Crypt::encryptString($packageId);
 
-        foreach ($users as $user) {
+        $part1 = trim($packageDetails->model);
+        $part2 = $packageDetails->doc_type;
+        $part3 = $packageDetails->category;
+
+        $subjectParts = array_filter([$part1, $part2, $part3], function ($value) {
+            return !is_null($value) && $value !== '';
+        });
+
+        $emailSubject = implode(' - ', $subjectParts);
+
+        $files = DB::table('doc_package_revision_files')
+            ->where('revision_id', $packageId)
+            ->pluck('filename');
+
+        foreach ($usersToEmail as $userData) {
+
+            $supplierNames = implode(', ', $userData['supplier_codes']);
             $encryptedId = Crypt::encrypt($request->input('package_id'));
 
-            Mail::to($user->email)->send(new ShareNotification(
-                $user->name,
-                $encryptedId
+            Mail::to($userData['email'])->send(new ShareNotification(
+                $userData['name'],
+                $encryptedId,
+                $emailSubject,
+                $supplierNames,
+                $files
             ));
         }
-
 
         return response()->json(['message' => 'Package shared and emails sent successfully!']);
     }

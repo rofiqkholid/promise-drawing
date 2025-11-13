@@ -112,8 +112,8 @@
                     <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
                         <button @click="downloadPackage()"
                             class="inline-flex items-center text-sm px-3 py-2 rounded-md
-                                                        bg-blue-600 text-white hover:bg-blue-700
-                                                        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                                                                                                bg-blue-600 text-white hover:bg-blue-700
+                                                                                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
                             <i class="fa-solid fa-download mr-2"></i>
                             Download All Files
                         </button>
@@ -192,36 +192,14 @@
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate"
                                     x-text="selectedFile?.name"></h3>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Revision: <span
-                                        x-text="pkg.metadata.revision"></span></p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Last updated:
+                                    {{ now()->format('M d, Y H:i') }}
+                                </p>
                             </div>
                             <a x-show="selectedFile?.url" :href="selectedFile?.url" target="_blank" rel="noopener"
                                 class="inline-flex items-center px-3 py-1.5 text-xs text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <i class="fa-solid fa-up-right-from-square mr-2"></i> Open
                             </a>
-                        </div>
-
-                        <div x-show="selectedFile" class="mb-3 flex flex-wrap items-center gap-2 text-xs">
-                            <div class="flex items-center gap-1">
-                                <span>Original:</span>
-                                <select x-model="stampConfig.original"
-                                    class="border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 bg-white dark:bg-gray-900">
-                                    <option value="top-left">Top Left</option>
-                                    <option value="top-right">Top Right</option>
-                                    <option value="bottom-left">Bottom Left</option>
-                                    <option value="bottom-right">Bottom Right</option>
-                                </select>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <span>Obsolete:</span>
-                                <select x-model="stampConfig.obsolete"
-                                    class="border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 bg-white dark:bg-gray-900">
-                                    <option value="top-left">Top Left</option>
-                                    <option value="top-right">Top Right</option>
-                                    <option value="bottom-left">Bottom Left</option>
-                                    <option value="bottom-right">Bottom Right</option>
-                                </select>
-                            </div>
                         </div>
 
                         <div x-show="isImage(selectedFile?.name) || isTiff(selectedFile?.name) || isHpgl(selectedFile?.name) || isPdf(selectedFile?.name)"
@@ -253,10 +231,12 @@
                                                 class="block pointer-events-none select-none max-w-full max-h-[70vh]"
                                                 loading="lazy">
 
-                                            <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')"
-                                                style="transform: scale(0.45);">
-                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
-                                                    style="background-color: transparent;">
+                                            <!-- STAMP ORIGINAL -->
+                                            <div x-show="pkg.stamp" class="absolute"
+                                                :class="stampPositionClass('original')">
+                                                <div :class="stampOriginClass('original')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                                       text-[10px] text-blue-700 flex flex-col items-center
+                                       justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine()"></span>
@@ -273,10 +253,33 @@
                                                 </div>
                                             </div>
 
+                                            <!-- STAMP COPY -->
+                                            <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
+                                                <div :class="stampOriginClass('copy')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                                       text-[10px] text-blue-700 flex flex-col items-center
+                                       justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
+                                                    <div
+                                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                        <span x-text="stampTopLine()"></span>
+                                                    </div>
+                                                    <div class="flex-1 flex items-center justify-center">
+                                                        <span
+                                                            class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                                                            x-text="stampCenterCopy()"></span>
+                                                    </div>
+                                                    <div
+                                                        class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                                                        <span x-text="stampBottomLine()"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- STAMP OBSOLETE -->
                                             <div x-show="pkg.stamp?.is_obsolete" class="absolute"
-                                                :class="stampPositionClass('obsolete')" style="transform: scale(0.45);">
-                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
-                                                    style="background-color: transparent;">
+                                                :class="stampPositionClass('obsolete')">
+                                                <div :class="stampOriginClass('obsolete')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                                               text-[10px] text-blue-700 flex flex-col items-center
+                                               justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine()"></span>
@@ -306,10 +309,12 @@
                                                 class="block pointer-events-none select-none max-w-full max-h-[70vh]">
                                             </canvas>
 
-                                            <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')"
-                                                style="transform: scale(0.45);">
-                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
-                                                    style="background-color: transparent;">
+                                            <!-- STAMP ORIGINAL -->
+                                            <div x-show="pkg.stamp" class="absolute"
+                                                :class="stampPositionClass('original')">
+                                                <div :class="stampOriginClass('original')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                                   text-[10px] text-blue-700 flex flex-col items-center
+                                   justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine()"></span>
@@ -326,10 +331,33 @@
                                                 </div>
                                             </div>
 
+                                            <!-- STAMP COPY -->
+                                            <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
+                                                <div :class="stampOriginClass('copy')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                                   text-[10px] text-blue-700 flex flex-col items-center
+                                   justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
+                                                    <div
+                                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                        <span x-text="stampTopLine()"></span>
+                                                    </div>
+                                                    <div class="flex-1 flex items-center justify-center">
+                                                        <span
+                                                            class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                                                            x-text="stampCenterCopy()"></span>
+                                                    </div>
+                                                    <div
+                                                        class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                                                        <span x-text="stampBottomLine()"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- STAMP OBSOLETE -->
                                             <div x-show="pkg.stamp?.is_obsolete" class="absolute"
-                                                :class="stampPositionClass('obsolete')" style="transform: scale(0.45);">
-                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
-                                                    style="background-color: transparent;">
+                                                :class="stampPositionClass('obsolete')">
+                                                <div :class="stampOriginClass('obsolete')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                                           text-[10px] text-blue-700 flex flex-col items-center
+                                           justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine()"></span>
@@ -367,10 +395,12 @@
                                             <img x-ref="tifImg" alt="TIFF Preview"
                                                 class="block pointer-events-none select-none max-w-full max-h-[70vh]" />
 
-                                            <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')"
-                                                style="transform: scale(0.45);">
-                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
-                                                    style="background-color: transparent;">
+                                            <!-- STAMP ORIGINAL -->
+                                            <div x-show="pkg.stamp" class="absolute"
+                                                :class="stampPositionClass('original')">
+                                                <div :class="stampOriginClass('original')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                               text-[10px] text-blue-700 flex flex-col items-center
+                               justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine()"></span>
@@ -387,10 +417,11 @@
                                                 </div>
                                             </div>
 
-                                            <div x-show="pkg.stamp?.is_obsolete" class="absolute"
-                                                :class="stampPositionClass('obsolete')" style="transform: scale(0.45);">
-                                                <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
-                                                    style="background-color: transparent;">
+                                            <!-- STAMP COPY -->
+                                            <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
+                                                <div :class="stampOriginClass('copy')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                               text-[10px] text-blue-700 flex flex-col items-center
+                               justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine()"></span>
@@ -398,6 +429,28 @@
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
                                                             class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                                                            x-text="stampCenterCopy()"></span>
+                                                    </div>
+                                                    <div
+                                                        class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                                                        <span x-text="stampBottomLine()"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- STAMP OBSOLETE -->
+                                            <div x-show="pkg.stamp?.is_obsolete" class="absolute"
+                                                :class="stampPositionClass('obsolete')">
+                                                <div :class="stampOriginClass('obsolete')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                                       text-[10px] text-blue-700 flex flex-col items-center
+                                       justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
+                                                    <div
+                                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                        <span x-text="stampTopLine()"></span>
+                                                    </div>
+                                                    <div class="flex-1 flex items-center justify-center">
+                                                        <span
+                                                            class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
                                                             x-text="stampCenterObsolete()"></span>
                                                     </div>
                                                     <div
@@ -428,10 +481,10 @@
                                         :style="imageTransformStyle()">
                                         <canvas x-ref="hpglCanvas" class="pointer-events-none select-none"></canvas>
 
-                                        <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')"
-                                            style="transform: scale(0.45);">
-                                            <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
-                                                style="background-color: transparent;">
+                                        <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
+                                            <div :class="stampOriginClass('original')"
+                                                class="w-56 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                style="transform: scale(0.45);">
                                                 <div
                                                     class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                     <span x-text="stampTopLine()"></span>
@@ -448,10 +501,31 @@
                                             </div>
                                         </div>
 
+                                        <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
+                                            <div :class="stampOriginClass('copy')"
+                                                class="w-56 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                style="transform: scale(0.45);">
+                                                <div
+                                                    class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                    <span x-text="stampTopLine()"></span>
+                                                </div>
+                                                <div class="flex-1 flex items-center justify-center">
+                                                    <span
+                                                        class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                                                        x-text="stampCenterCopy()"></span>
+                                                </div>
+                                                <div
+                                                    class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                                                    <span x-text="stampBottomLine()"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <div x-show="pkg.stamp?.is_obsolete" class="absolute"
-                                            :class="stampPositionClass('obsolete')" style="transform: scale(0.45);">
-                                            <div class="w-56 h-40 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1"
-                                                style="background-color: transparent;">
+                                            :class="stampPositionClass('obsolete')">
+                                            <div :class="stampOriginClass('obsolete')"
+                                                class="w-56 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                style="transform: scale(0.45);">
                                                 <div
                                                     class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                     <span x-text="stampTopLine()"></span>
@@ -578,14 +652,14 @@
 
     <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
     <script type="importmap">
-                            {
-                              "imports": {
-                                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-                                "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
-                              }
-                            }
-                            </script>
+                                                                {
+                                                                  "imports": {
+                                                                    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                                                                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                                                                    "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
+                                                                  }
+                                                                }
+                                                                </script>
 
     <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
 
@@ -654,18 +728,103 @@
                 // ==== KONFIGURASI POSISI STAMP ====
                 stampDefaults: {
                     original: 'bottom-right',
+                    copy: 'bottom-center',
                     obsolete: 'bottom-left',
                 },
-                stampPerFile: {}, // { [fileKey]: { original, obsolete } }
+                stampPerFile: {}, // { [fileKey]: { original, copy, obsolete } }
                 stampConfig: {
                     original: 'bottom-right',
+                    copy: 'bottom-center',
                     obsolete: 'bottom-left',
                 },
 
                 selectedFile: null,
                 openSections: [],
 
-                // ZOOM + PAN untuk image / TIFF / HPGL
+                // mapping dari integer DB -> key string (0-5) - HARUS SAMA DENGAN APPROVAL DETAIL
+                positionIntToKey(pos) {
+                    switch (Number(pos)) {
+                        case 0:
+                            return 'bottom-left';
+                        case 1:
+                            return 'bottom-center';
+                        case 2:
+                            return 'bottom-right';
+                        case 3:
+                            return 'top-left';
+                        case 4:
+                            return 'top-center';
+                        case 5:
+                            return 'top-right';
+                        default:
+                            return 'bottom-right';
+                    }
+                },
+
+                // Ambil posisi stamp dari file dan set stampConfig
+                loadStampConfigFor(file) {
+                    const key = this.getFileKey(file);
+                    if (!key) {
+                        this.stampConfig = {
+                            ...this.stampDefaults
+                        };
+                        return;
+                    }
+
+                    if (!this.stampPerFile[key]) {
+                        this.stampPerFile[key] = {
+                            original: this.positionIntToKey(file.ori_position ?? 2),
+                            copy: this.positionIntToKey(file.copy_position ?? 1),
+                            obsolete: this.positionIntToKey(file.obslt_position ?? 0),
+                        };
+                    }
+
+                    this.stampConfig = this.stampPerFile[key];
+                },
+
+                saveStampConfigForCurrent() {
+                    // Tidak ada operasi save di halaman export, hanya baca
+                },
+
+                stampPositionClass(which = 'original') {
+                    const pos = (this.stampConfig && this.stampConfig[which]) || this.stampDefaults[which];
+
+                    switch (pos) {
+                        case 'top-left':
+                            return 'top-4 left-4';
+                        case 'top-center':
+                            return 'top-4 left-1/2 -translate-x-1/2';
+                        case 'top-right':
+                            return 'top-4 right-4';
+                        case 'bottom-left':
+                            return 'bottom-4 left-4';
+                        case 'bottom-center':
+                            return 'bottom-4 left-1/2 -translate-x-1/2';
+                        case 'bottom-right':
+                        default:
+                            return 'bottom-4 right-4';
+                    }
+                },
+
+                stampOriginClass(which = 'original') {
+                    const pos = (this.stampConfig && this.stampConfig[which]) || this.stampDefaults[which];
+
+                    switch (pos) {
+                        case 'top-left':
+                            return 'origin-top-left';
+                        case 'top-center':
+                            return 'origin-top';
+                        case 'top-right':
+                            return 'origin-top-right';
+                        case 'bottom-left':
+                            return 'origin-bottom-left';
+                        case 'bottom-center':
+                            return 'origin-bottom';
+                        case 'bottom-right':
+                        default:
+                            return 'origin-bottom-right';
+                    }
+                },                // ZOOM + PAN untuk image / TIFF / HPGL
                 imageZoom: 1,
                 minZoom: 0.5,
                 maxZoom: 4,
@@ -729,6 +888,12 @@
                 stampCenterOriginal() {
                     return 'ORIGINAL';
                 },
+
+                // teks tengah stamp Control Copy
+                stampCenterCopy() {
+                    return 'Control COPY';
+                },
+
                 // teks tengah stamp OBSOLETE
                 stampCenterObsolete() {
                     return 'OBSOLETE';
@@ -756,48 +921,6 @@
                 getFileKey(file) {
                     return (file?.id ?? file?.name ?? '').toString();
                 },
-
-                loadStampConfigFor(file) {
-                    const key = this.getFileKey(file);
-                    if (!key) {
-                        this.stampConfig = {
-                            ...this.stampDefaults
-                        };
-                        return;
-                    }
-                    if (!this.stampPerFile[key]) {
-                        this.stampPerFile[key] = {
-                            ...this.stampDefaults
-                        };
-                    }
-                    this.stampConfig = this.stampPerFile[key];
-                },
-
-                saveStampConfigForCurrent() {
-                    const key = this.getFileKey(this.selectedFile);
-                    if (!key) return;
-                    this.stampPerFile[key] = {
-                        ...this.stampConfig
-                    };
-                },
-
-                stampPositionClass(which = 'original') {
-                    const pos = (this.stampConfig && this.stampConfig[which]) || this.stampDefaults[which];
-
-                    switch (pos) {
-                        case 'top-left':
-                            return 'top-4 left-4 origin-top-left';
-                        case 'top-right':
-                            return 'top-4 right-4 origin-top-right';
-                        case 'bottom-left':
-                            return 'bottom-4 left-4 origin-bottom-left';
-                        case 'bottom-right':
-                        default:
-                            return 'bottom-4 right-4 origin-bottom-right';
-                    }
-                },
-
-                // TIFF state
                 tifLoading: false, tifError: '',
 
                 // HPGL state

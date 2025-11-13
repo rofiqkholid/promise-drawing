@@ -5,85 +5,99 @@
 
 <div x-data="dashboardController()" x-init="init()">
 
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-[15%]">
-        <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Monitoring</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Analys File Management</p>
+    <div classid="card-container" class="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+
+        <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="flex items-center">
+                <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-500 dark:text-blue-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
+                    <i class="fa-solid fa-file-lines fa-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Total Files</h3>
+                    <p id="docCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                </div>
+            </div>
+            <div class="absolute bottom-0 right-0">
+                <svg class="w-28 text-blue-500/20 dark:text-blue-400/10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 30" stroke-width="2" stroke="currentColor">
+                    <path d="M0 25 L20 15 L40 20 L60 10 L80 15 L100 5" />
+                </svg>
+            </div>
         </div>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
 
-            <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="flex items-center">
-                    <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-500 dark:text-blue-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
-                        <i class="fa-solid fa-file-lines fa-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Total Files</h3>
-                        <p id="docCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
-                    </div>
+        <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="flex items-center">
+                <div class="bg-green-100 dark:bg-green-900/50 text-green-500 dark:text-green-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
+                    <i class="fa-solid fa-cloud-arrow-up fa-xl"></i>
                 </div>
-                <div class="absolute bottom-0 right-0">
-                    <svg class="w-28 text-blue-500/20 dark:text-blue-400/10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 30" stroke-width="2" stroke="currentColor">
-                        <path d="M0 25 L20 15 L40 20 L60 10 L80 15 L100 5" />
-                    </svg>
+                <div>
+                    <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Upload</h3>
+                    <p id="uploadCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
                 </div>
             </div>
-
-            <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="flex items-center">
-                    <div class="bg-green-100 dark:bg-green-900/50 text-green-500 dark:text-green-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
-                        <i class="fa-solid fa-cloud-arrow-up fa-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Upload</h3>
-                        <p id="uploadCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
-                    </div>
-                </div>
-                <div class="absolute bottom-0 right-0">
-                    <svg class="w-28 text-green-500/20 dark:text-green-400/10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 30" stroke-width="2" stroke="currentColor">
-                        <path d="M0 10 L20 20 L40 15 L60 25 L80 10 L100 15" />
-                    </svg>
-                </div>
+            <div class="absolute bottom-0 right-0">
+                <svg class="w-28 text-green-500/20 dark:text-green-400/10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 30" stroke-width="2" stroke="currentColor">
+                    <path d="M0 10 L20 20 L40 15 L60 25 L80 10 L100 15" />
+                </svg>
             </div>
-
-            <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="flex items-center">
-                    <div class="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-500 dark:text-yellow-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
-                        <i class="fa-solid fa-cloud-arrow-down fa-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Download</h3>
-                        <p id="downloadCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
-                    </div>
-                </div>
-                <div class="absolute bottom-0 right-0">
-                    <svg class="w-28 text-yellow-500/20 dark:text-yellow-400/10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 30" stroke-width="2" stroke="currentColor">
-                        <path d="M0 15 L20 25 L40 10 L60 20 L80 5 L100 20" />
-                    </svg>
-                </div>
-            </div>
-
-            <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="flex items-center">
-                    <div class="bg-red-100 dark:bg-red-900/50 text-red-500 dark:text-red-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
-                        <i class="fa-solid fa-users fa-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">User Active</h3>
-                        <p id="activeUserCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
-                    </div>
-                </div>
-                <div class="absolute bottom-0 right-0">
-                    <svg class="w-28 text-red-500/20 dark:text-red-400/10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 30" stroke-width="2" stroke="currentColor">
-                        <path d="M0 20 L20 18 L40 22 L60 20 L80 17 L100 15" />
-                    </svg>
-                </div>
-            </div>
-
         </div>
+
+        <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="flex items-center">
+                <div class="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-500 dark:text-yellow-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
+                    <i class="fa-solid fa-cloud-arrow-down fa-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Download</h3>
+                    <p id="downloadCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                </div>
+            </div>
+            <div class="absolute bottom-0 right-0">
+                <svg class="w-28 text-yellow-500/20 dark:text-yellow-400/10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 30" stroke-width="2" stroke="currentColor">
+                    <path d="M0 15 L20 25 L40 10 L60 20 L80 5 L100 20" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="flex items-center">
+                <div class="bg-red-100 dark:bg-red-900/50 text-red-500 dark:text-red-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
+                    <i class="fa-solid fa-users fa-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">User Active</h3>
+                    <p id="activeUserCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                </div>
+            </div>
+            <div class="absolute bottom-0 right-0">
+                <svg class="w-28 text-red-500/20 dark:text-red-400/10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 30" stroke-width="2" stroke="currentColor">
+                    <path d="M0 20 L20 18 L40 22 L60 20 L80 17 L100 15" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="flex items-center">
+                <div class="bg-purple-100 dark:bg-purple-900/50 text-purple-500 dark:text-purple-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
+                    <i class="fa-solid fa-hard-drive fa-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Server Storage</h3>
+                    <p class="text-lg font-bold text-gray-800 dark:text-gray-100">
+                        <span id="freeSpace">...</span> free
+                    </p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        <span id="usedSpace">...</span> / <span id="totalSpace">...</span>
+                    </p>
+                </div>
+            </div>
+            <div class="absolute bottom-0 right-0">
+                <svg class="w-28 text-purple-500/20 dark:text-purple-400/10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 30" stroke-width="2" stroke="currentColor">
+                    <path d="M0 15 L20 10 L40 18 L60 15 L80 20 L100 10" />
+                </svg>
+            </div>
+        </div>
+
     </div>
-
-    {{-- BAGIAN FILTER --}}
     <div class="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
             <i class="fa-solid fa-filter mr-2 text-gray-500"></i> Filter Data
@@ -188,6 +202,7 @@
         fetchUploadCount();
         fetchDocCount();
         fetchUDownloadCount();
+        fetchDiskSpace(); // <-- MEMANGGIL FUNGSI BARU
     });
 
     function fetchActiveUsers() {
@@ -265,6 +280,45 @@
                 userCountElement.textContent = 'Error';
             });
     }
+
+    // FUNGSI BARU UNTUK DISK SPACE
+    function fetchDiskSpace() {
+        const apiUrl = '/api/disk-space'; // Endpoint API baru
+        const freeEl = document.getElementById('freeSpace');
+        const usedEl = document.getElementById('usedSpace');
+        const totalEl = document.getElementById('totalSpace');
+
+        if (!freeEl || !usedEl || !totalEl) return;
+
+        // Set loading state
+        freeEl.textContent = '...';
+        usedEl.textContent = '...';
+        totalEl.textContent = '...';
+
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.status === 'success') {
+                    // API akan mengembalikan data.free, data.used, data.total
+                    // yang sudah diformat (misal: "100 GB")
+                    freeEl.textContent = data.free;
+                    usedEl.textContent = data.used;
+                    totalEl.textContent = data.total;
+                } else {
+                    throw new Error(data.message || 'Invalid data structure');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching disk space:', error);
+                freeEl.textContent = 'Error';
+                usedEl.textContent = '-';
+                totalEl.textContent = '-';
+            });
+    }
+
 
     function dashboardController() {
         return {
@@ -698,17 +752,17 @@
                     }
                 }
                 return `
-                        <div class="py-3 px-2 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
-                            <div class="flex-shrink-0 pt-1"> <i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i> </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex justify-between items-start">
-                                    <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-3 whitespace-nowrap">${fullTimestamp}</p>
+                            <div class="py-3 px-2 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                                <div class="flex-shrink-0 pt-1"> <i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i> </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex justify-between items-start">
+                                        <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-3 whitespace-nowrap">${fullTimestamp}</p>
+                                    </div>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${relativeTime}</p>
+                                    ${metaDetails}
                                 </div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${relativeTime}</p>
-                                ${metaDetails}
-                            </div>
-                        </div>`;
+                            </div>`;
             },
 
             formatTimeAgo(dateString) {

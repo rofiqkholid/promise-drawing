@@ -289,21 +289,24 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/upload/drawing/allowed-extensions', [DrawingUploadController::class, 'getPublicAllowedExtensions'])->name('upload.drawing.allowed-extensions');
     Route::post('/upload/drawing/check-revision-status', [DrawingUploadController::class, 'checkRevisionStatus'])->name('upload.drawing.check-status');
     Route::post('/upload/drawing/check-conflicts', [DrawingUploadController::class, 'checkConflicts'])
-        ->name('upload.drawing.check-conflicts');
+    ->name('upload.drawing.check-conflicts');
 
     Route::post('/upload/drawing/sync', [DrawingUploadController::class, 'syncLegacyData'])->name('upload.drawing.sync-legacy');
     Route::post('/upload/drawing/store', [DrawingUploadController::class, 'store'])->name('upload.drawing.store');
+    Route::delete('/upload/drawing/revision/{id}', [DrawingUploadController::class, 'destroyRevision'])->name('upload.drawing.destroy');
     Route::post('/upload/drawing/activity-logs', [DrawingUploadController::class, 'activityLogs'])->name('upload.drawing.activity-logs');
     Route::post('/upload/drawing/request-approval', [DrawingUploadController::class, 'requestApproval'])->name('upload.drawing.request-approval');
     Route::post('/upload/drawing/revise-confirm', [DrawingUploadController::class, 'reviseConfirmed'])->middleware(['auth'])
-        ->name('upload.drawing.revise-confirm');
+    ->name('upload.drawing.revise-confirm');
+
+    Route::post('/upload/drawing/file-extension-icons', [App\Http\Controllers\Api\DrawingUploadController::class, 'getFileExtensionIcons'])->name('upload.drawing.file-extension-icons');
 
     Route::get('/files/kpi', [UploadController::class, 'getKpiStats'])->name('api.files.kpi-stats');
     Route::get('/files/list', [UploadController::class, 'listFiles'])->name('api.files.list');
     Route::get('/files/{id}', [UploadController::class, 'getPackageDetails'])->name('api.files.detail');
     #End region
 
-    //Export
+    #region Export
     Route::get('/export/kpi', [ExportController::class, 'kpi'])->middleware(['auth'])->name('api.export.kpi');
 
     Route::get('/export/filters', [ExportController::class, 'filters'])->middleware(['auth'])->name('api.export.filters');

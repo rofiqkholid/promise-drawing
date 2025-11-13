@@ -858,18 +858,15 @@
             $('#addUserLinkForm').attr('action', `/master/suppliers/${currentSupplierIdForLinks}/links`);
             const $select = $('#ul_user_id');
 
-            // Destroy previous Select2 instance if it exists
             if ($select.hasClass("select2-hidden-accessible")) {
                 $select.select2('destroy');
             }
 
-            // Clear old options
             $select.html('');
 
             // [NEW] Initialize Select2 for the user dropdown
             $select.select2({
                 placeholder: 'Search user...',
-                allowClear: true,
                 dropdownParent: $('#addUserLinkModal'), // Penting untuk modal
                 ajax: {
                     // [MODIFIKASI] URL ke route 'suppliers.links.available' baru

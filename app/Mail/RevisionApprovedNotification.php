@@ -22,6 +22,6 @@ class RevisionApprovedNotification extends Mailable
     public function build()
     {
         return $this->subject('PROMISE - Revision Approved ' . ($this->approval['part_no'] ?? ''))
-                    ->view('emails.approvals.revision_approved');
+                    ->view('emails.approved_notif');
     }
 }

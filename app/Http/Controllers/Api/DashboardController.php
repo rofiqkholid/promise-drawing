@@ -315,12 +315,6 @@ class DashboardController extends Controller
             'year' => $year,
             'data' => $data
         ]);
-
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Terjadi kesalahan pada server.',
-            'error_detail' => $e->getMessage()
-        ], 500);
     }
 
     public function getDataActivityLog(Request $request): JsonResponse
@@ -676,5 +670,44 @@ class DashboardController extends Controller
             'status' => 'success',
             'data' => $results
         ]);
+    }
+    private function formatBytes($bytes, $precision = 2)
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+        $bytes /= pow(1024, $pow);
+        return round($bytes, $precision) . ' ' . $units[$pow];
+    }
+    public function getDiskSpace(Request $request)
+    {
+        try {
+            $diskPath = base_path('/');
+
+            $totalSpace = @disk_total_space($diskPath);
+            $freeSpace = @disk_free_space($diskPath);
+
+            if ($totalSpace === false || $freeSpace === false) {
+                throw new \Exception('Could not read disk space. Check server permissions or configuration.');
+            }
+
+            $usedSpace = $totalSpace - $freeSpace;
+
+            return response()->json([
+                'status' => 'success',
+                'total'  => $this->formatBytes($totalSpace),
+                'used'   => $this->formatBytes($usedSpace),
+                'free'   => $this->formatBytes($freeSpace),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'total'  => 'N/A',
+                'used'   => 'N/A',
+                'free'   => 'N/A',
+            ], 500);
+        }
     }
 }

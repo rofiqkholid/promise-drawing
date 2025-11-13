@@ -184,10 +184,21 @@
               <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate" x-text="selectedFile?.name"></h3>
               <p class="text-xs text-gray-500 dark:text-gray-400">Last updated: {{ now()->format('M d, Y H:i') }}</p>
             </div>
-            <a x-show="selectedFile?.url" :href="selectedFile?.url" target="_blank" rel="noopener"
-              class="inline-flex items-center px-3 py-1.5 text-xs text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
-              <i class="fa-solid fa-up-right-from-square mr-2"></i> Open
-            </a>
+            <a
+  x-show="selectedFile?.url"
+  :href="selectedFile?.url"
+  :download="isCad(selectedFile?.name) ? selectedFile?.name : null"
+  target="_blank"
+  rel="noopener"
+  class="inline-flex items-center px-3 py-1.5 text-xs text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+  :title="isCad(selectedFile?.name)
+    ? 'Download file ini lalu buka di eDrawings'
+    : 'Open file in new tab'">
+
+  <i class="fa-solid fa-up-right-from-square mr-2"></i>
+  <span x-text="isCad(selectedFile?.name) ? 'Download for eDrawings' : 'Open'"></span>
+</a>
+
           </div>
 
           <!-- STAMP POSITION PER FILE -->

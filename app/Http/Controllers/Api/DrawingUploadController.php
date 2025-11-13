@@ -157,6 +157,7 @@ class DrawingUploadController extends Controller
             'ecn_no' => 'required|string|max:50',
             'receipt_date' => 'nullable|date',
             'revision_label_id' => 'nullable|integer|exists:customer_revision_labels,id',
+            'is_finish' => 'required|in:0,1',
             'revision_no' => 'nullable|integer',
             'existing_revision_id' => 'nullable|integer|exists:doc_package_revisions,id',
             'files_to_delete' => 'nullable|array',
@@ -245,6 +246,11 @@ class DrawingUploadController extends Controller
                     $updates['note'] = $newNote;
                 }
 
+                $newIsFinish = (int)$r->input('is_finish');
+                if ($newIsFinish !== (int)$revToEdit->is_finish) {
+                    $updates['is_finish'] = $newIsFinish;
+                }
+
                 $currentRevisionNo = $revToEdit->revision_no;
                 $metaBase = $this->buildMetaBase($r, $currentRevisionNo); // Pakai rev_no yang ada
                 $newRevFolder = PathBuilder::revisionFolderName($metaBase);
@@ -291,6 +297,7 @@ class DrawingUploadController extends Controller
                     'revision_label_id' => $validated['revision_label_id'] ?: null,
                     'revision_status' => 'draft',
                     'note' => $r->input('note'),
+                    'is_finish' => (int)$r->input('is_finish', 0),
                     'is_obsolete' => 0,
                     'created_by' => $this->getAuthUserInt(),
                     'created_at' => now(),

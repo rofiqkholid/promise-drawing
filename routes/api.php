@@ -14,5 +14,4 @@ Route::get('/upload-monitoring-data-project', [DashboardController::class, 'getU
 
 Route::get('/upload-dashboard-data', [DashboardController::class, 'getUploadDashboardData'])->name('api.upload-dashboard-data');
 Route::get('/upload-dashboard-data-project', [DashboardController::class, 'getUploadDashboardDataProject'])->name('api.upload-dashboard-data-project');
-
-
+Route::get('/disk-space', [DashboardController::class, 'getDiskSpace'])->name('api.disk-space');

@@ -382,7 +382,7 @@ class ExportController extends Controller
 
         $fileRows = DB::table('doc_package_revision_files')
             ->where('revision_id', $id)
-            ->select('id', 'filename as name', 'category', 'storage_path')
+            ->select('id', 'filename as name', 'category', 'storage_path', 'ori_position', 'copy_position', 'obslt_position')
             ->get();
 
         $extList = $fileRows
@@ -414,6 +414,9 @@ class ExportController extends Controller
                         'url'      => $url,
                         'file_id'  => $item->id,
                         'icon_src' => $iconSrc,
+                        'ori_position' => $item->ori_position,
+                        'copy_position' => $item->copy_position,
+                        'obslt_position' => $item->obslt_position,
                     ];
                 });
             })
@@ -501,7 +504,7 @@ class ExportController extends Controller
 
         $fileRows = DB::table('doc_package_revision_files')
             ->where('revision_id', $decrypted_id)
-            ->select('id', 'filename as name', 'category', 'storage_path')
+            ->select('id', 'filename as name', 'category', 'storage_path', 'ori_position', 'copy_position', 'obslt_position')
             ->get();
 
         $extList = $fileRows
@@ -533,6 +536,9 @@ class ExportController extends Controller
                         'url'      => $url,
                         'file_id'  => $item->id,
                         'icon_src' => $iconSrc,
+                        'ori_position' => $item->ori_position,
+                        'copy_position' => $item->copy_position,
+                        'obslt_position' => $item->obslt_position,
                     ];
                 });
             })
@@ -638,7 +644,7 @@ class ExportController extends Controller
         $model = Str::slug($package->model);
         $partNo = Str::slug($package->part_no);
         $ecn = Str::slug($revision->ecn_no);
-        $timestamp = now()->format('Ymd-His');
+        $timestamp = now()->format('Ymd');
 
         $zipFileName = strtoupper("{$customer}-{$model}-{$partNo}-{$ecn}-{$timestamp}") . ".zip";
         $zipFilePath = storage_path('app/public/' . $zipFileName);

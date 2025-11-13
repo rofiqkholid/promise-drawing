@@ -15,7 +15,7 @@ class RoleController extends Controller
      */
    public function data(Request $request)
 {
-    $query = \App\Models\Role::query()->from('roles')
+    $query = Role::query()->from('roles')
         ->select(['roles.id','roles.role_name']);
 
     // jika dikirim user_id, ikutkan info selected
@@ -49,7 +49,7 @@ class RoleController extends Controller
     $start     = (int) $request->input('start', 0);
     $draw      = (int) $request->input('draw', 1);
 
-    $total     = \App\Models\Role::count();
+    $total     = Role::count();
     $filtered  = (clone $query)->count();
     $rows      = $query->skip($start)->take($perPage)->get();
 

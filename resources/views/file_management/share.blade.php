@@ -8,7 +8,7 @@
     <div class="sm:flex sm:items-center sm:justify-between">
         <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Share Packages</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Share packages with other roles.</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Share packages with other supplier.</p>
         </div>
     </div>
 
@@ -75,13 +75,13 @@
 
             <div class="p-6">
                 <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                    Select one or more roles to share this package with.
+                    Select one or more suppliers to share this package with.
                 </p>
 
                 <div>
-                    <label for="roleListContainer" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select to Share</label>
-                    <div class="relative mt-1"> <select id="roleListContainer" name="roleListContainer" class="w-full"></select> </div>
-                    <div id="selectedRolesContainer" class="mt-2"></div>
+                    <label for="supplierListContainer" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select to Share</label>
+                    <div class="relative mt-1"> <select id="supplierListContainer" name="supplierListContainer" class="w-full"></select> </div>
+                    <div id="selectedSupplierContainer" class="mt-2"></div>
                 </div>
 
                 <input type="hidden" id="hiddenPackageId" value="">
@@ -450,7 +450,7 @@
             });
 
             const $shareModal = $('#shareModal');
-            const $roleListContainer = $('#roleListContainer');
+            const $supplierListContainer = $('#supplierListContainer');
             const $hiddenPackageId = $('#hiddenPackageId');
             const $shareError = $('#shareError');
             const $btnSaveShare = $('#btnSaveShare');
@@ -466,14 +466,14 @@
                 }
             });
 
-            let selectedRoles = [];
+            let selectedSupplier = [];
 
-            function loadRoles() {
-                $roleListContainer.empty();
-                $roleListContainer.select2({
+            function loadSuppliers() {
+                $supplierListContainer.empty();
+                $supplierListContainer.select2({
                     dropdownParent: $('#shareModal'),
                     width: '100%',
-                    placeholder: 'Select roles...',
+                    placeholder: 'Select suppliers...',
                     allowClear: true,
                     ajax: {
                         url: "{{ route('share.getSuppliers') }}",
@@ -499,37 +499,35 @@
                     }
                 });
 
-                // Event ketika user memilih role
-                $roleListContainer.on('select2:select', function(e) {
+                $supplierListContainer.on('select2:select', function(e) {
                     const data = e.params.data;
-                    const exists = selectedRoles.find(r => r.id === data.id);
+                    const exists = selectedSupplier.find(r => r.id === data.id);
 
                     if (!exists) {
-                        selectedRoles.push(data);
-                        renderSelectedRoles();
+                        selectedSupplier.push(data);
+                        renderSelectSuppliers();
                     }
 
-                    // reset dropdown supaya bisa pilih lagi
-                    $roleListContainer.val(null).trigger('change');
+                    $supplierListContainer.val(null).trigger('change');
                 });
             }
 
-            function renderSelectedRoles() {
-                const $container = $('#selectedRolesContainer');
+            function renderSelectSuppliers() {
+                const $container = $('#selectedSupplierContainer');
                 $container.empty();
 
-                selectedRoles.forEach(role => {
+                selectedSupplier.forEach(supplier => {
                     const item = $(`
                     <div class="flex items-center justify-between 
                                 bg-gray-200 dark:bg-gray-700 
                                 text-gray-700 dark:text-gray-200 
                                 px-3 py-2 rounded-md mb-1 transition-colors">
-                        <span class="text-sm">${role.text}</span>
+                        <span class="text-sm">${supplier.text}</span>
                         <button 
                             type="button" 
                             class="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-gray-300 
-                                remove-role transition"
-                            data-id="${role.id}">
+                                remove-select transition"
+                            data-id="${supplier.id}">
                             &times;
                         </button>
                     </div>
@@ -538,11 +536,11 @@
                     $container.append(item);
                 });
             }
-            $(document).on('click', '.remove-role', function() {
+            $(document).on('click', '.remove-select', function() {
                 const id = $(this).data('id');
                 $(this).parent().fadeOut(150, function() {
-                    selectedRoles = selectedRoles.filter(r => r.id != id);
-                    renderSelectedRoles();
+                    selectedSupplier = selectedSupplier.filter(r => r.id != id);
+                    renderSelectSuppliers();
                 });
             });
 
@@ -557,7 +555,7 @@
                 $hiddenPackageId.val(packageId);
                 $btnSaveShare.prop('disabled', false).text('Share');
 
-                loadRoles();
+                loadSuppliers();
 
                 $shareModal.show();
             });
@@ -566,7 +564,7 @@
                 const $this = $(this);
                 const packageId = $hiddenPackageId.val();
 
-                const selectedRoleIds = selectedRoles.map(r => r.id);
+                const selectSupplierIds = selectedSupplier.map(r => r.id);
 
                 $shareError.hide().text('');
 
@@ -575,8 +573,8 @@
                     return;
                 }
 
-                if (selectedRoleIds.length === 0) {
-                    $shareError.text('Please select at least one role.').show();
+                if (selectSupplierIds.length === 0) {
+                    $shareError.text('Please select at least one supplier.').show();
                     return;
                 }
 
@@ -587,7 +585,7 @@
                     type: 'POST',
                     data: {
                         package_id: packageId,
-                        role_ids: selectedRoleIds
+                        supplier_ids: selectSupplierIds
                     },
                     dataType: 'json',
                     success: function(response) {
