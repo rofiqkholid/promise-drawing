@@ -607,7 +607,7 @@ class ApprovalController extends Controller
 
 
 
-    public function approve(Request $request, string $id)
+   public function approve(Request $request, string $id)
 {
     $userId = Auth::user()->id ?? 1;
 
@@ -620,6 +620,7 @@ class ApprovalController extends Controller
     try {
         DB::beginTransaction();
 
+        // ====== VALIDASI & UPDATE DB (persis seperti kode Tuan sekarang) ======
         $revision = DB::table('doc_package_revisions')
             ->where('id', $revisionId)
             ->lockForUpdate()
@@ -629,12 +630,10 @@ class ApprovalController extends Controller
             DB::rollBack();
             return response()->json(['message' => 'Revision not found.'], 404);
         }
-
         if ($revision->revision_status === 'approved') {
             DB::rollBack();
             return response()->json(['message' => 'Revision already approved.'], 200);
         }
-
         if ($revision->revision_status !== 'pending') {
             DB::rollBack();
             return response()->json(['message' => 'Revision cannot be approved.'], 422);
@@ -705,61 +704,67 @@ class ApprovalController extends Controller
             'meta'          => ['note' => 'Revision approved'],
         ]);
 
-        DB::commit();
+        // ====== SIAPKAN DATA EMAIL ======
+        $packageInfo = DB::table('doc_packages as dp')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->where('dp.id', $packageId)
+            ->select('dp.id','c.code as customer','m.name as model','p.part_no','dtg.name as doc_type','dsc.name as category')
+            ->first();
 
-        /* ========== KIRIM EMAIL KE SEMUA USER ========== */
+        $filenames = DB::table('doc_package_revision_files')
+            ->where('revision_id', $revisionId)
+            ->orderBy('id')
+            ->pluck('filename')
+            ->toArray();
 
-        // ambil info package untuk isi email
-       // ambil info package utk subject & header
-$packageInfo = DB::table('doc_packages as dp')
-    ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-    ->join('models as m', 'dp.model_id', '=', 'm.id')
-    ->join('products as p', 'dp.product_id', '=', 'p.id')
-    ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-    ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-    ->where('dp.id', $packageId)
-    ->select('dp.id','c.code as customer','m.name as model','p.part_no',
-             'dtg.name as doc_type','dsc.name as category')
-    ->first();
+        // pastikan route sesuai dengan yang Tuan kirim
+        $downloadUrl = route('file-manager.export.detail', ['id' => $packageId]);
 
-// daftar file pada revisi ini
-$filenames = DB::table('doc_package_revision_files')
-    ->where('revision_id', $revisionId)
-    ->orderBy('id')
-    ->pluck('filename')
-    ->toArray();
+        $approvalData = [
+            'revision_id'   => $revision->id,
+            'revision_no'   => $revision->revision_no,
+            'customer'      => $packageInfo->customer ?? '-',
+            'model'         => $packageInfo->model ?? '-',
+            'part_no'       => $packageInfo->part_no ?? '-',
+            'doc_type'      => $packageInfo->doc_type ?? '-',
+            'category'      => $packageInfo->category ?? '-',
+            'approved_by'   => Auth::user()->name ?? 'System',
+            'approved_at'   => now()->format('Y-m-d H:i'),
+            'decision_date' => now()->format('Y-m-d H:i'),
+            'comment'       => '',
+            'filenames'     => $filenames,
+            'download_url'  => $downloadUrl,
+        ];
 
-// url ke menu download (sesuaikan route-mu)
-$downloadUrl = route('file-manager.export.detail', ['id' => $packageId]);
-// atau deep-link khusus paket/revisi:
-// $downloadUrl = route('downloads.byRevision', ['revision' => $revisionId]);
-
-$approvalData = [
-    'revision_id'  => $revision->id,
-    'revision_no'  => $revision->revision_no,
-    'customer'     => $packageInfo->customer ?? '-',
-    'model'        => $packageInfo->model ?? '-',
-    'part_no'      => $packageInfo->part_no ?? '-',
-    'doc_type'     => $packageInfo->doc_type ?? '-',
-    'category'     => $packageInfo->category ?? '-',
-    'approved_by'  => Auth::user()->name ?? 'System',
-    'approved_at'  => now()->format('Y-m-d H:i'),
-    'decision_date'=> now()->format('Y-m-d H:i'),
-    'comment'      => '', // isi jika ada catatan
-    'filenames'    => $filenames,
-    'download_url' => $downloadUrl,
-];
-
-
-        // kirim ke semua user yang punya email
-        $users = User::whereNotNull('email')->get();
-
-        foreach ($users as $user) {
-            Mail::to($user->email)->send(
-                new RevisionApprovedNotification($user, $approvalData)
-            );
+        // ====== KIRIM EMAIL (dalam try-catch) ======
+        try {
+            // perbaiki nama view agar benar: 'emails.approvals_notif' -> 'emails.approved_notif' (atau sesuaikan file yg ada)
+            $users = User::whereNotNull('email')->get();
+            foreach ($users as $user) {
+                Mail::to($user->email)->send(
+                    new \App\Mail\RevisionApprovedNotification($user, $approvalData)
+                );
+            }
+        } catch (\Throwable $mailEx) {
+            // Kalau email gagal & belum ada konfirmasi, kembalikan 409 agar frontend munculkan popup
+            if (!$request->boolean('confirm_without_email')) {
+                DB::rollBack();
+                return response()->json([
+                    'message'             => 'Email delivery failed. Do you want to approve without sending emails?',
+                    'error'               => $mailEx->getMessage(),
+                    'needs_confirmation'  => true,
+                    'code'                => 'EMAIL_FAILED',
+                ], 409);
+            }
+            // Jika confirm_without_email=1, lanjutkan tanpa email
         }
 
+        // ====== EMAIL OK atau user setuju tanpa email -> commit ======
+        DB::commit();
         return response()->json(['message' => 'Revision approved successfully!']);
 
     } catch (QueryException $e) {
@@ -788,6 +793,7 @@ $approvalData = [
         ], 500);
     }
 }
+
 
 
     public function reject(Request $request, string $id)

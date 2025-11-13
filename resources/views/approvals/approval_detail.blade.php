@@ -2021,43 +2021,144 @@
         if (!this.processing) this.showRollbackModal = false;
       },
 
-      async confirmApprove() {
-        if (this.processing) return;
-        this.processing = true;
-        try {
-          const url = `{{ route('approvals.approve', ['id' => $approvalId]) }}`;
-          const response = await fetch(url, {
+     // GANTI fungsi ini
+async confirmApprove() {
+  if (this.processing) return;
+  this.processing = true;
+  try {
+    const url = `{{ route('approvals.approve', ['id' => $approvalId]) }}`;
+    let res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      }
+    });
+
+    let text = await res.text(); let json = {};
+    try { json = JSON.parse(text); } catch {}
+
+    if (!res.ok) {
+      // === tangani 409 minta konfirmasi ===
+      if (res.status === 409 && json?.needs_confirmation && json?.code === 'EMAIL_FAILED') {
+        const ask = await Swal.fire({
+          icon: 'warning',
+          title: 'Email Failed',
+          text: 'Failed to send email. Approve anyway? The team will not receive email.',
+          showCancelButton: true,
+          confirmButtonText: 'Approve without email',
+          cancelButtonText: 'Cancel',
+        });
+        if (ask.isConfirmed) {
+          // retry dengan confirm_without_email=1
+          res = await fetch(url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
+            },
+            body: JSON.stringify({ confirm_without_email: true })
           });
-          const text = await response.text();
-          let result = {};
-          try {
-            result = JSON.parse(text);
-          } catch {}
-          if (!response.ok) {
-            if (response.status === 409) throw new Error(result.message || 'Revision has already been approved by someone else.');
-            if (response.status === 403) throw new Error(result.message || 'You do not have permission to approve.');
-            if (response.status === 422) throw new Error(result.message || 'Revision is not in a state that can be approved.');
-            throw new Error(result.message || 'Server returned an error.');
-          }
-
-          this.pkg.status = 'Approved';
-          this.addPkgActivity('approved', '{{ auth()->user()->name ?? "Reviewer" }}');
-          this.showApproveModal = false;
-          toastSuccess('Success', result.message || 'Revision approved successfully!');
-        } catch (err) {
-          console.error('Approve Error:', err);
-          if (err instanceof SyntaxError) toastError('Error', 'Received an invalid response from server.');
-          else toastError('Error', err.message || 'Approve failed');
-        } finally {
-          this.processing = false;
+          text = await res.text(); json = {};
+          try { json = JSON.parse(text); } catch {}
+          if (!res.ok) throw new Error(json.message || 'Approve failed.');
+        } else {
+          throw new Error('Approval is canceled.');
         }
-      },
+      } else {
+        if (res.status === 422) throw new Error(json.message || 'Revision is not in a state that can be approved.');
+        if (res.status === 403) throw new Error(json.message || 'You do not have permission to approve.');
+        if (res.status === 409) throw new Error(json.message || 'Revision has already been approved by someone else.');
+        throw new Error(json.message || 'Server returned an error.');
+      }
+    }
+
+    // === sukses ===
+    this.pkg.status = 'Approved';
+    this.addPkgActivity('approved', '{{ auth()->user()->name ?? "Reviewer" }}');
+    this.showApproveModal = false;
+    toastSuccess('Success', json.message || 'Revision approved successfully!');
+  } catch (err) {
+    console.error('Approve Error:', err);
+    toastError('Error', err.message || 'Approve failed');
+  } finally {
+    this.processing = false;
+  }
+},
+
+
+// TAMBAHKAN helper baru ini
+async doApprove(confirmWithoutEmail = false) {
+  const url = `{{ route('approvals.approve', ['id' => $approvalId]) }}`;
+  const payload = confirmWithoutEmail ? { confirm_without_email: true } : null;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    },
+    body: payload ? JSON.stringify(payload) : null
+  });
+
+  const text = await res.text();
+  let json = {};
+  try { json = JSON.parse(text); } catch {}
+
+  // sukses
+  if (res.ok) return json;
+
+  // sudah diapprove orang lain
+  if (res.status === 409 && json?.message && !json?.needs_confirmation) {
+    throw new Error(json.message);
+  }
+
+  // butuh konfirmasi (email gagal dikirim)
+  if (res.status === 409 && json?.needs_confirmation) {
+    const ask = await Swal.fire({
+      icon: 'warning',
+      title: 'Email Failed',
+      text: json.message || 'System could not send emails. Approve without sending emails?',
+      showCancelButton: true,
+      confirmButtonText: 'Approve anyway',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+      focusCancel: true
+    });
+
+    if (ask.isConfirmed) {
+      // retry approve TANPA email
+      const retry = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ confirm_without_email: true })
+      });
+
+      const rtext = await retry.text();
+      let rjson = {};
+      try { rjson = JSON.parse(rtext); } catch {}
+
+      if (!retry.ok) {
+        throw new Error(rjson.message || 'Approve failed (no email).');
+      }
+
+      toastInfo('Approved (no email)', 'Approved successfully, but emails were not sent.');
+      return rjson;
+    } else {
+      throw new Error('Approval cancelled.');
+    }
+  }
+
+  // error lain
+  throw new Error(json?.message || 'Server returned an error.');
+},
 
       async confirmReject() {
         if (this.processing) return;

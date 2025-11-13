@@ -37,6 +37,6 @@ class RevisionApprovedNotification extends Mailable
                  . ($partNo ? " – {$partNo}" : "");
 
         return $this->subject($subject)
-                    ->view('emails.approvals_notif');
+                    ->view('emails.approved_notif');
     }
 }
