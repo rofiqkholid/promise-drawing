@@ -21,7 +21,22 @@ class RevisionApprovedNotification extends Mailable
 
     public function build()
     {
-        return $this->subject('PROMISE - Revision Approved ' . ($this->approval['part_no'] ?? ''))
-                    ->view('emails.approved_notif');
+        // Build a clean, informative subject
+        $customer  = $this->approval['customer']  ?? '-';
+        $model     = $this->approval['model']     ?? '-';
+        $docType   = $this->approval['doc_type']  ?? '-';
+        $category  = $this->approval['category']  ?? '-';
+        $revNo     = $this->approval['revision_no'] ?? '-';
+        $partNo    = $this->approval['part_no']   ?? '';
+
+        // Option A (compact):
+        // $subject = "[PROMISE] Revision Approved – {$customer}-{$model}-{$docType}-{$category} (Rev-{$revNo})";
+
+        // Option B (with part no if available):
+        $subject = "[PROMISE] Revision Approved – {$customer}-{$model}-{$docType}-{$category} (Rev-{$revNo})"
+                 . ($partNo ? " – {$partNo}" : "");
+
+        return $this->subject($subject)
+                    ->view('emails.approvals_notif');
     }
 }

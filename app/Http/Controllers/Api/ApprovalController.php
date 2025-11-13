@@ -730,7 +730,7 @@ $filenames = DB::table('doc_package_revision_files')
     ->toArray();
 
 // url ke menu download (sesuaikan route-mu)
-$downloadUrl = route('downloads.index'); 
+$downloadUrl = route('file-manager.export.detail', ['id' => $packageId]);
 // atau deep-link khusus paket/revisi:
 // $downloadUrl = route('downloads.byRevision', ['revision' => $revisionId]);
 
