@@ -13,8 +13,10 @@ class DashboardController extends Controller
     public function getActiveUsersCount(): JsonResponse
     {
         try {
-            $activeUsersCount = DB::table('users')
-                ->where('is_active', '1')
+
+            $activeUsersCount = DB::connection('sqlsrv')
+                ->table('users')
+                ->where('is_active', 1)
                 ->count();
 
             return response()->json([
@@ -25,15 +27,19 @@ class DashboardController extends Controller
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Could not fetch active users count.'
+                'message' => 'Could not fetch active users count.',
+                'error_detail' => $e->getMessage(),
             ], 500);
         }
     }
 
+
     public function getUploadCount(): JsonResponse
     {
         try {
-            $uploadCount = DB::table('doc_packages')->count('package_no');
+            $uploadCount = DB::connection('sqlsrv')
+                ->table('doc_packages')
+                ->count('package_no');
 
             return response()->json([
                 'status' => 'success',
@@ -51,7 +57,8 @@ class DashboardController extends Controller
     public function getDownloadCount(): JsonResponse
     {
         try {
-            $downloadCount = DB::table('activity_logs')
+            $downloadCount = DB::connection('sqlsrv')
+                ->table('activity_logs')
                 ->where('activity_code', 'DOWNLOAD')
                 ->count('activity_code');
 
@@ -71,7 +78,8 @@ class DashboardController extends Controller
     public function getDocCount(): JsonResponse
     {
         try {
-            $docCount = DB::table('doc_package_revision_files')
+            $docCount = DB::connection('sqlsrv')
+                ->table('doc_package_revision_files')
                 ->count('filename');
 
             return response()->json([
@@ -95,7 +103,8 @@ class DashboardController extends Controller
         $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
-        $query = DB::table('doctype_groups')
+        $query = DB::connection('sqlsrv')
+            ->table('doctype_groups')
             ->select('id', 'name');
 
         if ($searchTerm) {
@@ -128,7 +137,8 @@ class DashboardController extends Controller
         $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
-        $query = DB::table('doctype_subcategories')
+        $query = DB::connection('sqlsrv')
+            ->table('doctype_subcategories')
             ->select('id', 'name')
             ->where('doctype_group_id', $document_group_id);
 
@@ -162,7 +172,8 @@ class DashboardController extends Controller
         $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
-        $query = DB::table('customers')
+        $query = DB::connection('sqlsrv')
+            ->table('customers')
             ->select('id', 'code');
 
         if ($searchTerm) {
@@ -196,7 +207,8 @@ class DashboardController extends Controller
         $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
-        $query = DB::table('models')
+        $query = DB::connection('sqlsrv')
+            ->table('models')
             ->select('id', 'name')
             ->where('customer_id', $customer_id);
 
@@ -230,7 +242,8 @@ class DashboardController extends Controller
         $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
-        $query = DB::table('part_groups')
+        $query = DB::connection('sqlsrv')
+            ->table('part_groups')
             ->select('id', 'code_part_group');
 
         if ($searchTerm) {
@@ -262,7 +275,8 @@ class DashboardController extends Controller
         $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
-        $query = DB::table('project_status')
+        $query = DB::connection('sqlsrv')
+            ->table('project_status')
             ->select('id', 'name');
 
         if ($searchTerm) {
@@ -292,7 +306,8 @@ class DashboardController extends Controller
     {
         $year = $request->input('year', date('Y'));
 
-        $data = DB::table('activity_logs')
+        $data = DB::connection('sqlsrv')
+            ->table('activity_logs')
             ->selectRaw("
                 MONTH(created_at) AS month,
                 SUM(CASE WHEN activity_code = 'UPLOAD' THEN 1 ELSE 0 END) AS upload_count,
@@ -320,7 +335,8 @@ class DashboardController extends Controller
     public function getDataActivityLog(Request $request): JsonResponse
     {
         try {
-            $data = DB::table('activity_logs')
+            $data = DB::connection('sqlsrv')
+                ->table('activity_logs')
                 ->join('users', 'activity_logs.user_id', '=', 'users.id')
                 ->where('activity_logs.activity_code', 'UPLOAD')
                 ->select(
@@ -354,7 +370,8 @@ class DashboardController extends Controller
 
     public function getUploadMonitoringData(Request $request)
     {
-        $query = DB::table('part_groups AS pg')
+        $query = DB::connection('sqlsrv')
+            ->table('part_groups AS pg')
             ->leftJoin('models AS m', 'pg.model_id', '=', 'm.id')
             ->leftJoin('customers AS c', 'pg.customer_id', '=', 'c.id')
             ->leftJoin('doc_packages AS dp', function ($join) {
@@ -440,7 +457,8 @@ class DashboardController extends Controller
 
     public function getUploadMonitoringDataProject(Request $request)
     {
-        $query = DB::table('part_groups AS pg')
+        $query = DB::connection('sqlsrv')
+            ->table('part_groups AS pg')
             ->leftJoin('models AS m', 'pg.model_id', '=', 'm.id')
             ->leftJoin('customers AS c', 'pg.customer_id', '=', 'c.id')
             ->leftJoin('doc_packages AS dp', function ($join) {
