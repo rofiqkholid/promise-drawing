@@ -25,6 +25,7 @@ use App\Models\StampFormat;
 use App\Models\FileExtensions;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\RevisionApprovedNotification;
+use Illuminate\Support\Facades\Crypt;
 
 
 
@@ -721,8 +722,9 @@ class ApprovalController extends Controller
             ->pluck('filename')
             ->toArray();
 
-        // pastikan route sesuai dengan yang Tuan kirim
-        $downloadUrl = route('file-manager.export.detail', ['id' => $packageId]);
+        $downloadUrl = route('file-manager.export.detail', [
+  'id' => urlencode(Crypt::encryptString($packageId)), 
+]);
 
         $approvalData = [
             'revision_id'   => $revision->id,
