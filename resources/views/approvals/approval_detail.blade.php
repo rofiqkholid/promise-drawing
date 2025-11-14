@@ -204,7 +204,7 @@
           <!-- STAMP POSITION PER FILE -->
           <div x-show="selectedFile" class="mb-3 flex flex-wrap items-center gap-2 text-xs">
             <!-- ORIGINAL -->
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-1 text-gray-600 dark:text-gray-400">
               <span>Original:</span>
               <select x-model="stampConfig.original"
                 @change="onStampChange()"
@@ -219,7 +219,7 @@
             </div>
 
             <!-- COPY -->
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-1 text-gray-600 dark:text-gray-400">
               <span>Copy:</span>
               <select x-model="stampConfig.copy"
                 @change="onStampChange()"
@@ -234,7 +234,7 @@
             </div>
 
             <!-- OBSOLETE -->
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-1 text-gray-600 dark:text-gray-400">
               <span>Obsolete:</span>
               <select x-model="stampConfig.obsolete"
                 @change="onStampChange()"
