@@ -23,6 +23,9 @@ use App\Models\StampFormat;
 use App\Models\FileExtensions;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
+use Imagick;
+use ImagickDraw;
+use ImagickPixel;
 
 class ExportController extends Controller
 {
@@ -36,7 +39,7 @@ class ExportController extends Controller
         $q = DB::table('doc_package_revisions as dpr')
             ->joinSub($latestRevisionsSubquery, 'latest_revs', function ($join) {
                 $join->on('dpr.package_id', '=', 'latest_revs.package_id')
-                     ->on('dpr.revision_no', '=', 'latest_revs.max_revision_no');
+                    ->on('dpr.revision_no', '=', 'latest_revs.max_revision_no');
             })
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
@@ -59,7 +62,7 @@ class ExportController extends Controller
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
-            ->join('products as p', 'dp.product_id', '=', 'p.id') // Join products
+            ->join('products as p', 'dp.product_id', '=', 'p.id')
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
             ->where('dpr.revision_status', '=', 'approved');
@@ -382,7 +385,7 @@ class ExportController extends Controller
 
         $fileRows = DB::table('doc_package_revision_files')
             ->where('revision_id', $id)
-            ->select('id', 'filename as name', 'category', 'storage_path', 'ori_position', 'copy_position', 'obslt_position')
+            ->select('id', 'filename as name', 'category', 'storage_path', 'file_size', 'ori_position', 'copy_position', 'obslt_position')
             ->get();
 
         $extList = $fileRows
@@ -417,6 +420,7 @@ class ExportController extends Controller
                         'ori_position' => $item->ori_position,
                         'copy_position' => $item->copy_position,
                         'obslt_position' => $item->obslt_position,
+                        'size'          => $item->file_size,
                     ];
                 });
             })
@@ -428,13 +432,13 @@ class ExportController extends Controller
                 'model'    => $package->model,
                 'part_no'  => $package->part_no,
                 'revision' => 'Rev-' . $revision->revision_no,
-                'revision_label' => $revision->revision_label ?? null
+                'revision_label' => $revision->revision_label ?? null,
+                'ecn_no' => $revision->ecn_no,
+                'doc_type' => $package->doctype_group,
+                'category' => $package->doctype_subcategory,
+                'part_group' => $package->part_group,
             ],
-            'classification' => [
-                'doctype_group' => $package->doctype_group,
-                'doctype_subcategory' => $package->doctype_subcategory ?? '-',
-                'part_group' => $package->part_group ?? '-',
-            ],
+            'status'       => 'Approved',
             'files'        => $files,
 
             'stamp'        => [
@@ -550,13 +554,13 @@ class ExportController extends Controller
                 'model'    => $package->model,
                 'part_no'  => $package->part_no,
                 'revision' => 'Rev-' . $revision->revision_no,
-                'revision_label' => $revision->revision_label ?? null
+                'revision_label' => $revision->revision_label ?? null,
+                'ecn_no' => $revision->ecn_no,
+                'doc_type' => $package->doctype_group,
+                'category' => $package->doctype_subcategory,
+                'part_group' => $package->part_group,
             ],
-            'classification' => [
-                'doctype_group' => $package->doctype_group,
-                'doctype_subcategory' => $package->doctype_subcategory ?? '-',
-                'part_group' => $package->part_group ?? '-',
-            ],
+            'status'       => 'Approved',
             'files' => $files,
 
             'stamp'        => [
@@ -586,9 +590,11 @@ class ExportController extends Controller
             abort(404, 'File not found.');
         }
 
-        $revision = DB::table('doc_package_revisions')
-            ->where('id', $file->revision_id)
-            ->where('revision_status', '=', 'approved')
+        $revision = DB::table('doc_package_revisions as dpr')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+            ->where('dpr.id', $file->revision_id)
+            ->where('dpr.revision_status', '=', 'approved')
+            ->select('dpr.*', 'dp.id as package_id')
             ->first();
 
         if (!$revision) {
@@ -601,6 +607,35 @@ class ExportController extends Controller
             abort(404, 'File not found on server storage.');
         }
 
+        $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
+        $stampableTypes = ['jpg', 'jpeg', 'png', 'tif', 'tiff', 'pdf'];
+
+        if (in_array($ext, $stampableTypes) && class_exists('\Imagick')) {
+            $package = DB::table('doc_packages as dp')
+                ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+                ->join('models as m', 'dp.model_id', '=', 'm.id')
+                ->join('products as p', 'dp.product_id', '=', 'p.id')
+                ->where('dp.id', $revision->package_id)
+                ->select('c.code as customer', 'm.name as model', 'p.part_no')
+                ->first();
+
+            $stampFormat = StampFormat::where('is_active', true)->first();
+
+            if ($package && $stampFormat) {
+                try {
+                    $tempPath = $this->_burnStamps($path, $file, $revision, $package, $stampFormat);
+
+                    if ($tempPath !== $path) {
+                        return response()->download($tempPath, $file->filename)->deleteFileAfterSend(true);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Stamp burn-in failed for single download', [
+                        'file_id' => $file_id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+        }
         return response()->download($path, $file->filename);
     }
 
@@ -640,6 +675,10 @@ class ExportController extends Controller
             return response()->json(['success' => false, 'message' => 'No files found for this package revision.'], 404);
         }
 
+        $stampFormat = StampFormat::where('is_active', true)->first();
+        $stampableTypes = ['jpg', 'jpeg', 'png', 'tif', 'tiff'];
+        $canStamp = class_exists('\Imagick') && $stampFormat;
+
         $customer = Str::slug($package->customer);
         $model = Str::slug($package->model);
         $partNo = Str::slug($package->part_no);
@@ -647,19 +686,61 @@ class ExportController extends Controller
         $timestamp = now()->format('Ymd');
 
         $zipFileName = strtoupper("{$customer}-{$model}-{$partNo}-{$ecn}-{$timestamp}") . ".zip";
-        $zipFilePath = storage_path('app/public/' . $zipFileName);
+
+        $zipDirectory = storage_path('app/public');
+        $zipDirectory = str_replace('/', DIRECTORY_SEPARATOR, $zipDirectory); // Normalisasi path
+
+        if (!file_exists($zipDirectory)) {
+            if (!mkdir($zipDirectory, 0775, true)) {
+                $errorMsg = 'Failed to create zip directory. Check permissions for storage/app.';
+                Log::error($errorMsg, ['path' => $zipDirectory]);
+                return response()->json(['success' => false, 'message' => $errorMsg], 500);
+            }
+        }
+
+        if (!is_writable($zipDirectory)) {
+            $errorMsg = 'Zip directory exists but is not writable. Check permissions for storage/app/public.';
+            Log::error($errorMsg, ['path' => $zipDirectory]);
+            return response()->json(['success' => false, 'message' => $errorMsg], 500);
+        }
+
+        $zipFilePath = $zipDirectory . DIRECTORY_SEPARATOR . $zipFileName;
 
         $zip = new ZipArchive();
+
+        Log::info('Attempting to open ZipArchive at normalized path', ['path' => $zipFilePath]);
+
         if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
-            Log::error('Could not create zip file', ['path' => $zipFilePath]);
+            Log::error('ZipArchive::open() failed. Check permissions and path.', ['path' => $zipFilePath]);
             return response()->json(['success' => false, 'message' => 'Could not create zip file on server.'], 500);
         }
 
         $filesAddedCount = 0;
-        foreach ($files as $file) {
-            $filePath = Storage::disk('datacenter')->path($file->storage_path);
+        $tempFilesToDelete = [];
 
-            if (file_exists($filePath)) {
+        foreach ($files as $file) {
+            $filePath = str_replace('/', DIRECTORY_SEPARATOR, Storage::disk('datacenter')->path($file->storage_path));
+
+            $fileToAdd = $filePath;
+            $deleteAfterAdd = false;
+            $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
+
+            if ($canStamp && in_array($ext, $stampableTypes) && file_exists($filePath)) {
+                try {
+                    $tempPath = $this->_burnStamps($filePath, $file, $revision, $package, $stampFormat);
+                    if ($tempPath !== $filePath) {
+                        $fileToAdd = $tempPath;
+                        $deleteAfterAdd = true;
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Imagick stamp burn failed for zip', [
+                        'file_id' => $file->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            if (file_exists($fileToAdd)) {
                 $category = strtolower(trim($file->category));
                 $folderInZip = 'ecn';
                 if ($category === '2d') {
@@ -668,24 +749,47 @@ class ExportController extends Controller
                     $folderInZip = '3d';
                 }
 
-                $pathInZip = $folderInZip . '/' . $file->filename;
-                $zip->addFile($filePath, $pathInZip);
+                $pathInZip = str_replace('/', DIRECTORY_SEPARATOR, $folderInZip . '/' . $file->filename);
 
-                // OPTIMASI: Jangan kompres file yang sudah terkompresi
+                $zip->addFile($fileToAdd, $pathInZip);
+
                 $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
                 if (in_array($ext, ['jpg', 'jpeg', 'png', 'hpgl', 'tif', 'pdf', 'zip', 'rar', 'step', 'stp', 'igs', 'iges', 'catpart', 'catproduct'])) {
                     $zip->setCompressionName($pathInZip, ZipArchive::CM_STORE);
                 }
+
                 $filesAddedCount++;
+
+                if ($deleteAfterAdd) {
+                    $tempFilesToDelete[] = $fileToAdd;
+                }
+
             } else {
-                Log::warning('File not found and skipped for zipping: ' . $filePath);
+                Log::warning('File not found and skipped for zipping: ' . $filePath . ' (or temp file: ' . $fileToAdd . ')');
             }
         }
-        $zip->close();
+
+        $closeSuccess = false;
+        try {
+            $closeSuccess = $zip->close();
+            if (!$closeSuccess) {
+                 Log::error('zip->close() returned false.', ['path' => $zipFilePath, 'status' => $zip->status, 'statusString' => $zip->getStatusString()]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception at zip->close(). This is likely a source file issue.', ['path' => $zipFilePath, 'error' => $e->getMessage()]);
+            $closeSuccess = false;
+        }
+
+        foreach ($tempFilesToDelete as $tempFile) {
+            @unlink($tempFile);
+        }
+        if (!$closeSuccess) {
+            return response()->json(['success' => false, 'message' => 'Failed to finalize zip file. Check logs for details.'], 500);
+        }
 
         if ($filesAddedCount === 0) {
             if (file_exists($zipFilePath)) {
-                unlink($zipFilePath);
+                @unlink($zipFilePath);
             }
             return response()->json(['success' => false, 'message' => 'No physical files were found to add to the zip package.'], 404);
         }
@@ -788,5 +892,290 @@ class ExportController extends Controller
         }
 
         return response()->download($zipFilePath)->deleteFileAfterSend(true);
+    }
+
+    private function positionIntToKey(?int $pos, string $default = 'bottom-right'): string
+    {
+        switch ($pos) {
+            case 0: return 'bottom-left';
+            case 1: return 'bottom-center';
+            case 2: return 'bottom-right';
+            case 3: return 'top-left';
+            case 4: return 'top-center';
+            case 5: return 'top-right';
+            default: return $default;
+        }
+    }
+
+    private function calculateStampCoordinates(string $posKey, int $imgW, int $imgH, int $stampW, int $stampH, int $margin): array
+    {
+        $x = 0;
+        $y = 0;
+
+        switch ($posKey) {
+            case 'top-left':
+                $x = $margin;
+                $y = $margin;
+                break;
+            case 'top-center':
+                $x = max($margin, (int) (($imgW - $stampW) / 2));
+                $y = $margin;
+                break;
+            case 'top-right':
+                $x = max($margin, $imgW - $stampW - $margin);
+                $y = $margin;
+                break;
+            case 'bottom-left':
+                $x = $margin;
+                $y = max($margin, $imgH - $stampH - $margin);
+                break;
+            case 'bottom-center':
+                $x = max($margin, (int) (($imgW - $stampW) / 2));
+                $y = max($margin, $imgH - $stampH - $margin);
+                break;
+            case 'bottom-right':
+            default:
+                $x = max($margin, $imgW - $stampW - $margin);
+                $y = max($margin, $imgH - $stampH - $margin);
+                break;
+        }
+
+        // Final boundary check
+        $x = max(0, min($x, $imgW - $stampW));
+        $y = max(0, min($y, $imgH - $stampH));
+
+        return [$x, $y];
+    }
+
+    private function _createStampImage(string $centerText, string $topLine, string $bottomLine): ?Imagick
+    {
+        try {
+            $stamp = new Imagick();
+            $canvasWidth = 336;
+            $canvasHeight = 120;
+
+            $stamp->newImage($canvasWidth, $canvasHeight, new ImagickPixel('transparent'));
+            $stamp->setImageFormat('png');
+
+            $draw = new ImagickDraw();
+
+            $opacity = 0.85;
+            $borderColor = new ImagickPixel("rgba(37, 99, 235, $opacity)");
+            $textColor = new ImagickPixel("rgba(29, 78, 216, $opacity)");
+
+            $font = null;
+            $fontsToTry = [ 'DejaVu-Sans', 'Arial', 'Helvetica', 'Verdana', 'Tahoma', 'sans-serif' ];
+            foreach ($fontsToTry as $fontName) {
+                try {
+                    $draw->setFont($fontName);
+                    $font = $fontName;
+                    break;
+                } catch (\Exception $e) { continue; }
+            }
+            if ($font) { $draw->setFont($font); }
+
+            // --- Menggambar Border & Garis ---
+            $draw->setStrokeColor($borderColor);
+            $draw->setFillColor(new ImagickPixel('transparent'));
+            $draw->setStrokeWidth(3);
+            $draw->roundRectangle(2, 2, $canvasWidth - 2, $canvasHeight - 2, 6, 6);
+            $draw->line(2, 36, $canvasWidth - 2, 36);
+            $draw->line(2, 84, $canvasWidth - 2, 84);
+            $stamp->drawImage($draw);
+
+            // --- Menggambar Teks (Metode Perhitungan Manual) ---
+            $draw->setFillColor($textColor);
+            $draw->setTextAlignment(Imagick::ALIGN_LEFT);
+            $x_center_canvas = $canvasWidth / 2; // 168
+
+            // Teks Atas (Top Line)
+            $draw->setFontSize(16);
+            $draw->setFontWeight(600);
+            $draw->setStrokeWidth(0);
+            // Hitung metrik
+            $metricsTop = $stamp->queryFontMetrics($draw, $topLine);
+            $x_top = $x_center_canvas - ($metricsTop['textWidth'] / 2);
+            $y_top = 27;
+            $stamp->annotateImage($draw, $x_top, $y_top, 0, $topLine);
+
+            // Teks Bawah (Bottom Line)
+            $draw->setFontSize(16);
+            $draw->setFontWeight(400);
+            $draw->setStrokeWidth(0);
+            // Hitung metrik
+            $metricsBottom = $stamp->queryFontMetrics($draw, $bottomLine);
+            $x_bottom = $x_center_canvas - ($metricsBottom['textWidth'] / 2);
+            $y_bottom = 108;
+            $stamp->annotateImage($draw, $x_bottom, $y_bottom, 0, $bottomLine);
+
+            // Teks Tengah (Center Text)
+            $draw->setFontSize(21);
+            $draw->setFontWeight(900);
+            $draw->setStrokeColor($textColor); // Faux-bold
+            $draw->setStrokeWidth(0.75);
+            $metricsCenter = $stamp->queryFontMetrics($draw, $centerText);
+            $x_center = $x_center_canvas - ($metricsCenter['textWidth'] / 2);
+            $y_center = ($canvasHeight / 2) + ($metricsCenter['textHeight'] / 3);
+            $stamp->annotateImage($draw, $x_center, $y_center, 0, $centerText);
+
+
+            $draw->clear();
+            $draw->destroy();
+
+            return $stamp;
+
+        } catch (\Exception $e) {
+            Log::error('Failed to create stamp image with Imagick: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    private function _burnStamps(string $originalPath, DocPackageRevisionFile $file, object $revision, object $package, ?StampFormat $stampFormat): string
+    {
+        if (!class_exists('Imagick') || !file_exists($originalPath)) {
+            return $originalPath;
+        }
+
+        try {
+            $receiptDate = $revision->receipt_date ? Carbon::parse($revision->receipt_date)->toDateString() : '';
+            $uploadDate = $revision->created_at ? Carbon::parse($revision->created_at)->toDateString() : '';
+            $topLine = ($stampFormat?->prefix ?: 'DATE RECEIVED') . ' : ' . $receiptDate;
+            $bottomLine = ($stampFormat?->suffix ?: 'DATE UPLOADED') . ' : ' . $uploadDate;
+            $isObsolete = (bool)($revision->is_obsolete ?? 0);
+
+            $posOriginal = $this->positionIntToKey($file->ori_position ?? 2, 'bottom-right');
+            $posCopy = $this->positionIntToKey($file->copy_position ?? 1, 'bottom-center');
+            $posObsolete = $this->positionIntToKey($file->obslt_position ?? 0, 'bottom-left');
+
+            Log::debug('Stamp position values from file', [
+                'ori_position' => $file->ori_position ?? 'NULL',
+                'copy_position' => $file->copy_position ?? 'NULL',
+                'obslt_position' => $file->obslt_position ?? 'NULL',
+                'posOriginal' => $posOriginal,
+                'posCopy' => $posCopy,
+                'posObsolete' => $posObsolete,
+            ]);
+
+            $stampOriginal = $this->_createStampImage('ORIGINAL', $topLine, $bottomLine);
+            $stampCopy = $this->_createStampImage('Control COPY', $topLine, $bottomLine);
+            $stampObsolete = $isObsolete ? $this->_createStampImage('OBSOLETE', $topLine, $bottomLine) : null;
+
+            if (!$stampOriginal || !$stampCopy) {
+                Log::warning('Could not create stamp images, returning original file.');
+                return $originalPath;
+            }
+
+            $imagick = new Imagick();
+            $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
+            $isPdf = ($ext === 'pdf');
+
+            if ($isPdf) {
+                $imagick->setResolution(150, 150);
+            }
+
+            $imagick->readImage($originalPath);
+
+            $stampWidth = $stampOriginal->getImageWidth();
+            $stampHeight = $stampOriginal->getImageHeight();
+            $marginPercent = 0.03;
+
+            if ($isPdf) {
+                $totalPages = $imagick->getNumberImages();
+                for ($i = 0; $i < $totalPages; $i++) {
+                    $imagick->setIteratorIndex($i);
+
+                    $imgWidth = $imagick->getImageWidth();
+                    $imgHeight = $imagick->getImageHeight();
+                    $margin = (int) (min($imgWidth, $imgHeight) * $marginPercent);
+                    $margin = max(8, $margin);
+
+                    if ($imgWidth < $stampWidth) {
+                        Log::warning('Image width is smaller than stamp width, stamp may overlap.', [
+                            'file_id' => $file->id, 'page' => $i, 'imgW' => $imgWidth, 'stampW' => $stampWidth
+                        ]);
+                    }
+
+                    list($x, $y) = $this->calculateStampCoordinates($posOriginal, $imgWidth, $imgHeight, $stampWidth, $stampHeight, $margin);
+                    Log::debug('Stamp ORIGINAL position', ['pos' => $posOriginal, 'x' => $x, 'y' => $y, 'imgW' => $imgWidth, 'imgH' => $imgHeight]);
+                    $imagick->compositeImage($stampOriginal, Imagick::COMPOSITE_OVER, (int)$x, (int)$y);
+
+                    list($xCopy, $yCopy) = $this->calculateStampCoordinates($posCopy, $imgWidth, $imgHeight, $stampWidth, $stampHeight, $margin);
+                    Log::debug('Stamp COPY position (PDF)', ['pos' => $posCopy, 'x' => $xCopy, 'y' => $yCopy, 'imgW' => $imgWidth, 'imgH' => $imgHeight]);
+                    $imagick->compositeImage($stampCopy, Imagick::COMPOSITE_OVER, (int)$xCopy, (int)$yCopy);
+
+                    if ($isObsolete && $stampObsolete) {
+                        list($xObs, $yObs) = $this->calculateStampCoordinates($posObsolete, $imgWidth, $imgHeight, $stampWidth, $stampHeight, $margin);
+                        Log::debug('Stamp OBSOLETE position (PDF)', ['pos' => $posObsolete, 'x' => $xObs, 'y' => $yObs, 'imgW' => $imgWidth, 'imgH' => $imgHeight]);
+                        $imagick->compositeImage($stampObsolete, Imagick::COMPOSITE_OVER, (int)$xObs, (int)$yObs);
+                    }
+                }
+
+            } else {
+                $mainImageIndex = 0;
+                if ($imagick->getNumberImages() > 1) {
+                    $maxResolution = 0;
+                    foreach ($imagick as $i => $frame) {
+                        $resolution = $frame->getImageWidth() * $frame->getImageHeight();
+                        if ($resolution > $maxResolution) {
+                            $maxResolution = $resolution;
+                            $mainImageIndex = $i;
+                        }
+                    }
+                }
+                $imagick->setIteratorIndex($mainImageIndex);
+
+                $imgWidth = $imagick->getImageWidth();
+                $imgHeight = $imagick->getImageHeight();
+                $margin = (int) (min($imgWidth, $imgHeight) * $marginPercent);
+                $margin = max(8, $margin);
+
+                if ($imgWidth < $stampWidth) {
+                    Log::warning('Image width is smaller than stamp width, stamp may overlap.', [
+                        'file_id' => $file->id, 'imgW' => $imgWidth, 'stampW' => $stampWidth
+                    ]);
+                }
+
+                list($x, $y) = $this->calculateStampCoordinates($posOriginal, $imgWidth, $imgHeight, $stampWidth, $stampHeight, $margin);
+                Log::debug('Stamp ORIGINAL position (non-PDF)', ['pos' => $posOriginal, 'x' => $x, 'y' => $y, 'imgW' => $imgWidth, 'imgH' => $imgHeight]);
+                $imagick->compositeImage($stampOriginal, Imagick::COMPOSITE_OVER, (int)$x, (int)$y);
+
+                list($xCopy, $yCopy) = $this->calculateStampCoordinates($posCopy, $imgWidth, $imgHeight, $stampWidth, $stampHeight, $margin);
+                $xCopy = min($imgWidth - $stampWidth - $margin, $xCopy + $stampWidth + $margin);
+                Log::debug('Stamp COPY position (non-PDF)', ['pos' => $posCopy, 'x' => $xCopy, 'y' => $yCopy, 'imgW' => $imgWidth, 'imgH' => $imgHeight]);
+                $imagick->compositeImage($stampCopy, Imagick::COMPOSITE_OVER, (int)$xCopy, (int)$yCopy);
+
+                if ($isObsolete && $stampObsolete) {
+                    list($xObs, $yObs) = $this->calculateStampCoordinates($posObsolete, $imgWidth, $imgHeight, $stampWidth, $stampHeight, $margin);
+                    $xObs = max($margin, $xObs - $stampWidth - $margin);
+                    Log::debug('Stamp OBSOLETE position (non-PDF)', ['pos' => $posObsolete, 'x' => $xObs, 'y' => $yObs, 'imgW' => $imgWidth, 'imgH' => $imgHeight]);
+                    $imagick->compositeImage($stampObsolete, Imagick::COMPOSITE_OVER, (int)$xObs, (int)$yObs);
+                }
+            }
+
+            $tempDir = storage_path('app/temp');
+            if (!file_exists($tempDir)) {
+                mkdir($tempDir, 0775, true);
+            }
+
+            $outputExt = $isPdf ? 'pdf' : strtolower($imagick->getImageFormat());
+            $tempPath = $tempDir . '/' . Str::uuid()->toString() . '.' . $outputExt;
+
+            if ($isPdf) {
+                $imagick->writeImages($tempPath, true);
+            } else {
+                $imagick->writeImage($tempPath);
+            }
+
+            $imagick->clear(); $imagick->destroy();
+            $stampOriginal->clear(); $stampOriginal->destroy();
+            $stampCopy->clear(); $stampCopy->destroy();
+            if ($stampObsolete) { $stampObsolete->clear(); $stampObsolete->destroy(); }
+
+            return $tempPath;
+
+        } catch (\Exception $e) {
+            Log::error('Imagick stamp burn-in failed: ' . $e->getMessage(), ['file_id' => $file->id, 'path' => $originalPath]);
+            return $originalPath;
+        }
     }
 }

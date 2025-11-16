@@ -33,8 +33,10 @@
     </script>
 
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.tailwindcss.min.css">
-
     <link rel="stylesheet" href="{{ asset('assets/css/app.css?v=2') }}">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
+    <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
 
 
     @stack('style')

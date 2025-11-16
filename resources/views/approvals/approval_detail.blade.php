@@ -182,22 +182,26 @@
           <div class="mb-4 flex items-center justify-between">
             <div>
               <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate" x-text="selectedFile?.name"></h3>
-              <p class="text-xs text-gray-500 dark:text-gray-400">Last updated: {{ now()->format('M d, Y H:i') }}</p>
+              <p
+                class="text-xs text-gray-500 dark:text-gray-400"
+                x-text="fileSizeInfo()">
+              </p>
+              <!-- <p class="text-xs text-gray-500 dark:text-gray-400">Last updated: {{ now()->format('M d, Y H:i') }}</p> -->
             </div>
             <a
-  x-show="selectedFile?.url"
-  :href="selectedFile?.url"
-  :download="isCad(selectedFile?.name) ? selectedFile?.name : null"
-  target="_blank"
-  rel="noopener"
-  class="inline-flex items-center px-3 py-1.5 text-xs text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-  :title="isCad(selectedFile?.name)
+              x-show="selectedFile?.url"
+              :href="selectedFile?.url"
+              :download="isCad(selectedFile?.name) ? selectedFile?.name : null"
+              target="_blank"
+              rel="noopener"
+              class="inline-flex items-center px-3 py-1.5 text-xs text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+              :title="isCad(selectedFile?.name)
     ? 'Download file ini lalu buka di eDrawings'
     : 'Open file in new tab'">
 
-  <i class="fa-solid fa-up-right-from-square mr-2"></i>
-  <span x-text="isCad(selectedFile?.name) ? 'Download for eDrawings' : 'Open'"></span>
-</a>
+              <i class="fa-solid fa-up-right-from-square mr-2"></i>
+              <span x-text="isCad(selectedFile?.name) ? 'Download for eDrawings' : 'Open'"></span>
+            </a>
 
           </div>
 
@@ -269,6 +273,34 @@
             </button>
           </div>
 
+          <!-- PDF PAGE NAV -->
+          <div
+            x-show="isPdf(selectedFile?.name)"
+            class="mb-3 flex items-center justify-between text-xs text-gray-700 dark:text-gray-200">
+            <div class="flex items-center gap-2">
+              <button
+                @click="prevPdfPage()"
+                :disabled="pdfPageNum <= 1"
+                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded
+             hover:bg-gray-100 dark:hover:bg-gray-700
+             disabled:opacity-50 disabled:cursor-not-allowed">
+                ‹ Prev
+              </button>
+
+              <span x-text="`Page ${pdfPageNum} / ${pdfNumPages}`"></span>
+
+              <button
+                @click="nextPdfPage()"
+                :disabled="pdfPageNum >= pdfNumPages"
+                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded
+             hover:bg-gray-100 dark:hover:bg-gray-700
+             disabled:opacity-50 disabled:cursor-not-allowed">
+                Next ›
+              </button>
+            </div>
+          </div>
+
+
           <!-- PREVIEW AREA (image/pdf/tiff/cad) -->
           <div class="preview-area bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center w-full relative">
 
@@ -294,20 +326,20 @@
                       class="absolute"
                       :class="stampPositionClass('original')">
                       <div
-                       :class="stampOriginClass('original')"
+                        :class="stampOriginClass('original')"
                         class="w-56 h-20 border-2 border-blue-600 rounded-sm
            text-[10px] text-blue-700 flex flex-col items-center
            justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                          <span x-text="stampTopLine()"></span>
+                          <span x-text="stampTopLine('original')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
                           <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
                             x-text="stampCenterOriginal()"></span>
                         </div>
                         <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine()"></span>
+                          <span x-text="stampBottomLine('original')"></span>
                         </div>
                       </div>
                     </div>
@@ -324,7 +356,7 @@
            justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                          <span x-text="stampTopLine()"></span>
+                          <span x-text="stampTopLine('copy')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
                           <span
@@ -332,7 +364,7 @@
                             x-text="stampCenterCopy()"></span>
                         </div>
                         <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine()"></span>
+                          <span x-text="stampBottomLine('copy')"></span>
                         </div>
                       </div>
                     </div>
@@ -344,20 +376,20 @@
                       class="absolute"
                       :class="stampPositionClass('obsolete')">
                       <div
-                      :class="stampOriginClass('obsolete')"
+                        :class="stampOriginClass('obsolete')"
                         class="w-56 h-20 border-2 border-blue-600 rounded-sm
                    text-[10px] text-blue-700 flex flex-col items-center
                    justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                          <span x-text="stampTopLine()"></span>
+                          <span x-text="stampTopLine('obsolete')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
                           <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
                             x-text="stampCenterObsolete()"></span>
                         </div>
                         <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine()"></span>
+                          <span x-text="stampBottomLine('obsolete')"></span>
                         </div>
                       </div>
                     </div>
@@ -385,26 +417,26 @@
                       class="absolute"
                       :class="stampPositionClass('original')">
                       <div
-                       :class="stampOriginClass('original')"
+                        :class="stampOriginClass('original')"
                         class="w-56 h-20 border-2 border-blue-600 rounded-sm
            text-[10px] text-blue-700 flex flex-col items-center
            justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                          <span x-text="stampTopLine()"></span>
+                          <span x-text="stampTopLine('original')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
                           <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
                             x-text="stampCenterOriginal()"></span>
                         </div>
                         <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine()"></span>
+                          <span x-text="stampBottomLine('original')"></span>
                         </div>
                       </div>
                     </div>
 
                     <!-- STAMP COPY -->
-                     <div
+                    <div
                       x-show="pkg.stamp"
                       class="absolute"
                       :class="stampPositionClass('copy')">
@@ -415,14 +447,14 @@
            justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                          <span x-text="stampTopLine()"></span>
+                          <span x-text="stampTopLine('copy')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
                           <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
                             x-text="stampCenterCopy()"></span>
                         </div>
                         <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine()"></span>
+                          <span x-text="stampBottomLine('copy')"></span>
                         </div>
                       </div>
                     </div>
@@ -433,20 +465,20 @@
                       class="absolute"
                       :class="stampPositionClass('obsolete')">
                       <div
-                      :class="stampOriginClass('obsolete')"
+                        :class="stampOriginClass('obsolete')"
                         class="w-56 h-20 border-2 border-blue-600 rounded-sm
                    text-[10px] text-blue-700 flex flex-col items-center
                    justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                          <span x-text="stampTopLine()"></span>
+                          <span x-text="stampTopLine('obsolete')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
                           <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
                             x-text="stampCenterObsolete()"></span>
                         </div>
                         <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine()"></span>
+                          <span x-text="stampBottomLine('obsolete')"></span>
                         </div>
                       </div>
                     </div>
@@ -481,25 +513,25 @@
                       class="block pointer-events-none select-none max-w-full max-h-[70vh]" />
 
                     <!-- STAMP ORIGINAL -->
-                   <div
+                    <div
                       x-show="pkg.stamp"
                       class="absolute"
                       :class="stampPositionClass('original')">
                       <div
-                       :class="stampOriginClass('original')"
+                        :class="stampOriginClass('original')"
                         class="w-56 h-20 border-2 border-blue-600 rounded-sm
            text-[10px] text-blue-700 flex flex-col items-center
            justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                          <span x-text="stampTopLine()"></span>
+                          <span x-text="stampTopLine('original')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
                           <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
                             x-text="stampCenterOriginal()"></span>
                         </div>
                         <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine()"></span>
+                          <span x-text="stampBottomLine('original')"></span>
                         </div>
                       </div>
                     </div>
@@ -516,38 +548,38 @@
            justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                          <span x-text="stampTopLine()"></span>
+                          <span x-text="stampTopLine('copy')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
                           <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
                             x-text="stampCenterCopy()"></span>
                         </div>
                         <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine()"></span>
+                          <span x-text="stampBottomLine('copy')"></span>
                         </div>
                       </div>
                     </div>
 
                     <!-- STAMP OBSOLETE -->
-                  <div
+                    <div
                       x-show="pkg.stamp?.is_obsolete"
                       class="absolute"
                       :class="stampPositionClass('obsolete')">
                       <div
-                      :class="stampOriginClass('obsolete')"
+                        :class="stampOriginClass('obsolete')"
                         class="w-56 h-20 border-2 border-blue-600 rounded-sm
                    text-[10px] text-blue-700 flex flex-col items-center
                    justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                          <span x-text="stampTopLine()"></span>
+                          <span x-text="stampTopLine('obsolete')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
                           <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
                             x-text="stampCenterObsolete()"></span>
                         </div>
                         <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine()"></span>
+                          <span x-text="stampBottomLine('obsolete')"></span>
                         </div>
                       </div>
                     </div>
@@ -580,72 +612,72 @@
 
                   <!-- STAMP ORIGINAL -->
                   <div
-                      x-show="pkg.stamp"
-                      class="absolute"
-                      :class="stampPositionClass('original')">
-                      <div
-                       :class="stampOriginClass('original')"
-                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                    x-show="pkg.stamp"
+                    class="absolute"
+                    :class="stampPositionClass('original')">
+                    <div
+                      :class="stampOriginClass('original')"
+                      class="w-56 h-20 border-2 border-blue-600 rounded-sm
            text-[10px] text-blue-700 flex flex-col items-center
            justify-between px-2 py-1 bg-transparent"
-                        style="transform: scale(0.45);">
+                      style="transform: scale(0.45);">
                       <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                        <span x-text="stampTopLine()"></span>
+                        <span x-text="stampTopLine('original')"></span>
                       </div>
                       <div class="flex-1 flex items-center justify-center">
                         <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
                           x-text="stampCenterOriginal()"></span>
                       </div>
                       <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                        <span x-text="stampBottomLine()"></span>
+                        <span x-text="stampBottomLine('original')"></span>
                       </div>
                     </div>
                   </div>
 
                   <!-- STAMP COPY -->
                   <div
-                      x-show="pkg.stamp"
-                      class="absolute"
-                      :class="stampPositionClass('copy')">
-                      <div
-                        :class="stampOriginClass('copy')"
-                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                    x-show="pkg.stamp"
+                    class="absolute"
+                    :class="stampPositionClass('copy')">
+                    <div
+                      :class="stampOriginClass('copy')"
+                      class="w-56 h-20 border-2 border-blue-600 rounded-sm
            text-[10px] text-blue-700 flex flex-col items-center
            justify-between px-2 py-1 bg-transparent"
-                        style="transform: scale(0.45);">
+                      style="transform: scale(0.45);">
                       <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                        <span x-text="stampTopLine()"></span>
+                        <span x-text="stampTopLine('copy')"></span>
                       </div>
                       <div class="flex-1 flex items-center justify-center">
                         <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
                           x-text="stampCenterCopy()"></span>
                       </div>
                       <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                        <span x-text="stampBottomLine()"></span>
+                        <span x-text="stampBottomLine('copy')"></span>
                       </div>
                     </div>
                   </div>
 
                   <!-- STAMP OBSOLETE -->
-                 <div
-                      x-show="pkg.stamp?.is_obsolete"
-                      class="absolute"
-                      :class="stampPositionClass('obsolete')">
-                      <div
+                  <div
+                    x-show="pkg.stamp?.is_obsolete"
+                    class="absolute"
+                    :class="stampPositionClass('obsolete')">
+                    <div
                       :class="stampOriginClass('obsolete')"
-                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                      class="w-56 h-20 border-2 border-blue-600 rounded-sm
                    text-[10px] text-blue-700 flex flex-col items-center
                    justify-between px-2 py-1 bg-transparent"
-                        style="transform: scale(0.45);">
+                      style="transform: scale(0.45);">
                       <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                        <span x-text="stampTopLine()"></span>
+                        <span x-text="stampTopLine('obsolete')"></span>
                       </div>
                       <div class="flex-1 flex items-center justify-center">
                         <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
                           x-text="stampCenterObsolete()"></span>
                       </div>
                       <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                        <span x-text="stampBottomLine()"></span>
+                        <span x-text="stampBottomLine('obsolete')"></span>
                       </div>
                     </div>
                   </div>
@@ -1008,7 +1040,7 @@
     return {
       approvalId: JSON.parse(`@json($approvalId)`),
       pkg: JSON.parse(`@json($detail)`),
-      stampFormat: JSON.parse(`@json($stampFormat)`),
+      stampFormats: JSON.parse(`@json($stampFormats)`),
 
       // URL template update posisi stamp per file
       updateStampUrlTemplate: `{{ route('approvals.files.updateStamp', ['fileId' => '__FILE_ID__']) }}`,
@@ -1052,6 +1084,8 @@
       pdfPageNum: 1,
       pdfNumPages: 1,
       pdfScale: 1.0,
+
+
 
       // ZOOM + PAN untuk image / TIFF / HPGL / PDF
       imageZoom: 1,
@@ -1107,6 +1141,8 @@
       imageTransformStyle() {
         return `transform: translate(${this.panX}px, ${this.panY}px) scale(${this.imageZoom}); transform-origin: center center;`;
       },
+
+      
 
       // mapping dari integer DB -> key string
       // mapping dari integer DB -> key string (0-5)
@@ -1234,6 +1270,56 @@
         return null;
       },
 
+            formatBytes(bytes) {
+        if (!bytes || bytes <= 0) return '-';
+        const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        let i = 0;
+        let value = bytes;
+        while (value >= 1024 && i < units.length - 1) {
+          value /= 1024;
+          i++;
+        }
+        const fixed = value >= 10 || i === 0 ? value.toFixed(0) : value.toFixed(1);
+        return `${fixed} ${units[i]}`;
+      },
+
+      fileSizeInfo() {
+        if (!this.selectedFile) return '';
+        // sesuaikan nama field size dari backend
+        const bytes = this.selectedFile.size ?? this.selectedFile.filesize ?? 0;
+        if (!bytes) return 'Size: -';
+        return 'Size: ' + this.formatBytes(bytes);
+      },
+
+
+      // ==== pilih format normal vs obsolete dari array stampFormats ====
+      getNormalFormat() {
+        const list = this.stampFormats || [];
+        // anggap index 0 = normal (Date Received / Date Upload)
+        if (Array.isArray(list) && list.length > 0) {
+          return list[0];
+        }
+        // fallback kalau kosong
+        return {
+          prefix: 'DATE RECEIVED',
+          suffix: 'DATE UPLOADED'
+        };
+      },
+
+      getObsoleteFormat() {
+        const list = this.stampFormats || [];
+        // anggap index 1 = obsolete (Date Upload / Date Obsolete)
+        if (Array.isArray(list) && list.length > 1) {
+          return list[1];
+        }
+        // fallback kalau kosong
+        return {
+          prefix: 'DATE UPLOAD',
+          suffix: 'DATE OBSOLETE'
+        };
+      },
+
+
       formatStampDate(d) {
         return d || '';
       },
@@ -1253,22 +1339,40 @@
         return 'OBSOLETE';
       },
 
-      stampTopLine() {
-        const d = this.pkg?.stamp?.receipt_date;
-        if (!d) return '';
-        const label = (this.stampFormat && this.stampFormat.prefix) ?
-          this.stampFormat.prefix :
-          'DATE RECEIVED';
-        return `${label} : ${this.formatStampDate(d)}`;
+      stampTopLine(which = 'original') {
+        const s = this.pkg?.stamp || {};
+        let date;
+        let fmt;
+
+        if (which === 'obsolete') {
+          fmt = this.getObsoleteFormat();
+          date = s.upload_date || s.receipt_date || '';
+          const label = fmt.prefix || 'DATE UPLOAD';
+          return date ? `${label} : ${this.formatStampDate(date)}` : '';
+        } else {
+          fmt = this.getNormalFormat();
+          date = s.receipt_date || s.upload_date || '';
+          const label = fmt.prefix || 'DATE RECEIVED';
+          return date ? `${label} : ${this.formatStampDate(date)}` : '';
+        }
       },
 
-      stampBottomLine() {
-        const d = this.pkg?.stamp?.upload_date;
-        if (!d) return '';
-        const label = (this.stampFormat && this.stampFormat.suffix) ?
-          this.stampFormat.suffix :
-          'DATE UPLOADED';
-        return `${label} : ${this.formatStampDate(d)}`;
+      stampBottomLine(which = 'original') {
+        const s = this.pkg?.stamp || {};
+        let date;
+        let fmt;
+
+        if (which === 'obsolete') {
+          fmt = this.getObsoleteFormat();
+          date = s.obsolete_date || s.upload_date || '';
+          const label = fmt.suffix || 'DATE OBSOLETE';
+          return date ? `${label} : ${this.formatStampDate(date)}` : '';
+        } else {
+          fmt = this.getNormalFormat();
+          date = s.upload_date || '';
+          const label = fmt.suffix || 'DATE UPLOADED';
+          return date ? `${label} : ${this.formatStampDate(date)}` : '';
+        }
       },
 
       // ===== helper key per file (pakai id kalau ada) =====
@@ -1503,6 +1607,21 @@
           this.pdfError = e?.message || 'Failed to render PDF page';
         }
       },
+
+      nextPdfPage() {
+        if (!pdfDoc) return;
+        if (this.pdfPageNum >= this.pdfNumPages) return;
+        this.pdfPageNum++;
+        this.renderPdfPage();
+      },
+
+      prevPdfPage() {
+        if (!pdfDoc) return;
+        if (this.pdfPageNum <= 1) return;
+        this.pdfPageNum--;
+        this.renderPdfPage();
+      },
+
 
       /* ===== HPGL renderer ===== */
       async renderHpgl(url) {
@@ -2021,144 +2140,160 @@
         if (!this.processing) this.showRollbackModal = false;
       },
 
-     // GANTI fungsi ini
-async confirmApprove() {
-  if (this.processing) return;
-  this.processing = true;
-  try {
-    const url = `{{ route('approvals.approve', ['id' => $approvalId]) }}`;
-    let res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-      }
-    });
-
-    let text = await res.text(); let json = {};
-    try { json = JSON.parse(text); } catch {}
-
-    if (!res.ok) {
-      // === tangani 409 minta konfirmasi ===
-      if (res.status === 409 && json?.needs_confirmation && json?.code === 'EMAIL_FAILED') {
-        const ask = await Swal.fire({
-          icon: 'warning',
-          title: 'Email Failed',
-          text: 'Failed to send email. Approve anyway? The team will not receive email.',
-          showCancelButton: true,
-          confirmButtonText: 'Approve without email',
-          cancelButtonText: 'Cancel',
-        });
-        if (ask.isConfirmed) {
-          // retry dengan confirm_without_email=1
-          res = await fetch(url, {
+      // GANTI fungsi ini
+      async confirmApprove() {
+        if (this.processing) return;
+        this.processing = true;
+        try {
+          const url = `{{ route('approvals.approve', ['id' => $approvalId]) }}`;
+          let res = await fetch(url, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ confirm_without_email: true })
+            }
           });
-          text = await res.text(); json = {};
-          try { json = JSON.parse(text); } catch {}
-          if (!res.ok) throw new Error(json.message || 'Approve failed.');
-        } else {
-          throw new Error('Approval is canceled.');
+
+          let text = await res.text();
+          let json = {};
+          try {
+            json = JSON.parse(text);
+          } catch {}
+
+          if (!res.ok) {
+            // === tangani 409 minta konfirmasi ===
+            if (res.status === 409 && json?.needs_confirmation && json?.code === 'EMAIL_FAILED') {
+              const ask = await Swal.fire({
+                icon: 'warning',
+                title: 'Email Failed',
+                text: 'Failed to send email. Approve anyway? The team will not receive email.',
+                showCancelButton: true,
+                confirmButtonText: 'Approve without email',
+                cancelButtonText: 'Cancel',
+              });
+              if (ask.isConfirmed) {
+                // retry dengan confirm_without_email=1
+                res = await fetch(url, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                  },
+                  body: JSON.stringify({
+                    confirm_without_email: true
+                  })
+                });
+                text = await res.text();
+                json = {};
+                try {
+                  json = JSON.parse(text);
+                } catch {}
+                if (!res.ok) throw new Error(json.message || 'Approve failed.');
+              } else {
+                throw new Error('Approval is canceled.');
+              }
+            } else {
+              if (res.status === 422) throw new Error(json.message || 'Revision is not in a state that can be approved.');
+              if (res.status === 403) throw new Error(json.message || 'You do not have permission to approve.');
+              if (res.status === 409) throw new Error(json.message || 'Revision has already been approved by someone else.');
+              throw new Error(json.message || 'Server returned an error.');
+            }
+          }
+
+          // === sukses ===
+          this.pkg.status = 'Approved';
+          this.addPkgActivity('approved', '{{ auth()->user()->name ?? "Reviewer" }}');
+          this.showApproveModal = false;
+          toastSuccess('Success', json.message || 'Revision approved successfully!');
+        } catch (err) {
+          console.error('Approve Error:', err);
+          toastError('Error', err.message || 'Approve failed');
+        } finally {
+          this.processing = false;
         }
-      } else {
-        if (res.status === 422) throw new Error(json.message || 'Revision is not in a state that can be approved.');
-        if (res.status === 403) throw new Error(json.message || 'You do not have permission to approve.');
-        if (res.status === 409) throw new Error(json.message || 'Revision has already been approved by someone else.');
-        throw new Error(json.message || 'Server returned an error.');
-      }
-    }
-
-    // === sukses ===
-    this.pkg.status = 'Approved';
-    this.addPkgActivity('approved', '{{ auth()->user()->name ?? "Reviewer" }}');
-    this.showApproveModal = false;
-    toastSuccess('Success', json.message || 'Revision approved successfully!');
-  } catch (err) {
-    console.error('Approve Error:', err);
-    toastError('Error', err.message || 'Approve failed');
-  } finally {
-    this.processing = false;
-  }
-},
+      },
 
 
-// TAMBAHKAN helper baru ini
-async doApprove(confirmWithoutEmail = false) {
-  const url = `{{ route('approvals.approve', ['id' => $approvalId]) }}`;
-  const payload = confirmWithoutEmail ? { confirm_without_email: true } : null;
+      // TAMBAHKAN helper baru ini
+      async doApprove(confirmWithoutEmail = false) {
+        const url = `{{ route('approvals.approve', ['id' => $approvalId]) }}`;
+        const payload = confirmWithoutEmail ? {
+          confirm_without_email: true
+        } : null;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-    },
-    body: payload ? JSON.stringify(payload) : null
-  });
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+          },
+          body: payload ? JSON.stringify(payload) : null
+        });
 
-  const text = await res.text();
-  let json = {};
-  try { json = JSON.parse(text); } catch {}
+        const text = await res.text();
+        let json = {};
+        try {
+          json = JSON.parse(text);
+        } catch {}
 
-  // sukses
-  if (res.ok) return json;
+        // sukses
+        if (res.ok) return json;
 
-  // sudah diapprove orang lain
-  if (res.status === 409 && json?.message && !json?.needs_confirmation) {
-    throw new Error(json.message);
-  }
+        // sudah diapprove orang lain
+        if (res.status === 409 && json?.message && !json?.needs_confirmation) {
+          throw new Error(json.message);
+        }
 
-  // butuh konfirmasi (email gagal dikirim)
-  if (res.status === 409 && json?.needs_confirmation) {
-    const ask = await Swal.fire({
-      icon: 'warning',
-      title: 'Email Failed',
-      text: json.message || 'System could not send emails. Approve without sending emails?',
-      showCancelButton: true,
-      confirmButtonText: 'Approve anyway',
-      cancelButtonText: 'Cancel',
-      reverseButtons: true,
-      focusCancel: true
-    });
+        // butuh konfirmasi (email gagal dikirim)
+        if (res.status === 409 && json?.needs_confirmation) {
+          const ask = await Swal.fire({
+            icon: 'warning',
+            title: 'Email Failed',
+            text: json.message || 'System could not send emails. Approve without sending emails?',
+            showCancelButton: true,
+            confirmButtonText: 'Approve anyway',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+            focusCancel: true
+          });
 
-    if (ask.isConfirmed) {
-      // retry approve TANPA email
-      const retry = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ confirm_without_email: true })
-      });
+          if (ask.isConfirmed) {
+            // retry approve TANPA email
+            const retry = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+              },
+              body: JSON.stringify({
+                confirm_without_email: true
+              })
+            });
 
-      const rtext = await retry.text();
-      let rjson = {};
-      try { rjson = JSON.parse(rtext); } catch {}
+            const rtext = await retry.text();
+            let rjson = {};
+            try {
+              rjson = JSON.parse(rtext);
+            } catch {}
 
-      if (!retry.ok) {
-        throw new Error(rjson.message || 'Approve failed (no email).');
-      }
+            if (!retry.ok) {
+              throw new Error(rjson.message || 'Approve failed (no email).');
+            }
 
-      toastInfo('Approved (no email)', 'Approved successfully, but emails were not sent.');
-      return rjson;
-    } else {
-      throw new Error('Approval cancelled.');
-    }
-  }
+            toastInfo('Approved (no email)', 'Approved successfully, but emails were not sent.');
+            return rjson;
+          } else {
+            throw new Error('Approval cancelled.');
+          }
+        }
 
-  // error lain
-  throw new Error(json?.message || 'Server returned an error.');
-},
+        // error lain
+        throw new Error(json?.message || 'Server returned an error.');
+      },
 
       async confirmReject() {
         if (this.processing) return;

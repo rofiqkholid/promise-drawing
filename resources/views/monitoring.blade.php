@@ -3,6 +3,168 @@
 @section('header-title', 'Dashboard')
 @section('content')
 
+<style>
+    .select2-container--default .select2-selection--single .select2-selection__rendered:empty {
+        display: none;
+    }
+
+    .filter-pill-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .filter-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background-color: #E0E7FF;
+        border-radius: 9999px;
+        padding: 4px 10px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #3730A3;
+    }
+
+    .filter-pill-remove {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        margin-left: 2px;
+        color: #4338CA;
+        line-height: 1;
+    }
+
+    .filter-pill-remove:hover {
+        color: #C7D2FE;
+    }
+
+    .dark .filter-pill {
+        background-color: #3730A3;
+        color: #E0E7FF;
+    }
+
+    .dark .filter-pill-remove {
+        color: #A5B4FC;
+    }
+
+    .dark .filter-pill-remove:hover {
+        color: #E0E7FF;
+    }
+
+    .litepicker.dark {
+        background-color: #1F2937 !important;
+        border: 1px solid #374151 !important;
+        color: #D1D5DB !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+        border-radius: 0.5rem;
+    }
+
+    .litepicker.dark .litepicker__header {
+        background-color: #374151 !important;
+        border-bottom: 1px solid #4B5563 !important;
+        color: #F3F4F6 !important;
+    }
+
+    .litepicker.dark .litepicker__month-title,
+    .litepicker.dark .litepicker__year-title {
+        color: #F3F4F6 !important;
+        font-weight: 600;
+    }
+
+    .litepicker.dark .litepicker__month-title:hover,
+    .litepicker.dark .litepicker__year-title:hover {
+        color: #60A5FA !important;
+    }
+
+    .litepicker.dark .litepicker__next-button,
+    .litepicker.dark .litepicker__prev-button {
+        background-color: transparent !important;
+        border: none !important;
+    }
+
+    .litepicker.dark .litepicker__next-button:hover,
+    .litepicker.dark .litepicker__prev-button:hover {
+        background-color: #4B5563 !important;
+        border-radius: 50%;
+    }
+
+    .litepicker.dark .litepicker__next-button svg,
+    .litepicker.dark .litepicker__prev-button svg {
+        stroke: #D1D5DB !important;
+    }
+
+    .litepicker.dark .litepicker__day-of-week {
+        color: #9CA3AF !important;
+        font-weight: 500;
+    }
+
+    .litepicker.dark .litepicker__day {
+        color: #D1D5DB !important;
+        background-color: transparent !important;
+    }
+
+    .litepicker.dark .litepicker__day:hover {
+        background-color: #374151 !important;
+        border-radius: 50%;
+    }
+
+    .litepicker.dark .litepicker__day.is-today {
+        color: #3B82F6 !important;
+        font-weight: 600 !important;
+    }
+
+    .litepicker.dark .litepicker__day.is-selected {
+        background-color: #2563EB !important;
+        color: #FFFFFF !important;
+        border-radius: 50%;
+    }
+
+    .litepicker.dark .litepicker__day.is-in-range {
+        background-color: #1E40AF !important;
+        color: #FFFFFF !important;
+    }
+
+    .litepicker.dark .litepicker__day.is-start-date,
+    .litepicker.dark .litepicker__day.is-end-date {
+        background-color: #2563EB !important;
+        color: #FFFFFF !important;
+        border-radius: 50%;
+    }
+
+    .litepicker.dark .litepicker__footer {
+        background-color: #374151 !important;
+        border-top: 1px solid #4B5563 !important;
+    }
+
+    .litepicker.dark .litepicker__tooltip {
+        background-color: #111827 !important;
+        border: 1px solid #374151 !important;
+        color: #D1D5DB !important;
+    }
+
+    .litepicker.dark .litepicker__button-cancel {
+        background-color: #6B7280 !important;
+        color: #FFFFFF !important;
+    }
+
+    .litepicker.dark .litepicker__button-apply {
+        background-color: #2563EB !important;
+        color: #FFFFFF !important;
+    }
+
+    .dark #date_range_input {
+        background-color: #374151 !important;
+        border-color: #4B5563 !important;
+        color: #F9FAFB !important;
+    }
+
+    .dark #date_range_input::placeholder {
+        color: #9CA3AF !important;
+    }
+</style>
+
 <div x-data="dashboardController()" x-init="init()">
 
     <div classid="card-container" class="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
@@ -96,92 +258,121 @@
                 </svg>
             </div>
         </div>
-
     </div>
+
+
     <div class="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
             <i class="fa-solid fa-filter mr-2 text-gray-500"></i> Filter Data
         </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
+
             <div>
-                <label for="key_word" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Key Word (Part No)</label>
+                <label for="date_range_input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Range (Upload)</label>
                 <div class="relative mt-1">
-                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"> <i class="fa-solid fa-magnifying-glass text-gray-400"></i> </div>
-                    <input type="text" name="key_word" id="key_word" class="block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:placeholder-gray-500 focus:ring-0 focus:outline-none sm:text-sm py-2 pl-10 pr-3" placeholder="e.g. 721005233 or MMKI - 5J45">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <i class="fa-solid fa-calendar-days text-gray-400"></i>
+                    </div>
+                    <input type="text" id="date_range_input" name="date_range_input" class="block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:placeholder-gray-500 focus:ring-0 focus:outline-none sm:text-sm py-2 pl-10 pr-3" placeholder="Select date range...">
                 </div>
-            </div>
-            <div>
-                <label for="doc_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Document Group</label>
-                <div class="relative mt-1"> <select id="doc_group" name="doc_group" class="w-full"></select> </div>
-            </div>
-            <div>
-                <label for="sub_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
-                <div class="relative mt-1"> <select id="sub_type" name="sub_type" class="w-full"></select> </div>
-            </div>
-            <div>
-                <label for="month_input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Month (Upload)</label>
-                <input type="month" id="month_input" name="month_input" class="mt-1 block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:ring-0 focus:outline-none sm:text-sm py-[0.35rem] px-3">
-            </div>
-            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
-                <label for="customer" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
-                <div class="relative mt-1"> <select id="customer" name="customer" class="w-full"></select> </div>
-            </div>
-            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
-                <label for="model" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
-                <div class="relative mt-1"> <select id="model" name="model" class="w-full"></select> </div>
-            </div>
-            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
-                <label for="project_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                <div class="relative mt-1"> <select id="project_status" name="project_status" class="w-full"></select> </div>
-            </div>
-            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
-                <label for="part_group" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
-                <div class="relative mt-1"> <select id="part_group" name="part_group" class="w-full"></select> </div>
             </div>
 
-            <div x-show="showExtraFilters" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform -translate-y-4" x-transition:enter-end="opacity-100 transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 transform translate-y-0" x-transition:leave-end="opacity-0 transform -translate-y-4" style="display: none;">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sort By</label>
-                <div class="mt-2 flex space-x-4 pt-1">
-                    <div class="flex items-center">
-                        <input id="sort_actual" name="sort_by" type="radio" value="actual" class="h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-blue-500 dark:focus:ring-blue-600" checked>
-                        <label for="sort_actual" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">Sort by Actual</label>
+            <div>
+                <label for="customer_model_input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer - Model</label>
+                <div class="relative mt-1">
+                    <select id="customer_model_input" name="customer_model_input" class="w-full"></select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
+
+                <div x-show="partGroupMode === 'multi'">
+                    <div class="relative mt-1">
+                        <select id="part_group_multi_input" name="part_group_multi_input" class="w-full"></select>
                     </div>
-                    <div class="flex items-center">
-                        <input id="sort_plan" name="sort_by" type="radio" value="plan" class="h-4 w-4 text-blue-600 border-gray-300 dark:border-gray-600 dark:bg-gray-700 focus:ring-blue-500 dark:focus:ring-blue-600">
-                        <label for="sort_plan" class="ml-2 block text-sm text-gray-900 dark:text-gray-300">Sort by Plan</label>
+                </div>
+
+                <div x-show="partGroupMode === 'single'" style="display: none;">
+                    <div class="relative mt-1">
+                        <select id="part_group_single_input" name="part_group_single_input" class="w-full"></select>
                     </div>
                 </div>
             </div>
-            <div class="lg:col-span-4 w-full flex justify-end items-center pt-4 border-t border-gray-200 dark:border-gray-700 mt-2">
-                <div class="flex space-x-3">
-                    <button type="button" @click="resetFilters" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"> Reset </button>
-                    <button type="button" @click="applyFilters" :disabled="isLoading" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px]">
-                        <span x-show="!isLoading"> <i class="fa-solid fa-check mr-2"></i> Apply Filter </span>
-                        <span x-show="isLoading" style="display: none;"> <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg></span>
-                    </button>
+
+            <div>
+                <label for="project_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                <div class="relative mt-1">
+                    <select id="project_status" name="project_status" class="w-full"></select>
                 </div>
+            </div>
+
+        </div>
+        <div class="w-full flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+
+
+            <div class="filter-pill-container flex-grow pr-6">
+
+                <template x-for="item in selectedProjects" :key="'proj-' + item.model_id">
+                    <span class="filter-pill">
+                        <span x-text="item.text"></span>
+                        <button @click="removeProject(item.model_id)" type="button" class="filter-pill-remove">
+                            <i class="fa-solid fa-times fa-xs"></i>
+                        </button>
+                    </span>
+                </template>
+
+
+                <template x-for="item in selectedPartGroup" :key="'pg-' + item.id">
+                    <span class="filter-pill">
+                        <span class="font-normal text-gray-500 dark:text-gray-400 mr-1">Part Group:</span>
+                        <span x-text="item.text"></span>
+                        <button @click="removePartGroup(item.id)" type="button" class="filter-pill-remove">
+                            <i class="fa-solid fa-times fa-xs"></i>
+                        </button>
+                    </span>
+                </template>
+
+
+                <template x-if="partGroupMode === 'single' && partGroupSingleValue.id !== 'ALL'">
+                    <span class="filter-pill">
+                        <span class="font-normal text-gray-500 dark:text-gray-400 mr-1">Part Group:</span>
+
+                        <span x-text="partGroupSingleValue.text"></span>
+                        <button @click="resetPartGroupSingle" type="button" class="filter-pill-remove">
+                            <i class="fa-solid fa-times fa-xs"></i>
+                        </button>
+                    </span>
+                </template>
+            </div>
+
+
+            <div class="flex-shrink-0 flex space-x-3">
+                <button type="button" @click="resetFilters" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"> Reset </button>
+                <button type="button" @click="applyFilters" :disabled="isLoading" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px]">
+                    <span x-show="!isLoading"> <i class="fa-solid fa-check mr-2"></i> Apply Filter </span>
+                    <span x-show="isLoading" style="display: none;">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+                </button>
             </div>
         </div>
     </div>
 
-    <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <div class="mt-6 grid grid-cols-1 gap-6">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
             <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-chart-column mr-2 text-blue-500"></i>Upload File Monitoring (ALL)</h3>
             <div class="h-96">
                 <div id="planVsActualChart"></div>
             </div>
         </div>
-
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
-            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-chart-column mr-2 text-purple-500"></i>Upload File Monitoring (Project)</h3>
-            <div class="h-96">
-                <div id="planVsActualProjectChart"></div>
-            </div>
-        </div>
     </div>
+
     <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
             <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-chart-line mr-2 text-green-500"></i>Upload vs Download Trend</h3>
@@ -196,13 +387,15 @@
         </div>
     </div>
 </div>
+
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         fetchActiveUsers();
         fetchUploadCount();
         fetchDocCount();
         fetchUDownloadCount();
-        fetchDiskSpace(); // <-- MEMANGGIL FUNGSI BARU
+        fetchDiskSpace();
     });
 
     function fetchActiveUsers() {
@@ -210,18 +403,9 @@
         const userCountElement = document.getElementById('activeUserCount');
         if (!userCountElement) return;
         userCountElement.textContent = '...';
-        fetch(apiUrl)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                if (data && data.status === 'success') userCountElement.textContent = data.count;
-            })
-            .catch(error => {
-                console.error('Error fetching active users:', error);
-                userCountElement.textContent = 'Error';
-            });
+        fetch(apiUrl).then(response => response.json()).then(data => {
+            if (data && data.status === 'success') userCountElement.textContent = data.count;
+        }).catch(error => userCountElement.textContent = 'Error');
     }
 
     function fetchUploadCount() {
@@ -229,18 +413,9 @@
         const userCountElement = document.getElementById('uploadCount');
         if (!userCountElement) return;
         userCountElement.textContent = '...';
-        fetch(apiUrl)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                if (data && data.status === 'success') userCountElement.textContent = data.count;
-            })
-            .catch(error => {
-                console.error('Error fetching upload data:', error);
-                userCountElement.textContent = 'Error';
-            });
+        fetch(apiUrl).then(response => response.json()).then(data => {
+            if (data && data.status === 'success') userCountElement.textContent = data.count;
+        }).catch(error => userCountElement.textContent = 'Error');
     }
 
     function fetchUDownloadCount() {
@@ -248,18 +423,9 @@
         const userCountElement = document.getElementById('downloadCount');
         if (!userCountElement) return;
         userCountElement.textContent = '...';
-        fetch(apiUrl)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                if (data && data.status === 'success') userCountElement.textContent = data.count;
-            })
-            .catch(error => {
-                console.error('Error fetching download data:', error);
-                userCountElement.textContent = 'Error';
-            });
+        fetch(apiUrl).then(response => response.json()).then(data => {
+            if (data && data.status === 'success') userCountElement.textContent = data.count;
+        }).catch(error => userCountElement.textContent = 'Error');
     }
 
     function fetchDocCount() {
@@ -267,77 +433,62 @@
         const userCountElement = document.getElementById('docCount');
         if (!userCountElement) return;
         userCountElement.textContent = '...';
-        fetch(apiUrl)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                if (data && data.status === 'success') userCountElement.textContent = data.count;
-            })
-            .catch(error => {
-                console.error('Error fetching document total:', error);
-                userCountElement.textContent = 'Error';
-            });
+        fetch(apiUrl).then(response => response.json()).then(data => {
+            if (data && data.status === 'success') userCountElement.textContent = data.count;
+        }).catch(error => userCountElement.textContent = 'Error');
     }
 
-    // FUNGSI BARU UNTUK DISK SPACE
     function fetchDiskSpace() {
-        const apiUrl = '/api/disk-space'; // Endpoint API baru
+        const apiUrl = '/api/disk-space';
         const freeEl = document.getElementById('freeSpace');
         const usedEl = document.getElementById('usedSpace');
         const totalEl = document.getElementById('totalSpace');
-
         if (!freeEl || !usedEl || !totalEl) return;
-
-        // Set loading state
         freeEl.textContent = '...';
         usedEl.textContent = '...';
         totalEl.textContent = '...';
-
-        fetch(apiUrl)
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                if (data && data.status === 'success') {
-                    // API akan mengembalikan data.free, data.used, data.total
-                    // yang sudah diformat (misal: "100 GB")
-                    freeEl.textContent = data.free;
-                    usedEl.textContent = data.used;
-                    totalEl.textContent = data.total;
-                } else {
-                    throw new Error(data.message || 'Invalid data structure');
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching disk space:', error);
-                freeEl.textContent = 'Error';
-                usedEl.textContent = '-';
-                totalEl.textContent = '-';
-            });
+        fetch(apiUrl).then(response => response.json()).then(data => {
+            if (data && data.status === 'success') {
+                freeEl.textContent = data.free;
+                usedEl.textContent = data.used;
+                totalEl.textContent = data.total;
+            } else {
+                throw new Error('Invalid data');
+            }
+        }).catch(error => {
+            freeEl.textContent = 'Error';
+            usedEl.textContent = '-';
+            totalEl.textContent = '-';
+        });
     }
 
 
     function dashboardController() {
         return {
-            showExtraFilters: false,
             apexPlanVsActualChart: null,
-            apexPlanVsActualProjectChart: null,
             apexUploadDownloadChart: null,
             isLoading: false,
             isDarkMode: document.documentElement.classList.contains('dark'),
 
+            dateRangeInstance: null,
+            dateStart: '',
+            dateEnd: '',
+
+            selectedProjects: [],
+            selectedPartGroup: [],
+            partGroupMode: 'multi',
+            partGroupSingleValue: {
+                id: 'ALL',
+                text: 'ALL'
+            },
+
             init() {
-                if (typeof ApexCharts === 'undefined') {
-                    console.log('Waiting for ApexCharts...');
+                if (typeof ApexCharts === 'undefined' || typeof $ === 'undefined' || !$.fn.select2 || typeof Litepicker === 'undefined') {
+                    console.log('Waiting for libraries (ApexCharts, jQuery, Select2, Litepicker)...');
                     setTimeout(() => this.init(), 100);
                     return;
                 }
-
                 this.detectThemeChanges();
-
                 if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', () => this.initializeDashboard());
                 } else {
@@ -347,46 +498,56 @@
 
             detectThemeChanges() {
                 const component = this;
-
                 const updateTheme = () => {
                     const newDarkMode = document.documentElement.classList.contains('dark');
                     if (component.isDarkMode !== newDarkMode) {
                         component.isDarkMode = newDarkMode;
                         component.updateChartTheme();
+                        component.updateLitepickerTheme();
                     }
                 };
-
-                const observer = new MutationObserver(function(mutations) {
-                    mutations.forEach(function(mutation) {
-                        if (mutation.attributeName === 'class') {
-                            updateTheme();
-                        }
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.attributeName === 'class') updateTheme();
                     });
                 });
-
                 observer.observe(document.documentElement, {
                     attributes: true,
                     attributeFilter: ['class']
                 });
-
                 window.addEventListener('theme-changed', updateTheme);
+            },
+
+            updateLitepickerTheme() {
+                if (this.dateRangeInstance && this.dateRangeInstance.ui) {
+                    const isDark = this.isDarkMode;
+                    if (isDark) {
+                        this.dateRangeInstance.ui.classList.add('dark');
+                    } else {
+                        this.dateRangeInstance.ui.classList.remove('dark');
+                    }
+                }
             },
 
             initializeDashboard() {
                 const component = this;
-                component.initCharts();
-                component.initDocGroupSelect2();
-                component.initSubTypeSelect2();
-                component.initCustomerSelect2();
-                component.initModelSelect2();
-                component.initPartGroupSelect2();
-                component.initStatusSelect2();
-                component.fetchActivityLog();
 
                 const now = new Date();
                 const year = now.getFullYear();
                 const month = (now.getMonth() + 1).toString().padStart(2, '0');
-                document.getElementById('month_input').value = `${year}-${month}`;
+                const lastDay = new Date(year, now.getMonth() + 1, 0).getDate().toString().padStart(2, '0');
+
+                component.dateStart = `${year}-${month}-01`;
+                component.dateEnd = `${year}-${month}-${lastDay}`;
+
+                component.initCharts();
+                component.initLitepicker();
+                component.initCustomerModelSelect2();
+                component.initStatusSelect2();
+                component.initPartGroupSelect2_Multi();
+                component.initPartGroupSelect2_Single();
+
+                component.fetchActivityLog();
 
                 component.applyFilters();
                 component.updateUploadDownloadChart(year);
@@ -397,19 +558,11 @@
                 const gridColor = newMode === 'dark' ? '#4A5568' : '#E2E8F0';
                 const labelColor = newMode === 'dark' ? '#E2E8F0' : '#4A5568';
                 const background = newMode === 'dark' ? '#1F2937' : '#FFFFFF';
-
-                const mainCharts = [
-                    this.apexPlanVsActualChart,
-                    this.apexPlanVsActualProjectChart,
-                    this.apexUploadDownloadChart
-
-                ];
-
+                const mainCharts = [this.apexPlanVsActualChart, this.apexUploadDownloadChart];
                 mainCharts.forEach(chart => {
                     if (chart && chart.w && chart.w.config) {
                         const currentCategories = chart.w.globals.categoryLabels || [];
                         const currentSeries = JSON.parse(JSON.stringify(chart.w.config.series || []));
-
                         const updatedOptions = {
                             theme: {
                                 mode: newMode
@@ -454,70 +607,34 @@
                             },
                             series: currentSeries
                         };
-
                         chart.updateOptions(updatedOptions, true, true);
                     }
                 });
             },
-            updateChartData() {
-                fetchDataFromServer().then(data => {
-                    this.apexPlanVsActualChart.updateOptions({
-                        xaxis: {
-                            categories: data.categories
-                        }
-                    });
-
-                    this.apexPlanVsActualChart.updateSeries([{
-                            name: 'Plan',
-                            data: data.planData
-                        },
-                        {
-                            name: 'Actual',
-                            data: data.actualData
-                        },
-                        {
-                            name: 'Percentage',
-                            data: data.percentageData
-                        }
-                    ]);
-                });
-            },
 
             initCharts() {
-                const charts = [
-                    this.apexPlanVsActualChart,
-                    this.apexPlanVsActualProjectChart,
-                    this.apexUploadDownloadChart
-                ];
-
+                const charts = [this.apexPlanVsActualChart, this.apexUploadDownloadChart];
                 charts.forEach(chart => {
-                    if (chart) {
-                        chart.destroy();
-                    }
+                    if (chart) chart.destroy();
                 });
-
                 const isDarkMode = this.isDarkMode;
                 const gridColor = isDarkMode ? '#4A5568' : '#E2E8F0';
                 const labelColor = isDarkMode ? '#E2E8F0' : '#4A5568';
                 const background = isDarkMode ? '#1F2937' : '#FFFFFF';
-
                 const mainChartOptions = {
                     series: [{
-                            name: 'Plan',
-                            type: 'bar',
-                            data: []
-                        },
-                        {
-                            name: 'Actual',
-                            type: 'bar',
-                            data: []
-                        },
-                        {
-                            name: 'Percentace',
-                            type: 'line',
-                            data: []
-                        }
-                    ],
+                        name: 'Plan',
+                        type: 'bar',
+                        data: []
+                    }, {
+                        name: 'Actual',
+                        type: 'bar',
+                        data: []
+                    }, {
+                        name: 'Percentace',
+                        type: 'line',
+                        data: []
+                    }],
                     chart: {
                         type: 'line',
                         height: 350,
@@ -543,9 +660,7 @@
                     dataLabels: {
                         enabled: true,
                         enabledOnSeries: [2],
-                        formatter: function(val) {
-                            return val.toFixed(1) + '%';
-                        },
+                        formatter: (val) => val.toFixed(1) + '%',
                         style: {
                             fontWeight: 'semibold',
                         },
@@ -585,9 +700,7 @@
                     tooltip: {
                         theme: isDarkMode ? 'dark' : 'light',
                         y: {
-                            formatter: function(val) {
-                                return val
-                            }
+                            formatter: (val) => val
                         }
                     },
                     noData: {
@@ -600,24 +713,11 @@
                         }
                     }
                 };
-
-
-                const allChartOptions = {
+                this.apexPlanVsActualChart = new ApexCharts(document.querySelector("#planVsActualChart"), {
                     ...mainChartOptions,
                     colors: ['#0063d5ff', '#3ea70dff', '#bd8e00ff']
-                };
-
-                const projectChartOptions = {
-                    ...mainChartOptions,
-                    colors: ['#0063d5ff', '#3ea70dff', '#bd8e00ff']
-                };
-
-                this.apexPlanVsActualChart = new ApexCharts(document.querySelector("#planVsActualChart"), allChartOptions);
+                });
                 this.apexPlanVsActualChart.render();
-
-                this.apexPlanVsActualProjectChart = new ApexCharts(document.querySelector("#planVsActualProjectChart"), projectChartOptions);
-                this.apexPlanVsActualProjectChart.render();
-
                 const trendChartOptions = {
                     series: [],
                     chart: {
@@ -632,7 +732,6 @@
                         foreColor: labelColor,
                         background: background
                     },
-
                     colors: ['#3ea70dff', '#0063d5ff'],
                     theme: {
                         mode: isDarkMode ? 'dark' : 'light'
@@ -680,7 +779,6 @@
                         }
                     }
                 };
-
                 this.apexUploadDownloadChart = new ApexCharts(document.querySelector("#uploadDownloadChart"), trendChartOptions);
                 this.apexUploadDownloadChart.render();
             },
@@ -691,15 +789,12 @@
                 container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400">Loading activities...</div>`;
                 try {
                     const response = await fetch("{{ route('api.getDataActivityLog') }}");
-                    if (!response.ok) throw new Error(`Network response was not ok`);
+                    if (!response.ok) throw new Error('Network response was not ok');
                     const result = await response.json();
                     if (result.status === 'success') {
                         container.innerHTML = '';
                         if (result.data && result.data.length > 0) {
-                            result.data.forEach(log => {
-                                const logHtml = this.formatLogEntry(log);
-                                container.insertAdjacentHTML('beforeend', logHtml);
-                            });
+                            result.data.forEach(log => container.insertAdjacentHTML('beforeend', this.formatLogEntry(log)));
                         } else {
                             container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400">No recent activity found.</div>`;
                         }
@@ -747,22 +842,19 @@
                 let metaDetails = '';
                 if (log.meta && typeof log.meta === 'object' && log.activity_code === 'UPLOAD') {
                     const detailsArray = [log.meta.customer_code, log.meta.model_name, log.meta.part_no, log.meta.doctype_group, log.meta.part_group_code, log.meta.doctype_subcategory, log.meta.ecn_no].filter(Boolean);
-                    if (detailsArray.length > 0) {
-                        metaDetails = `<p class="mt-2 text-sm text-gray-600 dark:text-gray-400 font-mono">${detailsArray.join(' - ')}</p>`;
-                    }
+                    if (detailsArray.length > 0) metaDetails = `<p class="mt-2 text-sm text-gray-600 dark:text-gray-400 font-mono">${detailsArray.join(' - ')}</p>`;
                 }
-                return `
-                            <div class="py-3 px-2 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
-                                <div class="flex-shrink-0 pt-1"> <i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i> </div>
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex justify-between items-start">
-                                        <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-3 whitespace-nowrap">${fullTimestamp}</p>
-                                    </div>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${relativeTime}</p>
-                                    ${metaDetails}
+                return `<div class="py-3 px-2 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                            <div class="flex-shrink-0 pt-1"><i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-3 whitespace-nowrap">${fullTimestamp}</p>
                                 </div>
-                            </div>`;
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${relativeTime}</p>
+                                ${metaDetails}
+                            </div>
+                        </div>`;
             },
 
             formatTimeAgo(dateString) {
@@ -790,7 +882,7 @@
 
                 const isDarkMode = this.isDarkMode;
                 const labelColor = isDarkMode ? '#E2E8F0' : '#4A5568';
-                const loadingOptions = {
+                this.apexPlanVsActualChart?.updateOptions({
                     noData: {
                         text: 'Loading data...',
                         style: {
@@ -798,36 +890,47 @@
                             fontSize: '16px'
                         }
                     }
-                };
-                this.apexPlanVsActualChart?.updateOptions(loadingOptions);
-                this.apexPlanVsActualProjectChart?.updateOptions(loadingOptions);
+                });
 
                 try {
+                    // --- TAMBAHAN UNTUK MENGAMBIL TEKS STATUS ---
+                    const statusData = $('#project_status').select2('data');
+                    let projectStatusText = '';
+                    if (statusData && statusData.length > 0) {
+                        projectStatusText = statusData[0].text;
+                    }
+                    // --- END TAMBAHAN ---
+
                     const filters = {
-                        key_word: document.getElementById('key_word')?.value || '',
-                        doc_group: $('#doc_group').val() || '',
-                        sub_type: $('#sub_type').val() || '',
-                        month: document.getElementById('month_input')?.value || '',
-                        customer: $('#customer').val() || '',
-                        model: $('#model').val() || '',
-                        project_status: $('#project_status').val() || '',
-                        part_group: $('#part_group').val() || '',
-                        sort_by: document.querySelector('input[name="sort_by"]:checked')?.value || 'actual'
+                        date_start: this.dateStart,
+                        date_end: this.dateEnd,
+
+                        // --- PERUBAHAN DI SINI ---
+                        project_status: projectStatusText,
+
+                        model: this.selectedProjects.map(item => item.text),
+
+                        part_group: this.partGroupMode === 'multi' ?
+                            this.selectedPartGroup.map(item => item.text) : (this.partGroupSingleValue.id === 'ALL' ? [] : [this.partGroupSingleValue.text])
                     };
 
                     const params = new URLSearchParams();
                     for (const key in filters) {
-                        if (filters[key] && filters[key] !== 'ALL') params.append(key, filters[key]);
+                        const value = filters[key];
+                        if (value) {
+                            if (Array.isArray(value)) {
+                                if (value.length > 0) {
+                                    value.forEach(val => params.append(`${key}[]`, val));
+                                }
+                            } else if (value !== 'ALL') {
+                                params.append(key, value);
+                            }
+                        }
                     }
                     const paramsString = params.toString();
 
                     const urlAll = `{{ route('api.upload-monitoring-data') }}?${paramsString}`;
-                    const urlProject = `{{ route('api.upload-monitoring-data-project') }}?${paramsString}`;
-
-                    const [responseAll, responseProject] = await Promise.all([
-                        fetch(urlAll),
-                        fetch(urlProject)
-                    ]);
+                    const responseAll = await fetch(urlAll);
 
                     const errorOptionsAll = {
                         noData: {
@@ -838,58 +941,27 @@
                             }
                         }
                     };
+
                     if (responseAll.ok) {
                         const resultAll = await responseAll.json();
                         if (resultAll.status === 'success') {
                             this.updateBarChart(this.apexPlanVsActualChart, resultAll.data, 'ALL Chart');
                         } else {
-                            console.error('Failed to fetch data for (ALL) chart:', resultAll.message);
                             this.apexPlanVsActualChart?.updateOptions(errorOptionsAll);
                         }
                     } else {
-                        console.error('Network error for (ALL) chart:', responseAll.statusText);
-                        const networkErrorOptions = {
+                        this.apexPlanVsActualChart?.updateOptions({
                             ...errorOptionsAll,
                             noData: {
                                 ...errorOptionsAll.noData,
                                 text: 'Network error.'
                             }
-                        };
-                        this.apexPlanVsActualChart?.updateOptions(networkErrorOptions);
-                    }
-
-                    const errorOptionsProject = {
-                        noData: {
-                            text: 'Error loading data.',
-                            style: {
-                                color: '#EF4444',
-                                fontSize: '16px'
-                            }
-                        }
-                    };
-                    if (responseProject.ok) {
-                        const resultProject = await responseProject.json();
-                        if (resultProject.status === 'success') {
-                            this.updateBarChart(this.apexPlanVsActualProjectChart, resultProject.data, 'Project Chart');
-                        } else {
-                            console.error('Failed to fetch data for (Project) chart:', resultProject.message);
-                            this.apexPlanVsActualProjectChart?.updateOptions(errorOptionsProject);
-                        }
-                    } else {
-                        console.error('Network error for (Project) chart:', responseProject.statusText);
-                        const networkErrorOptions = {
-                            ...errorOptionsProject,
-                            noData: {
-                                ...errorOptionsProject.noData,
-                                text: 'Network error.'
-                            }
-                        };
-                        this.apexPlanVsActualProjectChart?.updateOptions(networkErrorOptions);
+                        });
                     }
 
                 } catch (error) {
                     console.error('Error applying filters:', error);
-                    const errorOptions = {
+                    this.apexPlanVsActualChart?.updateOptions({
                         noData: {
                             text: 'An error occurred.',
                             style: {
@@ -897,54 +969,65 @@
                                 fontSize: '16px'
                             }
                         }
-                    };
-                    this.apexPlanVsActualChart?.updateOptions(errorOptions);
-                    this.apexPlanVsActualProjectChart?.updateOptions(errorOptions);
+                    });
                 } finally {
                     this.isLoading = false;
                 }
             },
 
             resetFilters() {
-                document.getElementById('key_word').value = '';
-                $('#doc_group').val('ALL').trigger('change');
-                $('#sub_type').val('ALL').trigger('change');
-                $('#customer').val('ALL').trigger('change');
-                $('#model').val('ALL').trigger('change');
+                this.selectedProjects = [];
+                this.selectedPartGroup = [];
+
                 $('#project_status').val('ALL').trigger('change');
-                $('#part_group').val('ALL').trigger('change');
+
                 const now = new Date();
                 const year = now.getFullYear();
                 const month = (now.getMonth() + 1).toString().padStart(2, '0');
-                document.getElementById('month_input').value = `${year}-${month}`;
+                const lastDay = new Date(year, now.getMonth() + 1, 0).getDate().toString().padStart(2, '0');
+                const firstDayOfMonth = `${year}-${month}-01`;
+                const lastDayOfMonth = `${year}-${month}-${lastDay}`;
 
-                document.getElementById('sort_actual').checked = true;
+                this.dateStart = firstDayOfMonth;
+                this.dateEnd = lastDayOfMonth;
+
+                if (this.dateRangeInstance) {
+                    this.dateRangeInstance.destroy();
+                }
+
+                setTimeout(() => {
+                    this.initLitepicker();
+                }, 50);
+
+                this.partGroupMode = 'multi';
+                this.partGroupSingleValue = {
+                    id: 'ALL',
+                    text: 'ALL'
+                };
+
+                $('#part_group_single_input').select2('destroy');
+                this.initPartGroupSelect2_Single();
+                $('#part_group_single_input').val('ALL').trigger('change');
 
                 this.applyFilters();
             },
 
             updateBarChart(chart, apiData, chartName = 'Chart') {
                 if (!chart) return;
-
                 const isDarkMode = this.isDarkMode;
                 const labelColor = isDarkMode ? '#E2E8F0' : '#4A5568';
-
                 if (!apiData || !Array.isArray(apiData) || apiData.length === 0) {
-                    console.warn(`No valid data received for ${chartName}`);
                     chart.updateOptions({
                         series: [{
-                                name: 'Plan',
-                                data: []
-                            },
-                            {
-                                name: 'Actual',
-                                data: []
-                            },
-                            {
-                                name: 'Percentace',
-                                data: []
-                            }
-                        ],
+                            name: 'Plan',
+                            data: []
+                        }, {
+                            name: 'Actual',
+                            data: []
+                        }, {
+                            name: 'Percentace',
+                            data: []
+                        }],
                         xaxis: {
                             categories: []
                         },
@@ -954,26 +1037,21 @@
                     });
                     return;
                 }
-
                 const categories = apiData.map(item => `${item.customer_name || '?'} - ${item.model_name || '?'} - ${item.part_group || '?'}`);
                 const actualSeriesData = apiData.map(item => parseInt(item.actual_count) || 0);
                 const planSeriesData = apiData.map(item => parseInt(item.plan_count) || 0);
                 const percentaceData = apiData.map(item => parseFloat(item.percentage).toFixed(2) || 0);
-
                 chart.updateOptions({
                     series: [{
-                            name: 'Plan',
-                            data: planSeriesData
-                        },
-                        {
-                            name: 'Actual',
-                            data: actualSeriesData
-                        },
-                        {
-                            name: 'Percentace',
-                            data: percentaceData
-                        }
-                    ],
+                        name: 'Plan',
+                        data: planSeriesData
+                    }, {
+                        name: 'Actual',
+                        data: actualSeriesData
+                    }, {
+                        name: 'Percentace',
+                        data: percentaceData
+                    }],
                     xaxis: {
                         categories: categories
                     },
@@ -1035,14 +1113,99 @@
                 }
             },
 
-            initDocGroupSelect2() {
+            removeProject(modelId) {
+                this.selectedProjects = this.selectedProjects.filter(p => p.model_id !== modelId);
+                this.updatePartGroupMode();
+            },
+            removePartGroup(id) {
+                this.selectedPartGroup = this.selectedPartGroup.filter(p => p.id !== id);
+            },
+
+            resetPartGroupSingle() {
+                this.partGroupSingleValue = {
+                    id: 'ALL',
+                    text: 'ALL'
+                };
+                $('#part_group_single_input').val('ALL').trigger('change');
+            },
+
+            updatePartGroupMode() {
                 const component = this;
-                $('#doc_group').select2({
-                    dropdownParent: $('#doc_group').parent(),
+                let projectCount = component.selectedProjects.length;
+
+                let newMode = (projectCount > 1) ? 'single' : 'multi';
+
+                if (component.partGroupMode !== newMode) {
+                    component.partGroupMode = newMode;
+                    if (newMode === 'single') {
+                        component.selectedPartGroup = [];
+                        component.partGroupSingleValue = {
+                            id: 'ALL',
+                            text: 'ALL'
+                        };
+                        $('#part_group_single_input').val('ALL').trigger('change');
+                    } else {
+                        component.partGroupSingleValue = {
+                            id: 'ALL',
+                            text: 'ALL'
+                        };
+                        $('#part_group_single_input').val('ALL').trigger('change');
+                    }
+                }
+            },
+
+            initLitepicker() {
+                const component = this;
+
+                if (component.dateRangeInstance) {
+                    component.dateRangeInstance.destroy();
+                }
+
+                component.dateRangeInstance = new Litepicker({
+                    element: document.getElementById('date_range_input'),
+                    singleMode: false,
+                    allowRepick: true,
+                    format: 'DD MMM YYYY',
+                    startDate: new Date(component.dateStart),
+                    endDate: new Date(component.dateEnd),
+                    setup: (picker) => {
+                        picker.on('selected', (date1, date2) => {
+                            component.dateStart = date1 ? date1.format('YYYY-MM-DD') : '';
+                            component.dateEnd = date2 ? date2.format('YYYY-MM-DD') : '';
+                        });
+
+                        picker.on('show', () => {
+                            const isDark = document.documentElement.classList.contains('dark');
+                            if (isDark) {
+                                picker.ui.classList.add('dark');
+                            } else {
+                                picker.ui.classList.remove('dark');
+                            }
+                        });
+                    }
+                });
+
+                setTimeout(() => {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    if (component.dateRangeInstance && component.dateRangeInstance.ui) {
+                        if (isDark) {
+                            component.dateRangeInstance.ui.classList.add('dark');
+                        } else {
+                            component.dateRangeInstance.ui.classList.remove('dark');
+                        }
+                    }
+                }, 100);
+            },
+
+            initCustomerModelSelect2() {
+                const component = this;
+                $('#customer_model_input').select2({
+                    dropdownParent: $('#customer_model_input').parent(),
                     width: '100%',
-                    placeholder: 'Select Document Group',
+                    placeholder: 'Tambah Customer-Model...',
+                    allowClear: true,
                     ajax: {
-                        url: "{{ route('dashboard.getDocumentGroups') }}",
+                        url: "{{ route('dashboard.getCustomerModel') }}",
                         method: 'POST',
                         dataType: 'json',
                         delay: 250,
@@ -1055,205 +1218,93 @@
                         },
                         processResults: function(data, params) {
                             params.page = params.page || 1;
-                            let results = data.results || [];
-                            if (params.page === 1 && !params.term) {
-                                results.unshift({
-                                    id: 'ALL',
-                                    text: 'ALL'
-                                });
-                            }
                             return {
-                                results: results,
+                                results: data.results || [],
                                 pagination: {
-                                    more: (params.page * 10) < (data.total_count || 0)
+                                    more: data.pagination && data.pagination.more
                                 }
                             };
                         },
                         cache: true
                     }
                 }).on('change', function(e) {
-                    let docGroupId = $(this).val();
-                    component.showExtraFilters = (docGroupId !== 'ALL' && docGroupId !== '' && docGroupId !== null);
-                    let subTypeSelect = $('#sub_type');
-                    subTypeSelect.val('ALL').trigger('change.select2');
-                    subTypeSelect.select2('destroy');
-                    if (docGroupId && docGroupId !== 'ALL') {
-                        subTypeSelect.prop('disabled', false);
-                        component.initSubTypeSelect2(docGroupId);
-                    } else {
-                        subTypeSelect.prop('disabled', true);
-                        component.initSubTypeSelect2();
+                    let data = $(this).select2('data')[0];
+                    if (data && data.model_id) {
+                        if (!component.selectedProjects.find(p => p.model_id === data.model_id)) {
+                            component.selectedProjects.push({
+                                model_id: data.model_id,
+                                text: data.text,
+                                customer_id: data.customer_id
+                            });
+                            component.updatePartGroupMode();
+                        }
                     }
+                    $(this).val(null).trigger('change.select2');
                 });
             },
-            initSubTypeSelect2(docGroupId = null) {
-                let subTypeSelect = $('#sub_type');
-                let options = {
-                    dropdownParent: subTypeSelect.parent(),
-                    width: '100%',
-                    placeholder: 'Doc Group First'
-                };
-                if (docGroupId) {
-                    options.placeholder = 'Select Category';
-                    options.ajax = {
-                        url: "{{ route('dashboard.getSubType') }}",
-                        method: 'POST',
-                        dataType: 'json',
-                        delay: 250,
-                        data: function(params) {
-                            return {
-                                _token: "{{ csrf_token() }}",
-                                q: params.term,
-                                document_group_id: docGroupId,
-                                page: params.page || 1
-                            };
-                        },
-                        processResults: function(data, params) {
-                            params.page = params.page || 1;
-                            let results = data.results || [];
-                            if (params.page === 1 && !params.term) {
-                                results.unshift({
-                                    id: 'ALL',
-                                    text: 'ALL'
-                                });
-                            }
-                            return {
-                                results: results,
-                                pagination: {
-                                    more: (params.page * 10) < (data.total_count || 0)
-                                }
-                            };
-                        },
-                        cache: true
-                    };
-                }
-                subTypeSelect.select2(options);
-                if (!docGroupId) {
-                    subTypeSelect.prop('disabled', true);
-                }
-            },
-            initCustomerSelect2() {
+
+            initPartGroupSelect2_Multi() {
                 const component = this;
-                $('#customer').select2({
-                    dropdownParent: $('#customer').parent(),
+                $('#part_group_multi_input').select2({
+                    dropdownParent: $('#part_group_multi_input').parent(),
                     width: '100%',
-                    placeholder: 'Select Customer',
-                    ajax: {
-                        url: "{{ route('dashboard.getCustomer') }}",
-                        method: 'POST',
-                        dataType: 'json',
-                        delay: 250,
-                        data: function(params) {
-                            return {
-                                _token: "{{ csrf_token() }}",
-                                q: params.term,
-                                page: params.page || 1
-                            };
-                        },
-                        processResults: function(data, params) {
-                            params.page = params.page || 1;
-                            let results = data.results || [];
-                            if (params.page === 1 && !params.term) {
-                                results.unshift({
-                                    id: 'ALL',
-                                    text: 'ALL'
-                                });
-                            }
-                            return {
-                                results: results,
-                                pagination: {
-                                    more: (params.page * 10) < (data.total_count || 0)
-                                }
-                            };
-                        },
-                        cache: true
-                    }
-                }).on('change', function(e) {
-                    let customerId = $(this).val();
-                    let modelSelect = $('#model');
-                    modelSelect.val('ALL').trigger('change.select2');
-                    modelSelect.select2('destroy');
-                    if (customerId && customerId !== 'ALL') {
-                        modelSelect.prop('disabled', false);
-                        component.initModelSelect2(customerId);
-                    } else {
-                        modelSelect.prop('disabled', true);
-                        component.initModelSelect2();
-                    }
-                });
-            },
-            initModelSelect2(customerId = null) {
-                let modelSelect = $('#model');
-                let options = {
-                    dropdownParent: modelSelect.parent(),
-                    width: '100%',
-                    placeholder: 'Select Customer First'
-                };
-                if (customerId) {
-                    options.placeholder = 'Select Model';
-                    options.ajax = {
-                        url: "{{ route('dashboard.getModel') }}",
-                        method: 'POST',
-                        dataType: 'json',
-                        delay: 250,
-                        data: function(params) {
-                            return {
-                                _token: "{{ csrf_token() }}",
-                                q: params.term,
-                                customer_id: customerId,
-                                page: params.page || 1
-                            };
-                        },
-                        processResults: function(data, params) {
-                            params.page = params.page || 1;
-                            let results = data.results || [];
-                            if (params.page === 1 && !params.term) {
-                                results.unshift({
-                                    id: 'ALL',
-                                    text: 'ALL'
-                                });
-                            }
-                            return {
-                                results: results,
-                                pagination: {
-                                    more: (params.page * 10) < (data.total_count || 0)
-                                }
-                            };
-                        },
-                        cache: true
-                    };
-                }
-                modelSelect.select2(options);
-                if (!customerId) {
-                    modelSelect.prop('disabled', true);
-                }
-            },
-            initPartGroupSelect2() {
-                $('#part_group').select2({
-                    dropdownParent: $('#part_group').parent(),
-                    width: '100%',
-                    placeholder: 'Select Part Group',
+                    placeholder: 'Tambah Part Group...',
+                    allowClear: true,
                     ajax: {
                         url: "{{ route('dashboard.getPartGroup') }}",
                         method: 'POST',
                         dataType: 'json',
                         delay: 250,
-                        data: function(params) {
-                            return {
-                                _token: "{{ csrf_token() }}",
-                                q: params.term,
-                                page: params.page || 1
-                            };
-                        },
-                        processResults: function(data, params) {
+                        data: (params) => ({
+                            _token: "{{ csrf_token() }}",
+                            q: params.term,
+                            page: params.page || 1
+                        }),
+                        processResults: (data, params) => ({
+                            results: data.results || [],
+                            pagination: {
+                                more: (params.page || 1) * 10 < (data.total_count || 0)
+                            }
+                        }),
+                        cache: true
+                    }
+                }).on('change', function(e) {
+                    let data = $(this).select2('data')[0];
+                    if (data && data.id) {
+                        if (!component.selectedPartGroup.find(p => p.id === data.id)) {
+                            component.selectedPartGroup.push({
+                                id: data.id,
+                                text: data.text
+                            });
+                        }
+                    }
+                    $(this).val(null).trigger('change.select2');
+                });
+            },
+
+            initPartGroupSelect2_Single() {
+                const component = this;
+                $('#part_group_single_input').select2({
+                    dropdownParent: $('#part_group_single_input').parent(),
+                    width: '100%',
+                    placeholder: 'Pilih 1 Part Group',
+                    ajax: {
+                        url: "{{ route('dashboard.getPartGroup') }}",
+                        method: 'POST',
+                        dataType: 'json',
+                        delay: 250,
+                        data: (params) => ({
+                            _token: "{{ csrf_token() }}",
+                            q: params.term,
+                            page: params.page || 1
+                        }),
+                        processResults: (data, params) => {
                             params.page = params.page || 1;
                             let results = data.results || [];
-                            if (params.page === 1 && !params.term) {
-                                results.unshift({
-                                    id: 'ALL',
-                                    text: 'ALL'
-                                });
-                            }
+                            if (params.page === 1 && !params.term) results.unshift({
+                                id: 'ALL',
+                                text: 'ALL'
+                            });
                             return {
                                 results: results,
                                 pagination: {
@@ -1263,8 +1314,22 @@
                         },
                         cache: true
                     }
+                }).on('change', function(e) {
+                    let data = $(this).select2('data')[0];
+                    if (data) {
+                        component.partGroupSingleValue = {
+                            id: data.id,
+                            text: data.text
+                        };
+                    } else {
+                        component.partGroupSingleValue = {
+                            id: 'ALL',
+                            text: 'ALL'
+                        };
+                    }
                 });
             },
+
             initStatusSelect2() {
                 $('#project_status').select2({
                     dropdownParent: $('#project_status').parent(),
@@ -1275,22 +1340,18 @@
                         method: 'POST',
                         dataType: 'json',
                         delay: 250,
-                        data: function(params) {
-                            return {
-                                _token: "{{ csrf_token() }}",
-                                q: params.term,
-                                page: params.page || 1
-                            };
-                        },
-                        processResults: function(data, params) {
+                        data: (params) => ({
+                            _token: "{{ csrf_token() }}",
+                            q: params.term,
+                            page: params.page || 1
+                        }),
+                        processResults: (data, params) => {
                             params.page = params.page || 1;
                             let results = data.results || [];
-                            if (params.page === 1 && !params.term) {
-                                results.unshift({
-                                    id: 'ALL',
-                                    text: 'ALL'
-                                });
-                            }
+                            if (params.page === 1 && !params.term) results.unshift({
+                                id: 'ALL',
+                                text: 'ALL'
+                            });
                             return {
                                 results: results,
                                 pagination: {

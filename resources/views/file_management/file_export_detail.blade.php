@@ -28,7 +28,7 @@
                                 Package Info
                             </h2>
                             @php
-                                $backUrl = route('file-manager.export'); //
+                                $backUrl = route('file-manager.export');
                             @endphp
                             <a href="{{ $backUrl }}"
                                 class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
@@ -38,53 +38,26 @@
                         </div>
                     </div>
 
-                    <div class="p-4 space-y-4" x-data="{ openClassification: false }">
+                    <div class="p-4 space-y-4">
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Package</label>
+                            {{-- <label class="block text-sm font-medium text-gray-500 dark:text-gray-400">Metadata</label>
+                            --}}
                             <div class="flex items-start justify-between gap-2 mt-0.5">
 
                                 <div class="flex-grow flex items-center gap-x-2 gap-y-1 flex-wrap min-w-0">
-                                    <p class="text-sm text-gray-900 dark:text-gray-100" x-text="metaLine()"
+                                    <div class="w-full flex items-start justify-start gap-2">
+                                        <span
+                                            class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                                            x-text="revisionBadgeText()" :title="revisionBadgeText()">
+                                        </span>
+                                    </div>
+
+                                    <p class="text-sm text-gray-900 dark:text-gray-100 w-full mt-1" x-text="metaLine()"
                                         :title="metaLine()">
                                     </p>
-
-                                    <span
-                                        class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-                                        x-text="revisionBadgeText()" :title="revisionBadgeText()">
-                                    </span>
                                 </div>
-
-                                <button @click="openClassification = !openClassification"
-                                    class="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 p-1 rounded-full transition-transform"
-                                    :class="{'rotate-180': openClassification}" title="Toggle classification details">
-                                    <i class="fa-solid fa-chevron-down fa-xs"></i>
-                                </button>
                             </div>
-                        </div>
-
-                        <div x-show="openClassification" x-collapse
-                            class="pl-2 ml-1 border-l-2 border-gray-200 dark:border-gray-700">
-
-                            <template x-if="pkg && pkg.classification">
-                                <dl class="space-y-2 text-sm">
-                                    <div>
-                                        <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Doc. Group</dt>
-                                        <dd class="font-medium text-gray-900 dark:text-gray-100"
-                                            x-text="pkg.classification.doctype_group"></dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Sub-Category</dt>
-                                        <dd class="font-medium text-gray-900 dark:text-gray-100"
-                                            x-text="pkg.classification.doctype_subcategory"></dd>
-                                    </div>
-                                    <div>
-                                        <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">Part Group</dt>
-                                        <dd class="font-medium text-gray-900 dark:text-gray-100"
-                                            x-text="pkg.classification.part_group"></dd>
-                                    </div>
-                                </dl>
-                            </template>
                         </div>
 
                         <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
@@ -112,8 +85,8 @@
                     <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
                         <button @click="downloadPackage()"
                             class="inline-flex items-center text-sm px-3 py-2 rounded-md
-                                                                                                bg-blue-600 text-white hover:bg-blue-700
-                                                                                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                                                                                                                                                bg-blue-600 text-white hover:bg-blue-700
+                                                                                                                                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
                             <i class="fa-solid fa-download mr-2"></i>
                             Download All Files
                         </button>
@@ -192,8 +165,7 @@
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate"
                                     x-text="selectedFile?.name"></h3>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Last updated:
-                                    {{ now()->format('M d, Y H:i') }}
+                                <p class="text-xs text-gray-500 dark:text-gray-400" x-text="fileSizeInfo()">
                                 </p>
                             </div>
                             <a x-show="selectedFile?.url" :href="selectedFile?.url" target="_blank" rel="noopener"
@@ -219,6 +191,26 @@
                             </button>
                         </div>
 
+                        <!-- PDF PAGE NAV -->
+                        <div x-show="isPdf(selectedFile?.name)"
+                            class="mb-3 flex items-center justify-between text-xs text-gray-700 dark:text-gray-200">
+                            <div class="flex items-center gap-2">
+                                <button @click="prevPdfPage()" :disabled="pdfPageNum <= 1" class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded
+                                                             hover:bg-gray-100 dark:hover:bg-gray-700
+                                                             disabled:opacity-50 disabled:cursor-not-allowed">
+                                    ‹ Prev
+                                </button>
+
+                                <span x-text="`Page ${pdfPageNum} / ${pdfNumPages}`"></span>
+
+                                <button @click="nextPdfPage()" :disabled="pdfPageNum >= pdfNumPages" class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded
+                                                             hover:bg-gray-100 dark:hover:bg-gray-700
+                                                             disabled:opacity-50 disabled:cursor-not-allowed">
+                                    Next ›
+                                </button>
+                            </div>
+                        </div>
+
                         <div
                             class="preview-area bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center w-full relative">
 
@@ -234,12 +226,13 @@
                                             <!-- STAMP ORIGINAL -->
                                             <div x-show="pkg.stamp" class="absolute"
                                                 :class="stampPositionClass('original')">
-                                                <div :class="stampOriginClass('original')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                       text-[10px] text-blue-700 flex flex-col items-center
-                                       justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
+                                                <div :class="stampOriginClass('original')"
+                                                    class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                                                                                       text-[10px] text-blue-700 flex flex-col items-center
+                                                                                       justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                                                        <span x-text="stampTopLine()"></span>
+                                                        <span x-text="stampTopLine('original')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
@@ -248,19 +241,21 @@
                                                     </div>
                                                     <div
                                                         class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                        <span x-text="stampBottomLine()"></span>
+                                                        <span x-text="stampBottomLine('original')"></span>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <!-- STAMP COPY -->
                                             <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
-                                                <div :class="stampOriginClass('copy')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                       text-[10px] text-blue-700 flex flex-col items-center
-                                       justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
+                                                <div :class="stampOriginClass('copy')"
+                                                    class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                                                                                       text-[10px] text-blue-700 flex flex-col items-center
+                                                                                       justify-between px-2 py-1 bg-transparent"
+                                                    style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                                                        <span x-text="stampTopLine()"></span>
+                                                        <span x-text="stampTopLine('copy')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
@@ -269,7 +264,7 @@
                                                     </div>
                                                     <div
                                                         class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                        <span x-text="stampBottomLine()"></span>
+                                                        <span x-text="stampBottomLine('copy')"></span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -277,12 +272,14 @@
                                             <!-- STAMP OBSOLETE -->
                                             <div x-show="pkg.stamp?.is_obsolete" class="absolute"
                                                 :class="stampPositionClass('obsolete')">
-                                                <div :class="stampOriginClass('obsolete')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                               text-[10px] text-blue-700 flex flex-col items-center
-                                               justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
+                                                <div :class="stampOriginClass('obsolete')"
+                                                    class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                                                                                               text-[10px] text-blue-700 flex flex-col items-center
+                                                                                               justify-between px-2 py-1 bg-transparent"
+                                                    style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                                                        <span x-text="stampTopLine()"></span>
+                                                        <span x-text="stampTopLine('obsolete')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
@@ -291,7 +288,7 @@
                                                     </div>
                                                     <div
                                                         class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                        <span x-text="stampBottomLine()"></span>
+                                                        <span x-text="stampBottomLine('obsolete')"></span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -312,12 +309,13 @@
                                             <!-- STAMP ORIGINAL -->
                                             <div x-show="pkg.stamp" class="absolute"
                                                 :class="stampPositionClass('original')">
-                                                <div :class="stampOriginClass('original')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                   text-[10px] text-blue-700 flex flex-col items-center
-                                   justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
+                                                <div :class="stampOriginClass('original')"
+                                                    class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                                                                                   text-[10px] text-blue-700 flex flex-col items-center
+                                                                                   justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                                                        <span x-text="stampTopLine()"></span>
+                                                        <span x-text="stampTopLine('original')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
@@ -326,19 +324,20 @@
                                                     </div>
                                                     <div
                                                         class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                        <span x-text="stampBottomLine()"></span>
+                                                        <span x-text="stampBottomLine('original')"></span>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <!-- STAMP COPY -->
                                             <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
-                                                <div :class="stampOriginClass('copy')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                   text-[10px] text-blue-700 flex flex-col items-center
-                                   justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
+                                                <div :class="stampOriginClass('copy')"
+                                                    class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                                                                                   text-[10px] text-blue-700 flex flex-col items-center
+                                                                                   justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                                                        <span x-text="stampTopLine()"></span>
+                                                        <span x-text="stampTopLine('copy')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
@@ -347,7 +346,7 @@
                                                     </div>
                                                     <div
                                                         class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                        <span x-text="stampBottomLine()"></span>
+                                                        <span x-text="stampBottomLine('copy')"></span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -355,12 +354,14 @@
                                             <!-- STAMP OBSOLETE -->
                                             <div x-show="pkg.stamp?.is_obsolete" class="absolute"
                                                 :class="stampPositionClass('obsolete')">
-                                                <div :class="stampOriginClass('obsolete')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                           text-[10px] text-blue-700 flex flex-col items-center
-                                           justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
+                                                <div :class="stampOriginClass('obsolete')"
+                                                    class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                                                                                           text-[10px] text-blue-700 flex flex-col items-center
+                                                                                           justify-between px-2 py-1 bg-transparent"
+                                                    style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                                                        <span x-text="stampTopLine()"></span>
+                                                        <span x-text="stampTopLine('obsolete')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
@@ -369,7 +370,7 @@
                                                     </div>
                                                     <div
                                                         class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                        <span x-text="stampBottomLine()"></span>
+                                                        <span x-text="stampBottomLine('obsolete')"></span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -399,11 +400,12 @@
                                             <div x-show="pkg.stamp" class="absolute"
                                                 :class="stampPositionClass('original')">
                                                 <div :class="stampOriginClass('original')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                               text-[10px] text-blue-700 flex flex-col items-center
-                               justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
+                                                                               text-[10px] text-blue-700 flex flex-col items-center
+                                                                               justify-between px-2 py-1 bg-transparent"
+                                                    style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                                                        <span x-text="stampTopLine()"></span>
+                                                        <span x-text="stampTopLine('original')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
@@ -412,7 +414,7 @@
                                                     </div>
                                                     <div
                                                         class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                        <span x-text="stampBottomLine()"></span>
+                                                        <span x-text="stampBottomLine('original')"></span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -420,11 +422,12 @@
                                             <!-- STAMP COPY -->
                                             <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
                                                 <div :class="stampOriginClass('copy')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                               text-[10px] text-blue-700 flex flex-col items-center
-                               justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
+                                                                               text-[10px] text-blue-700 flex flex-col items-center
+                                                                               justify-between px-2 py-1 bg-transparent"
+                                                    style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                                                        <span x-text="stampTopLine()"></span>
+                                                        <span x-text="stampTopLine('copy')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
@@ -433,7 +436,7 @@
                                                     </div>
                                                     <div
                                                         class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                        <span x-text="stampBottomLine()"></span>
+                                                        <span x-text="stampBottomLine('copy')"></span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -441,12 +444,13 @@
                                             <!-- STAMP OBSOLETE -->
                                             <div x-show="pkg.stamp?.is_obsolete" class="absolute"
                                                 :class="stampPositionClass('obsolete')">
-                                                <div :class="stampOriginClass('obsolete')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                       text-[10px] text-blue-700 flex flex-col items-center
-                                       justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
+                                                <div :class="stampOriginClass('obsolete')"
+                                                    class="w-56 h-20 border-2 border-blue-600 rounded-sm
+                                                                                       text-[10px] text-blue-700 flex flex-col items-center
+                                                                                       justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                                                        <span x-text="stampTopLine()"></span>
+                                                        <span x-text="stampTopLine('obsolete')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
@@ -455,7 +459,7 @@
                                                     </div>
                                                     <div
                                                         class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                        <span x-text="stampBottomLine()"></span>
+                                                        <span x-text="stampBottomLine('obsolete')"></span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -487,7 +491,7 @@
                                                 style="transform: scale(0.45);">
                                                 <div
                                                     class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                                                    <span x-text="stampTopLine()"></span>
+                                                    <span x-text="stampTopLine('original')"></span>
                                                 </div>
                                                 <div class="flex-1 flex items-center justify-center">
                                                     <span
@@ -496,7 +500,7 @@
                                                 </div>
                                                 <div
                                                     class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                    <span x-text="stampBottomLine()"></span>
+                                                    <span x-text="stampBottomLine('original')"></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -507,7 +511,7 @@
                                                 style="transform: scale(0.45);">
                                                 <div
                                                     class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                                                    <span x-text="stampTopLine()"></span>
+                                                    <span x-text="stampTopLine('copy')"></span>
                                                 </div>
                                                 <div class="flex-1 flex items-center justify-center">
                                                     <span
@@ -516,7 +520,7 @@
                                                 </div>
                                                 <div
                                                     class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                    <span x-text="stampBottomLine()"></span>
+                                                    <span x-text="stampBottomLine('copy')"></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -528,7 +532,7 @@
                                                 style="transform: scale(0.45);">
                                                 <div
                                                     class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                                                    <span x-text="stampTopLine()"></span>
+                                                    <span x-text="stampTopLine('obsolete')"></span>
                                                 </div>
                                                 <div class="flex-1 flex items-center justify-center">
                                                     <span
@@ -537,7 +541,7 @@
                                                 </div>
                                                 <div
                                                     class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                    <span x-text="stampBottomLine()"></span>
+                                                    <span x-text="stampBottomLine('obsolete')"></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -635,13 +639,16 @@
 @endsection
 
 @push('scripts')
+    <!-- SweetAlert -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- Alpine collapse (untuk x-collapse) -->
     <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 
-    <script src="https://unpkg.com/utif@3.1.0/dist/UTIF.min.js"></script>
+    <!-- UTIF.js untuk render TIFF (v2 classic API) -->
     <script src="https://unpkg.com/utif@2.0.1/UTIF.js"></script>
 
+    <!-- pdf.js 2.x (lebih stabil untuk UMD) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script>
         if (window['pdfjsLib']) {
@@ -650,17 +657,19 @@
         }
     </script>
 
+    <!-- ES Module shims + Import Map untuk Three.js (module) -->
     <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
     <script type="importmap">
-                                                                {
-                                                                  "imports": {
-                                                                    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                                                                    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-                                                                    "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
-                                                                  }
-                                                                }
-                                                                </script>
+                          {
+                            "imports": {
+                              "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                              "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                              "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
+                            }
+                          }
+                        </script>
 
+    <!-- OCCT: parser STEP/IGES (WASM) -->
     <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
 
     <script>
@@ -783,7 +792,6 @@
                 },
 
                 saveStampConfigForCurrent() {
-                    // Tidak ada operasi save di halaman export, hanya baca
                 },
 
                 stampPositionClass(which = 'original') {
@@ -899,22 +907,94 @@
                     return 'OBSOLETE';
                 },
 
-                stampTopLine() {
-                    const d = this.pkg?.stamp?.receipt_date;
+                stampTopLine(which = 'original') {
+                    let d, label;
+
+                    if (which === 'obsolete') {
+                        // Use obsolete format (second format in array)
+                        d = this.pkg?.stamp?.obsolete_date || this.pkg?.stamp?.upload_date || '';
+                        label = (this.stampFormat && this.stampFormat[1] && this.stampFormat[1].prefix) ?
+                            this.stampFormat[1].prefix :
+                            'DATE OBSOLETE';
+                    } else if (which === 'copy') {
+                        // Use original/normal format for copy
+                        d = this.pkg?.stamp?.receipt_date || '';
+                        label = (this.stampFormat && this.stampFormat[0] && this.stampFormat[0].prefix) ?
+                            this.stampFormat[0].prefix :
+                            'DATE RECEIVED';
+                    } else {
+                        // Default to original with normal format
+                        d = this.pkg?.stamp?.receipt_date || '';
+                        label = (this.stampFormat && this.stampFormat[0] && this.stampFormat[0].prefix) ?
+                            this.stampFormat[0].prefix :
+                            'DATE RECEIVED';
+                    }
+
                     if (!d) return '';
-                    const label = (this.stampFormat && this.stampFormat.prefix) ?
-                        this.stampFormat.prefix :
-                        'DATE RECEIVED';
                     return `${label} : ${this.formatStampDate(d)}`;
                 },
 
-                stampBottomLine() {
-                    const d = this.pkg?.stamp?.upload_date;
+                stampBottomLine(which = 'original') {
+                    let d, label;
+
+                    if (which === 'obsolete') {
+                        // Use obsolete format (second format in array)
+                        d = this.pkg?.stamp?.obsolete_date || this.pkg?.stamp?.upload_date || '';
+                        label = (this.stampFormat && this.stampFormat[1] && this.stampFormat[1].suffix) ?
+                            this.stampFormat[1].suffix :
+                            'DATE OBSOLETE';
+                    } else if (which === 'copy') {
+                        // Use original/normal format for copy
+                        d = this.pkg?.stamp?.upload_date || '';
+                        label = (this.stampFormat && this.stampFormat[0] && this.stampFormat[0].suffix) ?
+                            this.stampFormat[0].suffix :
+                            'DATE UPLOADED';
+                    } else {
+                        // Default to original with normal format
+                        d = this.pkg?.stamp?.upload_date || '';
+                        label = (this.stampFormat && this.stampFormat[0] && this.stampFormat[0].suffix) ?
+                            this.stampFormat[0].suffix :
+                            'DATE UPLOADED';
+                    }
+
                     if (!d) return '';
-                    const label = (this.stampFormat && this.stampFormat.suffix) ?
-                        this.stampFormat.suffix :
-                        'DATE UPLOADED';
                     return `${label} : ${this.formatStampDate(d)}`;
+                },
+
+                // Helper functions for file size display
+                formatBytes(bytes) {
+                    if (!bytes || bytes <= 0) return '-';
+                    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+                    let i = 0;
+                    let value = bytes;
+                    while (value >= 1024 && i < units.length - 1) {
+                        value /= 1024;
+                        i++;
+                    }
+                    const fixed = value >= 10 || i === 0 ? value.toFixed(0) : value.toFixed(1);
+                    return `${fixed} ${units[i]}`;
+                },
+
+                fileSizeInfo() {
+                    if (!this.selectedFile) return '';
+                    const bytes = this.selectedFile.size ?? this.selectedFile.filesize ?? 0;
+                    if (!bytes) return 'Size: -';
+                    return 'Size: ' + this.formatBytes(bytes);
+                },
+
+                // PDF page navigation functions
+                nextPdfPage() {
+                    if (this.pdfPageNum < this.pdfNumPages) {
+                        this.pdfPageNum++;
+                        this.renderPdfPage();
+                    }
+                },
+
+                prevPdfPage() {
+                    if (this.pdfPageNum > 1) {
+                        this.pdfPageNum--;
+                        this.renderPdfPage();
+                    }
                 },
 
                 // ===== helper posisi stamp per file =====
@@ -997,6 +1077,7 @@
                     return null;
                 },
 
+                /* ===== TIFF renderer ===== */
                 async renderTiff(url) {
                     if (!url || typeof window.UTIF === 'undefined') return;
 
@@ -1294,7 +1375,15 @@
                 /* ===== Meta line formatter ===== */
                 metaLine() {
                     const m = this.pkg?.metadata || {};
-                    return [m.customer, m.model, m.part_no]
+                    return [
+                        m.customer,
+                        m.model,
+                        m.part_no,
+                        m.doc_type,
+                        m.category,
+                        m.part_group,
+                        m.ecn_no
+                    ]
                         .filter(v => v && String(v).trim().length > 0)
                         .join(' - ');
                 },

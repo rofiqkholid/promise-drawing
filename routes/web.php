@@ -172,7 +172,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/master/suppliers/{supplier}/links/available-users', [SuppliersController::class, 'getAvailableUsers'])->name('suppliers.links.available');
     Route::post('/master/suppliers/{supplier}/links', [SuppliersController::class, 'storeLink'])->name('suppliers.links.store');
     Route::delete('/master/suppliers/{supplier}/users/{user}', [SuppliersController::class, 'destroyLink']);
-    
+
     #Region Customers
     Route::resource('master/customers', CustomersController::class)->names('customers')->except(['create', 'edit']);
     Route::get('/customers/data', [CustomersController::class, 'data'])->name('customers.data');
@@ -247,8 +247,7 @@ Route::middleware(['auth'])->group(function () {
     #Region Dashboard
     Route::post('/dashboard/getDocumentGroups', [DashboardController::class, 'getDocumentGroups'])->name('dashboard.getDocumentGroups');
     Route::post('/dashboard/getSubType', [DashboardController::class, 'getSubType'])->name('dashboard.getSubType');
-    Route::post('/dashboard/getCustomer', [DashboardController::class, 'getCustomer'])->name('dashboard.getCustomer');
-    Route::post('/dashboard/getModel', [DashboardController::class, 'getModel'])->name('dashboard.getModel');
+    Route::post('/dashboard/get-customer-model', [DashboardController::class, 'getCustomerModel'])->name('dashboard.getCustomerModel');
     Route::post('/dashboard/getPartGroup', [DashboardController::class, 'getPartGroup'])->name('dashboard.getPartGroup');
     Route::post('/dashboard/getStatus', [DashboardController::class, 'getStatus'])->name('dashboard.getStatus');
     Route::post('/dashboard/detDataCardMonitoring', [DashboardController::class, 'detDataCardMonitoring'])->name('dashboard.detDataCardMonitoring');
@@ -289,7 +288,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/upload/drawing/allowed-extensions', [DrawingUploadController::class, 'getPublicAllowedExtensions'])->name('upload.drawing.allowed-extensions');
     Route::post('/upload/drawing/check-revision-status', [DrawingUploadController::class, 'checkRevisionStatus'])->name('upload.drawing.check-status');
     Route::post('/upload/drawing/check-conflicts', [DrawingUploadController::class, 'checkConflicts'])
-    ->name('upload.drawing.check-conflicts');
+        ->name('upload.drawing.check-conflicts');
 
     Route::post('/upload/drawing/sync', [DrawingUploadController::class, 'syncLegacyData'])->name('upload.drawing.sync-legacy');
     Route::post('/upload/drawing/store', [DrawingUploadController::class, 'store'])->name('upload.drawing.store');
@@ -297,7 +296,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/upload/drawing/activity-logs', [DrawingUploadController::class, 'activityLogs'])->name('upload.drawing.activity-logs');
     Route::post('/upload/drawing/request-approval', [DrawingUploadController::class, 'requestApproval'])->name('upload.drawing.request-approval');
     Route::post('/upload/drawing/revise-confirm', [DrawingUploadController::class, 'reviseConfirmed'])->middleware(['auth'])
-    ->name('upload.drawing.revise-confirm');
+        ->name('upload.drawing.revise-confirm');
 
     Route::post('/upload/drawing/file-extension-icons', [App\Http\Controllers\Api\DrawingUploadController::class, 'getFileExtensionIcons'])->name('upload.drawing.file-extension-icons');
 

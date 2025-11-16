@@ -419,6 +419,11 @@ class ApprovalController extends Controller
             : null;
 
         $isObsolete = (bool)($revision->is_obsolete ?? 0);
+
+        $obsoleteDate = $revision->obsolete_at
+            ? Carbon::parse($revision->obsolete_at)
+            : null;
+
         // --- /Tambahan ---
 
         // 3. Ambil info package + uploader
@@ -456,6 +461,7 @@ class ApprovalController extends Controller
                 'filename as name',
                 'category',
                 'storage_path',
+                'file_size',
                 'ori_position',
                 'copy_position',
                 'obslt_position'
@@ -480,27 +486,29 @@ class ApprovalController extends Controller
             ->mapWithKeys(fn(FileExtensions $m) => [strtolower($m->code) => $m->icon_src])
             ->all();
 
-        $files = $fileRows
-            ->groupBy('category')
-            ->map(function ($items) use ($extIcons) {
-                return $items->map(function ($item) use ($extIcons) {
-                    $url = URL::signedRoute('preview.file', ['id' => $item->id]);
+       $files = $fileRows
+    ->groupBy('category')
+    ->map(function ($items) use ($extIcons) {
+        return $items->map(function ($item) use ($extIcons) {
+            $url = URL::signedRoute('preview.file', ['id' => $item->id]);
 
-                    $ext = strtolower(pathinfo($item->name, PATHINFO_EXTENSION));
-                    $iconSrc = $extIcons[$ext] ?? null; // bisa null kalau tidak ada di master
+            $ext = strtolower(pathinfo($item->name, PATHINFO_EXTENSION));
+            $iconSrc = $extIcons[$ext] ?? null; // bisa null kalau tidak ada di master
 
-                    return [
-                        'id'            => $item->id,
-                        'name'          => $item->name,
-                        'url'           => $url,
-                        'icon_src'      => $iconSrc,
-                        'ori_position'  => $item->ori_position,
-                        'copy_position' => $item->copy_position,
-                        'obslt_position' => $item->obslt_position,
-                    ];
-                });
-            })
-            ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
+            return [
+                'id'            => $item->id,
+                'name'          => $item->name,
+                'url'           => $url,
+                'icon_src'      => $iconSrc,
+                'ori_position'  => $item->ori_position,
+                'copy_position' => $item->copy_position,
+                'obslt_position'=> $item->obslt_position,
+                'size'          => $item->file_size, // <--- ukuran (byte) dari DB
+            ];
+        });
+    })
+    ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
+
 
         // 5. Activity logs dari tabel activity_logs
         $logs = $this->buildApprovalLogs($revision->package_id, $revisionId);
@@ -551,6 +559,7 @@ class ApprovalController extends Controller
             'stamp'        => [
                 'receipt_date' => $receiptDate?->toDateString(),
                 'upload_date'  => $uploadDateRevision?->toDateString(),
+                'obsolete_date' => $obsoleteDate?->toDateString(),
                 'is_obsolete'  => $isObsolete,
             ],
         ];
@@ -559,12 +568,14 @@ class ApprovalController extends Controller
         $hash = encrypt($revisionId);
 
         // --- Tambahan: ambil format label stamp (prefix/suffix) dari master ---
-        $stampFormat = StampFormat::where('is_active', true)->first();
+        $stampFormats = StampFormat::where('is_active', true)
+            ->orderBy('id')
+            ->get();
 
         return view('approvals.approval_detail', [
-            'approvalId'  => $hash,
-            'detail'      => $detail,
-            'stampFormat' => $stampFormat,
+            'approvalId'    => $hash,
+            'detail'        => $detail,
+            'stampFormats'  => $stampFormats,
         ]);
     }
 
@@ -621,7 +632,6 @@ class ApprovalController extends Controller
         try {
             DB::beginTransaction();
 
-            // ====== VALIDASI & UPDATE DB (persis seperti kode Tuan sekarang) ======
             $revision = DB::table('doc_package_revisions')
                 ->where('id', $revisionId)
                 ->lockForUpdate()
@@ -652,6 +662,7 @@ class ApprovalController extends Controller
             $isOlder   = !is_null($currentNo) && $revNo < (int) $currentNo;
 
             if (!$isOlder) {
+                // obsolete-kan approved aktif lainnya
                 DB::table('doc_package_revisions')
                     ->where('package_id', $packageId)
                     ->where('id', '!=', $revisionId)
@@ -659,6 +670,7 @@ class ApprovalController extends Controller
                     ->where('is_obsolete', 0)
                     ->update([
                         'is_obsolete' => 1,
+                        'obsolete_at'  => Carbon::now(),
                         'updated_at'  => Carbon::now(),
                     ]);
 
@@ -667,8 +679,10 @@ class ApprovalController extends Controller
                     ->update([
                         'revision_status' => 'approved',
                         'is_obsolete'     => 0,
+                        'obsolete_at'     => null,
                         'updated_at'      => Carbon::now(),
                     ]);
+
 
                 DB::table('doc_packages')
                     ->where('id', $packageId)
@@ -683,6 +697,7 @@ class ApprovalController extends Controller
                     ->update([
                         'revision_status' => 'approved',
                         'is_obsolete'     => 1,
+                        'obsolete_at'     => Carbon::now(),
                         'updated_at'      => Carbon::now(),
                     ]);
             }
@@ -705,7 +720,6 @@ class ApprovalController extends Controller
                 'meta'          => ['note' => 'Revision approved'],
             ]);
 
-            // ====== SIAPKAN DATA EMAIL ======
             $packageInfo = DB::table('doc_packages as dp')
                 ->join('customers as c', 'dp.customer_id', '=', 'c.id')
                 ->join('models as m', 'dp.model_id', '=', 'm.id')
@@ -722,7 +736,10 @@ class ApprovalController extends Controller
                 ->pluck('filename')
                 ->toArray();
 
-            $downloadUrl = route('file-manager.export.detail', ['id' => urlencode(Crypt::encryptString((string) $revision->id)),]);
+            $rawToken = encrypt((string) $revision->id);
+            $token    = str_replace('=', '-', $rawToken);
+
+            $downloadUrl = route('file-manager.export.detail', ['id' => $token]);
 
             $approvalData = [
                 'revision_id'   => $revision->id,
@@ -740,30 +757,34 @@ class ApprovalController extends Controller
                 'download_url'  => $downloadUrl,
             ];
 
-            // ====== KIRIM EMAIL (dalam try-catch) ======
             try {
-                // perbaiki nama view agar benar: 'emails.approvals_notif' -> 'emails.approved_notif' (atau sesuaikan file yg ada)
-                $users = User::whereNotNull('email')->get();
+                $users = User::select('users.*')
+                    ->distinct()
+                    ->leftJoin('user_roles', 'user_roles.user_id', '=', 'users.id')
+                    ->whereNotNull('users.email')
+                    ->where(function ($q) {
+                        $q->whereNull('user_roles.role_id')
+                            ->orWhere('user_roles.role_id', '!=', 5);
+                    })
+                    ->get();
+
                 foreach ($users as $user) {
                     Mail::to($user->email)->send(
-                        new \App\Mail\RevisionApprovedNotification($user, $approvalData)
+                        new RevisionApprovedNotification($user, $approvalData)
                     );
                 }
             } catch (\Throwable $mailEx) {
-                // Kalau email gagal & belum ada konfirmasi, kembalikan 409 agar frontend munculkan popup
                 if (!$request->boolean('confirm_without_email')) {
                     DB::rollBack();
                     return response()->json([
-                        'message'             => 'Email delivery failed. Do you want to approve without sending emails?',
-                        'error'               => $mailEx->getMessage(),
-                        'needs_confirmation'  => true,
-                        'code'                => 'EMAIL_FAILED',
+                        'message'            => 'Email delivery failed. Do you want to approve without sending emails?',
+                        'error'              => $mailEx->getMessage(),
+                        'needs_confirmation' => true,
+                        'code'               => 'EMAIL_FAILED',
                     ], 409);
                 }
-                // Jika confirm_without_email=1, lanjutkan tanpa email
             }
 
-            // ====== EMAIL OK atau user setuju tanpa email -> commit ======
             DB::commit();
             return response()->json(['message' => 'Revision approved successfully!']);
         } catch (QueryException $e) {
@@ -792,6 +813,7 @@ class ApprovalController extends Controller
             ], 500);
         }
     }
+
 
 
 
@@ -969,8 +991,10 @@ class ApprovalController extends Controller
                 ->update([
                     'revision_status' => 'pending',
                     'is_obsolete'     => 1,
+                    'obsolete_at'     => Carbon::now(),   // <---
                     'updated_at'      => Carbon::now(),
                 ]);
+
 
             // 2. HANYA kalau sebelumnya dia approved & aktif,
             //    baru kita aktifkan approved sebelumnya

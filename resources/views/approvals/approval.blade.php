@@ -69,13 +69,23 @@
       <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">Filters</h3>
       <div class="flex items-center gap-2">
         <button id="btnDownloadSummary"
-          type="button"
-          class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-green-500
-             bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200
-             hover:bg-green-100 dark:hover:bg-green-900/60">
-          <i class="fa-solid fa-file-excel"></i>
-          Download Summary
-        </button>
+  type="button"
+  class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-green-500
+     bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200
+     hover:bg-green-100 dark:hover:bg-green-900/60">
+  {{-- normal state --}}
+  <span class="btn-label inline-flex items-center gap-2">
+    <i class="fa-solid fa-file-excel"></i>
+    <span>Download Summary</span>
+  </span>
+
+  {{-- loading state --}}
+  <span class="btn-spinner hidden inline-flex items-center gap-2">
+    <i class="fa-solid fa-circle-notch fa-spin"></i>
+    <span>Preparing...</span>
+  </span>
+</button>
+
 
         <button id="btnResetFilters"
           type="button"
@@ -412,11 +422,55 @@
         loadKPI();
       });
 
-      $('#btnDownloadSummary').on('click', function() {
-        const f = getCurrentFilters();
-        const query = $.param(f);
-        window.location.href = '{{ route("approvals.summary") }}?' + query;
-      });
+     $('#btnDownloadSummary').on('click', function() {
+  const f = getCurrentFilters();
+  const query = $.param(f);
+  const url = '{{ route("approvals.summary") }}?' + query;
+
+  const $btn = $(this);
+
+  function setLoading(isLoading) {
+    if (isLoading) {
+      $btn.prop('disabled', true)
+          .addClass('opacity-60 cursor-not-allowed');
+      $btn.find('.btn-label').addClass('hidden');
+      $btn.find('.btn-spinner').removeClass('hidden');
+    } else {
+      $btn.prop('disabled', false)
+          .removeClass('opacity-60 cursor-not-allowed');
+      $btn.find('.btn-label').removeClass('hidden');
+      $btn.find('.btn-spinner').addClass('hidden');
+    }
+  }
+
+  setLoading(true);
+
+  // buat iframe tersembunyi
+  const $iframe = $('<iframe>', {
+    src: url,
+    style: 'display:none;'
+  }).appendTo('body');
+
+  let done = false;
+
+  function finish() {
+    if (done) return;
+    done = true;
+    setLoading(false);
+    $iframe.remove();
+  }
+
+  // Fallback: kalau nggak ada event load, reset setelah 7 detik
+  const timeoutId = setTimeout(finish, 7000);
+
+  // Kalau iframe bener-bener nge-load, reset lebih cepat
+  $iframe.on('load', function() {
+    clearTimeout(timeoutId);
+    setTimeout(finish, 1000); // biar spinner sempat kelihatan sebentar
+  });
+});
+
+
 
       // klik row -> detail
       $('#approvalTable tbody').on('click', 'tr', function() {

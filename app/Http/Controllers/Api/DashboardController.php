@@ -165,73 +165,67 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function getCustomer(Request $request): JsonResponse
+    public function getCustomerModel(Request $request): JsonResponse
     {
         $searchTerm = $request->q;
-        $page = $request->page ?: 1;
-        $resultsPerPage = 10;
-        $offset = ($page - 1) * $resultsPerPage;
-
-        $query = DB::connection('sqlsrv')
-            ->table('customers')
-            ->select('id', 'code');
-
-        if ($searchTerm) {
-            $query->where('code', 'LIKE', '%' . $searchTerm . '%');
-        }
-
-        $totalCount = $query->count();
-        $groups = $query->orderBy('code', 'asc')
-            ->offset($offset)
-            ->limit($resultsPerPage)
-            ->get();
-
-        $formattedGroups = $groups->map(function ($group) {
-            return [
-                'id'   => $group->id,
-                'text' => $group->code
-            ];
-        });
-
-        return response()->json([
-            'results'     => $formattedGroups,
-            'total_count' => $totalCount
-        ]);
-    }
-
-    public function getModel(Request $request): JsonResponse
-    {
-        $searchTerm = $request->q;
-        $customer_id = $request->customer_id;
         $page = $request->page ?: 1;
         $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
         $query = DB::connection('sqlsrv')
             ->table('models')
-            ->select('id', 'name')
-            ->where('customer_id', $customer_id);
+            ->join('customers', 'models.customer_id', '=', 'customers.id')
+            // Kita butuh model_id (untuk value), text (untuk display), 
+            // dan customer_id (untuk logika part group)
+            ->select(
+                'models.id as model_id',
+                'models.name as model_name',
+                'customers.id as customer_id',
+                'customers.code as customer_code'
+            );
 
         if ($searchTerm) {
-            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+            // Cari di kedua kolom
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('customers.code', 'LIKE', '%' . $searchTerm . '%')
+                    ->orWhere('models.name', 'LIKE', '%' . $searchTerm . '%');
+            });
         }
 
-        $totalCount = $query->count();
-        $groups = $query->orderBy('name', 'asc')
+        // Clone query untuk count (penting sebelum limit/offset)
+        $totalCountQuery = clone $query;
+        $totalCount = $totalCountQuery->count();
+
+        $models = $query->orderBy('customers.code', 'asc')
+            ->orderBy('models.name', 'asc')
             ->offset($offset)
             ->limit($resultsPerPage)
             ->get();
 
-        $formattedGroups = $groups->map(function ($group) {
+        // Format data untuk Select2
+        $formattedResults = $models->map(function ($model) {
             return [
-                'id'   => $group->id,
-                'text' => $group->name
+                // 'id' yang dipakai Select2 adalah model_id
+                'id'            => $model->model_id,
+                // 'text' yang dipakai Select2 untuk display
+                'text'          => $model->customer_code . ' - ' . $model->model_name,
+
+                // Data tambahan untuk Alpine.js
+                'customer_id'   => $model->customer_id,
+                'customer_code' => $model->customer_code,
+                'model_id'      => $model->model_id,
+                'model_name'    => $model->model_name
             ];
         });
 
         return response()->json([
-            'results'     => $formattedGroups,
-            'total_count' => $totalCount
+            'results'     => $formattedResults,
+            'pagination' => [
+                'more' => ($page * $resultsPerPage) < $totalCount
+            ]
+            // Ganti 'total_count' menjadi 'pagination.more' jika Anda menggunakan
+            // format proses 'processResults' standar Select2
+            // Jika tidak, kembalikan ke: 'total_count' => $totalCount
         ]);
     }
 
@@ -430,87 +424,6 @@ class DashboardController extends Controller
             'c.code',
             'pg.planning',
             'pg.created_at'
-        );
-
-        $sortBy = $request->input('sort_by', 'plan');
-        $orderColumn = $sortBy === 'actual' ? 'actual_count' : 'pg.planning';
-        $query->orderBy($orderColumn, 'desc');
-
-        $results = $query->limit(5)->get();
-
-        $results = $results->map(function ($item) {
-            $plan = floatval($item->plan_count);
-            $actual = floatval($item->actual_count);
-            $percentage = $plan > 0 ? ($actual / $plan) * 100 : 0;
-            $item->percentage = number_format($percentage, 1);
-            return $item;
-        });
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $results
-        ]);
-    }
-
-
-
-
-    public function getUploadMonitoringDataProject(Request $request)
-    {
-        $query = DB::connection('sqlsrv')
-            ->table('part_groups AS pg')
-            ->leftJoin('models AS m', 'pg.model_id', '=', 'm.id')
-            ->leftJoin('customers AS c', 'pg.customer_id', '=', 'c.id')
-            ->leftJoin('doc_packages AS dp', function ($join) {
-                $join->on('dp.customer_id', '=', 'pg.customer_id')
-                    ->on('dp.model_id', '=', 'pg.model_id')
-                    ->on('dp.part_group_id', '=', 'pg.id');
-            })
-            ->select(
-                'c.code AS customer_name',
-                'm.name AS model_name',
-                'pg.code_part_group AS part_group',
-                'pg.planning AS plan_count',
-                DB::raw('COUNT(dp.current_revision_id) AS actual_count')
-            )
-            ->where('m.status_id', 3);
-
-        if ($request->filled('month')) {
-            $month = $request->month;
-            $startDate = $month . '-01 00:00:00';
-            $endDate = date('Y-m-t 23:59:59', strtotime($startDate));
-
-            $query->where(function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('dp.created_at', [$startDate, $endDate])
-                    ->orWhereNull('dp.created_at');
-            });
-        }
-
-        $query->when($request->filled('doc_group'), function ($q) use ($request) {
-            $q->where(function ($w) use ($request) {
-                $w->where('dp.doctype_group_id', $request->doc_group)
-                    ->orWhereNull('dp.doctype_group_id');
-            });
-        });
-
-        $query->when($request->filled('sub_type'), function ($q) use ($request) {
-            $q->where(function ($w) use ($request) {
-                $w->where('dp.doctype_subcategory_id', $request->sub_type)
-                    ->orWhereNull('dp.doctype_subcategory_id');
-            });
-        });
-
-        $query->when($request->filled('part_group'), function ($q) use ($request) {
-            $q->where('pg.code_part_group', $request->part_group);
-        });
-
-        $query->groupBy(
-            'pg.id',
-            'pg.code_part_group',
-            'm.name',
-            'm.status_id',
-            'c.code',
-            'pg.planning'
         );
 
         $sortBy = $request->input('sort_by', 'plan');
