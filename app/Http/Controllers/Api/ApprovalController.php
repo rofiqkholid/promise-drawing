@@ -424,7 +424,18 @@ class ApprovalController extends Controller
             ? Carbon::parse($revision->obsolete_at)
             : null;
 
-        // --- /Tambahan ---
+        $approver = DB::table('package_approvals as pa')
+            ->leftJoin('users as u', 'u.id', '=', 'pa.decided_by')
+            ->where('pa.revision_id', $revisionId)
+            // kalau mau nanti bisa tambahkan filter:
+            // ->where('pa.decision', 'approved')
+            ->orderByDesc('pa.decided_at')
+            ->orderByDesc('pa.id')
+            ->first([
+                'u.name as approver_name',
+                // nanti kalau sudah ada relasi dept:
+                // 'd.name as approver_dept',
+            ]);
 
         // 3. Ambil info package + uploader
         $package = DB::table('doc_packages as dp')
@@ -486,28 +497,28 @@ class ApprovalController extends Controller
             ->mapWithKeys(fn(FileExtensions $m) => [strtolower($m->code) => $m->icon_src])
             ->all();
 
-       $files = $fileRows
-    ->groupBy('category')
-    ->map(function ($items) use ($extIcons) {
-        return $items->map(function ($item) use ($extIcons) {
-            $url = URL::signedRoute('preview.file', ['id' => $item->id]);
+        $files = $fileRows
+            ->groupBy('category')
+            ->map(function ($items) use ($extIcons) {
+                return $items->map(function ($item) use ($extIcons) {
+                    $url = URL::signedRoute('preview.file', ['id' => $item->id]);
 
-            $ext = strtolower(pathinfo($item->name, PATHINFO_EXTENSION));
-            $iconSrc = $extIcons[$ext] ?? null; // bisa null kalau tidak ada di master
+                    $ext = strtolower(pathinfo($item->name, PATHINFO_EXTENSION));
+                    $iconSrc = $extIcons[$ext] ?? null; // bisa null kalau tidak ada di master
 
-            return [
-                'id'            => $item->id,
-                'name'          => $item->name,
-                'url'           => $url,
-                'icon_src'      => $iconSrc,
-                'ori_position'  => $item->ori_position,
-                'copy_position' => $item->copy_position,
-                'obslt_position'=> $item->obslt_position,
-                'size'          => $item->file_size, // <--- ukuran (byte) dari DB
-            ];
-        });
-    })
-    ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
+                    return [
+                        'id'            => $item->id,
+                        'name'          => $item->name,
+                        'url'           => $url,
+                        'icon_src'      => $iconSrc,
+                        'ori_position'  => $item->ori_position,
+                        'copy_position' => $item->copy_position,
+                        'obslt_position' => $item->obslt_position,
+                        'size'          => $item->file_size, // <--- ukuran (byte) dari DB
+                    ];
+                });
+            })
+            ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
 
         // 5. Activity logs dari tabel activity_logs
@@ -561,6 +572,9 @@ class ApprovalController extends Controller
                 'upload_date'  => $uploadDateRevision?->toDateString(),
                 'obsolete_date' => $obsoleteDate?->toDateString(),
                 'is_obsolete'  => $isObsolete,
+
+                'obsolete_user_name' => $approver?->approver_name,
+                'obsolete_user_dept' => null, // sementara null, nanti diisi dari relasi dept
             ],
         ];
 

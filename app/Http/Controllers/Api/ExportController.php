@@ -974,7 +974,6 @@ class ExportController extends Controller
             }
             if ($font) { $draw->setFont($font); }
 
-            // --- Menggambar Border & Garis ---
             $draw->setStrokeColor($borderColor);
             $draw->setFillColor(new ImagickPixel('transparent'));
             $draw->setStrokeWidth(3);
@@ -983,7 +982,6 @@ class ExportController extends Controller
             $draw->line(2, 84, $canvasWidth - 2, 84);
             $stamp->drawImage($draw);
 
-            // --- Menggambar Teks (Metode Perhitungan Manual) ---
             $draw->setFillColor($textColor);
             $draw->setTextAlignment(Imagick::ALIGN_LEFT);
             $x_center_canvas = $canvasWidth / 2; // 168

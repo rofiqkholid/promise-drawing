@@ -390,55 +390,103 @@
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        fetchActiveUsers();
-        fetchUploadCount();
-        fetchDocCount();
-        fetchUDownloadCount();
-        fetchDiskSpace();
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            await fetchActiveUsers();
+            await fetchUploadCount();
+            await fetchDocCount();
+            await fetchUDownloadCount();
+            await fetchDiskSpace();
+        } catch (error) {
+            console.error("Error loading dashboard stats:", error);
+        }
     });
 
-    function fetchActiveUsers() {
+    async function fetchActiveUsers() {
         const apiUrl = '/api/active-users-count';
         const userCountElement = document.getElementById('activeUserCount');
         if (!userCountElement) return;
         userCountElement.textContent = '...';
-        fetch(apiUrl).then(response => response.json()).then(data => {
-            if (data && data.status === 'success') userCountElement.textContent = data.count;
-        }).catch(error => userCountElement.textContent = 'Error');
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            if (data && data.status === 'success') {
+                userCountElement.textContent = data.count;
+            } else {
+                userCountElement.textContent = 'Error';
+            }
+        } catch (error) {
+            console.error('Fetch Active Users Error:', error);
+            userCountElement.textContent = 'Error';
+            throw error;
+        }
     }
 
-    function fetchUploadCount() {
+    async function fetchUploadCount() {
         const apiUrl = '/api/upload-count';
         const userCountElement = document.getElementById('uploadCount');
         if (!userCountElement) return;
         userCountElement.textContent = '...';
-        fetch(apiUrl).then(response => response.json()).then(data => {
-            if (data && data.status === 'success') userCountElement.textContent = data.count;
-        }).catch(error => userCountElement.textContent = 'Error');
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            if (data && data.status === 'success') {
+                userCountElement.textContent = data.count;
+            } else {
+                userCountElement.textContent = 'Error';
+            }
+        } catch (error) {
+            console.error('Fetch Upload Count Error:', error);
+            userCountElement.textContent = 'Error';
+            throw error;
+        }
     }
 
-    function fetchUDownloadCount() {
+    async function fetchUDownloadCount() {
         const apiUrl = '/api/download-count';
         const userCountElement = document.getElementById('downloadCount');
         if (!userCountElement) return;
         userCountElement.textContent = '...';
-        fetch(apiUrl).then(response => response.json()).then(data => {
-            if (data && data.status === 'success') userCountElement.textContent = data.count;
-        }).catch(error => userCountElement.textContent = 'Error');
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            if (data && data.status === 'success') {
+                userCountElement.textContent = data.count;
+            } else {
+                userCountElement.textContent = 'Error';
+            }
+        } catch (error) {
+            console.error('Fetch Download Count Error:', error);
+            userCountElement.textContent = 'Error';
+            throw error;
+        }
     }
 
-    function fetchDocCount() {
+    async function fetchDocCount() {
         const apiUrl = '/api/doc-count';
         const userCountElement = document.getElementById('docCount');
         if (!userCountElement) return;
         userCountElement.textContent = '...';
-        fetch(apiUrl).then(response => response.json()).then(data => {
-            if (data && data.status === 'success') userCountElement.textContent = data.count;
-        }).catch(error => userCountElement.textContent = 'Error');
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            if (data && data.status === 'success') {
+                userCountElement.textContent = data.count;
+            } else {
+                userCountElement.textContent = 'Error';
+            }
+        } catch (error) {
+            console.error('Fetch Doc Count Error:', error);
+            userCountElement.textContent = 'Error';
+            throw error;
+        }
     }
 
-    function fetchDiskSpace() {
+    async function fetchDiskSpace() {
         const apiUrl = '/api/disk-space';
         const freeEl = document.getElementById('freeSpace');
         const usedEl = document.getElementById('usedSpace');
@@ -447,7 +495,10 @@
         freeEl.textContent = '...';
         usedEl.textContent = '...';
         totalEl.textContent = '...';
-        fetch(apiUrl).then(response => response.json()).then(data => {
+        try {
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
             if (data && data.status === 'success') {
                 freeEl.textContent = data.free;
                 usedEl.textContent = data.used;
@@ -455,11 +506,13 @@
             } else {
                 throw new Error('Invalid data');
             }
-        }).catch(error => {
+        } catch (error) {
+            console.error('Fetch Disk Space Error:', error);
             freeEl.textContent = 'Error';
             usedEl.textContent = '-';
             totalEl.textContent = '-';
-        });
+            throw error;
+        }
     }
 
 
@@ -529,7 +582,7 @@
                 }
             },
 
-            initializeDashboard() {
+            async initializeDashboard() {
                 const component = this;
 
                 const now = new Date();
@@ -547,10 +600,13 @@
                 component.initPartGroupSelect2_Multi();
                 component.initPartGroupSelect2_Single();
 
-                component.fetchActivityLog();
-
-                component.applyFilters();
-                component.updateUploadDownloadChart(year);
+                try {
+                    await component.fetchActivityLog();
+                    await component.applyFilters();
+                    await component.updateUploadDownloadChart(year);
+                } catch (error) {
+                    console.error("Error initializing dashboard charts:", error);
+                }
             },
 
             updateChartTheme() {
@@ -845,16 +901,16 @@
                     if (detailsArray.length > 0) metaDetails = `<p class="mt-2 text-sm text-gray-600 dark:text-gray-400 font-mono">${detailsArray.join(' - ')}</p>`;
                 }
                 return `<div class="py-3 px-2 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
-                            <div class="flex-shrink-0 pt-1"><i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i></div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex justify-between items-start">
-                                    <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-3 whitespace-nowrap">${fullTimestamp}</p>
-                                </div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${relativeTime}</p>
-                                ${metaDetails}
-                            </div>
-                        </div>`;
+                            <div class="flex-shrink-0 pt-1"><i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-3 whitespace-nowrap">${fullTimestamp}</p>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${relativeTime}</p>
+                                ${metaDetails}
+                            </div>
+                        </div>`;
             },
 
             formatTimeAgo(dateString) {
@@ -893,23 +949,17 @@
                 });
 
                 try {
-                    // --- TAMBAHAN UNTUK MENGAMBIL TEKS STATUS ---
                     const statusData = $('#project_status').select2('data');
                     let projectStatusText = '';
                     if (statusData && statusData.length > 0) {
                         projectStatusText = statusData[0].text;
                     }
-                    // --- END TAMBAHAN ---
 
                     const filters = {
                         date_start: this.dateStart,
                         date_end: this.dateEnd,
-
-                        // --- PERUBAHAN DI SINI ---
                         project_status: projectStatusText,
-
                         model: this.selectedProjects.map(item => item.text),
-
                         part_group: this.partGroupMode === 'multi' ?
                             this.selectedPartGroup.map(item => item.text) : (this.partGroupSingleValue.id === 'ALL' ? [] : [this.partGroupSingleValue.text])
                     };

@@ -31,6 +31,10 @@ use App\Http\Controllers\Api\ReceiptController;
 use App\Http\Controllers\Api\ShareController;
 use Illuminate\Support\Facades\Auth;
 
+Route::get('/infophp', function () {
+    phpinfo();
+});
+
 
 Route::get('/', function () {
     if (Auth::check()) {

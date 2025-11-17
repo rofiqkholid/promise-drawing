@@ -39,8 +39,7 @@
                     </a>
                 </div>
             </div>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Fill in the metadata and upload all related drawing
-                files in one go.</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Fill in the metadata and upload all related drawing files in one go.</p>
         </div>
 
         <form @submit.prevent="submitForm" id="uploadDrawingForm" class="space-y-8">
@@ -52,57 +51,85 @@
                             <i class="fa-solid fa-file-invoice mr-2 text-blue-500"></i>
                             Drawing Metadata
                         </h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">This information will determine the file
-                            storage
-                            location.</p>
-
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">This information will determine the file storage location.</p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
                                 <label for="customer"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer <span
+                                        class="text-red-500">*</span></label>
                                 <select id="customer" name="customer" class="mt-1 block w-full"
                                     :disabled="isMetadataLocked"></select>
+                                <template x-if="validationErrors.customer">
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400"
+                                        x-text="validationErrors.customer[0]"></p>
+                                </template>
                             </div>
                             <div>
-                                <label for="model"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
+                                <label for="model" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model
+                                    <span class="text-red-500">*</span></label>
                                 <select id="model" name="model" class="mt-1 block w-full"
                                     :disabled="isMetadataLocked || !customer"></select>
+                                <template x-if="validationErrors.model">
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400"
+                                        x-text="validationErrors.model[0]"></p>
+                                </template>
                             </div>
                             <div>
-                                <label for="partNo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part
-                                    No</label>
+                                <label for="partNo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part No <span class="text-red-500">*</span></label>
                                 <select id="partNo" name="partNo" class="mt-1 block w-full"
                                     :disabled="isMetadataLocked || !model"></select>
+                                <template x-if="validationErrors.partNo">
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400"
+                                        x-text="validationErrors.partNo[0]"></p>
+                                </template>
                             </div>
                             <div>
                                 <label for="docType"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Document
-                                    Type</label>
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Document Type <span
+                                        class="text-red-500">*</span></label>
                                 <select id="docType" name="docType" class="mt-1 block w-full"
                                     :disabled="isMetadataLocked || !partNo"></select>
+                                <template x-if="validationErrors.docType">
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400"
+                                        x-text="validationErrors.docType[0]"></p>
+                                </template>
                             </div>
                             <div>
                                 <label for="category"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category <span
+                                        class="text-red-500">*</span></label>
                                 <select id="category" name="category" class="mt-1 block w-full"
                                     :disabled="isMetadataLocked || !docType"></select>
+                                <template x-if="validationErrors.category">
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400"
+                                        x-text="validationErrors.category[0]"></p>
+                                </template>
                             </div>
                             <div>
                                 <label for="partGroup"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group <span
+                                        class="text-red-500">*</span></label>
                                 <select id="partGroup" name="partGroup" class="mt-1 block w-full"
                                     :disabled="isMetadataLocked || !category"></select>
+                                <template x-if="validationErrors.partGroup">
+                                    <p class="mt-1 text-sm text-red-600 dark:text-red-400"
+                                        x-text="validationErrors.partGroup[0]"></p>
+                                </template>
                             </div>
 
                             <div class="sm:col-span-2 grid grid-cols-2 gap-6">
                                 <div>
                                     <label for="ecn_no"
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">ECN
-                                        Number</label>
+                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">ECN Number <span
+                                            class="text-red-500">*</span></label>
                                     <input type="text" x-model.debounce.500ms="ecn_no" id="ecn_no" name="ecn_no"
                                         class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                        :class="{ 'border-red-500 dark:border-red-400 focus:ring-red-500 focus:border-red-500': validationErrors.ecn_no }"
                                         :disabled="isReadOnly || !isMetadataFilled">
+                                    <template x-if="validationErrors.ecn_no">
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400"
+                                            x-text="validationErrors.ecn_no[0]"></p>
+                                    </template>
                                 </div>
                                 <div>
                                     <label for="receipt_date"
@@ -110,7 +137,12 @@
                                         Date</label>
                                     <input type="date" x-model="receipt_date" id="receipt_date" name="receipt_date"
                                         class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                        :class="{ 'border-red-500 dark:border-red-400 focus:ring-red-500 focus:border-red-500': validationErrors.receipt_date }"
                                         :disabled="isReadOnly || !isMetadataFilled">
+                                    <template x-if="validationErrors.receipt_date">
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400"
+                                            x-text="validationErrors.receipt_date[0]"></p>
+                                    </template>
                                 </div>
                             </div>
 
@@ -126,7 +158,8 @@
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Finish Good Drawing
                                 </label>
-                                <div class="flex items-center mt-2">
+                                <div class="flex items-center mt-2"
+                                    :class="{ 'opacity-50 pointer-events-none cursor-not-allowed': isReadOnly || !isMetadataFilled }">
                                     <label for="is_finish" class="relative flex items-center cursor-pointer">
                                         <input type="checkbox" id="is_finish" x-model="is_finish" class="sr-only peer"
                                             :disabled="isReadOnly || !isMetadataFilled">
@@ -136,10 +169,7 @@
                                             class="dot absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition transform peer-checked:translate-x-full peer-checked:bg-blue-600">
                                         </div>
                                     </label>
-                                    <div class="ml-3 text-sm" :class="{
-                                                                                        'text-gray-900 dark:text-gray-100 font-semibold': is_finish,
-                                                                                        'text-gray-500 dark:text-gray-400': !is_finish
-                                                                                    }">
+                                    <div class="ml-3 text-sm" :class="{'text-gray-900 dark:text-gray-100 font-semibold': is_finish, 'text-gray-500 dark:text-gray-400': !is_finish }">
                                         <span x-text="is_finish ? 'Yes' : 'No'"></span>
                                     </div>
                                 </div>
@@ -168,12 +198,8 @@
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Current Status</h3>
                                 <p class="text-sm text-gray-600 dark:text-gray-300">This revision is currently <strong
-                                        class="font-semibold" :class="{
-                                                                                                                            'text-green-600 dark:text-green-400': revisionStatus === 'approved',
-                                                                                                                            'text-red-600 dark:text-red-400': revisionStatus === 'rejected',
-                                                                                                                            'text-yellow-600 dark:text-yellow-400': revisionStatus === 'pending',
-                                                                                                                            'text-gray-700 dark:text-gray-300': revisionStatus === 'draft'
-                                                                                                                        }"
+                                        class="font-semibold"
+                                        :class="{'text-green-600 dark:text-green-400': revisionStatus === 'approved', 'text-red-600 dark:text-red-400': revisionStatus === 'rejected', 'text-yellow-600 dark:text-yellow-400': revisionStatus === 'pending', 'text-gray-700 dark:text-gray-300': revisionStatus === 'draft' }"
                                         x-text="revisionStatus ? revisionStatus.charAt(0).toUpperCase() + revisionStatus.slice(1) : ''"></strong>.
                                 </p>
                             </div>
@@ -357,11 +383,8 @@
                                                         <template
                                                             x-if="fileWrapper.status === 'uploading' || fileWrapper.status === 'retrying'"><i
                                                                 class="fa-solid fa-spinner fa-spin text-blue-500"></i></template>
-                                                        <p class="status-text text-xs ml-1.5" :class="{
-                                                                                                                    'text-red-600 dark:text-red-400': fileWrapper.status === 'failed',
-                                                                                                                    'text-blue-600 dark:text-blue-400': fileWrapper.status === 'uploading' || fileWrapper.status === 'retrying',
-                                                                                                                    'text-gray-500 dark:text-gray-400': fileWrapper.status === 'added' || !fileWrapper.status
-                                                                                                                }"
+                                                        <p class="status-text text-xs ml-1.5"
+                                                            :class="{ 'text-red-600 dark:text-red-400': fileWrapper.status === 'failed', 'text-blue-600 dark:text-blue-400': fileWrapper.status === 'uploading' || fileWrapper.status === 'retrying', 'text-gray-500 dark:text-gray-400': fileWrapper.status === 'added' || !fileWrapper.status }"
                                                             x-text="fileWrapper.statusText || 'Added'">
                                                         </p>
                                                     </div>
@@ -394,9 +417,7 @@
                                             :key="fileWrapper._uid">
                                             <div class="file-preview-item flex items-center space-x-3 p-2 rounded-md">
                                                 <div class="file-icon text-white w-10 h-10 flex items-center justify-center rounded flex-shrink-0"
-                                                    :class="iconMap[fileWrapper.name.split('.').pop().toLowerCase()]
-                                                                                                                        ? 'bg-white p-0.5 border border-gray-200 dark:border-gray-700'
-                                                                                                                        : 'bg-gray-400 text-white'">
+                                                    :class="iconMap[fileWrapper.name.split('.').pop().toLowerCase()] ? 'bg-white p-0.5 border border-gray-200 dark:border-gray-700' : 'bg-gray-400 text-white'">
                                                     <template
                                                         x-if="iconMap[fileWrapper.name.split('.').pop().toLowerCase()]">
                                                         <img :src="iconMap[fileWrapper.name.split('.').pop().toLowerCase()]"
@@ -751,6 +772,7 @@
                 isReadOnly: false,
                 isCreatingNewRevision: false,
                 originalRevisionStatus: null,
+                validationErrors: {},
 
                 // --- COMPUTED ---
                 get isDirty() {
@@ -892,6 +914,27 @@
                         });
                     });
                     this.fetchAllowedExtensions();
+
+                    this.$watch('validationErrors', (errors) => {
+                        this.styleSelect2Error('customer', errors.customer);
+                        this.styleSelect2Error('model', errors.model);
+                        this.styleSelect2Error('partNo', errors.partNo);
+                        this.styleSelect2Error('docType', errors.docType);
+                        this.styleSelect2Error('partGroup', errors.partGroup);
+                        // this.styleSelect2Error('revision_label_id', errors.revision_label_id);
+                    });
+                },
+
+                styleSelect2Error(fieldName, hasError) {
+                    const container = $(`#${fieldName}`).next('.select2-container');
+                    if (!container.length) return;
+                    const selectionBox = container.find('.select2-selection');
+
+                    if (hasError) {
+                        selectionBox.addClass('validation-error-select2');
+                    } else {
+                        selectionBox.removeClass('validation-error-select2');
+                    }
                 },
 
                 fetchAllowedExtensions() {
@@ -1415,6 +1458,7 @@
                     }
 
                     this.isUploading = true;
+                    this.validationErrors = {};
                     this.uploadBatch();
                 },
                 uploadBatch() {
@@ -1486,6 +1530,7 @@
                             return xhr;
                         },
                         success: (res) => {
+                            this.validationErrors = {};
                             filesToUpload.forEach(fw => {
                                 fw.progress = 100;
                                 fw.uploaded = true;
@@ -1523,7 +1568,13 @@
                                 fw.progress = 0;
                             });
 
-                            toastError('Upload Failed', xhr.responseJSON?.message || 'A server error occurred. The operation was rolled back.');
+                            if (xhr.status === 422 && xhr.responseJSON.errors) {
+                                this.validationErrors = xhr.responseJSON.errors;
+                                toastError('Validation Failed', 'Please check the form for errors.');
+                            } else {
+                                this.validationErrors = {};
+                                toastError('Upload Failed', xhr.responseJSON?.message || 'A server error occurred.');
+                            }
                         },
                         complete: () => {
                             this.isUploading = false;
@@ -1640,37 +1691,29 @@
                     const t = detectTheme();
                     const conflictHtml = this.conflictFiles.map((fileWrapper, index) => {
                         const iconInfo = this.getFileIcon(fileWrapper.name);
-                        return `
-                                                                                    <div class="conflict-item" style="display: flex; align-items: center; padding: 12px 8px; border-bottom: 1px solid ${t.border};">
-                                                                                        <div style="flex-shrink: 0; margin-right: 12px;">
-                                                                                            <span style="width: 40px; height: 40px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border-radius: 0.375rem;" class="${iconInfo.color} text-white">
-                                                                                                <i class="fa-solid ${iconInfo.icon}"></i>
-                                                                                            </span>
-                                                                                        </div>
-                                                                                        <div style="flex-grow: 1; min-width: 0;">
-                                                                                            <p style="font-weight: 500; color: ${t.fg}; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${fileWrapper.name}">${fileWrapper.name}</p>
-                                                                                            <p style="font-size: 0.75rem; color: #6b7280;">${this.formatBytes(fileWrapper.size)}</p>
-                                                                                        </div>
-                                                                                        <div style="display: flex; gap: 16px; white-space: nowrap; margin-left: 16px;">
-                                                                                            <label style="display: flex; align-items: center; cursor: pointer; color: ${t.fg}; font-size: 0.875rem;">
-                                                                                                <input type="radio" name="conflict_action_${index}" value="replace" class="form-radio h-4 w-4 text-orange-600" style="margin-right: 6px;"> Replace
-                                                                                            </label>
-                                                                                            <label style="display: flex; align-items: center; cursor: pointer; color: ${t.fg}; font-size: 0.875rem;">
-                                                                                                <input type="radio" name="conflict_action_${index}" value="suffix" checked class="form-radio h-4 w-4 text-blue-600" style="margin-right: 6px;"> Add New
-                                                                                            </label>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                `;
+                        return `<div class="conflict-item" style="display: flex; align-items: center; padding: 12px 8px; border-bottom: 1px solid ${t.border};">
+                        <div style="flex-shrink: 0; margin-right: 12px;">
+                        <span style="width: 40px; height: 40px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; border-radius: 0.375rem;" class="${iconInfo.color} text-white">
+                        <i class="fa-solid ${iconInfo.icon}"></i></span></div>
+                        <div style="flex-grow: 1; min-width: 0;">
+                        <p style="font-weight: 500; color: ${t.fg}; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${fileWrapper.name}">${fileWrapper.name}</p>
+                        <p style="font-size: 0.75rem; color: #6b7280;">${this.formatBytes(fileWrapper.size)}</p></div>
+                        <div style="display: flex; gap: 16px; white-space: nowrap; margin-left: 16px;">
+                        <label style="display: flex; align-items: center; cursor: pointer; color: ${t.fg}; font-size: 0.875rem;">
+                        <input type="radio" name="conflict_action_${index}" value="replace" class="form-radio h-4 w-4 text-orange-600" style="margin-right: 6px;"> Replace</label>
+                        <label style="display: flex; align-items: center; cursor: pointer; color: ${t.fg}; font-size: 0.875rem;">
+                        <input type="radio" name="conflict_action_${index}" value="suffix" checked class="form-radio h-4 w-4 text-blue-600" style="margin-right: 6px;"> Add New
+                        </label>
+                        </div>
+                        </div>
+                        `;
                     }).join('');
 
                     Swal.fire({
                         title: '<i class="fa-solid fa-copy mr-2"></i> File Already Exists',
-                        html: `
-                                                                                    <p style="margin-bottom: 1.5rem; color: ${t.fg}; text-align: left;">Some of the files you uploaded already exist on the server. Select an action for each file below.</p>
-                                                                                    <div style="max-height: 300px; overflow-y: auto; border: 1px solid ${t.border}; border-radius: 8px; background-color: ${t.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)'};">
-                                                                                        ${conflictHtml}
-                                                                                    </div>
-                                                                                `,
+                        html: ` <p style="margin-bottom: 1.5rem; color: ${t.fg}; text-align: left;">Some of the files you uploaded already exist on the server. Select an action for each file below.</p> <div style="max-height: 300px; overflow-y: auto; border: 1px solid ${t.border}; border-radius: 8px; background-color: ${t.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)'};">
+                                    ${conflictHtml}
+                                </div>`,
                         width: '48rem',
                         icon: 'warning',
                         showCloseButton: true,
@@ -1983,6 +2026,14 @@
 
         .dark .remove-file-btn:hover {
             background-color: #450a0a;
+        }
+
+        .select2-container .select2-selection.validation-error-select2 {
+            border-color: #ef4444 !important;
+        }
+
+        .dark .select2-container .select2-selection.validation-error-select2 {
+            border-color: #f87171 !important;
         }
     </style>
 @endpush

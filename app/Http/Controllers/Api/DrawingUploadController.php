@@ -23,6 +23,11 @@ class DrawingUploadController extends Controller
 {
     protected string $disk = 'datacenter';
 
+    // public function __construct()
+    // {
+    //     $this->middleware('auth');
+    // }
+
     protected function getFolderLabels(array $ids): array
     {
         $customer = DB::table('customers')
@@ -77,7 +82,7 @@ class DrawingUploadController extends Controller
             'partNo' => 'required|integer|exists:products,id',
             'docType' => 'required|integer|exists:doctype_groups,id',
             'partGroup' => 'required|integer|exists:part_groups,id',
-            'category' => 'nullable|integer|exists:doctype_subcategories,id',
+            'category' => 'required|integer|exists:doctype_subcategories,id',
             'ecn_no' => 'required|string|max:50',
             'revision_label_id' => 'nullable|integer|exists:customer_revision_labels,id',
             'existing_revision_id' => 'nullable|integer|exists:doc_package_revisions,id'
@@ -152,7 +157,7 @@ class DrawingUploadController extends Controller
             'model' => 'required|integer|exists:models,id',
             'partNo' => 'required|integer|exists:products,id',
             'docType' => 'required|integer|exists:doctype_groups,id',
-            'category' => 'nullable|integer|exists:doctype_subcategories,id',
+            'category' => 'required|integer|exists:doctype_subcategories,id',
             'partGroup' => 'required|integer|exists:part_groups,id',
             'ecn_no' => 'required|string|max:50',
             'receipt_date' => 'nullable|date',
@@ -176,7 +181,7 @@ class DrawingUploadController extends Controller
                 'model_id' => $validated['model'],
                 'product_id' => $validated['partNo'],
                 'doctype_group_id' => $validated['docType'],
-                'doctype_subcategory_id' => $validated['category'] ?? null,
+                'doctype_subcategory_id' => $validated['category'],
                 'part_group_id' => $validated['partGroup'],
             ];
             $packageLabels = $this->getFolderLabels($packageIds);
