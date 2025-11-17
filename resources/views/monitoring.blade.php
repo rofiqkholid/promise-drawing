@@ -179,6 +179,7 @@
                     <p id="docCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
                 </div>
             </div>
+            <!--  -->
             <div class="absolute bottom-0 right-0">
                 <svg class="w-28 text-blue-500/20 dark:text-blue-400/10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 30" stroke-width="2" stroke="currentColor">
                     <path d="M0 25 L20 15 L40 20 L60 10 L80 15 L100 5" />
