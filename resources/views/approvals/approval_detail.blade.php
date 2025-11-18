@@ -378,18 +378,30 @@
                       <div
                         :class="stampOriginClass('obsolete')"
                         class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                   text-[10px] text-blue-700 flex flex-col items-center
-                   justify-between px-2 py-1 bg-transparent"
+           text-[10px] text-blue-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <!-- top line: Date : Oct.25th 2025 -->
                           <span x-text="stampTopLine('obsolete')"></span>
                         </div>
+
                         <div class="flex-1 flex items-center justify-center">
+                          <!-- middle: SAI-DRAWING OBSOLETE -->
                           <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
                             x-text="stampCenterObsolete()"></span>
                         </div>
-                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine('obsolete')"></span>
+
+                        <!-- bottom: Nama & Dept -->
+                        <div class="w-full border-t border-blue-600 pt-0.5 px-1 flex justify-between tracking-tight">
+                          <span>
+                            Nama :
+                            <span x-text="obsoleteName()"></span>
+                          </span>
+                          <span>
+                            <span x-text="(getObsoleteFormat().suffix || 'Dept.') + ' :'"></span>
+                            <span x-text="obsoleteDept()"></span>
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -459,7 +471,7 @@
                       </div>
                     </div>
 
-                    <!-- STAMP OBSOLETE -->
+                   <!-- STAMP OBSOLETE -->
                     <div
                       x-show="pkg.stamp?.is_obsolete"
                       class="absolute"
@@ -467,18 +479,30 @@
                       <div
                         :class="stampOriginClass('obsolete')"
                         class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                   text-[10px] text-blue-700 flex flex-col items-center
-                   justify-between px-2 py-1 bg-transparent"
+           text-[10px] text-blue-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <!-- top line: Date : Oct.25th 2025 -->
                           <span x-text="stampTopLine('obsolete')"></span>
                         </div>
+
                         <div class="flex-1 flex items-center justify-center">
+                          <!-- middle: SAI-DRAWING OBSOLETE -->
                           <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
                             x-text="stampCenterObsolete()"></span>
                         </div>
-                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine('obsolete')"></span>
+
+                        <!-- bottom: Nama & Dept -->
+                        <div class="w-full border-t border-blue-600 pt-0.5 px-1 flex justify-between tracking-tight">
+                          <span>
+                            Nama :
+                            <span x-text="obsoleteName()"></span>
+                          </span>
+                          <span>
+                            <span x-text="(getObsoleteFormat().suffix || 'Dept.') + ' :'"></span>
+                            <span x-text="obsoleteDept()"></span>
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -568,18 +592,30 @@
                       <div
                         :class="stampOriginClass('obsolete')"
                         class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                   text-[10px] text-blue-700 flex flex-col items-center
-                   justify-between px-2 py-1 bg-transparent"
+           text-[10px] text-blue-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <!-- top line: Date : Oct.25th 2025 -->
                           <span x-text="stampTopLine('obsolete')"></span>
                         </div>
+
                         <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                          <!-- middle: SAI-DRAWING OBSOLETE -->
+                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
                             x-text="stampCenterObsolete()"></span>
                         </div>
-                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine('obsolete')"></span>
+
+                        <!-- bottom: Nama & Dept -->
+                        <div class="w-full border-t border-blue-600 pt-0.5 px-1 flex justify-between tracking-tight">
+                          <span>
+                            Nama :
+                            <span x-text="obsoleteName()"></span>
+                          </span>
+                          <span>
+                            <span x-text="(getObsoleteFormat().suffix || 'Dept.') + ' :'"></span>
+                            <span x-text="obsoleteDept()"></span>
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -659,30 +695,40 @@
                   </div>
 
                   <!-- STAMP OBSOLETE -->
-                  <div
-                    x-show="pkg.stamp?.is_obsolete"
-                    class="absolute"
-                    :class="stampPositionClass('obsolete')">
                     <div
-                      :class="stampOriginClass('obsolete')"
-                      class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                   text-[10px] text-blue-700 flex flex-col items-center
-                   justify-between px-2 py-1 bg-transparent"
-                      style="transform: scale(0.45);">
-                      <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                        <span x-text="stampTopLine('obsolete')"></span>
-                      </div>
-                      <div class="flex-1 flex items-center justify-center">
-                        <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
-                          x-text="stampCenterObsolete()"></span>
-                      </div>
-                      <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                        <span x-text="stampBottomLine('obsolete')"></span>
+                      x-show="pkg.stamp?.is_obsolete"
+                      class="absolute"
+                      :class="stampPositionClass('obsolete')">
+                      <div
+                        :class="stampOriginClass('obsolete')"
+                        class="w-56 h-20 border-2 border-blue-600 rounded-sm
+           text-[10px] text-blue-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
+                        style="transform: scale(0.45);">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <!-- top line: Date : Oct.25th 2025 -->
+                          <span x-text="stampTopLine('obsolete')"></span>
+                        </div>
+
+                        <div class="flex-1 flex items-center justify-center">
+                          <!-- middle: SAI-DRAWING OBSOLETE -->
+                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                            x-text="stampCenterObsolete()"></span>
+                        </div>
+
+                        <!-- bottom: Nama & Dept -->
+                        <div class="w-full border-t border-blue-600 pt-0.5 px-1 flex justify-between tracking-tight">
+                          <span>
+                            Nama :
+                            <span x-text="obsoleteName()"></span>
+                          </span>
+                          <span>
+                            <span x-text="(getObsoleteFormat().suffix || 'Dept.') + ' :'"></span>
+                            <span x-text="obsoleteDept()"></span>
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                </div>
 
                 <div
                   x-show="hpglLoading"
@@ -1142,7 +1188,7 @@
         return `transform: translate(${this.panX}px, ${this.panY}px) scale(${this.imageZoom}); transform-origin: center center;`;
       },
 
-      
+
 
       // mapping dari integer DB -> key string
       // mapping dari integer DB -> key string (0-5)
@@ -1270,7 +1316,7 @@
         return null;
       },
 
-            formatBytes(bytes) {
+      formatBytes(bytes) {
         if (!bytes || bytes <= 0) return '-';
         const units = ['B', 'KB', 'MB', 'GB', 'TB'];
         let i = 0;
@@ -1319,6 +1365,10 @@
         };
       },
 
+      getObsoleteInfo() {
+        return this.pkg?.stamp?.obsolete_info || {};
+      },
+
 
       formatStampDate(d) {
         return d || '';
@@ -1336,8 +1386,21 @@
 
       // teks tengah stamp OBSOLETE
       stampCenterObsolete() {
-        return 'OBSOLETE';
+        return 'SAI-DRAWING OBSOLETE';
       },
+
+      obsoleteName() {
+        const s = this.pkg?.stamp || {};
+        const info = s.obsolete_info || {};
+        return info.name || '';
+      },
+
+      obsoleteDept() {
+        const s = this.pkg?.stamp || {};
+        const info = s.obsolete_info || {};
+        return info.dept || '';
+      },
+
 
       stampTopLine(which = 'original') {
         const s = this.pkg?.stamp || {};
@@ -1346,9 +1409,18 @@
 
         if (which === 'obsolete') {
           fmt = this.getObsoleteFormat();
-          date = s.upload_date || s.receipt_date || '';
-          const label = fmt.prefix || 'DATE UPLOAD';
-          return date ? `${label} : ${this.formatStampDate(date)}` : '';
+
+          const info = this.getObsoleteInfo();
+          // pakai date_text (Oct.25th 2025) kalau ada
+          date =
+            info.date_text ||
+            s.obsolete_date ||
+            s.upload_date ||
+            s.receipt_date ||
+            '';
+
+          const label = fmt.prefix || 'DATE OBSOLETE';
+          return date ? `${label} : ${date}` : '';
         } else {
           fmt = this.getNormalFormat();
           date = s.receipt_date || s.upload_date || '';
@@ -1357,23 +1429,35 @@
         }
       },
 
+
       stampBottomLine(which = 'original') {
         const s = this.pkg?.stamp || {};
-        let date;
         let fmt;
 
         if (which === 'obsolete') {
           fmt = this.getObsoleteFormat();
-          date = s.obsolete_date || s.upload_date || '';
-          const label = fmt.suffix || 'DATE OBSOLETE';
-          return date ? `${label} : ${this.formatStampDate(date)}` : '';
+          const info = this.getObsoleteInfo();
+
+          const name = info.name || '';
+          const dept = info.dept || '';
+
+          let value = '';
+          if (name && dept) {
+            value = `${name} / ${dept}`;
+          } else {
+            value = name || dept || '';
+          }
+
+          const label = fmt.suffix || 'BY';
+          return value ? `${label} : ${value}` : '';
         } else {
           fmt = this.getNormalFormat();
-          date = s.upload_date || '';
+          const date = s.upload_date || '';
           const label = fmt.suffix || 'DATE UPLOADED';
           return date ? `${label} : ${this.formatStampDate(date)}` : '';
         }
       },
+
 
       // ===== helper key per file (pakai id kalau ada) =====
       getFileKey(file) {

@@ -676,7 +676,7 @@ class ExportController extends Controller
         }
 
         $stampFormat = StampFormat::where('is_active', true)->first();
-        $stampableTypes = ['jpg', 'jpeg', 'png', 'tif', 'tiff'];
+        $stampableTypes = ['jpg', 'jpeg', 'png', 'tif', 'tiff', 'pdf'];
         $canStamp = class_exists('\Imagick') && $stampFormat;
 
         $customer = Str::slug($package->customer);
@@ -1045,23 +1045,20 @@ class ExportController extends Controller
             $posCopy = $this->positionIntToKey($file->copy_position ?? 1, 'bottom-center');
             $posObsolete = $this->positionIntToKey($file->obslt_position ?? 0, 'bottom-left');
 
-            Log::debug('Stamp position values from file', [
-                'ori_position' => $file->ori_position ?? 'NULL',
-                'copy_position' => $file->copy_position ?? 'NULL',
-                'obslt_position' => $file->obslt_position ?? 'NULL',
-                'posOriginal' => $posOriginal,
-                'posCopy' => $posCopy,
-                'posObsolete' => $posObsolete,
-            ]);
-
+            // 1. Buat "Master" stempel (ukuran 336x120)
             $stampOriginal = $this->_createStampImage('ORIGINAL', $topLine, $bottomLine);
             $stampCopy = $this->_createStampImage('Control COPY', $topLine, $bottomLine);
             $stampObsolete = $isObsolete ? $this->_createStampImage('OBSOLETE', $topLine, $bottomLine) : null;
 
             if (!$stampOriginal || !$stampCopy) {
-                Log::warning('Could not create stamp images, returning original file.');
+                Log::warning('Could not create master stamp images, returning original file.');
                 return $originalPath;
             }
+
+            // Dapatkan rasio aspek master stempel (336 / 120 = 2.8)
+            $masterStampWidth = $stampOriginal->getImageWidth();
+            $masterStampHeight = $stampOriginal->getImageHeight();
+            $stampAspectRatio = $masterStampWidth / $masterStampHeight; // 2.8
 
             $imagick = new Imagick();
             $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
@@ -1073,9 +1070,11 @@ class ExportController extends Controller
 
             $imagick->readImage($originalPath);
 
-            $stampWidth = $stampOriginal->getImageWidth();
-            $stampHeight = $stampOriginal->getImageHeight();
-            $marginPercent = 0.03;
+            $marginPercent = 0.03; 
+            // Tentukan persentase lebar stempel (misal: 15% dari lebar gambar)
+            $stampWidthPercent = 0.15; 
+            // Tentukan ukuran minimum stempel agar teks terbaca
+            $minStampWidth = 224; // (1.0x ukuran lama)
 
             if ($isPdf) {
                 $totalPages = $imagick->getNumberImages();
@@ -1084,31 +1083,51 @@ class ExportController extends Controller
 
                     $imgWidth = $imagick->getImageWidth();
                     $imgHeight = $imagick->getImageHeight();
-                    $margin = (int) (min($imgWidth, $imgHeight) * $marginPercent);
-                    $margin = max(8, $margin);
+                    $margin = max(8, (int) (min($imgWidth, $imgHeight) * $marginPercent));
 
-                    if ($imgWidth < $stampWidth) {
+                    // 2. Hitung ukuran stempel dinamis
+                    $newStampWidth = max($minStampWidth, (int) ($imgWidth * $stampWidthPercent));
+                    $newStampHeight = (int) ($newStampWidth / $stampAspectRatio);
+
+                    // 3. Clone dan resize stempel master
+                    $stampOrigResized = $stampOriginal->clone();
+                    $stampOrigResized->resizeImage($newStampWidth, $newStampHeight, Imagick::FILTER_LANCZOS, 1);
+                    
+                    $stampCopyResized = $stampCopy->clone();
+                    $stampCopyResized->resizeImage($newStampWidth, $newStampHeight, Imagick::FILTER_LANCZOS, 1);
+                    
+                    $stampObsResized = null;
+                    if ($isObsolete && $stampObsolete) {
+                        $stampObsResized = $stampObsolete->clone();
+                        $stampObsResized->resizeImage($newStampWidth, $newStampHeight, Imagick::FILTER_LANCZOS, 1);
+                    }
+
+                    if ($imgWidth < $newStampWidth) {
                         Log::warning('Image width is smaller than stamp width, stamp may overlap.', [
-                            'file_id' => $file->id, 'page' => $i, 'imgW' => $imgWidth, 'stampW' => $stampWidth
+                            'file_id' => $file->id, 'page' => $i, 'imgW' => $imgWidth, 'stampW' => $newStampWidth
                         ]);
                     }
 
-                    list($x, $y) = $this->calculateStampCoordinates($posOriginal, $imgWidth, $imgHeight, $stampWidth, $stampHeight, $margin);
-                    Log::debug('Stamp ORIGINAL position', ['pos' => $posOriginal, 'x' => $x, 'y' => $y, 'imgW' => $imgWidth, 'imgH' => $imgHeight]);
-                    $imagick->compositeImage($stampOriginal, Imagick::COMPOSITE_OVER, (int)$x, (int)$y);
+                    // 4. Gunakan stempel yang sudah di-resize
+                    list($x, $y) = $this->calculateStampCoordinates($posOriginal, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
+                    $imagick->compositeImage($stampOrigResized, Imagick::COMPOSITE_OVER, (int)$x, (int)$y);
 
-                    list($xCopy, $yCopy) = $this->calculateStampCoordinates($posCopy, $imgWidth, $imgHeight, $stampWidth, $stampHeight, $margin);
-                    Log::debug('Stamp COPY position (PDF)', ['pos' => $posCopy, 'x' => $xCopy, 'y' => $yCopy, 'imgW' => $imgWidth, 'imgH' => $imgHeight]);
-                    $imagick->compositeImage($stampCopy, Imagick::COMPOSITE_OVER, (int)$xCopy, (int)$yCopy);
+                    list($xCopy, $yCopy) = $this->calculateStampCoordinates($posCopy, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
+                    $imagick->compositeImage($stampCopyResized, Imagick::COMPOSITE_OVER, (int)$xCopy, (int)$yCopy);
 
-                    if ($isObsolete && $stampObsolete) {
-                        list($xObs, $yObs) = $this->calculateStampCoordinates($posObsolete, $imgWidth, $imgHeight, $stampWidth, $stampHeight, $margin);
-                        Log::debug('Stamp OBSOLETE position (PDF)', ['pos' => $posObsolete, 'x' => $xObs, 'y' => $yObs, 'imgW' => $imgWidth, 'imgH' => $imgHeight]);
-                        $imagick->compositeImage($stampObsolete, Imagick::COMPOSITE_OVER, (int)$xObs, (int)$yObs);
+                    if ($stampObsResized) {
+                        list($xObs, $yObs) = $this->calculateStampCoordinates($posObsolete, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
+                        $imagick->compositeImage($stampObsResized, Imagick::COMPOSITE_OVER, (int)$xObs, (int)$yObs);
                     }
+                    
+                    // 5. Hancurkan (destroy) clone stempel
+                    $stampOrigResized->destroy();
+                    $stampCopyResized->destroy();
+                    if ($stampObsResized) $stampObsResized->destroy();
                 }
 
             } else {
+                // Logika yang sama untuk gambar non-PDF
                 $mainImageIndex = 0;
                 if ($imagick->getNumberImages() > 1) {
                     $maxResolution = 0;
@@ -1124,30 +1143,47 @@ class ExportController extends Controller
 
                 $imgWidth = $imagick->getImageWidth();
                 $imgHeight = $imagick->getImageHeight();
-                $margin = (int) (min($imgWidth, $imgHeight) * $marginPercent);
-                $margin = max(8, $margin);
+                $margin = max(8, (int) (min($imgWidth, $imgHeight) * $marginPercent));
 
-                if ($imgWidth < $stampWidth) {
+                // 2. Hitung ukuran stempel dinamis
+                $newStampWidth = max($minStampWidth, (int) ($imgWidth * $stampWidthPercent));
+                $newStampHeight = (int) ($newStampWidth / $stampAspectRatio);
+                
+                // 3. Clone dan resize stempel master
+                $stampOrigResized = $stampOriginal->clone();
+                $stampOrigResized->resizeImage($newStampWidth, $newStampHeight, Imagick::FILTER_LANCZOS, 1);
+                
+                $stampCopyResized = $stampCopy->clone();
+                $stampCopyResized->resizeImage($newStampWidth, $newStampHeight, Imagick::FILTER_LANCZOS, 1);
+                
+                $stampObsResized = null;
+                if ($isObsolete && $stampObsolete) {
+                    $stampObsResized = $stampObsolete->clone();
+                    $stampObsResized->resizeImage($newStampWidth, $newStampHeight, Imagick::FILTER_LANCZOS, 1);
+                }
+
+                if ($imgWidth < $newStampWidth) {
                     Log::warning('Image width is smaller than stamp width, stamp may overlap.', [
-                        'file_id' => $file->id, 'imgW' => $imgWidth, 'stampW' => $stampWidth
+                        'file_id' => $file->id, 'imgW' => $imgWidth, 'stampW' => $newStampWidth
                     ]);
                 }
 
-                list($x, $y) = $this->calculateStampCoordinates($posOriginal, $imgWidth, $imgHeight, $stampWidth, $stampHeight, $margin);
-                Log::debug('Stamp ORIGINAL position (non-PDF)', ['pos' => $posOriginal, 'x' => $x, 'y' => $y, 'imgW' => $imgWidth, 'imgH' => $imgHeight]);
-                $imagick->compositeImage($stampOriginal, Imagick::COMPOSITE_OVER, (int)$x, (int)$y);
+                // 4. Gunakan stempel yang sudah di-resize
+                list($x, $y) = $this->calculateStampCoordinates($posOriginal, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
+                $imagick->compositeImage($stampOrigResized, Imagick::COMPOSITE_OVER, (int)$x, (int)$y);
 
-                list($xCopy, $yCopy) = $this->calculateStampCoordinates($posCopy, $imgWidth, $imgHeight, $stampWidth, $stampHeight, $margin);
-                $xCopy = min($imgWidth - $stampWidth - $margin, $xCopy + $stampWidth + $margin);
-                Log::debug('Stamp COPY position (non-PDF)', ['pos' => $posCopy, 'x' => $xCopy, 'y' => $yCopy, 'imgW' => $imgWidth, 'imgH' => $imgHeight]);
-                $imagick->compositeImage($stampCopy, Imagick::COMPOSITE_OVER, (int)$xCopy, (int)$yCopy);
+                list($xCopy, $yCopy) = $this->calculateStampCoordinates($posCopy, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
+                $imagick->compositeImage($stampCopyResized, Imagick::COMPOSITE_OVER, (int)$xCopy, (int)$yCopy);
 
-                if ($isObsolete && $stampObsolete) {
-                    list($xObs, $yObs) = $this->calculateStampCoordinates($posObsolete, $imgWidth, $imgHeight, $stampWidth, $stampHeight, $margin);
-                    $xObs = max($margin, $xObs - $stampWidth - $margin);
-                    Log::debug('Stamp OBSOLETE position (non-PDF)', ['pos' => $posObsolete, 'x' => $xObs, 'y' => $yObs, 'imgW' => $imgWidth, 'imgH' => $imgHeight]);
-                    $imagick->compositeImage($stampObsolete, Imagick::COMPOSITE_OVER, (int)$xObs, (int)$yObs);
+                if ($stampObsResized) {
+                    list($xObs, $yObs) = $this->calculateStampCoordinates($posObsolete, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
+                    $imagick->compositeImage($stampObsResized, Imagick::COMPOSITE_OVER, (int)$xObs, (int)$yObs);
                 }
+                
+                // 5. Hancurkan (destroy) clone stempel
+                $stampOrigResized->destroy();
+                $stampCopyResized->destroy();
+                if ($stampObsResized) $stampObsResized->destroy();
             }
 
             $tempDir = storage_path('app/temp');
@@ -1165,6 +1201,7 @@ class ExportController extends Controller
             }
 
             $imagick->clear(); $imagick->destroy();
+            // 6. Hancurkan stempel MASTER
             $stampOriginal->clear(); $stampOriginal->destroy();
             $stampCopy->clear(); $stampCopy->destroy();
             if ($stampObsolete) { $stampObsolete->clear(); $stampObsolete->destroy(); }
@@ -1173,6 +1210,10 @@ class ExportController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Imagick stamp burn-in failed: ' . $e->getMessage(), ['file_id' => $file->id, 'path' => $originalPath]);
+            // Hancurkan master stempel jika terjadi error
+            if (isset($stampOriginal)) { $stampOriginal->clear(); $stampOriginal->destroy(); }
+            if (isset($stampCopy)) { $stampCopy->clear(); $stampCopy->destroy(); }
+            if (isset($stampObsolete) && $stampObsolete) { $stampObsolete->clear(); $stampObsolete->destroy(); }
             return $originalPath;
         }
     }

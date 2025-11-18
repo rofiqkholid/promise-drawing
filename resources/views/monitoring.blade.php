@@ -179,7 +179,6 @@
                     <p id="docCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
                 </div>
             </div>
-            <!--  -->
             <div class="absolute bottom-0 right-0">
                 <svg class="w-28 text-blue-500/20 dark:text-blue-400/10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 100 30" stroke-width="2" stroke="currentColor">
                     <path d="M0 25 L20 15 L40 20 L60 10 L80 15 L100 5" />
@@ -902,16 +901,16 @@
                     if (detailsArray.length > 0) metaDetails = `<p class="mt-2 text-sm text-gray-600 dark:text-gray-400 font-mono">${detailsArray.join(' - ')}</p>`;
                 }
                 return `<div class="py-3 px-2 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
-                            <div class="flex-shrink-0 pt-1"><i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i></div>
-                            <div class="flex-1 min-w-0">
-                                <div class="flex justify-between items-start">
-                                    <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-3 whitespace-nowrap">${fullTimestamp}</p>
-                                </div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${relativeTime}</p>
-                                ${metaDetails}
-                            </div>
-                        </div>`;
+              <div class="flex-shrink-0 pt-1"><i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i></div>
+              <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-start">
+                  <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-3 whitespace-nowrap">${fullTimestamp}</p>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${relativeTime}</p>
+                ${metaDetails}
+              </div>
+            </div>`;
             },
 
             formatTimeAgo(dateString) {
