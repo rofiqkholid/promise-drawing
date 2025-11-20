@@ -87,6 +87,11 @@ class ExportController extends Controller
             $downloadQuery->where('dsc.name', $req->category);
             $totalRevisionsQuery->where('dsc.name', $req->category);
         }
+        if ($req->filled('project_status') && $req->project_status !== 'All') {
+            $q->where('m.status_id', $req->project_status);
+            $downloadQuery->where('m.status_id', $req->project_status);
+            $totalRevisionsQuery->where('m.status_id', $req->project_status);
+        }
 
         $totalApprovedPackages = $q->count();
         $totalDownloads = $downloadQuery->count();
@@ -169,6 +174,16 @@ class ExportController extends Controller
                     $total = (clone $builder)->count();
                     $items = $builder->forPage($page, $perPage)->get();
                     break;
+
+                case 'project_status':
+                $builder = DB::table('project_status')
+                    ->selectRaw('id, name AS text')
+                    ->when($q, fn($x) => $x->where('name', 'like', "%{$q}%"))
+                    ->orderBy('name');
+
+                $total = (clone $builder)->count();
+                $items = $builder->forPage($page, $perPage)->get();
+                break;
 
                 default:
                     return response()->json(['results' => [], 'pagination' => ['more' => false]]);
@@ -275,13 +290,29 @@ class ExportController extends Controller
         if ($request->filled('category') && $request->category !== 'All') {
             $query->where('dsc.name', $request->category);
         }
+        if ($request->filled('project_status') && $request->project_status !== 'All') {
+            $query->where('m.status_id', $request->project_status);
+        }
 
         if (!empty($searchValue)) {
             $query->where(function ($q) use ($searchValue) {
-                $q->where('c.code', 'like', "%{$searchValue}%")
-                    ->orWhere('m.name', 'like', "%{$searchValue}%")
-                    ->orWhere('p.part_no', 'like', "%{$searchValue}%")
-                    ->orWhere('dsc.name', 'like', "%{$searchValue}%");
+                $q->where('c.code', 'like', "%{$searchValue}%")         // Customer
+                    ->orWhere('m.name', 'like', "%{$searchValue}%")     // Model
+                    ->orWhere('p.part_no', 'like', "%{$searchValue}%")  // Part No
+                    ->orWhere('dsc.name', 'like', "%{$searchValue}%")   // Category
+                    ->orWhere('pg.code_part_group', 'like', "%{$searchValue}%") // Part Group
+                    ->orWhere('dpr.ecn_no', 'like', "%{$searchValue}%")
+                    ->orWhere('dpr.revision_no', 'like', "%{$searchValue}%")
+
+                    ->orWhereExists(function ($subQuery) use ($searchValue) {
+                        $subQuery->select(DB::raw(1))
+                            ->from('doc_package_revisions as history_rev')
+                            ->whereColumn('history_rev.package_id', 'dpr.package_id')
+                            ->where(function ($deepGroup) use ($searchValue) {
+                                $deepGroup->where('history_rev.ecn_no', 'like', "%{$searchValue}%")
+                                        ->orWhere('history_rev.revision_no', 'like', "%{$searchValue}%");
+                            });
+                    });
             });
         }
 
@@ -592,7 +623,7 @@ class ExportController extends Controller
 
         $fileRows = DB::table('doc_package_revision_files')
             ->where('revision_id', $decrypted_id)
-            ->select('id', 'filename as name', 'category', 'storage_path', 'ori_position', 'copy_position', 'obslt_position')
+            ->select('id', 'filename as name', 'category', 'storage_path', 'file_size', 'ori_position', 'copy_position', 'obslt_position')
             ->get();
 
         $extList = $fileRows
@@ -627,6 +658,7 @@ class ExportController extends Controller
                         'ori_position' => $item->ori_position,
                         'copy_position' => $item->copy_position,
                         'obslt_position' => $item->obslt_position,
+                        'size'          => $item->file_size,
                     ];
                 });
             })
@@ -1038,24 +1070,33 @@ class ExportController extends Controller
         return [$x, $y];
     }
 
-    private function _createStampImage(string $centerText, string $topLine, string $bottomLine): ?Imagick
+    private function _createStampImage(string $centerText, string $topLine, string $bottomLine, string $colorMode = 'blue'): ?\Imagick
     {
         try {
-            $stamp = new Imagick();
+            $stamp = new \Imagick();
             $canvasWidth = 336;
             $canvasHeight = 120;
 
-            $stamp->newImage($canvasWidth, $canvasHeight, new ImagickPixel('transparent'));
+            $stamp->newImage($canvasWidth, $canvasHeight, new \ImagickPixel('transparent'));
             $stamp->setImageFormat('png');
 
-            $draw = new ImagickDraw();
+            $draw = new \ImagickDraw();
 
             $opacity = 0.85;
-            $borderColor = new ImagickPixel("rgba(37, 99, 235, $opacity)");
-            $textColor = new ImagickPixel("rgba(29, 78, 216, $opacity)");
+
+            // --- LOGIKA WARNA (BLUE vs RED) ---
+            if ($colorMode === 'red') {
+                // Warna Merah untuk Obsolete
+                $borderColor = new \ImagickPixel("rgba(220, 38, 38, $opacity)"); // Red-600
+                $textColor   = new \ImagickPixel("rgba(185, 28, 28, $opacity)"); // Red-700
+            } else {
+                // Warna Biru Default (Original/Copy)
+                $borderColor = new \ImagickPixel("rgba(37, 99, 235, $opacity)"); // Blue-600
+                $textColor   = new \ImagickPixel("rgba(29, 78, 216, $opacity)"); // Blue-700
+            }
 
             $font = null;
-            $fontsToTry = [ 'DejaVu-Sans', 'Arial', 'Helvetica', 'Verdana', 'Tahoma', 'sans-serif' ];
+            $fontsToTry = ['DejaVu-Sans', 'Arial', 'Helvetica', 'Verdana', 'Tahoma', 'sans-serif'];
             foreach ($fontsToTry as $fontName) {
                 try {
                     $draw->setFont($fontName);
@@ -1063,25 +1104,26 @@ class ExportController extends Controller
                     break;
                 } catch (\Exception $e) { continue; }
             }
-            if ($font) { $draw->setFont($font); }
 
             $draw->setStrokeColor($borderColor);
-            $draw->setFillColor(new ImagickPixel('transparent'));
+            $draw->setFillColor(new \ImagickPixel('transparent'));
             $draw->setStrokeWidth(3);
-            $draw->roundRectangle(2, 2, $canvasWidth - 2, $canvasHeight - 2, 6, 6);
+
+            $draw->roundRectangle(2, 2, $canvasWidth - 2, $canvasHeight - 2, 2, 2);
+
             $draw->line(2, 36, $canvasWidth - 2, 36);
             $draw->line(2, 84, $canvasWidth - 2, 84);
             $stamp->drawImage($draw);
 
+            // Setting Text Color
             $draw->setFillColor($textColor);
-            $draw->setTextAlignment(Imagick::ALIGN_LEFT);
-            $x_center_canvas = $canvasWidth / 2; // 168
+            $draw->setTextAlignment(\Imagick::ALIGN_LEFT);
+            $x_center_canvas = $canvasWidth / 2;
 
             // Teks Atas (Top Line)
             $draw->setFontSize(16);
             $draw->setFontWeight(600);
             $draw->setStrokeWidth(0);
-            // Hitung metrik
             $metricsTop = $stamp->queryFontMetrics($draw, $topLine);
             $x_top = $x_center_canvas - ($metricsTop['textWidth'] / 2);
             $y_top = 27;
@@ -1091,7 +1133,6 @@ class ExportController extends Controller
             $draw->setFontSize(16);
             $draw->setFontWeight(400);
             $draw->setStrokeWidth(0);
-            // Hitung metrik
             $metricsBottom = $stamp->queryFontMetrics($draw, $bottomLine);
             $x_bottom = $x_center_canvas - ($metricsBottom['textWidth'] / 2);
             $y_bottom = 108;
@@ -1100,13 +1141,12 @@ class ExportController extends Controller
             // Teks Tengah (Center Text)
             $draw->setFontSize(21);
             $draw->setFontWeight(900);
-            $draw->setStrokeColor($textColor); // Faux-bold
+            $draw->setStrokeColor($textColor);
             $draw->setStrokeWidth(0.75);
             $metricsCenter = $stamp->queryFontMetrics($draw, $centerText);
             $x_center = $x_center_canvas - ($metricsCenter['textWidth'] / 2);
             $y_center = ($canvasHeight / 2) + ($metricsCenter['textHeight'] / 3);
             $stamp->annotateImage($draw, $x_center, $y_center, 0, $centerText);
-
 
             $draw->clear();
             $draw->destroy();
@@ -1114,7 +1154,7 @@ class ExportController extends Controller
             return $stamp;
 
         } catch (\Exception $e) {
-            Log::error('Failed to create stamp image with Imagick: ' . $e->getMessage());
+            Log::error('Failed to create stamp image: ' . $e->getMessage());
             return null;
         }
     }
@@ -1126,19 +1166,18 @@ class ExportController extends Controller
         }
 
         try {
+            // Helper Format Tanggal (Lokal)
             $formatSaiDate = function ($dateInput) {
                 if (!$dateInput) return '-';
                 try {
                     $d = Carbon::parse($dateInput);
                     $day = $d->day;
-                    // Logika Suffix (st, nd, rd, th)
                     if (in_array($day % 100, [11, 12, 13], true)) {
                         $suffixRaw = 'th';
                     } else {
                         $last = $day % 10;
                         $suffixRaw = match ($last) { 1 => 'st', 2 => 'nd', 3 => 'rd', default => 'th' };
                     }
-                    // Unicode Superscript
                     $superscripts = ['st' => 'ˢᵗ', 'nd' => 'ⁿᵈ', 'rd' => 'ʳᵈ', 'th' => 'ᵗʰ'];
                     $suffix = $superscripts[$suffixRaw] ?? $suffixRaw;
                     return $d->format('M') . '.' . $day . $suffix . ' ' . $d->format('Y');
@@ -1164,6 +1203,7 @@ class ExportController extends Controller
                 $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
                 if ($dept && isset($dept->code)) $deptCode = $dept->code;
             }
+
             $topLineCopy = "SAI / {$deptCode} / {$datePart} {$timePart}";
 
             $userName = '--';
@@ -1172,14 +1212,15 @@ class ExportController extends Controller
             }
             $bottomLineCopy = "DOWNLOADED BY {$userName}";
 
-            // --- POSISI STAMP (DEFINISI DI SCOPE INDUK) ---
+            // --- POSISI STAMP ---
             $posOriginal = $this->positionIntToKey($file->ori_position ?? 2, 'bottom-right');
             $posCopy     = $this->positionIntToKey($file->copy_position ?? 1, 'bottom-center');
             $posObsolete = $this->positionIntToKey($file->obslt_position ?? 0, 'bottom-left');
 
             // --- GENERATE MASTER GAMBAR ---
-            $stampOriginal = $this->_createStampImage('SAI-DRAWING ORIGINAL', $topLine, $bottomLine);
-            $stampCopy     = $this->_createStampImage('SAI-DRAWING CONTROL COPY', $topLineCopy, $bottomLineCopy);
+            // Original & Copy (Default Blue)
+            $stampOriginal = $this->_createStampImage('SAI-DRAWING ORIGINAL', $topLine, $bottomLine, 'blue');
+            $stampCopy     = $this->_createStampImage('SAI-DRAWING CONTROLLED COPY', $topLineCopy, $bottomLineCopy, 'blue');
             $stampObsolete = null;
 
             $isObsolete = (bool)($revision->is_obsolete ?? 0);
@@ -1198,8 +1239,17 @@ class ExportController extends Controller
                         }
                     }
                 }
+                if ($obsName === '-') {
+                     $lastReject = DB::table('package_approvals')->where('revision_id', $revision->id)->where('decision', 'rejected')->orderByDesc('id')->first();
+                     if ($lastReject && $lastReject->decided_by) {
+                         $u = DB::table('users')->where('id', $lastReject->decided_by)->first();
+                         if ($u) { $obsName = $u->name; $d = DB::table('departments')->where('id', $u->id_dept)->value('code'); $obsDept = $d ?? '-'; }
+                     }
+                }
+
                 $bottomLineObsolete = "Nama : {$obsName}          Dept. : {$obsDept}";
-                $stampObsolete = $this->_createStampImage('SAI-DRAWING OBSOLETE', $topLineObsolete, $bottomLineObsolete);
+
+                $stampObsolete = $this->_createStampImage('SAI-DRAWING OBSOLETE', $topLineObsolete, $bottomLineObsolete, 'red');
             }
 
             if (!$stampOriginal || !$stampCopy) {
@@ -1207,12 +1257,12 @@ class ExportController extends Controller
                 return $originalPath;
             }
 
-            // PROSES IMAGICK
+            // 3. Proses Imagick
             $masterStampWidth = $stampOriginal->getImageWidth();
             $masterStampHeight = $stampOriginal->getImageHeight();
             $stampAspectRatio = $masterStampWidth / $masterStampHeight;
 
-            $imagick = new Imagick();
+            $imagick = new \Imagick();
             $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
             $isPdf = ($ext === 'pdf');
 
@@ -1229,7 +1279,7 @@ class ExportController extends Controller
             $processPage = function($iteratorIndex) use (
                 $imagick, $stampOriginal, $stampCopy, $stampObsolete, $isObsolete, $file,
                 $stampAspectRatio, $marginPercent, $stampWidthPercent, $minStampWidth,
-                $posOriginal, $posCopy, $posObsolete,
+                $posOriginal, $posCopy, $posObsolete // <--- Variabel Scope Aman
             ) {
                 $imagick->setIteratorIndex($iteratorIndex);
                 $imgWidth = $imagick->getImageWidth();
@@ -1241,27 +1291,27 @@ class ExportController extends Controller
 
                 // Resize Stamps
                 $stampOrigResized = $stampOriginal->clone();
-                $stampOrigResized->resizeImage($newStampWidth, $newStampHeight, Imagick::FILTER_LANCZOS, 1);
+                $stampOrigResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
 
                 $stampCopyResized = $stampCopy->clone();
-                $stampCopyResized->resizeImage($newStampWidth, $newStampHeight, Imagick::FILTER_LANCZOS, 1);
+                $stampCopyResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
 
                 $stampObsResized = null;
                 if ($isObsolete && $stampObsolete) {
                     $stampObsResized = $stampObsolete->clone();
-                    $stampObsResized->resizeImage($newStampWidth, $newStampHeight, Imagick::FILTER_LANCZOS, 1);
+                    $stampObsResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
                 }
 
                 // Composite Stamps
                 list($x, $y) = $this->calculateStampCoordinates($posOriginal, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
-                $imagick->compositeImage($stampOrigResized, Imagick::COMPOSITE_OVER, (int)$x, (int)$y);
+                $imagick->compositeImage($stampOrigResized, \Imagick::COMPOSITE_OVER, (int)$x, (int)$y);
 
                 list($xCopy, $yCopy) = $this->calculateStampCoordinates($posCopy, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
-                $imagick->compositeImage($stampCopyResized, Imagick::COMPOSITE_OVER, (int)$xCopy, (int)$yCopy);
+                $imagick->compositeImage($stampCopyResized, \Imagick::COMPOSITE_OVER, (int)$xCopy, (int)$yCopy);
 
                 if ($stampObsResized) {
                     list($xObs, $yObs) = $this->calculateStampCoordinates($posObsolete, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
-                    $imagick->compositeImage($stampObsResized, Imagick::COMPOSITE_OVER, (int)$xObs, (int)$yObs);
+                    $imagick->compositeImage($stampObsResized, \Imagick::COMPOSITE_OVER, (int)$xObs, (int)$yObs);
                     $stampObsResized->destroy();
                 }
 
@@ -1276,7 +1326,6 @@ class ExportController extends Controller
                     $processPage($i);
                 }
             } else {
-                // Logic untuk gambar non-PDF (Cari resolusi terbesar)
                 $mainImageIndex = 0;
                 if ($imagick->getNumberImages() > 1) {
                     $maxResolution = 0;

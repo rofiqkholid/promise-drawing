@@ -212,7 +212,11 @@ class DashboardController extends Controller
 
         $query = DB::connection('sqlsrv')
             ->table('models')
-            ->select('id', 'name');
+            ->select('id', 'name', 'customer_id');
+
+        if ($request->filled('customer_ids')) {
+            $query->whereIn('customer_id', $request->customer_ids);
+        }
 
         if ($searchTerm) {
             $query->where('name', 'LIKE', '%' . $searchTerm . '%');
@@ -228,7 +232,8 @@ class DashboardController extends Controller
         $formattedResults = $models->map(function ($model) {
             return [
                 'id' => $model->id,
-                'text' => $model->name
+                'text' => $model->name,
+                'customer_id' => $model->customer_id
             ];
         });
 
@@ -381,7 +386,8 @@ class DashboardController extends Controller
                 'part_group',
                 'plan_count',
                 'actual_count',
-                'created_at'
+                'created_at',
+                'project_status'
             );
 
         if ($request->filled('date_start') && $request->filled('date_end')) {
@@ -391,17 +397,18 @@ class DashboardController extends Controller
             ]);
         }
 
-        // Filter Customer (Array)
+        if ($request->filled('project_status') && $request->project_status !== 'ALL') {
+            $query->where('project_status', $request->project_status);
+        }
+
         if ($request->filled('customer')) {
             $query->whereIn('customer_name', $request->customer);
         }
 
-        // Filter Model (Array)
         if ($request->filled('model')) {
             $query->whereIn('model_name', $request->model);
         }
 
-        // Filter Part Group (Array)
         if ($request->filled('part_group')) {
             $query->whereIn('part_group', $request->part_group);
         }

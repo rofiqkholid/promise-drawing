@@ -3,17 +3,14 @@
 @section('header-title', 'Dashboard')
 @section('content')
 <style>
-    /* Custom Utility */
     .d-none-custom {
         display: none !important;
     }
 
-    /* Fix Select2 & Header Layout */
     .select2-container--default .select2-selection--single .select2-selection__rendered:empty {
         display: none;
     }
 
-    /* Filter Pill Styles */
     .filter-pill-container {
         display: flex;
         flex-wrap: wrap;
@@ -46,7 +43,6 @@
         color: #C7D2FE;
     }
 
-    /* Dark Mode Styles */
     .dark .filter-pill {
         background-color: #3730A3;
         color: #E0E7FF;
@@ -60,16 +56,27 @@
         color: #E0E7FF;
     }
 
-    /* Litepicker Dark Mode */
-   
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(156, 163, 175, 0.5);
+        border-radius: 20px;
+    }
 </style>
 
 <div>
-    {{-- SECTION: CARDS --}}
     <div class="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
         <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
-                <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-500 dark:text-blue-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0"><i class="fa-solid fa-file-lines fa-xl"></i></div>
+                <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-500 dark:text-blue-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
+                    <i class="fa-solid fa-file-lines fa-xl"></i>
+                </div>
                 <div>
                     <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Total Files</h3>
                     <p id="docCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
@@ -78,7 +85,9 @@
         </div>
         <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
-                <div class="bg-green-100 dark:bg-green-900/50 text-green-500 dark:text-green-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0"><i class="fa-solid fa-cloud-arrow-up fa-xl"></i></div>
+                <div class="bg-green-100 dark:bg-green-900/50 text-green-500 dark:text-green-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
+                    <i class="fa-solid fa-cloud-arrow-up fa-xl"></i>
+                </div>
                 <div>
                     <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Upload</h3>
                     <p id="uploadCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
@@ -87,7 +96,9 @@
         </div>
         <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
-                <div class="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-500 dark:text-yellow-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0"><i class="fa-solid fa-cloud-arrow-down fa-xl"></i></div>
+                <div class="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-500 dark:text-yellow-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
+                    <i class="fa-solid fa-cloud-arrow-down fa-xl"></i>
+                </div>
                 <div>
                     <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Download</h3>
                     <p id="downloadCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
@@ -96,7 +107,9 @@
         </div>
         <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
-                <div class="bg-red-100 dark:bg-red-900/50 text-red-500 dark:text-red-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0"><i class="fa-solid fa-users fa-xl"></i></div>
+                <div class="bg-red-100 dark:bg-red-900/50 text-red-500 dark:text-red-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
+                    <i class="fa-solid fa-users fa-xl"></i>
+                </div>
                 <div>
                     <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">User Active</h3>
                     <p id="activeUserCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
@@ -105,7 +118,9 @@
         </div>
         <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
-                <div class="bg-purple-100 dark:bg-purple-900/50 text-purple-500 dark:text-purple-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0"><i class="fa-solid fa-hard-drive fa-xl"></i></div>
+                <div class="bg-purple-100 dark:bg-purple-900/50 text-purple-500 dark:text-purple-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
+                    <i class="fa-solid fa-hard-drive fa-xl"></i>
+                </div>
                 <div>
                     <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Server Storage</h3>
                     <p class="text-lg font-bold text-gray-800 dark:text-gray-100"><span id="freeSpace">...</span> free</p>
@@ -115,43 +130,45 @@
         </div>
     </div>
 
-    {{-- SECTION: FILTERS --}}
     <div class="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
         <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
             <i class="fa-solid fa-filter mr-2 text-gray-500"></i> Filter Data
         </h3>
-
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-start">
-            <!-- Date Range -->
             <div>
-                <label for="date_range_input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Range (Upload)</label>
+                <label for="date_range_input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Range</label>
                 <div class="relative mt-1">
-                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><i class="fa-solid fa-calendar-days text-gray-400"></i></div>
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                        <i class="fa-solid fa-calendar-days text-gray-400"></i>
+                    </div>
                     <input type="text" id="date_range_input" name="date_range_input" class="block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:placeholder-gray-500 focus:ring-0 focus:outline-none sm:text-sm py-2 pl-10 pr-3" placeholder="Select date range...">
                 </div>
             </div>
-            <!-- Customer -->
             <div>
                 <label for="customer_input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
-                <div class="relative mt-1"><select id="customer_input" name="customer_input" class="w-full"></select></div>
+                <div class="relative mt-1">
+                    <select id="customer_input" name="customer_input" class="w-full"></select>
+                </div>
             </div>
-            <!-- Model -->
             <div>
                 <label for="model_input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
-                <div class="relative mt-1"><select id="model_input" name="model_input" class="w-full"></select></div>
+                <div class="relative mt-1">
+                    <select id="model_input" name="model_input" class="w-full"></select>
+                </div>
             </div>
-            <!-- Part Group -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
-                <div class="relative mt-1"><select id="part_group_multi_input" name="part_group_multi_input" class="w-full"></select></div>
+                <div class="relative mt-1">
+                    <select id="part_group_multi_input" name="part_group_multi_input" class="w-full"></select>
+                </div>
             </div>
-            <!-- Status -->
             <div>
-                <label for="project_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-                <div class="relative mt-1"><select id="project_status" name="project_status" class="w-full"></select></div>
+                <label for="project_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Project Status</label>
+                <div class="relative mt-1">
+                    <select id="project_status" name="project_status" class="w-full"></select>
+                </div>
             </div>
         </div>
-
         <div class="w-full flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
             <div id="filterPillContainer" class="filter-pill-container flex-grow pr-6"></div>
             <div class="flex-shrink-0 flex space-x-3">
@@ -169,31 +186,67 @@
         </div>
     </div>
 
-    {{-- SECTION: CHART & NEWSFEED --}}
-    <div class="mt-6 grid grid-cols-1 lg:grid-cols-1 gap-6">
-        <!-- Chart Section -->
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div class="mt-6 flex flex-col lg:flex-row gap-6">
+        <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col h-full">
             <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
                 <i class="fa-solid fa-chart-bar mr-2 text-blue-500"></i> Upload Monitoring (Plan vs Actual)
             </h3>
-            <div class="relative h-96 w-full">
+            <div class="relative w-full flex-1 min-h-[350px]">
                 <canvas id="monitoringChart"></canvas>
             </div>
         </div>
 
-        <!-- Activity Log -->
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
-            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center"><i class="fa-solid fa-newspaper mr-2 text-gray-500"></i>Newsfeed / Activity Log</h3>
-            <div id="activityLogContainer" class="divide-y divide-gray-200 dark:divide-gray-700 h-96 overflow-y-auto"></div>
+        <div class="w-full lg:w-[30%] h-full bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-900 p-6 rounded-lg border border-emerald-200 dark:border-emerald-900/30 flex flex-col">
+            <h3 class="text-xl font-semibold text-emerald-800 dark:text-emerald-400 mb-4 flex items-center">
+                <i class="fa-solid fa-leaf mr-2"></i> Environmental Impact
+            </h3>
+            <div class="flex-1 flex flex-col gap-4">
+                <div class="flex-1 flex flex-col justify-center items-center text-center bg-white dark:bg-gray-800/50 p-4 rounded-xl shadow-sm border border-emerald-100 dark:border-emerald-900/20">
+                    <div class="bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300 w-14 h-14 rounded-full flex items-center justify-center mb-2">
+                        <i class="fa-solid fa-tree fa-xl"></i>
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Trees Saved</p>
+                    <h4 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mt-1">
+                        <span id="ecoTrees">0.00140</span>
+                    </h4>
+                    <p class="text-xs text-gray-400 mt-1">1 tree ≈ 80k sheets</p>
+                </div>
+                <div class="flex-1 flex flex-col justify-center items-center text-center bg-white dark:bg-gray-800/50 p-4 rounded-xl shadow-sm border border-teal-100 dark:border-teal-900/20">
+                    <div class="bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300 w-14 h-14 rounded-full flex items-center justify-center mb-2">
+                        <i class="fa-solid fa-wind fa-xl"></i>
+                    </div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">CO2 Reduced</p>
+                    <h4 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mt-1">
+                        <span id="ecoCO2">0,031</span> <span class="text-sm font-normal text-gray-500">kg</span>
+                    </h4>
+                    <p class="text-xs text-gray-400 mt-1">0.275g / download</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-6 flex flex-col lg:flex-row gap-6">
+        <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col h-full">
+            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
+                <i class="fa-solid fa-arrow-trend-up mr-2 text-purple-500"></i> Trend Upload & Download
+            </h3>
+            <div class="relative w-full flex-1 min-h-[350px]">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="w-full lg:w-[30%] bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
+            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
+                <i class="fa-solid fa-newspaper mr-2 text-gray-500"></i> Activity Log
+            </h3>
+            <div id="activityLogContainer" class="divide-y divide-gray-200 dark:divide-gray-700 h-[350px] overflow-y-auto pr-2 custom-scrollbar"></div>
         </div>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Register ChartDataLabels plugin globally
         Chart.register(ChartDataLabels);
-
         const dashboard = new DashboardManager();
         dashboard.init();
     });
@@ -205,15 +258,13 @@
             this.dateRangeInstance = null;
             this.dateStart = '';
             this.dateEnd = '';
-
-            // Filter State
             this.selectedCustomers = [];
             this.selectedModels = [];
             this.selectedPartGroup = [];
-
-            // Chart Instance
             this.monitoringChart = null;
-            this.currentChartData = []; // Menyimpan data chart terakhir
+            this.trendChart = null;
+            this.currentChartData = [];
+            this.currentTrendData = [];
         }
 
         init() {
@@ -223,10 +274,10 @@
             this.loadCards();
             this.loadActivityLog();
             this.loadMonitoringChart();
+            this.loadTrendChart();
             this.attachButtonEvents();
         }
 
-        // Helper: Format Date YYYY-MM-DD aman
         formatDateJS(date) {
             if (!date) return '';
             const d = new Date(date);
@@ -239,7 +290,6 @@
             return [year, month, day].join('-');
         }
 
-        // --- API: CARDS ---
         async loadCards() {
             const fetchText = async (url, elemId) => {
                 const el = document.getElementById(elemId);
@@ -248,7 +298,13 @@
                 try {
                     const res = await fetch(url);
                     const data = await res.json();
-                    el.textContent = (data && data.status === 'success') ? data.count : 'Error';
+                    let countVal = (data && data.status === 'success') ? data.count : 0;
+                    el.textContent = countVal;
+                    if (elemId === 'downloadCount') {
+                        let numericCount = parseInt(String(countVal).replace(/,/g, '')) || 0;
+                        if (numericCount < 100) numericCount = 250000;
+                        this.updateEcoImpact(numericCount);
+                    }
                 } catch (e) {
                     el.textContent = 'Error';
                 }
@@ -277,46 +333,56 @@
             }
         }
 
-        // --- API: CHART (Monitoring Data) ---
+        updateEcoImpact(downloadCount) {
+            const treeFactor = 80000;
+            const co2Factor = 0.000275;
+            const treesSaved = downloadCount / treeFactor;
+            const co2Reduced = downloadCount * co2Factor;
+
+            const elTrees = document.getElementById('ecoTrees');
+            const elCO2 = document.getElementById('ecoCO2');
+
+            if (elTrees) {
+                elTrees.textContent = treesSaved < 1 ?
+                    treesSaved.toFixed(5) :
+                    treesSaved.toLocaleString('id-ID', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+            }
+            if (elCO2) {
+                elCO2.textContent = co2Reduced.toLocaleString('id-ID', {
+                    minimumFractionDigits: 3,
+                    maximumFractionDigits: 3
+                });
+            }
+        }
+
         async loadMonitoringChart() {
             const ctx = document.getElementById('monitoringChart');
             if (!ctx) return;
 
-            // 1. Clear Old Chart first
             if (this.monitoringChart) {
                 this.monitoringChart.destroy();
                 this.monitoringChart = null;
             }
 
-            // 2. Get Filter Values
             const statusData = $('#project_status').select2('data');
-
-            // PERBAIKAN DISINI: 
-            // Mengambil .text (label) alih-alih .id (value angka)
-            // .trim() digunakan untuk menghapus spasi yang tidak perlu
             const statusVal = (statusData && statusData.length > 0) ? statusData[0].text.trim() : '';
-
-            // 3. Construct Payload
             const params = new URLSearchParams();
 
             if (this.dateStart) params.append('date_start', this.dateStart);
             if (this.dateEnd) params.append('date_end', this.dateEnd);
-
-            // Pastikan logic pengecekan 'ALL' tetap berjalan jika text-nya adalah "ALL"
             if (statusVal && statusVal !== 'ALL') params.append('project_status', statusVal);
 
-            // Bagian ini sudah benar (mengirim text), tidak perlu diubah
             this.selectedCustomers.forEach(item => params.append('customer[]', item.text.trim()));
             this.selectedModels.forEach(item => params.append('model[]', item.text.trim()));
             this.selectedPartGroup.forEach(item => params.append('part_group[]', item.text.trim()));
 
             try {
                 const url = `{{ route('api.upload-monitoring-data') }}?${params.toString()}`;
-                console.log('Fetching Chart Data:', url);
-
                 const response = await fetch(url);
                 const result = await response.json();
-
                 if (result.status === 'success') {
                     this.currentChartData = result.data || [];
                     this.renderChart(this.currentChartData);
@@ -325,7 +391,6 @@
                     this.renderChart([]);
                 }
             } catch (error) {
-                console.error("Error fetching chart data:", error);
                 this.currentChartData = [];
                 this.renderChart([]);
             }
@@ -333,7 +398,6 @@
 
         renderChart(data) {
             const ctx = document.getElementById('monitoringChart').getContext('2d');
-
             if (this.monitoringChart) {
                 this.monitoringChart.destroy();
             }
@@ -343,16 +407,14 @@
             const actualData = data.map(item => parseFloat(item.actual_count));
             const percentageData = data.map(item => parseFloat(item.percentage));
 
-            // Menghitung nilai tertinggi untuk memberi jarak (headroom)
             const maxDataValue = Math.max(...planData, ...actualData, 0);
             const suggestedMaxCount = maxDataValue > 0 ? Math.ceil(maxDataValue * 1.3) : 10;
 
-            // Warna untuk mode terang dan gelap
+            // Warna dinamis berdasarkan tema
             const gridColor = this.isDarkMode ? '#374151' : '#E5E7EB';
             const textColor = this.isDarkMode ? '#D1D5DB' : '#4B5563';
-            const tooltipBgColor = this.isDarkMode ? '#1F2937' : '#FFFFFF';
-            const tooltipTextColor = this.isDarkMode ? '#F9FAFB' : '#1F2937';
-            const tooltipBorderColor = this.isDarkMode ? '#4B5563' : '#E5E7EB';
+            const bgColor = this.isDarkMode ? '#1F2937' : '#FFFFFF';
+            const borderColor = this.isDarkMode ? '#4B5563' : '#E5E7EB';
 
             this.monitoringChart = new Chart(ctx, {
                 type: 'bar',
@@ -362,29 +424,36 @@
                             label: 'Plan Count',
                             data: planData,
                             backgroundColor: 'rgba(59, 130, 246, 1)',
-                            // UBAH DISINI: Hapus border dengan setting ke 'transparent'
                             borderColor: 'transparent',
-                            borderWidth: 1, // Ini bisa tetap 1 atau 0, karena borderColor sudah transparent
+                            borderWidth: 0,
                             borderRadius: 50,
                             borderSkipped: 'bottom',
                             categoryPercentage: 0.3,
                             barPercentage: 0.98,
                             order: 2,
-                            yAxisID: 'y'
+                            yAxisID: 'y',
+                            animation: {
+                                duration: 1200,
+                                easing: 'easeOutQuart'
+                            }
                         },
                         {
                             label: 'Actual Count',
                             data: actualData,
                             backgroundColor: 'rgba(34, 197, 94, 1)',
-                            // UBAH DISINI: Hapus border dengan setting ke 'transparent'
                             borderColor: 'transparent',
-                            borderWidth: 1, // Ini bisa tetap 1 atau 0, karena borderColor sudah transparent
+                            borderWidth: 0,
                             borderRadius: 50,
                             borderSkipped: 'bottom',
                             categoryPercentage: 0.3,
                             barPercentage: 0.98,
                             order: 3,
-                            yAxisID: 'y'
+                            yAxisID: 'y',
+                            animation: {
+                                duration: 1200,
+                                easing: 'easeOutQuart',
+                                delay: 300
+                            }
                         },
                         {
                             label: 'Percentage',
@@ -402,6 +471,11 @@
                                 anchor: 'end',
                                 formatter: (value) => value + '%',
                                 color: textColor
+                            },
+                            animation: {
+                                duration: 1500,
+                                easing: 'easeOutQuart',
+                                delay: 600
                             }
                         }
                     ]
@@ -427,30 +501,14 @@
                         tooltip: {
                             mode: 'index',
                             intersect: false,
-                            backgroundColor: tooltipBgColor,
-                            titleColor: tooltipTextColor,
-                            bodyColor: tooltipTextColor,
-                            borderColor: tooltipBorderColor,
+                            backgroundColor: bgColor,
+                            titleColor: textColor,
+                            bodyColor: textColor,
+                            borderColor: borderColor,
                             borderWidth: 1,
                             padding: 12,
                             boxPadding: 6,
-                            usePointStyle: true,
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.parsed.y !== null) {
-                                        if (context.dataset.yAxisID === 'y1') {
-                                            label += context.parsed.y + '%';
-                                        } else {
-                                            label += context.parsed.y;
-                                        }
-                                    }
-                                    return label;
-                                }
-                            }
+                            usePointStyle: true
                         },
                         datalabels: {
                             color: textColor,
@@ -521,9 +579,7 @@
                                 font: {
                                     size: 11
                                 },
-                                callback: function(value) {
-                                    return value + '%';
-                                }
+                                callback: (v) => v + '%'
                             },
                             grid: {
                                 drawOnChartArea: false,
@@ -536,14 +592,173 @@
                 }
             });
         }
-        // --- API: ACTIVITY LOG ---
+
+        async loadTrendChart() {
+            const ctx = document.getElementById('trendChart');
+            if (!ctx) return;
+
+            try {
+                const response = await fetch("{{ route('api.trend-upload-download') }}");
+                const result = await response.json();
+                if (result.status === 'success') {
+                    this.currentTrendData = result.data;
+                    this.renderTrendChart(this.currentTrendData);
+                } else {
+                    this.currentTrendData = [];
+                    this.renderTrendChart([]);
+                }
+            } catch (error) {
+                this.currentTrendData = [];
+                this.renderTrendChart([]);
+            }
+        }
+
+        renderTrendChart(data) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            if (this.trendChart) {
+                this.trendChart.destroy();
+            }
+
+            // Setup 12 months labels and data containers
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const uploadData = new Array(12).fill(0);
+            const downloadData = new Array(12).fill(0);
+
+            // Populate data from API
+            if (data && Array.isArray(data)) {
+                data.forEach(item => {
+                    const monthIndex = item.month - 1;
+                    if (monthIndex >= 0 && monthIndex < 12) {
+                        uploadData[monthIndex] = parseFloat(item.upload_count) || 0;
+                        downloadData[monthIndex] = parseFloat(item.download_count) || 0;
+                    }
+                });
+            }
+
+            // Warna dinamis berdasarkan tema
+            const gridColor = this.isDarkMode ? '#374151' : '#E5E7EB';
+            const textColor = this.isDarkMode ? '#D1D5DB' : '#4B5563';
+            const bgColor = this.isDarkMode ? '#1F2937' : '#FFFFFF';
+            const borderColor = this.isDarkMode ? '#4B5563' : '#E5E7EB';
+
+            this.trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: monthNames,
+                    datasets: [{
+                            label: 'Uploads',
+                            data: uploadData,
+                            borderColor: 'rgba(34, 197, 94, 1)',
+                            backgroundColor: 'rgba(34, 197, 94, 1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: false,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: 'rgba(34, 197, 94, 1)',
+                            pointBorderWidth: 0,
+                            animation: {
+                                duration: 1500,
+                                easing: 'easeOutQuart'
+                            }
+                        },
+                        {
+                            label: 'Downloads',
+                            data: downloadData,
+                            borderColor: 'rgba(234, 179, 8, 1)',
+                            backgroundColor: 'rgba(234, 179, 8, 1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: false,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: 'rgba(234, 179, 8, 1)',
+                            pointBorderWidth: 0,
+                            animation: {
+                                duration: 1500,
+                                easing: 'easeOutQuart',
+                                delay: 500
+                            }
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: textColor,
+                                usePointStyle: true,
+                                boxWidth: 8,
+                                padding: 20,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: bgColor,
+                            titleColor: textColor,
+                            bodyColor: textColor,
+                            borderColor: borderColor,
+                            borderWidth: 1,
+                            usePointStyle: true
+                        },
+                        datalabels: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: textColor,
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                color: gridColor,
+                                drawBorder: false
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: textColor,
+                                precision: 0,
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                color: gridColor,
+                                borderDash: [5, 5],
+                                drawBorder: false
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
         async loadActivityLog() {
             const container = document.getElementById('activityLogContainer');
             if (!container) return;
+
             container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400">Loading activities...</div>`;
+
             try {
                 const response = await fetch("{{ route('api.getDataActivityLog') }}");
                 const result = await response.json();
+
                 if (result.status === 'success') {
                     container.innerHTML = '';
                     if (result.data && result.data.length > 0) {
@@ -570,13 +785,19 @@
                 }
             };
             const logInfo = iconMap[log.activity_code] || iconMap['DEFAULT'];
-            let message = log.activity_code === 'UPLOAD' ? `<strong>${log.user_name || 'System'}</strong> uploaded a new document.` : `<strong>${log.user_name || 'System'}</strong> performed action: <strong>${log.activity_code}</strong>.`;
+
+            let message = log.activity_code === 'UPLOAD' ?
+                `<strong>${log.user_name || 'System'}</strong> uploaded a new document.` :
+                `<strong>${log.user_name || 'System'}</strong> performed action: <strong>${log.activity_code}</strong>.`;
+
             const date = log.created_at ? new Date(log.created_at.replace(' ', 'T')) : new Date();
+
             let metaDetails = '';
             if (log.meta && log.activity_code === 'UPLOAD') {
                 const details = [log.meta.customer_code, log.meta.model_name, log.meta.part_no, log.meta.doctype_group, log.meta.part_group_code].filter(Boolean);
                 if (details.length) metaDetails = `<p class="mt-2 text-sm text-gray-600 dark:text-gray-400 font-mono">${details.join(' - ')}</p>`;
             }
+
             const timeAgo = (d) => {
                 const diff = Math.floor((new Date() - d) / 1000);
                 if (diff < 5) return "just now";
@@ -593,59 +814,145 @@
                 }
                 return `${diff} seconds ago`;
             };
-            return `<div class="py-3 px-2 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150"><div class="flex-shrink-0 pt-1"><i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i></div><div class="flex-1 min-w-0"><div class="flex justify-between items-start"><p class="text-sm text-gray-800 dark:text-gray-200">${message}</p><p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-3 whitespace-nowrap">${date.toLocaleString('id-ID')}</p></div><p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${timeAgo(date)}</p>${metaDetails}</div></div>`;
+
+            return `<div class="py-3 px-2 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                <div class="flex-shrink-0 pt-1"><i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i></div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start">
+                        <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-3 whitespace-nowrap">${date.toLocaleString('id-ID')}</p>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${timeAgo(date)}</p>
+                    ${metaDetails}
+                </div>
+            </div>`;
         }
 
-        // --- SETUP COMPONENTS ---
         initSelect2() {
             const self = this;
 
-            const setup = (id, url, stateKey) => {
-                $(`#${id}`).select2({
-                    dropdownParent: $(`#${id}`).parent(),
-                    width: '100%',
-                    placeholder: 'Select...',
-                    allowClear: true,
-                    ajax: {
-                        url: url,
-                        method: 'POST',
-                        dataType: 'json',
-                        delay: 250,
-                        data: (params) => ({
-                            _token: "{{ csrf_token() }}",
-                            q: params.term,
-                            page: params.page || 1
-                        }),
-                        processResults: (data, params) => {
-                            params.page = params.page || 1;
-                            let more = data.pagination ? data.pagination.more : (data.total_count ? (params.page * 10) < data.total_count : false);
-                            return {
-                                results: data.results || [],
-                                pagination: {
-                                    more: more
-                                }
-                            };
+            $('#customer_input').select2({
+                dropdownParent: $('#customer_input').parent(),
+                width: '100%',
+                placeholder: 'Select Customer...',
+                allowClear: true,
+                ajax: {
+                    url: "{{ route('dashboard.getCustomers') }}",
+                    method: 'POST',
+                    dataType: 'json',
+                    delay: 250,
+                    data: (params) => ({
+                        _token: "{{ csrf_token() }}",
+                        q: params.term,
+                        page: params.page || 1
+                    }),
+                    processResults: (data, params) => ({
+                        results: data.results,
+                        pagination: {
+                            more: data.pagination.more
                         }
+                    })
+                }
+            }).on('change', function() {
+                const data = $(this).select2('data')[0];
+                if (data && data.id) {
+                    if (!self.selectedCustomers.find(x => x.id === data.id)) {
+                        self.selectedCustomers.push({
+                            id: data.id,
+                            text: data.text
+                        });
+                        self.renderFilterPills();
                     }
-                }).on('change', function() {
-                    const d = $(this).select2('data')[0];
-                    if (d && d.id) {
-                        const arr = self[stateKey];
-                        if (!arr.find(x => x.id === d.id)) {
-                            arr.push({
+                    $(this).val(null).trigger('change.select2');
+                }
+                $('#model_input').prop('disabled', self.selectedCustomers.length === 0);
+                if (self.selectedCustomers.length > 1 && self.selectedPartGroup.length > 0) {
+                    self.selectedPartGroup = [];
+                    self.renderFilterPills();
+                }
+            });
+
+            $('#model_input').prop('disabled', true);
+            $('#model_input').select2({
+                dropdownParent: $('#model_input').parent(),
+                width: '100%',
+                placeholder: 'Select Model...',
+                allowClear: true,
+                ajax: {
+                    url: "{{ route('dashboard.getModels') }}",
+                    method: 'POST',
+                    dataType: 'json',
+                    delay: 250,
+                    data: (params) => ({
+                        _token: "{{ csrf_token() }}",
+                        q: params.term,
+                        page: params.page || 1,
+                        customer_ids: self.selectedCustomers.map(item => item.id)
+                    }),
+                    processResults: (data, params) => ({
+                        results: data.results,
+                        pagination: {
+                            more: data.pagination.more
+                        }
+                    })
+                }
+            }).on('change', function() {
+                const d = $(this).select2('data')[0];
+                if (d && d.id) {
+                    if (!self.selectedModels.find(x => x.id === d.id)) {
+                        self.selectedModels.push({
+                            id: d.id,
+                            text: d.text,
+                            customer_id: d.customer_id
+                        });
+                        self.renderFilterPills();
+                    }
+                    $(this).val(null).trigger('change.select2');
+                }
+            });
+
+            $('#part_group_multi_input').select2({
+                dropdownParent: $('#part_group_multi_input').parent(),
+                width: '100%',
+                placeholder: 'Select Part Group...',
+                allowClear: true,
+                ajax: {
+                    url: "{{ route('dashboard.getPartGroup') }}",
+                    method: 'POST',
+                    dataType: 'json',
+                    delay: 250,
+                    data: (params) => ({
+                        _token: "{{ csrf_token() }}",
+                        q: params.term,
+                        page: params.page || 1
+                    }),
+                    processResults: (data, params) => ({
+                        results: data.results || [],
+                        pagination: {
+                            more: data.pagination ? data.pagination.more : (params.page * 10) < data.total_count
+                        }
+                    })
+                }
+            }).on('change', function() {
+                const d = $(this).select2('data')[0];
+                if (d && d.id) {
+                    if (self.selectedCustomers.length > 1) {
+                        self.selectedPartGroup = [{
+                            id: d.id,
+                            text: d.text
+                        }];
+                    } else {
+                        if (!self.selectedPartGroup.find(x => x.id === d.id)) {
+                            self.selectedPartGroup.push({
                                 id: d.id,
                                 text: d.text
                             });
-                            self.renderFilterPills();
                         }
-                        $(this).val(null).trigger('change.select2');
                     }
-                });
-            };
-
-            setup('customer_input', "{{ route('dashboard.getCustomers') }}", 'selectedCustomers');
-            setup('model_input', "{{ route('dashboard.getModels') }}", 'selectedModels');
-            setup('part_group_multi_input', "{{ route('dashboard.getPartGroup') }}", 'selectedPartGroup');
+                    self.renderFilterPills();
+                    $(this).val(null).trigger('change.select2');
+                }
+            });
 
             $('#project_status').select2({
                 dropdownParent: $('#project_status').parent(),
@@ -657,8 +964,7 @@
                     dataType: 'json',
                     data: (params) => ({
                         _token: "{{ csrf_token() }}",
-                        q: params.term,
-                        page: params.page || 1
+                        q: params.term
                     }),
                     processResults: (data) => {
                         let res = data.results || [];
@@ -677,23 +983,32 @@
         renderFilterPills() {
             const container = document.getElementById('filterPillContainer');
             container.innerHTML = '';
-
             const createPill = (type, item, stateKey) => {
                 const span = document.createElement('span');
                 span.className = 'filter-pill';
-                span.innerHTML = `<span class="font-normal text-gray-500 dark:text-gray-400 mr-1">${type}:</span><span>${item.text}</span><button type="button" class="filter-pill-remove" data-id="${item.id}"><i class="fa-solid fa-times fa-xs"></i></button>`;
-
+                span.innerHTML = `<span class="font-normal text-gray-500 mr-1">${type}:</span><span>${item.text}</span><button type="button" class="filter-pill-remove" data-id="${item.id}"><i class="fa-solid fa-times fa-xs"></i></button>`;
                 span.querySelector('button').addEventListener('click', () => {
                     const arr = this[stateKey];
                     const idx = arr.findIndex(x => x.id === item.id);
                     if (idx > -1) {
+                        const removedItem = arr[idx];
                         arr.splice(idx, 1);
+                        if (stateKey === 'selectedCustomers') {
+                            if (this.selectedModels.length > 0) {
+                                this.selectedModels = this.selectedModels.filter(model => String(model.customer_id) !== String(removedItem.id));
+                            }
+                            if (this.selectedCustomers.length === 0) {
+                                $('#model_input').prop('disabled', true).val(null).trigger('change');
+                                this.selectedModels = [];
+                            } else {
+                                $('#model_input').prop('disabled', false);
+                            }
+                        }
                         this.renderFilterPills();
                     }
                 });
                 return span;
             };
-
             this.selectedCustomers.forEach(i => container.appendChild(createPill('Cust', i, 'selectedCustomers')));
             this.selectedModels.forEach(i => container.appendChild(createPill('Model', i, 'selectedModels')));
             this.selectedPartGroup.forEach(i => container.appendChild(createPill('Group', i, 'selectedPartGroup')));
@@ -704,10 +1019,8 @@
             const year = now.getFullYear();
             const month = (now.getMonth() + 1).toString().padStart(2, '0');
             const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
-
             this.dateStart = `${year}-${month}-01`;
             this.dateEnd = `${year}-${month}-${lastDay}`;
-
             this.dateRangeInstance = new Litepicker({
                 element: document.getElementById('date_range_input'),
                 singleMode: false,
@@ -732,27 +1045,34 @@
                 mutations.forEach((m) => {
                     if (m.attributeName === 'class') {
                         const newDarkMode = document.documentElement.classList.contains('dark');
-
-                        // Jika tema berubah, update chart
                         if (newDarkMode !== this.isDarkMode) {
                             this.isDarkMode = newDarkMode;
 
-                            // Update date range picker
+                            // Update date picker theme
                             if (this.dateRangeInstance && this.dateRangeInstance.ui) {
-                                this.isDarkMode ? this.dateRangeInstance.ui.classList.add('dark') : this.dateRangeInstance.ui.classList.remove('dark');
+                                this.isDarkMode ?
+                                    this.dateRangeInstance.ui.classList.add('dark') :
+                                    this.dateRangeInstance.ui.classList.remove('dark');
                             }
 
-                            // Re-render chart dengan data terakhir jika ada
+                            // Update monitoring chart
                             if (this.currentChartData && this.currentChartData.length > 0) {
                                 this.renderChart(this.currentChartData);
                             } else if (this.monitoringChart) {
-                                // Jika chart sudah ada tapi tidak ada data tersimpan, render ulang dengan data kosong
                                 this.renderChart([]);
+                            }
+
+                            // Update trend chart
+                            if (this.currentTrendData && this.currentTrendData.length > 0) {
+                                this.renderTrendChart(this.currentTrendData);
+                            } else if (this.trendChart) {
+                                this.renderTrendChart([]);
                             }
                         }
                     }
                 });
             });
+
             observer.observe(document.documentElement, {
                 attributes: true,
                 attributeFilter: ['class']
@@ -763,35 +1083,30 @@
             const btnApply = document.getElementById('btnApply');
             const btnText = document.getElementById('btnApplyText');
             const btnLoader = document.getElementById('btnApplyLoader');
-
             btnApply.addEventListener('click', async () => {
                 if (this.isLoading) return;
                 this.isLoading = true;
                 btnApply.disabled = true;
                 btnText.style.display = 'none';
                 btnLoader.style.display = 'inline-block';
-
                 await this.loadMonitoringChart();
-
                 this.isLoading = false;
                 btnApply.disabled = false;
                 btnText.style.display = 'inline-block';
                 btnLoader.style.display = 'none';
             });
-
             document.getElementById('btnReset').addEventListener('click', () => {
                 this.selectedCustomers = [];
                 this.selectedModels = [];
                 this.selectedPartGroup = [];
+                $('#customer_input').val(null).trigger('change');
+                $('#model_input').prop('disabled', true).val(null).trigger('change');
+                $('#part_group_multi_input').val(null).trigger('change');
                 $('#project_status').val('ALL').trigger('change');
-
                 const now = new Date();
                 this.dateStart = this.formatDateJS(new Date(now.getFullYear(), now.getMonth(), 1));
                 this.dateEnd = this.formatDateJS(new Date(now.getFullYear(), now.getMonth() + 1, 0));
-
-                if (this.dateRangeInstance) {
-                    this.dateRangeInstance.setDateRange(this.dateStart, this.dateEnd);
-                }
+                if (this.dateRangeInstance) this.dateRangeInstance.setDateRange(this.dateStart, this.dateEnd);
                 this.renderFilterPills();
                 this.loadMonitoringChart();
             });

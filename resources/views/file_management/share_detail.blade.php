@@ -6,11 +6,12 @@
 
 <div
   class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen"
-  x-data="approvalDetail()"
+  x-data="shareDetail()"
   x-init="init()"
   @mousemove.window="onPan($event)"
   @mouseup.window="endPan()"
   @mouseleave.window="endPan()">
+
 
   <!-- ================= MAIN LAYOUT: LEFT STACK + RIGHT PREVIEW ================= -->
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6 items-start">
@@ -29,10 +30,10 @@
             </h2>
 
             @php
-              $backUrl = url()->previous();
-              $backUrl = ($backUrl && $backUrl !== url()->current())
-                        ? $backUrl
-                        : route('file-manager.share'); // fallback ke list share
+            $backUrl = url()->previous();
+            $backUrl = ($backUrl && $backUrl !== url()->current())
+            ? $backUrl
+            : route('file-manager.share'); // fallback ke list share
             @endphp
             <a href="{{ $backUrl }}"
               class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
@@ -46,53 +47,6 @@
         <div class="px-4 py-4 space-y-3">
           <!-- satu baris ringkas -->
           <p class="text-sm text-gray-700 dark:text-gray-200" x-text="metaLine()"></p>
-
-          <!-- detail metadata -->
-          <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-gray-600 dark:text-gray-300">
-            <div>
-              <dt class="font-semibold">Customer</dt>
-              <dd class="mt-0.5" x-text="pkg.metadata?.customer || '-'"></dd>
-            </div>
-            <div>
-              <dt class="font-semibold">Model</dt>
-              <dd class="mt-0.5" x-text="pkg.metadata?.model || '-'"></dd>
-            </div>
-            <div>
-              <dt class="font-semibold">Part No</dt>
-              <dd class="mt-0.5" x-text="pkg.metadata?.part_no || '-'"></dd>
-            </div>
-            <div>
-              <dt class="font-semibold">Doc Type</dt>
-              <dd class="mt-0.5" x-text="pkg.metadata?.doc_type || '-'"></dd>
-            </div>
-            <div>
-              <dt class="font-semibold">Category</dt>
-              <dd class="mt-0.5" x-text="pkg.metadata?.category || '-'"></dd>
-            </div>
-            <div>
-              <dt class="font-semibold">ECN No</dt>
-              <dd class="mt-0.5" x-text="pkg.metadata?.ecn_no || '-'"></dd>
-            </div>
-            <div>
-              <dt class="font-semibold">Revision</dt>
-              <dd class="mt-0.5" x-text="pkg.metadata?.revision || '-'"></dd>
-            </div>
-            <div>
-              <dt class="font-semibold">Status</dt>
-              <dd class="mt-0.5">
-                <span
-                  class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                  :class="{
-                    'bg-green-100 text-green-800': (pkg.status || '').toLowerCase() === 'approved',
-                    'bg-red-100 text-red-800': (pkg.status || '').toLowerCase() === 'rejected',
-                    'bg-amber-100 text-amber-800': (pkg.status || '').toLowerCase() === 'waiting',
-                    'bg-gray-100 text-gray-800': !(pkg.status || '').length
-                  }"
-                  x-text="pkg.status || '-'">
-                </span>
-              </dd>
-            </div>
-          </dl>
         </div>
       </div>
 
@@ -281,22 +235,48 @@
           </div>
 
           <!-- ZOOM TOOLBAR untuk JPG/PNG/TIFF/HPGL/PDF -->
-          <div x-show="isImage(selectedFile?.name) || isTiff(selectedFile?.name) || isHpgl(selectedFile?.name) || isPdf(selectedFile?.name)"
-            class="mb-3 flex items-center justify-end gap-2 text-xs text-gray-700 dark:text-gray-200">
-            <span x-text="Math.round(imageZoom * 100) + '%'"></span>
-            <button @click="zoomOut()"
-              class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-              -
-            </button>
-            <button @click="resetZoom()"
-              class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-              Fit
-            </button>
-            <button @click="zoomIn()"
-              class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-              +
-            </button>
+          <div
+            x-show="isImage(selectedFile?.name) || isTiff(selectedFile?.name) || isHpgl(selectedFile?.name) || isPdf(selectedFile?.name)"
+            class="mb-3 flex items-center justify-between text-xs text-gray-700 dark:text-gray-200">
+
+            
+            <!-- KIRI: tombol white block (multi) -->
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                @click.stop="addMask()"
+                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                + Add Block
+              </button>
+
+              <button
+                type="button"
+                @click.stop="removeActiveMask()"
+                x-show="getActiveMask()"
+                x-cloak
+                class="px-2 py-1 border border-red-300 text-red-600 dark:border-red-500 rounded hover:bg-red-50 dark:hover:bg-red-900/40">
+                Delete Block
+              </button>
+            </div>
+
+            <!-- KANAN: kontrol zoom -->
+            <div class="flex items-center gap-2">
+              <span x-text="Math.round(imageZoom * 100) + '%'"></span>
+              <button @click="zoomOut()"
+                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                -
+              </button>
+              <button @click="resetZoom()"
+                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                Fit
+              </button>
+              <button @click="zoomIn()"
+                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                +
+              </button>
+            </div>
           </div>
+
 
           <!-- PDF PAGE NAV -->
           <div
@@ -326,16 +306,721 @@
           </div>
 
           <!-- PREVIEW AREA (image/pdf/tiff/cad) -->
-          <div class="preview-area bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center w-full relative">
+          <div
+            class="preview-area bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center w-full relative"
+            @mousedown="deactivateMask()">
 
             <!-- IMAGE (JPG/PNG/...) -->
-            @* ... (SEMUA BLOK PREVIEW IMAGE, PDF, TIFF, HPGL, CAD, FALLBACK
-                   PERSIS SEPERTI PUNYA Tuan TADI – saya tidak ubah) *@
+            <template x-if="isImage(selectedFile?.name)">
+              <div
+                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                @mousedown.prevent="startPan($event)"
+                @wheel.prevent="onWheelZoom($event)">
+                <div class="w-full h-full flex items-center justify-center">
+                  <div
+                    class="relative inline-block"
+                    :style="imageTransformStyle()">
+                    <img
+                      :src="selectedFile?.url"
+                      alt="File Preview"
+                      class="block pointer-events-none select-none max-w-full max-h-[70vh]"
+                      loading="lazy">
 
-            {{-- Karena terlalu panjang, saya biarkan sama persis dengan kode Tuan di pesan tadi
-                 mulai dari: <template x-if="isImage(selectedFile?.name)"> ... 
-                 sampai closing template fallback. --}}
-            {{-- *Tempel saja blok preview yang sudah Tuan kirim tadi di sini, tidak perlu diubah* --}}
+                   <!-- WHITE BLOCKS (MULTI) -->
+<template x-for="mask in masks" :key="mask.id">
+  <div
+    x-show="mask.visible"
+    x-cloak
+    :style="maskStyle(mask)"
+    class="absolute bg-white/95 shadow-sm cursor-move"
+    @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
+    @click.stop="activateMask(mask)">
+
+    <!-- BORDER hanya saat aktif -->
+    <div
+      x-show="mask.active"
+      x-cloak
+      class="absolute inset-0 border border-blue-500 pointer-events-none">
+    </div>
+
+    <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
+    <div
+      x-show="mask.active && mask.editable"
+      x-cloak
+      class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
+      @mousedown.stop.prevent="startMaskRotate($event, mask)">
+    </div>
+
+    <!-- ZONA RESIZE: transparan di tepian blok -->
+    <template x-if="mask.active && mask.editable">
+      <div>
+        <!-- atas / bawah -->
+        <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
+        <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
+
+        <!-- kiri / kanan -->
+        <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
+        <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
+
+        <!-- pojok -->
+        <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
+        <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
+        <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
+        <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
+      </div>
+    </template>
+  </div>
+</template>
+
+
+
+                    <!-- STAMP ORIGINAL -->
+                    <div
+                      x-show="pkg.stamp"
+                      class="absolute"
+                      :class="stampPositionClass('original')">
+                      <div
+                        :class="stampOriginClass('original')"
+                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
+           text-[10px] text-blue-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
+                        style="transform: scale(0.45);">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine('original')"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                            x-text="stampCenterOriginal()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine('original')"></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- STAMP COPY -->
+                    <div
+                      x-show="pkg.stamp"
+                      class="absolute"
+                      :class="stampPositionClass('copy')">
+                      <div
+                        :class="stampOriginClass('copy')"
+                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
+           text-[10px] text-blue-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
+                        style="transform: scale(0.45);">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine('copy')"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span
+                            class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                            x-text="stampCenterCopy()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine('copy')"></span>
+                        </div>
+                      </div>
+                    </div>
+
+
+                    <!-- STAMP OBSOLETE -->
+                    <div
+                      x-show="pkg.stamp?.is_obsolete"
+                      class="absolute"
+                      :class="stampPositionClass('obsolete')">
+                      <div
+                        :class="stampOriginClass('obsolete')"
+                        class="w-65 h-20 border-2 border-red-600 rounded-sm
+           text-[10px] text-red-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
+                        style="transform: scale(0.45);">
+                        <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                          <!-- top line: Date : Oct.25th 2025 -->
+                          <span x-text="stampTopLine('obsolete')"></span>
+                        </div>
+
+                        <div class="flex-1 flex items-center justify-center">
+                          <!-- middle: SAI-DRAWING OBSOLETE -->
+                          <span class="text-xs font-extrabold tracking-[0.25em] text-red-700 uppercase"
+                            x-text="stampCenterObsolete()"></span>
+                        </div>
+
+                        <!-- bottom: Nama & Dept -->
+                        <div class="w-full border-t border-red-600 pt-0.5 px-1 flex justify-between tracking-tight">
+                          <span>
+                            Nama :
+                            <span x-text="obsoleteName()"></span>
+                          </span>
+                          <span>
+                            <span x-text="(getObsoleteFormat().suffix || 'Dept.') + ' :'"></span>
+                            <span x-text="obsoleteDept()"></span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- PDF via pdf.js + canvas -->
+            <template x-if="isPdf(selectedFile?.name)">
+              <div
+                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                @mousedown.prevent="startPan($event)"
+                @wheel.prevent="onWheelZoom($event)">
+                <div class="w-full h-full flex items-center justify-center">
+                  <div class="relative inline-block" :style="imageTransformStyle()">
+                    <canvas
+                      x-ref="pdfCanvas"
+                      class="block pointer-events-none select-none max-w-full max-h-[70vh]">
+                    </canvas>
+
+                   
+                    <!-- WHITE BLOCKS (MULTI) -->
+<template x-for="mask in masks" :key="mask.id">
+  <div
+    x-show="mask.visible"
+    x-cloak
+    :style="maskStyle(mask)"
+    class="absolute bg-white/95 shadow-sm cursor-move"
+    @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
+    @click.stop="activateMask(mask)">
+
+    <!-- BORDER hanya saat aktif -->
+    <div
+      x-show="mask.active"
+      x-cloak
+      class="absolute inset-0 border border-blue-500 pointer-events-none">
+    </div>
+
+    <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
+    <div
+      x-show="mask.active && mask.editable"
+      x-cloak
+      class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
+      @mousedown.stop.prevent="startMaskRotate($event, mask)">
+    </div>
+
+    <!-- ZONA RESIZE: transparan di tepian blok -->
+    <template x-if="mask.active && mask.editable">
+      <div>
+        <!-- atas / bawah -->
+        <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
+        <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
+
+        <!-- kiri / kanan -->
+        <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
+        <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
+
+        <!-- pojok -->
+        <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
+        <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
+        <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
+        <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
+      </div>
+    </template>
+  </div>
+</template>
+
+
+                    <!-- STAMP ORIGINAL -->
+                    <div
+                      x-show="pkg.stamp"
+                      class="absolute"
+                      :class="stampPositionClass('original')">
+                      <div
+                        :class="stampOriginClass('original')"
+                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
+           text-[10px] text-blue-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
+                        style="transform: scale(0.45);">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine('original')"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                            x-text="stampCenterOriginal()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine('original')"></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- STAMP COPY -->
+                    <div
+                      x-show="pkg.stamp"
+                      class="absolute"
+                      :class="stampPositionClass('copy')">
+                      <div
+                        :class="stampOriginClass('copy')"
+                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
+           text-[10px] text-blue-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
+                        style="transform: scale(0.45);">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine('copy')"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                            x-text="stampCenterCopy()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine('copy')"></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- STAMP OBSOLETE -->
+                    <div
+                      x-show="pkg.stamp?.is_obsolete"
+                      class="absolute"
+                      :class="stampPositionClass('obsolete')">
+                      <div
+                        :class="stampOriginClass('obsolete')"
+                        class="w-65 h-20 border-2 border-red-600 rounded-sm
+           text-[10px] text-red-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
+                        style="transform: scale(0.45);">
+                        <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                          <!-- top line: Date : Oct.25th 2025 -->
+                          <span x-text="stampTopLine('obsolete')"></span>
+                        </div>
+
+                        <div class="flex-1 flex items-center justify-center">
+                          <!-- middle: SAI-DRAWING OBSOLETE -->
+                          <span class="text-xs font-extrabold tracking-[0.25em] text-red-700 uppercase"
+                            x-text="stampCenterObsolete()"></span>
+                        </div>
+
+                        <!-- bottom: Nama & Dept -->
+                        <div class="w-full border-t border-red-600 pt-0.5 px-1 flex justify-between tracking-tight">
+                          <span>
+                            Nama :
+                            <span x-text="obsoleteName()"></span>
+                          </span>
+                          <span>
+                            <span x-text="(getObsoleteFormat().suffix || 'Dept.') + ' :'"></span>
+                            <span x-text="obsoleteDept()"></span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- status render PDF -->
+                <div
+                  x-show="pdfLoading"
+                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
+                  Rendering PDF…
+                </div>
+                <div
+                  x-show="pdfError"
+                  class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
+                  x-text="pdfError"></div>
+              </div>
+            </template>
+
+            <!-- TIFF -->
+            <template x-if="isTiff(selectedFile?.name)">
+              <div
+                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                @mousedown.prevent="startPan($event)"
+                @wheel.prevent="onWheelZoom($event)">
+                <div class="w-full h-full flex items-center justify-center">
+                  <!-- wrapper yang di-zoom + pan -->
+                  <div class="relative inline-block" :style="imageTransformStyle()">
+                    <img
+                      x-ref="tifImg"
+                      alt="TIFF Preview"
+                      class="block pointer-events-none select-none max-w-full max-h-[70vh]" />
+
+                    
+                   <!-- WHITE BLOCKS (MULTI) -->
+<template x-for="mask in masks" :key="mask.id">
+  <div
+    x-show="mask.visible"
+    x-cloak
+    :style="maskStyle(mask)"
+    class="absolute bg-white/95 shadow-sm cursor-move"
+    @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
+    @click.stop="activateMask(mask)">
+
+    <!-- BORDER hanya saat aktif -->
+    <div
+      x-show="mask.active"
+      x-cloak
+      class="absolute inset-0 border border-blue-500 pointer-events-none">
+    </div>
+
+    <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
+    <div
+      x-show="mask.active && mask.editable"
+      x-cloak
+      class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
+      @mousedown.stop.prevent="startMaskRotate($event, mask)">
+    </div>
+
+    <!-- ZONA RESIZE: transparan di tepian blok -->
+    <template x-if="mask.active && mask.editable">
+      <div>
+        <!-- atas / bawah -->
+        <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
+        <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
+
+        <!-- kiri / kanan -->
+        <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
+        <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
+
+        <!-- pojok -->
+        <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
+        <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
+        <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
+        <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
+      </div>
+    </template>
+  </div>
+</template>
+
+
+
+                    <!-- STAMP ORIGINAL -->
+                    <div
+                      x-show="pkg.stamp"
+                      class="absolute"
+                      :class="stampPositionClass('original')">
+                      <div
+                        :class="stampOriginClass('original')"
+                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
+           text-[10px] text-blue-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
+                        style="transform: scale(0.45);">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine('original')"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                            x-text="stampCenterOriginal()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine('original')"></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- STAMP COPY -->
+                    <div
+                      x-show="pkg.stamp"
+                      class="absolute"
+                      :class="stampPositionClass('copy')">
+                      <div
+                        :class="stampOriginClass('copy')"
+                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
+           text-[10px] text-blue-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
+                        style="transform: scale(0.45);">
+                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                          <span x-text="stampTopLine('copy')"></span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                          <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                            x-text="stampCenterCopy()"></span>
+                        </div>
+                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                          <span x-text="stampBottomLine('copy')"></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- STAMP OBSOLETE -->
+                    <div
+                      x-show="pkg.stamp?.is_obsolete"
+                      class="absolute"
+                      :class="stampPositionClass('obsolete')">
+                      <div
+                        :class="stampOriginClass('obsolete')"
+                        class="w-65 h-20 border-2 border-red-600 rounded-sm
+           text-[10px] text-red-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
+                        style="transform: scale(0.45);">
+                        <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                          <!-- top line: Date : Oct.25th 2025 -->
+                          <span x-text="stampTopLine('obsolete')"></span>
+                        </div>
+
+                        <div class="flex-1 flex items-center justify-center">
+                          <!-- middle: SAI-DRAWING OBSOLETE -->
+                          <span class="text-xs font-extrabold tracking-[0.25em] text-red-700 uppercase"
+                            x-text="stampCenterObsolete()"></span>
+                        </div>
+
+                        <!-- bottom: Nama & Dept -->
+                        <div class="w-full border-t border-red-600 pt-0.5 px-1 flex justify-between tracking-tight">
+                          <span>
+                            Nama :
+                            <span x-text="obsoleteName()"></span>
+                          </span>
+                          <span>
+                            <span x-text="(getObsoleteFormat().suffix || 'Dept.') + ' :'"></span>
+                            <span x-text="obsoleteDept()"></span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- status render -->
+                <div
+                  x-show="tifLoading"
+                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
+                  Rendering TIFF…
+                </div>
+                <div
+                  x-show="tifError"
+                  class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
+                  x-text="tifError"></div>
+              </div>
+            </template>
+
+            <!-- HPGL -->
+            <template x-if="isHpgl(selectedFile?.name)">
+              <div
+                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                @mousedown.prevent="startPan($event)"
+                @wheel.prevent="onWheelZoom($event)">
+                <div class="relative w-full h-full flex items-center justify-center" :style="imageTransformStyle()">
+                  <canvas
+                    x-ref="hpglCanvas"
+                    class="pointer-events-none select-none"></canvas>
+
+              
+                  <!-- WHITE BLOCKS (MULTI) -->
+<template x-for="mask in masks" :key="mask.id">
+  <div
+    x-show="mask.visible"
+    x-cloak
+    :style="maskStyle(mask)"
+    class="absolute bg-white/95 shadow-sm cursor-move"
+    @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
+    @click.stop="activateMask(mask)">
+
+    <!-- BORDER hanya saat aktif -->
+    <div
+      x-show="mask.active"
+      x-cloak
+      class="absolute inset-0 border border-blue-500 pointer-events-none">
+    </div>
+
+    <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
+    <div
+      x-show="mask.active && mask.editable"
+      x-cloak
+      class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
+      @mousedown.stop.prevent="startMaskRotate($event, mask)">
+    </div>
+
+    <!-- ZONA RESIZE: transparan di tepian blok -->
+    <template x-if="mask.active && mask.editable">
+      <div>
+        <!-- atas / bawah -->
+        <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
+        <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
+
+        <!-- kiri / kanan -->
+        <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
+        <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
+
+        <!-- pojok -->
+        <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
+        <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
+        <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
+        <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
+          @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
+      </div>
+    </template>
+  </div>
+</template>
+
+
+
+                  <!-- STAMP ORIGINAL -->
+                  <div
+                    x-show="pkg.stamp"
+                    class="absolute"
+                    :class="stampPositionClass('original')">
+                    <div
+                      :class="stampOriginClass('original')"
+                      class="w-65 h-20 border-2 border-blue-600 rounded-sm
+           text-[10px] text-blue-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
+                      style="transform: scale(0.45);">
+                      <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                        <span x-text="stampTopLine('original')"></span>
+                      </div>
+                      <div class="flex-1 flex items-center justify-center">
+                        <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                          x-text="stampCenterOriginal()"></span>
+                      </div>
+                      <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                        <span x-text="stampBottomLine('original')"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- STAMP COPY -->
+                  <div
+                    x-show="pkg.stamp"
+                    class="absolute"
+                    :class="stampPositionClass('copy')">
+                    <div
+                      :class="stampOriginClass('copy')"
+                      class="w-65 h-20 border-2 border-blue-600 rounded-sm
+           text-[10px] text-blue-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
+                      style="transform: scale(0.45);">
+                      <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                        <span x-text="stampTopLine('copy')"></span>
+                      </div>
+                      <div class="flex-1 flex items-center justify-center">
+                        <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                          x-text="stampCenterCopy()"></span>
+                      </div>
+                      <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                        <span x-text="stampBottomLine('copy')"></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- STAMP OBSOLETE -->
+                  <div
+                    x-show="pkg.stamp?.is_obsolete"
+                    class="absolute"
+                    :class="stampPositionClass('obsolete')">
+                    <div
+                      :class="stampOriginClass('obsolete')"
+                      class="w-65 h-20 border-2 border-red-600 rounded-sm
+           text-[10px] text-red-700 flex flex-col items-center
+           justify-between px-2 py-1 bg-transparent"
+                      style="transform: scale(0.45);">
+                      <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                        <!-- top line: Date : Oct.25th 2025 -->
+                        <span x-text="stampTopLine('obsolete')"></span>
+                      </div>
+
+                      <div class="flex-1 flex items-center justify-center">
+                        <!-- middle: SAI-DRAWING OBSOLETE -->
+                        <span class="text-xs font-extrabold tracking-[0.25em] text-red-700 uppercase"
+                          x-text="stampCenterObsolete()"></span>
+                      </div>
+
+                      <!-- bottom: Nama & Dept -->
+                      <div class="w-full border-t border-red-600 pt-0.5 px-1 flex justify-between tracking-tight">
+                        <span>
+                          Nama :
+                          <span x-text="obsoleteName()"></span>
+                        </span>
+                        <span>
+                          <span x-text="(getObsoleteFormat().suffix || 'Dept.') + ' :'"></span>
+                          <span x-text="obsoleteDept()"></span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    x-show="hpglLoading"
+                    class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
+                    Rendering HPGL…
+                  </div>
+                  <div
+                    x-show="hpglError"
+                    class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
+                    x-text="hpglError"></div>
+                </div>
+            </template>
+
+            <!-- CAD: IGES / STEP via occt-import-js -->
+            <template x-if="isCad(selectedFile?.name)">
+              <div class="w-full">
+                <div x-ref="igesWrap" class="w-full h-[70vh] rounded border border-gray-200 dark:border-gray-700 bg-black/5"></div>
+
+                <!-- TOOLBAR -->
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                  <div class="inline-flex rounded-md shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700" @click="setDisplayStyle('shaded')">Shaded</button>
+                  </div>
+                  <div class="inline-flex rounded-md shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
+                    <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700" @click="setDisplayStyle('shaded-edges')">Shaded+Edges</button>
+                  </div>
+
+                  <div class="inline-flex items-center gap-2 ml-2">
+                    <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      :class="{'bg-blue-50 dark:bg-blue-900/30': iges.measure.enabled}"
+                      @click="toggleMeasure()">
+                      Measure
+                    </button>
+                    <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      @click="clearMeasurements()">
+                      Clear
+                    </button>
+                  </div>
+                </div>
+
+                <div x-show="iges.loading" class="text-xs text-gray-500 mt-2">Loading CAD…</div>
+                <div x-show="iges.error" class="text-xs text-red-600 mt-2" x-text="iges.error"></div>
+              </div>
+            </template>
+
+            <!-- FALLBACK -->
+            <template
+              x-if="
+                !isImage(selectedFile?.name)
+                && !isPdf(selectedFile?.name)
+                && !isTiff(selectedFile?.name)
+                && !isCad(selectedFile?.name)
+                && !isHpgl(selectedFile?.name)
+              ">
+              <div class="text-center">
+                <i class="fa-solid fa-file text-6xl text-gray-400 dark:text-gray-500"></i>
+                <p class="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400">Preview Unavailable</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">This file type is not supported for preview.</p>
+              </div>
+            </template>
 
           </div>
           <!-- /PREVIEW AREA -->
@@ -395,13 +1080,13 @@
 <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
 <script type="importmap">
   {
-    "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-      "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+        "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
+      }
     }
-  }
-</script>
+  </script>
 
 <!-- OCCT: parser STEP/IGES (WASM) -->
 <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
@@ -436,6 +1121,7 @@
       }
     };
   }
+
   const BaseToast = Swal.mixin({
     toast: true,
     position: 'top-end',
@@ -521,11 +1207,12 @@
   window.toastInfo = toastInfo;
 
   /* ========== Alpine Component ========== */
-  function approvalDetail() {
-    // <- private variable, tidak ikut diproxy Alpine
+  function shareDetail() {
+    // private var untuk pdf.js
     let pdfDoc = null;
+
     return {
-      approvalId: JSON.parse(`@json($approvalId)`),
+      // data dari backend
       pkg: JSON.parse(`@json($detail)`),
       stampFormats: JSON.parse(`@json($stampFormats)`),
 
@@ -544,18 +1231,15 @@
         copy: 'bottom-center',
         obsolete: 'bottom-left',
       },
+      
+            // ===== WHITE BLOCKS (MULTI MASK) =====
+      masks: [],
+      nextMaskId: 1,
+
 
 
       selectedFile: null,
       openSections: [],
-
-      // modal
-      showApproveModal: false,
-      showRejectModal: false,
-      processing: false,
-      rejectNote: '',
-      rejectNoteError: false,
-      showRollbackModal: false,
 
       // TIFF state
       tifLoading: false,
@@ -572,9 +1256,7 @@
       pdfNumPages: 1,
       pdfScale: 1.0,
 
-
-
-      // ZOOM + PAN untuk image / TIFF / HPGL / PDF
+      // ZOOM + PAN
       imageZoom: 1,
       minZoom: 0.5,
       maxZoom: 4,
@@ -586,6 +1268,17 @@
       panStartY: 0,
       panOriginX: 0,
       panOriginY: 0,
+
+      activateMask() {
+        if (!this.mask.visible) return;
+        this.mask.active = true;
+      },
+
+      deactivateMask() {
+        this.mask.active = false;
+        this.mask._mode = null;
+      },
+
 
       zoomIn() {
         this.imageZoom = Math.min(this.imageZoom + this.zoomStep, this.maxZoom);
@@ -600,12 +1293,10 @@
       },
       onWheelZoom(e) {
         const delta = e.deltaY;
-        const step = this.zoomStep;
-
         if (delta < 0) {
-          this.imageZoom = Math.min(this.imageZoom + step, this.maxZoom);
+          this.imageZoom = Math.min(this.imageZoom + this.zoomStep, this.maxZoom);
         } else if (delta > 0) {
-          this.imageZoom = Math.max(this.imageZoom - step, this.minZoom);
+          this.imageZoom = Math.max(this.imageZoom - this.zoomStep, this.minZoom);
         }
       },
       startPan(e) {
@@ -615,24 +1306,23 @@
         this.panOriginX = this.panX;
         this.panOriginY = this.panY;
       },
-      onPan(e) {
+            onPan(e) {
         if (!this.isPanning) return;
         const dx = e.clientX - this.panStartX;
         const dy = e.clientY - this.panStartY;
         this.panX = this.panOriginX + dx;
         this.panY = this.panOriginY + dy;
       },
+
       endPan() {
         this.isPanning = false;
       },
+
       imageTransformStyle() {
         return `transform: translate(${this.panX}px, ${this.panY}px) scale(${this.imageZoom}); transform-origin: center center;`;
       },
 
-
-
-      // mapping dari integer DB -> key string
-      // mapping dari integer DB -> key string (0-5)
+      // mapping posisi
       positionIntToKey(pos) {
         switch (Number(pos)) {
           case 0:
@@ -651,8 +1341,6 @@
             return 'bottom-right';
         }
       },
-
-      // mapping dari key string -> integer DB (0-5)
       positionKeyToInt(key) {
         switch (key) {
           case 'bottom-left':
@@ -671,7 +1359,6 @@
             return 2;
         }
       },
-
 
       // CAD viewer state
       iges: {
@@ -753,7 +1440,6 @@
           const hit = list.find(f => /\.(igs|iges)$/i.test(f.name || ''));
           if (hit) return hit;
         }
-
         return null;
       },
 
@@ -772,94 +1458,69 @@
 
       fileSizeInfo() {
         if (!this.selectedFile) return '';
-        // sesuaikan nama field size dari backend
         const bytes = this.selectedFile.size ?? this.selectedFile.filesize ?? 0;
         if (!bytes) return 'Size: -';
         return 'Size: ' + this.formatBytes(bytes);
       },
 
-
-      // ==== pilih format normal vs obsolete dari array stampFormats ====
+      // ==== format stamp normal vs obsolete ====
       getNormalFormat() {
         const list = this.stampFormats || [];
-        // anggap index 0 = normal (Date Received / Date Upload)
         if (Array.isArray(list) && list.length > 0) {
           return list[0];
         }
-        // fallback kalau kosong
         return {
           prefix: 'DATE RECEIVED',
           suffix: 'DATE UPLOADED'
         };
       },
-
       getObsoleteFormat() {
         const list = this.stampFormats || [];
-        // anggap index 1 = obsolete (Date Upload / Date Obsolete)
         if (Array.isArray(list) && list.length > 1) {
           return list[1];
         }
-        // fallback kalau kosong
         return {
           prefix: 'DATE UPLOAD',
           suffix: 'DATE OBSOLETE'
         };
       },
-
       getObsoleteInfo() {
         return this.pkg?.stamp?.obsolete_info || {};
       },
-
-
       formatStampDate(d) {
         return d || '';
       },
-
-      // teks tengah stamp ORIGINAL
       stampCenterOriginal() {
         return 'SAI-DRAWING ORIGINAL';
       },
-
-      // teks tengah stamp Control Copy
       stampCenterCopy() {
         return 'SAI-DRAWING CONTROL COPY';
       },
-
-      // teks tengah leteLETE
       stampCenterObsolete() {
         return 'SAI-DRAWING OBSOLETE';
       },
-
       obsoleteName() {
-        const s = this.pkg?.stamp || {};
-        const info = s.obsolete_info || {};
+        const info = this.getObsoleteInfo();
         return info.name || '';
       },
-
       obsoleteDept() {
-        const s = this.pkg?.stamp || {};
-        const info = s.obsolete_info || {};
+        const info = this.getObsoleteInfo();
         return info.dept || '';
       },
 
-
       stampTopLine(which = 'original') {
         const s = this.pkg?.stamp || {};
-        let date;
-        let fmt;
+        let date, fmt;
 
         if (which === 'obsolete') {
           fmt = this.getObsoleteFormat();
-
           const info = this.getObsoleteInfo();
-          // pakai date_text (Oct.25th 2025) kalau ada
           date =
             info.date_text ||
             s.obsolete_date ||
             s.upload_date ||
             s.receipt_date ||
             '';
-
           const label = fmt.prefix || 'DATE OBSOLETE';
           return date ? `${label} : ${date}` : '';
         } else {
@@ -869,7 +1530,6 @@
           return date ? `${label} : ${this.formatStampDate(date)}` : '';
         }
       },
-
 
       stampBottomLine(which = 'original') {
         const s = this.pkg?.stamp || {};
@@ -881,13 +1541,9 @@
 
           const name = info.name || '';
           const dept = info.dept || '';
-
           let value = '';
-          if (name && dept) {
-            value = `${name} / ${dept}`;
-          } else {
-            value = name || dept || '';
-          }
+          if (name && dept) value = `${name} / ${dept}`;
+          else value = name || dept || '';
 
           const label = fmt.suffix || 'BY';
           return value ? `${label} : ${value}` : '';
@@ -899,13 +1555,10 @@
         }
       },
 
-
-      // ===== helper key per file (pakai id kalau ada) =====
+      // ===== helper key per file =====
       getFileKey(file) {
         return (file?.id ?? file?.name ?? '').toString();
       },
-
-      // load konfigurasi posisi stamp untuk file tertentu (dari state / DB)
       loadStampConfigFor(file) {
         const key = this.getFileKey(file);
         if (!key) {
@@ -922,11 +1575,8 @@
             obsolete: this.positionIntToKey(file.obslt_position ?? 0),
           };
         }
-
         this.stampConfig = this.stampPerFile[key];
       },
-
-
       saveStampConfigForCurrent() {
         const key = this.getFileKey(this.selectedFile);
         if (!key) return;
@@ -936,7 +1586,6 @@
       },
 
       async onStampChange() {
-        // simpan ke memory di front-end
         this.saveStampConfigForCurrent();
         if (!this.selectedFile?.id) return;
 
@@ -947,7 +1596,6 @@
           copy_position: this.positionKeyToInt(this.stampConfig.copy),
           obslt_position: this.positionKeyToInt(this.stampConfig.obsolete),
         };
-
 
         try {
           const res = await fetch(url, {
@@ -979,7 +1627,6 @@
 
       stampPositionClass(which = 'original') {
         const pos = (this.stampConfig && this.stampConfig[which]) || this.stampDefaults[which];
-
         switch (pos) {
           case 'top-left':
             return 'top-4 left-4';
@@ -998,7 +1645,6 @@
       },
       stampOriginClass(which = 'original') {
         const pos = (this.stampConfig && this.stampConfig[which]) || this.stampDefaults[which];
-
         switch (pos) {
           case 'top-left':
             return 'origin-top-left';
@@ -1015,8 +1661,6 @@
             return 'origin-bottom-right';
         }
       },
-
-
 
       /* ===== TIFF renderer ===== */
       async renderTiff(url) {
@@ -1139,14 +1783,12 @@
         this.pdfPageNum++;
         this.renderPdfPage();
       },
-
       prevPdfPage() {
         if (!pdfDoc) return;
         if (this.pdfPageNum <= 1) return;
         this.pdfPageNum--;
         this.renderPdfPage();
       },
-
 
       /* ===== HPGL renderer ===== */
       async renderHpgl(url) {
@@ -1211,7 +1853,9 @@
               penDown = false;
               x = 0;
               y = 0;
-            } else if (op === 'SP') {} else if (op === 'PU') {
+            } else if (op === 'SP') {
+              // ignore pen select
+            } else if (op === 'PU') {
               penDown = false;
               const coords = parseCoords();
               for (let i = 0; i < coords.length; i += 2) {
@@ -1553,14 +2197,10 @@
 
       /* ===== Lifecycle ===== */
       init() {
-        window.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape') {
-            if (this.showApproveModal) this.closeApproveModal();
-            if (this.showRejectModal) this.closeRejectModal();
-            if (this.showRollbackModal) this.closeRollbackModal();
-          }
-        });
+        // kalau nanti ada modal lain buat share, Escape handler bisa ditaruh di sini
         window.addEventListener('beforeunload', () => this.disposeCad());
+        this._onMaskMouseMove = (ev) => this.handleMaskMouseMove(ev);
+        this._onMaskMouseUp = () => this.handleMaskMouseUp();
       },
 
       /* ===== UI ===== */
@@ -1576,6 +2216,7 @@
           this.saveStampConfigForCurrent();
         }
 
+        // cleanup viewer sebelumnya
         if (this.isCad(this.selectedFile?.name)) this.disposeCad();
 
         if (this.isTiff(this.selectedFile?.name)) {
@@ -1637,190 +2278,9 @@
         });
       },
 
-      /* ===== Helper status ===== */
+      // Helper status (kalau nanti mau dipakai di Share)
       isWaiting() {
         return (this.pkg.status || '').toLowerCase() === 'waiting';
-      },
-
-      /* ===== approve / reject / rollback ===== */
-      approvePackage() {
-        this.showApproveModal = true;
-      },
-      rejectPackage() {
-        this.rejectNote = '';
-        this.rejectNoteError = false;
-        this.showRejectModal = true;
-      },
-      rollbackPackage() {
-        this.showRollbackModal = true;
-      },
-
-      closeApproveModal() {
-        if (!this.processing) this.showApproveModal = false;
-      },
-      closeRejectModal() {
-        if (!this.processing) this.showRejectModal = false;
-      },
-      closeRollbackModal() {
-        if (!this.processing) this.showRollbackModal = false;
-      },
-
-     
-      async confirmApprove() {
-        if (this.processing) return;
-        this.processing = true;
-        try {
-          const url = `{{ route('approvals.approve', ['id' => $approvalId]) }}`;
-          let res = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-          });
-
-          let text = await res.text();
-          let json = {};
-          try {
-            json = JSON.parse(text);
-          } catch {}
-
-          if (!res.ok) {
-            
-            if (res.status === 409 && json?.needs_confirmation && json?.code === 'EMAIL_FAILED') {
-              const ask = await Swal.fire({
-                icon: 'warning',
-                title: 'Email Failed',
-                text: 'Failed to send email. Approve anyway? The team will not receive email.',
-                showCancelButton: true,
-                confirmButtonText: 'Approve without email',
-                cancelButtonText: 'Cancel',
-              });
-              if (ask.isConfirmed) {
-               
-                res = await fetch(url, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                  },
-                  body: JSON.stringify({
-                    confirm_without_email: true
-                  })
-                });
-                text = await res.text();
-                json = {};
-                try {
-                  json = JSON.parse(text);
-                } catch {}
-                if (!res.ok) throw new Error(json.message || 'Approve failed.');
-              } else {
-                throw new Error('Approval is canceled.');
-              }
-            } else {
-              if (res.status === 422) throw new Error(json.message || 'Revision is not in a state that can be approved.');
-              if (res.status === 403) throw new Error(json.message || 'You do not have permission to approve.');
-              if (res.status === 409) throw new Error(json.message || 'Revision has already been approved by someone else.');
-              throw new Error(json.message || 'Server returned an error.');
-            }
-          }
-
-          // === sukses ===
-          this.pkg.status = 'Approved';
-          this.addPkgActivity('approved', '{{ auth()->user()->name ?? "Reviewer" }}');
-          this.showApproveModal = false;
-          toastSuccess('Success', json.message || 'Revision approved successfully!');
-        } catch (err) {
-          console.error('Approve Error:', err);
-          toastError('Error', err.message || 'Approve failed');
-        } finally {
-          this.processing = false;
-        }
-      },
-
-      async confirmReject() {
-        if (this.processing) return;
-        if (!this.rejectNote || this.rejectNote.trim().length === 0) {
-          this.rejectNoteError = true;
-          toastWarning('Warning', 'Rejection note is required.');
-          return;
-        }
-        this.rejectNoteError = false;
-        this.processing = true;
-        try {
-          const url = `{{ route('approvals.reject', ['id' => $approvalId]) }}`;
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-              note: this.rejectNote
-            })
-          });
-          const text = await response.text();
-          let result = {};
-          try {
-            result = JSON.parse(text);
-          } catch {}
-          if (!response.ok) {
-            if (response.status === 403) throw new Error(result.message || 'You do not have permission to reject.');
-            if (response.status === 422) throw new Error(result.message || 'Revision is not in a state that can be rejected.');
-            throw new Error(result.message || 'Server returned an error.');
-          }
-
-          this.pkg.status = 'Rejected';
-          this.addPkgActivity('rejected', '{{ auth()->user()->name ?? "Reviewer" }}', this.rejectNote);
-          this.showRejectModal = false;
-          toastSuccess('Rejected', result.message || 'Revision rejected successfully!');
-        } catch (err) {
-          console.error('Reject Error:', err);
-          if (err instanceof SyntaxError) toastError('Error', 'Received an invalid response from server.');
-          else toastError('Error', err.message || 'Reject failed');
-        } finally {
-          this.processing = false;
-        }
-      },
-
-      async confirmRollback() {
-        if (this.processing) return;
-        this.processing = true;
-        try {
-          const url = `{{ route('approvals.rollback', ['id' => $approvalId]) }}`;
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-          });
-          const text = await response.text();
-          let result = {};
-          try {
-            result = JSON.parse(text);
-          } catch {}
-          if (!response.ok) {
-            if (response.status === 403) throw new Error(result.message || 'You do not have permission to rollback.');
-            if (response.status === 422) throw new Error(result.message || 'Revision is not in a state that can be rolled back.');
-            throw new Error(result.message || 'Server returned an error.');
-          }
-
-          this.pkg.status = 'Waiting';
-          this.addPkgActivity('rollbacked', '{{ auth()->user()->name ?? "Reviewer" }}', 'Status set to Waiting');
-          this.showRollbackModal = false;
-          toastSuccess('Rolled back', result.message || 'Status has been set back to Waiting.');
-        } catch (err) {
-          console.error('Rollback Error:', err);
-          if (err instanceof SyntaxError) toastError('Error', 'Received an invalid response from server.');
-          else toastError('Error', err.message || 'Rollback failed');
-        } finally {
-          this.processing = false;
-        }
       },
 
       /* ===== render CAD via occt-import-js (STEP/IGES + fallback IGES) ===== */
@@ -1881,8 +2341,6 @@
           if (!resp.ok) throw new Error('Failed to fetch CAD file');
           const mainBuf = new Uint8Array(await resp.arrayBuffer());
 
-          console.log('CAD size (bytes):', mainBuf.byteLength);
-
           const occt = await window.occtimportjs();
           const ext = (url.split('?')[0].split('#')[0].split('.').pop() || '').toLowerCase();
           const params = {
@@ -1896,13 +2354,9 @@
 
           if (ext === 'stp' || ext === 'step') {
             res = occt.ReadStepFile(mainBuf, params);
-            console.log('OCCT STEP result:', res);
-
             if (!res || !res.success) {
-              console.warn('STEP failed, trying IGES fallback...');
               const igesFile = this._findIgesSibling(fileObj);
               if (igesFile?.url) {
-                console.log('Fallback IGES file:', igesFile.name, igesFile.url);
                 const igResp = await fetch(igesFile.url, {
                   cache: 'no-store',
                   credentials: 'same-origin'
@@ -1910,12 +2364,10 @@
                 if (!igResp.ok) throw new Error('Failed to fetch fallback IGES file');
                 const igBuf = new Uint8Array(await igResp.arrayBuffer());
                 res = occt.ReadIgesFile(igBuf, params);
-                console.log('OCCT IGES fallback result:', res);
               }
             }
           } else {
             res = occt.ReadIgesFile(mainBuf, params);
-            console.log('OCCT IGES result:', res);
           }
 
           if (!res || !res.success) {
@@ -1979,7 +2431,165 @@
         }
       },
 
+           // ===== White block helper (MULTI) =====
+      addMask() {
+        const m = {
+          id: this.nextMaskId++,
+          visible: true,
+          editable: true,
+          active: true,
+
+          x: 150,
+          y: 150,
+          width: 250,
+          height: 60,
+          rotation: 0,
+
+          _mode: null,
+          _edge: null,
+          _startX: 0,
+          _startY: 0,
+          _startLeft: 0,
+          _startTop: 0,
+          _startW: 0,
+          _startH: 0,
+          _centerX: 0,
+          _centerY: 0,
+          _startRot: 0,
+        };
+
+        // matikan blok lain lalu aktifkan blok baru
+        this.masks.forEach(mm => (mm.active = false));
+        this.masks.push(m);
+      },
+
+      getActiveMask() {
+        return this.masks.find(m => m.active) || null;
+      },
+
+      activateMask(mask) {
+        this.masks.forEach(m => (m.active = (m.id === mask.id)));
+      },
+
+      deactivateMask() {
+        this.masks.forEach(m => {
+          m.active = false;
+          m._mode = null;
+        });
+      },
+
+      maskStyle(mask) {
+        return `
+          left:${mask.x}px;
+          top:${mask.y}px;
+          width:${mask.width}px;
+          height:${mask.height}px;
+          transform: rotate(${mask.rotation}deg);
+          transform-origin:center center;
+        `;
+      },
+
+      onMaskMouseDown(e, mask) {
+        this.activateMask(mask);
+        if (!mask.editable) return;
+
+        mask._mode = 'move';
+        mask._startX = e.clientX;
+        mask._startY = e.clientY;
+        mask._startLeft = mask.x;
+        mask._startTop = mask.y;
+
+        window.addEventListener('mousemove', this._onMaskMouseMove);
+        window.addEventListener('mouseup', this._onMaskMouseUp);
+      },
+
+      startMaskResize(e, edge, mask) {
+        this.activateMask(mask);
+        if (!mask.editable) return;
+
+        mask._mode = 'resize';
+        mask._edge = edge;
+        mask._startX = e.clientX;
+        mask._startY = e.clientY;
+        mask._startLeft = mask.x;
+        mask._startTop = mask.y;
+        mask._startW = mask.width;
+        mask._startH = mask.height;
+
+        window.addEventListener('mousemove', this._onMaskMouseMove);
+        window.addEventListener('mouseup', this._onMaskMouseUp);
+      },
+
+      startMaskRotate(e, mask) {
+        this.activateMask(mask);
+        if (!mask.editable) return;
+
+        const rect = e.currentTarget.parentElement.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+
+        mask._mode = 'rotate';
+        mask._centerX = cx;
+        mask._centerY = cy;
+        mask._startRot = mask.rotation;
+
+        window.addEventListener('mousemove', this._onMaskMouseMove);
+        window.addEventListener('mouseup', this._onMaskMouseUp);
+      },
+
+      handleMaskMouseMove(ev) {
+        const mask = this.masks.find(m => m._mode);
+        if (!mask) return;
+
+        const dx = ev.clientX - mask._startX;
+        const dy = ev.clientY - mask._startY;
+
+        if (mask._mode === 'move') {
+          mask.x = mask._startLeft + dx;
+          mask.y = mask._startTop + dy;
+
+        } else if (mask._mode === 'resize') {
+          const minW = 20, minH = 20;
+
+          if (mask._edge.includes('e')) {
+            mask.width = Math.max(minW, mask._startW + dx);
+          }
+          if (mask._edge.includes('s')) {
+            mask.height = Math.max(minH, mask._startH + dy);
+          }
+          if (mask._edge.includes('w')) {
+            mask.x = mask._startLeft + dx;
+            mask.width = Math.max(minW, mask._startW - dx);
+          }
+          if (mask._edge.includes('n')) {
+            mask.y = mask._startTop + dy;
+            mask.height = Math.max(minH, mask._startH - dy);
+          }
+
+        } else if (mask._mode === 'rotate') {
+          const angle = Math.atan2(ev.clientY - mask._centerY, ev.clientX - mask._centerX);
+          mask.rotation = (angle * 180 / Math.PI) + 90;
+        }
+      },
+
+      handleMaskMouseUp() {
+        const mask = this.masks.find(m => m._mode);
+        if (mask) mask._mode = null;
+
+        window.removeEventListener('mousemove', this._onMaskMouseMove);
+        window.removeEventListener('mouseup', this._onMaskMouseUp);
+      },
+
+      removeActiveMask() {
+        const active = this.getActiveMask();
+        if (!active) return;
+        this.masks = this.masks.filter(m => m.id !== active.id);
+      },
+
+
+
     }
   }
 </script>
+
 @endpush

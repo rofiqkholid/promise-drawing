@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Models;
 use App\Models\DocTypeSubCategories;
 use App\Models\Customers;
+use App\Models\FileExtensions;
 use App\Models\DoctypeGroups;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Crypt;
@@ -16,7 +17,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ShareNotification;
 use Illuminate\Support\Facades\URL;
+use App\Models\StampFormat;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Carbon\Carbon;
 
 class ShareController extends Controller
 {
@@ -321,7 +324,7 @@ class ShareController extends Controller
             return $item;
         });
 
-         // 🔹 TAMBAHAN: hash untuk link ke share.detail
+        // 🔹 TAMBAHAN: hash untuk link ke share.detail
         $data = $data->map(function ($row) {
             // dpr.id yang Tuan select tadi adalah revision_id
             $row->hash = encrypt($row->id);
@@ -470,6 +473,45 @@ class ShareController extends Controller
             abort(404, 'Shared package not found.');
         }
 
+        // --- Tambahan: data untuk stamp ---
+        $receiptDate = $revision->receipt_date
+            ? Carbon::parse($revision->receipt_date)
+            : null;
+
+        $uploadDateRevision = $revision->created_at
+            ? Carbon::parse($revision->created_at)
+            : null;
+
+        $isObsolete = (bool)($revision->is_obsolete ?? 0);
+
+        $obsoleteDate = $revision->obsolete_at
+            ? Carbon::parse($revision->obsolete_at)
+            : null;
+
+        $lastApproval = DB::table('package_approvals as pa')
+            ->leftJoin('users as u', 'u.id', '=', 'pa.decided_by')
+            ->leftJoin('departments as d', 'd.id', '=', 'u.id_dept')
+            ->where('pa.revision_id', $revisionId)
+            ->orderByRaw('COALESCE(pa.decided_at, pa.requested_at) DESC')
+            ->first([
+                'u.name as approver_name',
+                'd.code as dept_name'
+            ]);
+
+        $obsoleteStampInfo = [
+            'date_raw'  => $obsoleteDate?->toDateString(),
+            'date_text' => $obsoleteDate
+                ? $this->formatObsoleteDate($obsoleteDate)
+                : null,
+            'name' => $revision->obsolete_name
+                ?? optional($lastApproval)->approver_name
+                ?? '-',
+
+            'dept' => $revision->obsolete_dept
+                ?? optional($lastApproval)->dept_name
+                ?? '-',
+        ];
+
         // 3. Ambil info package (customer, model, dst)
         $package = DB::table('doc_packages as dp')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
@@ -497,49 +539,88 @@ class ShareController extends Controller
         }
 
         // 4. Ambil file-file di revisi ini, dikelompokkan per kategori
-        $files = DB::table('doc_package_revision_files')
+        $fileRows = DB::table('doc_package_revision_files')
             ->where('revision_id', $revisionId)
-            ->select('id', 'filename as name', 'category')
+            ->select(
+                'id',
+                'filename as name',
+                'category',
+                'storage_path',
+                'file_size',
+                'ori_position',
+                'copy_position',
+                'obslt_position'
+            )
+            ->get();
+
+
+        // daftar extension yang dipakai
+        $extList = $fileRows
+            ->map(fn($r) => strtolower(pathinfo($r->name, PATHINFO_EXTENSION)))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $extUpper = $extList->map(fn($e) => strtoupper($e));
+
+        // ambil icon dari master file_extensions
+        $extIcons = $extUpper->isEmpty()
+            ? []
+            : FileExtensions::whereIn('code', $extUpper)
             ->get()
+            ->mapWithKeys(fn(FileExtensions $m) => [strtolower($m->code) => $m->icon_src])
+            ->all();
+
+        $files = $fileRows
             ->groupBy('category')
-            ->map(function ($items) {
-                return $items->map(function ($item) {
+            ->map(function ($items) use ($extIcons) {
+                return $items->map(function ($item) use ($extIcons) {
+                    $url = URL::signedRoute('preview.file', ['id' => $item->id]);
+
+                    $ext = strtolower(pathinfo($item->name, PATHINFO_EXTENSION));
+                    $iconSrc = $extIcons[$ext] ?? null; // bisa null kalau tidak ada di master
+
                     return [
-                        'id'   => $item->id,
-                        'name' => $item->name,
-                        'url'  => URL::signedRoute('preview.file', ['id' => $item->id]),
+                        'id'            => $item->id,
+                        'name'          => $item->name,
+                        'url'           => $url,
+                        'icon_src'      => $iconSrc,
+                        'ori_position'  => $item->ori_position,
+                        'copy_position' => $item->copy_position,
+                        'obslt_position' => $item->obslt_position,
+                        'size'          => $item->file_size, // <--- ukuran (byte) dari DB
                     ];
                 });
             })
-            ->mapWithKeys(fn ($items, $key) => [strtolower($key) => $items]);
+            ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
-       
+
         // 5. Daftar supplier yang pernah di-share (berdasarkan kolom share_to di doc_package_revisions)
-$shares = collect();
+        $shares = collect();
 
-if (!empty($revision->share_to)) {
-    $ids = json_decode($revision->share_to, true);
+        if (!empty($revision->share_to)) {
+            $ids = json_decode($revision->share_to, true);
 
-    if (is_array($ids) && count($ids) > 0) {
-        $supplierRows = DB::table('suppliers as s')
-            ->whereIn('s.id', $ids)
-            ->orderBy('s.code')
-            ->get([
-                's.code as supplier_code',
-                's.name as supplier_name',
-            ]);
+            if (is_array($ids) && count($ids) > 0) {
+                $supplierRows = DB::table('suppliers as s')
+                    ->whereIn('s.id', $ids)
+                    ->orderBy('s.code')
+                    ->get([
+                        's.code as supplier_code',
+                        's.name as supplier_name',
+                    ]);
 
-        $sharedAt = $revision->shared_at ?? null;
+                $sharedAt = $revision->shared_at ?? null;
 
-        $shares = $supplierRows->map(function ($row) use ($sharedAt) {
-            return (object) [
-                'supplier_code' => $row->supplier_code,
-                'supplier_name' => $row->supplier_name,
-                'shared_at'     => $sharedAt,
-            ];
-        });
-    }
-}
+                $shares = $supplierRows->map(function ($row) use ($sharedAt) {
+                    return (object) [
+                        'supplier_code' => $row->supplier_code,
+                        'supplier_name' => $row->supplier_name,
+                        'shared_at'     => $sharedAt,
+                    ];
+                });
+            }
+        }
 
 
         // 6. Susun data untuk Blade
@@ -560,14 +641,48 @@ if (!empty($revision->share_to)) {
             ],
             'files'   => $files,
             'shares'  => $shares,
+
+            'stamp'        => [
+                'receipt_date' => $receiptDate?->toDateString(),
+                'upload_date'  => $uploadDateRevision?->toDateString(),
+                'obsolete_date' => $obsoleteDate?->toDateString(),
+                'is_obsolete'  => $isObsolete,
+                'obsolete_info'  => $obsoleteStampInfo,
+            ],
         ];
 
         // hash baru untuk link (kalau mau dipakai lagi)
         $hash = encrypt($revisionId);
 
+        $stampFormats = StampFormat::where('is_active', true)
+            ->orderBy('id')
+            ->get();
+
         return view('file_management.share_detail', [
             'shareId' => $hash,
             'detail'  => $detail,
+            'stampFormats'  => $stampFormats,
         ]);
+    }
+
+    private function formatObsoleteDate(Carbon $date): string
+    {
+        $month = $date->format('M');       // "Oct"
+        $day   = (int) $date->format('j'); // 25
+        $year  = $date->format('Y');       // 2025
+
+        if (in_array($day % 100, [11, 12, 13], true)) {
+            $suffix = 'th';
+        } else {
+            $last = $day % 10;
+            $suffix = match ($last) {
+                1 => 'st',
+                2 => 'nd',
+                3 => 'rd',
+                default => 'th',
+            };
+        }
+
+        return sprintf('%s.%d%s %s', $month, $day, $suffix, $year);
     }
 }

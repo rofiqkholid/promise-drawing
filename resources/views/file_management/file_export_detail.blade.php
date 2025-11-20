@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Download Detail - File Manager')
-@section('header-title', 'File Manager/Download Detail')
+@section('header-title', 'File Manager - Download Detail')
 
 @section('content')
 
@@ -173,13 +173,13 @@
                                 class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
                                 -
                             </button>
-                            <button @click="resetZoom()"
-                                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-                                Fit
-                            </button>
                             <button @click="zoomIn()"
                                 class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
                                 +
+                            </button>
+                            <button @click="resetZoom()"
+                                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                                Fit
                             </button>
                         </div>
 
@@ -1955,22 +1955,15 @@
                                 }
                             })
                             .catch(error => {
-                                if (error.name === 'AbortError' || error.message === 'Aborted') {
-                                    console.log('File preparation canceled by user.');
+                                if (signal.aborted || error.name === 'AbortError' || error.message === 'Aborted' || error === 'Aborted') {
+                                    console.log('Download canceled by user.');
                                     const t_cancel = detectTheme();
-                                    Swal.fire({
-                                        title: 'Canceled',
-                                        text: 'File preparation was canceled.',
+                                    BaseToast.fire({
                                         icon: 'info',
-                                        iconColor: t_cancel.icon.info,
+                                        title: 'Canceled',
+                                        text: 'Download preparation canceled.',
                                         background: t_cancel.bg,
-                                        color: t_cancel.fg,
-                                        customClass: { popup: 'swal2-popup border' },
-                                        didOpen: (popup) => {
-                                            const p = popup.querySelector('.swal2-popup');
-                                            if (p) p.style.borderColor = t_cancel.border;
-                                        },
-                                        confirmButtonColor: '#2563eb',
+                                        color: t_cancel.fg
                                     });
                                     return;
                                 }

@@ -380,8 +380,6 @@ class ApprovalController extends Controller
     }
 
 
-
-
     public function showDetail(string $id)
     {
         // 1. Tentukan revisionId sebenarnya

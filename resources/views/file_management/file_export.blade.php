@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Download - File Manager')
-@section('header-title', 'File Manager/Download')
+@section('header-title', 'File Manager - Download')
 
 @section('content')
 <div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900" x-data="{ modalOpen: false }">
@@ -53,18 +53,60 @@
   {{-- Filter section --}}
   <div class="mt-8 bg-white dark:bg-gray-800 p-7 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">Filters</h3>
-      <button id="btnResetFilters"
-        type="button"
-        class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600
-               bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
-        <i class="fa-solid fa-rotate-left"></i>
-        Reset Filters
-      </button>
+      {{-- <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">Filters</h3> --}}
+      <div class="relative w-full sm:w-72"> <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <i id="search-icon-static" class="fa-solid fa-magnifying-glass text-gray-400 transition-opacity duration-200"></i>
+              
+              <i id="search-icon-loading" class="fa-solid fa-spinner fa-spin text-blue-500 opacity-0 transition-opacity duration-200 absolute left-3"></i>
+          </div>
+
+          <input type="text" 
+              id="custom-export-search" 
+              class="block w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-full leading-5 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out shadow-sm" 
+              placeholder="Search ECN, Model, Etc..."
+              autocomplete="off">
+
+          <div class="absolute inset-y-0 right-0 pr-2 flex items-center">
+              <button id="btn-clear-search" 
+                      type="button"
+                      class="hidden text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none transition-colors p-1">
+                  <i class="fa-solid fa-circle-xmark"></i>
+              </button>
+          </div>
+      </div>
+      <div class="flex items-center gap-2">
+
+        <button id="btnDownloadSummary"
+          type="button"
+          class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-green-500
+     bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200
+     hover:bg-green-100 dark:hover:bg-green-900/60">
+          {{-- normal state --}}
+          <span class="btn-label inline-flex items-center gap-2">
+            <i class="fa-solid fa-file-excel"></i>
+            <span>Download Summary</span>
+          </span>
+
+          {{-- loading state --}}
+          <span class="btn-spinner hidden inline-flex items-center gap-2">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+            <span>Preparing...</span>
+          </span>
+        </button>
+
+
+        <button id="btnResetFilters"
+          type="button"
+          class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600
+             bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+          <i class="fa-solid fa-rotate-left"></i>
+          Reset Filters
+        </button>
+      </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
-      @foreach(['Customer', 'Model', 'Document Type', 'Category'] as $label)
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-5">
+      @foreach(['Customer', 'Model', 'Document Type', 'Category', 'Project Status'] as $label)
       <div>
         <label for="{{ Str::slug($label) }}" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $label }}</label>
         <div class="relative mt-1">
@@ -168,6 +210,7 @@ $(function () {
   makeSelect2($('#model'),         'model',      () => ({ customer_code: $('#customer').val() || '' }));
   makeSelect2($('#document-type'), 'doc_type');
   makeSelect2($('#category'),      'category',   () => ({ doc_type: $('#document-type').val() || '' }));
+  makeSelect2($('#project-status'), 'project_status');
 
   $('#customer').on('change', function () {
     resetSelect2ToAll($('#model'));
@@ -183,6 +226,7 @@ $(function () {
       model:     valOrAll($('#model').val()),
       doc_type:  valOrAll($('#document-type').val()),
       category:  valOrAll($('#category').val()),
+      project_status: valOrAll($('#project-status').val()),
     };
   }
 
@@ -209,9 +253,14 @@ $(function () {
 
   // Initialize DataTable
   function initTable() {
+    const $staticIcon  = $('#search-icon-static');
+    const $loadingIcon = $('#search-icon-loading')
+
     table = $('#exportTable').DataTable({
       processing: true,
       serverSide: true,
+      responsive: true,
+      dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
       ajax: {
         url: '{{ route("api.export.list") }}',
         type: 'GET',
@@ -221,7 +270,13 @@ $(function () {
           d.model     = f.model;
           d.doc_type  = f.doc_type;
           d.category  = f.category;
-        }
+          d.project_status = f.project_status;
+        },
+        error: function (xhr, error, thrown) {
+                console.error('DataTable Error:', error);
+                $loadingIcon.removeClass('opacity-100').addClass('opacity-0');
+                $staticIcon.removeClass('opacity-0');
+            }
       },
       order: [[ 7, 'desc' ]],
 
@@ -272,8 +327,24 @@ $(function () {
             }
         }
       ],
-      responsive: true,
-      dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
+    });
+
+    table.on('processing.dt', function (e, settings, processing) {
+        if (processing) {
+            $staticIcon.addClass('opacity-0');
+            $loadingIcon.removeClass('opacity-0').addClass('opacity-100');
+        } else {
+            $loadingIcon.removeClass('opacity-100').addClass('opacity-0');
+            $staticIcon.removeClass('opacity-0');
+        }
+    });
+    
+    $('#dt-custom-search').on('keyup', function () {
+        const val = this.value;
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(function() {
+            table.search(val).draw(); 
+        }, 500); // Delay 500ms
     });
 
     table.on('draw.dt', function () {
@@ -295,7 +366,7 @@ $(function () {
   }
 
   function bindHandlers() {
-    $('#customer, #model, #document-type, #category').on('change', function () {
+    $('#customer, #model, #document-type, #category, #project-status').on('change', function () {
       if (table) table.ajax.reload(null, true);
       loadKPI();
     });
@@ -305,9 +376,88 @@ $(function () {
       resetSelect2ToAll($('#model'));
       resetSelect2ToAll($('#document-type'));
       resetSelect2ToAll($('#category'));
+      resetSelect2ToAll($('#project-status'));
 
       if (table) table.ajax.reload(null, true);
       loadKPI();
+    });
+
+    $('#btnDownloadSummary').on('click', function() {
+        const f = getCurrentFilters();
+        const query = $.param(f);
+        const url = '{{ route("approvals.summary") }}?' + query;
+
+        const $btn = $(this);
+
+        function setLoading(isLoading) {
+          if (isLoading) {
+            $btn.prop('disabled', true)
+              .addClass('opacity-60 cursor-not-allowed');
+            $btn.find('.btn-label').addClass('hidden');
+            $btn.find('.btn-spinner').removeClass('hidden');
+          } else {
+            $btn.prop('disabled', false)
+              .removeClass('opacity-60 cursor-not-allowed');
+            $btn.find('.btn-label').removeClass('hidden');
+            $btn.find('.btn-spinner').addClass('hidden');
+          }
+        }
+
+        setLoading(true);
+
+        const $iframe = $('<iframe>', {
+          src: url,
+          style: 'display:none;'
+        }).appendTo('body');
+
+        let done = false;
+
+        function finish() {
+          if (done) return;
+          done = true;
+          setLoading(false);
+          $iframe.remove();
+        }
+
+        const timeoutId = setTimeout(finish, 7000);
+
+        $iframe.on('load', function() {
+          clearTimeout(timeoutId);
+          setTimeout(finish, 1000);
+        });
+    });
+
+    const $inputSearch = $('#custom-export-search');
+    const $btnClear    = $('#btn-clear-search');
+    let searchTimeout  = null;
+
+    // Handler Input (Typing)
+    $inputSearch.on('keyup input', function () {
+        const val = this.value;
+
+        // Toggle tombol Clear (X)
+        if (val.length > 0) {
+            $btnClear.removeClass('hidden');
+        } else {
+            $btnClear.addClass('hidden');
+        }
+        
+        // Debounce Search
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(function() {
+            if (table.search() !== val) {
+                table.search(val).draw(); 
+            }
+        }, 600);
+    });
+
+    // 2. Handler Tombol Clear (X)
+    $btnClear.on('click', function () {
+        $inputSearch.val('').focus(); // Kosongkan input & balikin fokus
+        $btnClear.addClass('hidden'); // Sembunyikan tombol X
+        
+        // Reset search datatable
+        table.search('').draw();
     });
   }
 
@@ -560,7 +710,7 @@ $(function () {
       const loaderOverlay = document.createElement('div');
       loaderOverlay.id = 'package-details-modal';
       loaderOverlay.className = 'fixed inset-0 bg-black bg-opacity-40 p-4 flex items-center justify-center z-50';
-      loaderOverlay.innerHTML = `<div class="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center gap-3"><div class="loader-border w-8 h-8 border-4 border-blue-400 rounded-full animate-spin"></div><div class="text-sm text-gray-700 dark:text-gray-300">Loading package details...</div></div>`;
+      loaderOverlay.innerHTML = `<div class="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center gap-3"><div class="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div><div class="text-sm text-gray-700 dark:text-gray-300">Loading package details...</div></div>`;
       document.body.appendChild(loaderOverlay);
 
       fetch(`{{ url('/files') }}` + '/' + encodeURIComponent(id))
