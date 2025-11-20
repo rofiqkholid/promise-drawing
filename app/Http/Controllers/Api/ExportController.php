@@ -15,12 +15,12 @@ use App\Models\Customers;
 use App\Models\Models;
 use App\Models\DoctypeGroups;
 use App\Models\DoctypeSubcategory;
-use App\Models\DocPackageRevisionFile;
 use App\Models\DocTypeSubCategories;
 use App\Models\ActivityLog;
 use App\Models\User;
 use App\Models\StampFormat;
 use App\Models\FileExtensions;
+use App\Models\DocPackageRevisionFile;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
 use Imagick;
@@ -330,9 +330,16 @@ class ExportController extends Controller
         // $id = revision_id
         $revision = DB::table('doc_package_revisions as dpr')
             ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
+            ->leftJoin('users as ou', 'ou.id', '=', 'dpr.obsolete_by')
+            ->leftJoin('departments as od', 'od.id', '=', 'ou.id_dept')
             ->where('dpr.id', $id)
             ->where('dpr.revision_status', '=', 'approved')
-            ->select('dpr.*', 'crl.label as revision_label')
+            ->select(
+                'dpr.*',
+                'crl.label as revision_label',
+                'ou.name as obsolete_name',
+                'od.code as obsolete_dept'
+            )
             ->first();
 
         if (!$revision) {
@@ -344,13 +351,14 @@ class ExportController extends Controller
             ->where('dpr.package_id', $revision->package_id)
             ->where('dpr.revision_status', '=', 'approved')
             ->orderBy('dpr.revision_no', 'desc')
-            ->select('dpr.id', 'dpr.revision_no', 'crl.label')
+            ->select('dpr.id', 'dpr.revision_no', 'crl.label', 'dpr.is_obsolete')
             ->get()
             ->map(function ($rev) {
                 $labelText = $rev->label ? " ({$rev->label})" : "";
                 return [
                     'id'   => str_replace('=', '-', encrypt($rev->id)),
-                    'text' => "Rev-{$rev->revision_no}{$labelText}"
+                    'text' => "Rev-{$rev->revision_no}{$labelText}",
+                    'is_obsolete' => (bool)($rev->is_obsolete ?? 0)
                 ];
             });
 
@@ -382,6 +390,33 @@ class ExportController extends Controller
             : null;
 
         $isObsolete = (bool)($revision->is_obsolete ?? 0);
+
+        $obsoleteDate = $revision->obsolete_at
+            ? Carbon::parse($revision->obsolete_at)
+            : null;
+
+        $lastApproval = DB::table('package_approvals as pa')
+            ->leftJoin('users as u', 'u.id', '=', 'pa.decided_by')
+            ->leftJoin('departments as d', 'd.id', '=', 'u.id_dept')
+            ->where('pa.revision_id', $id)
+            ->orderByRaw('COALESCE(pa.decided_at, pa.requested_at) DESC')
+            ->first([
+                'u.name as approver_name',
+                'd.code as dept_name'
+            ]);
+
+        $obsoleteStampInfo = [
+            'date_raw'  => $obsoleteDate?->toDateString(),
+            'date_text' => $obsoleteDate
+                ? $obsoleteDate->toSaiStampFormat()
+                : null,
+            'name' => $revision->obsolete_name
+                ?? optional($lastApproval)->approver_name
+                ?? '-',
+            'dept' => $revision->obsolete_dept
+                ?? optional($lastApproval)->dept_name
+                ?? '-',
+        ];
 
         $fileRows = DB::table('doc_package_revision_files')
             ->where('revision_id', $id)
@@ -426,6 +461,13 @@ class ExportController extends Controller
             })
             ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
+        // Mendapatkan kode departemen pengguna
+        $userDeptCode = null;
+        if (Auth::check() && Auth::user()->id_dept) {
+            $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
+            $userDeptCode = $dept->code ?? null;
+        }
+
         $detail = [
             'metadata' => [
                 'customer' => $package->customer,
@@ -445,16 +487,24 @@ class ExportController extends Controller
                 'receipt_date' => $receiptDate?->toDateString(),
                 'upload_date'  => $uploadDateRevision?->toDateString(),
                 'is_obsolete'  => $isObsolete,
+                'obsolete_info' => $obsoleteStampInfo,
             ],
         ];
 
         $stampFormat = StampFormat::where('is_active', true)->first();
+
+        $userName = null;
+        if (Auth::check()) {
+            $userName = Auth::user()->name ?? null;
+        }
 
         return view('file_management.file_export_detail', [
             'exportId' => $originalEncryptedId,
             'detail'   => $detail,
             'revisionList' => $revisionList,
             'stampFormat' => $stampFormat,
+            'userDeptCode' => $userDeptCode,
+            'userName' => $userName,
         ]);
     }
 
@@ -469,9 +519,16 @@ class ExportController extends Controller
 
         $revision = DB::table('doc_package_revisions as dpr')
             ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
+            ->leftJoin('users as ou', 'ou.id', '=', 'dpr.obsolete_by')
+            ->leftJoin('departments as od', 'od.id', '=', 'ou.id_dept')
             ->where('dpr.id', $decrypted_id)
             ->where('dpr.revision_status', '=', 'approved')
-            ->select('dpr.*', 'crl.label as revision_label')
+            ->select(
+                'dpr.*',
+                'crl.label as revision_label',
+                'ou.name as obsolete_name',
+                'od.code as obsolete_dept'
+            )
             ->first();
 
         if (!$revision) {
@@ -505,6 +562,33 @@ class ExportController extends Controller
             : null;
 
         $isObsolete = (bool)($revision->is_obsolete ?? 0);
+
+        $obsoleteDate = $revision->obsolete_at
+            ? Carbon::parse($revision->obsolete_at)
+            : null;
+
+        $lastApproval = DB::table('package_approvals as pa')
+            ->leftJoin('users as u', 'u.id', '=', 'pa.decided_by')
+            ->leftJoin('departments as d', 'd.id', '=', 'u.id_dept')
+            ->where('pa.revision_id', $decrypted_id)
+            ->orderByRaw('COALESCE(pa.decided_at, pa.requested_at) DESC')
+            ->first([
+                'u.name as approver_name',
+                'd.code as dept_name'
+            ]);
+
+        $obsoleteStampInfo = [
+            'date_raw'  => $obsoleteDate?->toDateString(),
+            'date_text' => $obsoleteDate
+                ? $obsoleteDate->toSaiStampFormat()
+                : null,
+            'name' => $revision->obsolete_name
+                ?? optional($lastApproval)->approver_name
+                ?? '-',
+            'dept' => $revision->obsolete_dept
+                ?? optional($lastApproval)->dept_name
+                ?? '-',
+        ];
 
         $fileRows = DB::table('doc_package_revision_files')
             ->where('revision_id', $decrypted_id)
@@ -567,16 +651,23 @@ class ExportController extends Controller
                 'receipt_date' => $receiptDate?->toDateString(),
                 'upload_date'  => $uploadDateRevision?->toDateString(),
                 'is_obsolete'  => $isObsolete,
+                'obsolete_info' => $obsoleteStampInfo,
             ],
         ];
 
         $stampFormat = StampFormat::where('is_active', true)->first();
+
+        $userName = null;
+        if (Auth::check()) {
+            $userName = Auth::user()->name ?? null;
+        }
 
         return response()->json([
             'success'  => true,
             'pkg'      => $detail,
             'exportId' => $originalEncryptedId,
             'stampFormat' => $stampFormat,
+            'userName' => $userName,
         ]);
     }
 
@@ -1035,30 +1126,91 @@ class ExportController extends Controller
         }
 
         try {
-            $receiptDate = $revision->receipt_date ? Carbon::parse($revision->receipt_date)->toDateString() : '';
-            $uploadDate = $revision->created_at ? Carbon::parse($revision->created_at)->toDateString() : '';
-            $topLine = ($stampFormat?->prefix ?: 'DATE RECEIVED') . ' : ' . $receiptDate;
-            $bottomLine = ($stampFormat?->suffix ?: 'DATE UPLOADED') . ' : ' . $uploadDate;
-            $isObsolete = (bool)($revision->is_obsolete ?? 0);
+            $formatSaiDate = function ($dateInput) {
+                if (!$dateInput) return '-';
+                try {
+                    $d = Carbon::parse($dateInput);
+                    $day = $d->day;
+                    // Logika Suffix (st, nd, rd, th)
+                    if (in_array($day % 100, [11, 12, 13], true)) {
+                        $suffixRaw = 'th';
+                    } else {
+                        $last = $day % 10;
+                        $suffixRaw = match ($last) { 1 => 'st', 2 => 'nd', 3 => 'rd', default => 'th' };
+                    }
+                    // Unicode Superscript
+                    $superscripts = ['st' => 'ˢᵗ', 'nd' => 'ⁿᵈ', 'rd' => 'ʳᵈ', 'th' => 'ᵗʰ'];
+                    $suffix = $superscripts[$suffixRaw] ?? $suffixRaw;
+                    return $d->format('M') . '.' . $day . $suffix . ' ' . $d->format('Y');
+                } catch (\Exception $e) {
+                    return '-';
+                }
+            };
 
+            // --- A. STAMP ORIGINAL ---
+            $receiptDateStr = $formatSaiDate($revision->receipt_date);
+            $uploadDateStr  = $formatSaiDate($revision->created_at);
+
+            $topLine    = "DATE RECEIVED : " . $receiptDateStr;
+            $bottomLine = "DATE UPLOADED : " . $uploadDateStr;
+
+            // --- B. STAMP CONTROL COPY ---
+            $now = now();
+            $datePart = $formatSaiDate($now);
+            $timePart = $now->format('H:i:s');
+
+            $deptCode = '--';
+            if (Auth::check() && Auth::user()->id_dept) {
+                $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
+                if ($dept && isset($dept->code)) $deptCode = $dept->code;
+            }
+            $topLineCopy = "SAI / {$deptCode} / {$datePart} {$timePart}";
+
+            $userName = '--';
+            if (Auth::check()) {
+                $userName = Auth::user()->name ?? '--';
+            }
+            $bottomLineCopy = "DOWNLOADED BY {$userName}";
+
+            // --- POSISI STAMP (DEFINISI DI SCOPE INDUK) ---
             $posOriginal = $this->positionIntToKey($file->ori_position ?? 2, 'bottom-right');
-            $posCopy = $this->positionIntToKey($file->copy_position ?? 1, 'bottom-center');
+            $posCopy     = $this->positionIntToKey($file->copy_position ?? 1, 'bottom-center');
             $posObsolete = $this->positionIntToKey($file->obslt_position ?? 0, 'bottom-left');
 
-            // 1. Buat "Master" stempel (ukuran 336x120)
-            $stampOriginal = $this->_createStampImage('ORIGINAL', $topLine, $bottomLine);
-            $stampCopy = $this->_createStampImage('Control COPY', $topLine, $bottomLine);
-            $stampObsolete = $isObsolete ? $this->_createStampImage('OBSOLETE', $topLine, $bottomLine) : null;
+            // --- GENERATE MASTER GAMBAR ---
+            $stampOriginal = $this->_createStampImage('SAI-DRAWING ORIGINAL', $topLine, $bottomLine);
+            $stampCopy     = $this->_createStampImage('SAI-DRAWING CONTROL COPY', $topLineCopy, $bottomLineCopy);
+            $stampObsolete = null;
+
+            $isObsolete = (bool)($revision->is_obsolete ?? 0);
+            if ($isObsolete) {
+                $obsDateStr = $formatSaiDate($revision->obsolete_at);
+                $topLineObsolete = "DATE OBSOLETE : {$obsDateStr}";
+
+                $obsName = '-'; $obsDept = '-';
+                if (!empty($revision->obsolete_by)) {
+                    $u = DB::table('users')->where('id', $revision->obsolete_by)->first(['name', 'id_dept']);
+                    if ($u) {
+                        $obsName = $u->name;
+                        if ($u->id_dept) {
+                            $d = DB::table('departments')->where('id', $u->id_dept)->value('code');
+                            $obsDept = $d ?? '-';
+                        }
+                    }
+                }
+                $bottomLineObsolete = "Nama : {$obsName}          Dept. : {$obsDept}";
+                $stampObsolete = $this->_createStampImage('SAI-DRAWING OBSOLETE', $topLineObsolete, $bottomLineObsolete);
+            }
 
             if (!$stampOriginal || !$stampCopy) {
                 Log::warning('Could not create master stamp images, returning original file.');
                 return $originalPath;
             }
 
-            // Dapatkan rasio aspek master stempel (336 / 120 = 2.8)
+            // PROSES IMAGICK
             $masterStampWidth = $stampOriginal->getImageWidth();
             $masterStampHeight = $stampOriginal->getImageHeight();
-            $stampAspectRatio = $masterStampWidth / $masterStampHeight; // 2.8
+            $stampAspectRatio = $masterStampWidth / $masterStampHeight;
 
             $imagick = new Imagick();
             $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
@@ -1067,108 +1219,40 @@ class ExportController extends Controller
             if ($isPdf) {
                 $imagick->setResolution(150, 150);
             }
-
             $imagick->readImage($originalPath);
 
-            $marginPercent = 0.03; 
-            // Tentukan persentase lebar stempel (misal: 15% dari lebar gambar)
-            $stampWidthPercent = 0.15; 
-            // Tentukan ukuran minimum stempel agar teks terbaca
-            $minStampWidth = 224; // (1.0x ukuran lama)
+            $marginPercent = 0.03;
+            $stampWidthPercent = 0.15;
+            $minStampWidth = 224;
 
-            if ($isPdf) {
-                $totalPages = $imagick->getNumberImages();
-                for ($i = 0; $i < $totalPages; $i++) {
-                    $imagick->setIteratorIndex($i);
-
-                    $imgWidth = $imagick->getImageWidth();
-                    $imgHeight = $imagick->getImageHeight();
-                    $margin = max(8, (int) (min($imgWidth, $imgHeight) * $marginPercent));
-
-                    // 2. Hitung ukuran stempel dinamis
-                    $newStampWidth = max($minStampWidth, (int) ($imgWidth * $stampWidthPercent));
-                    $newStampHeight = (int) ($newStampWidth / $stampAspectRatio);
-
-                    // 3. Clone dan resize stempel master
-                    $stampOrigResized = $stampOriginal->clone();
-                    $stampOrigResized->resizeImage($newStampWidth, $newStampHeight, Imagick::FILTER_LANCZOS, 1);
-                    
-                    $stampCopyResized = $stampCopy->clone();
-                    $stampCopyResized->resizeImage($newStampWidth, $newStampHeight, Imagick::FILTER_LANCZOS, 1);
-                    
-                    $stampObsResized = null;
-                    if ($isObsolete && $stampObsolete) {
-                        $stampObsResized = $stampObsolete->clone();
-                        $stampObsResized->resizeImage($newStampWidth, $newStampHeight, Imagick::FILTER_LANCZOS, 1);
-                    }
-
-                    if ($imgWidth < $newStampWidth) {
-                        Log::warning('Image width is smaller than stamp width, stamp may overlap.', [
-                            'file_id' => $file->id, 'page' => $i, 'imgW' => $imgWidth, 'stampW' => $newStampWidth
-                        ]);
-                    }
-
-                    // 4. Gunakan stempel yang sudah di-resize
-                    list($x, $y) = $this->calculateStampCoordinates($posOriginal, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
-                    $imagick->compositeImage($stampOrigResized, Imagick::COMPOSITE_OVER, (int)$x, (int)$y);
-
-                    list($xCopy, $yCopy) = $this->calculateStampCoordinates($posCopy, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
-                    $imagick->compositeImage($stampCopyResized, Imagick::COMPOSITE_OVER, (int)$xCopy, (int)$yCopy);
-
-                    if ($stampObsResized) {
-                        list($xObs, $yObs) = $this->calculateStampCoordinates($posObsolete, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
-                        $imagick->compositeImage($stampObsResized, Imagick::COMPOSITE_OVER, (int)$xObs, (int)$yObs);
-                    }
-                    
-                    // 5. Hancurkan (destroy) clone stempel
-                    $stampOrigResized->destroy();
-                    $stampCopyResized->destroy();
-                    if ($stampObsResized) $stampObsResized->destroy();
-                }
-
-            } else {
-                // Logika yang sama untuk gambar non-PDF
-                $mainImageIndex = 0;
-                if ($imagick->getNumberImages() > 1) {
-                    $maxResolution = 0;
-                    foreach ($imagick as $i => $frame) {
-                        $resolution = $frame->getImageWidth() * $frame->getImageHeight();
-                        if ($resolution > $maxResolution) {
-                            $maxResolution = $resolution;
-                            $mainImageIndex = $i;
-                        }
-                    }
-                }
-                $imagick->setIteratorIndex($mainImageIndex);
-
+            // --- DEFINISI CLOSURE ---
+            $processPage = function($iteratorIndex) use (
+                $imagick, $stampOriginal, $stampCopy, $stampObsolete, $isObsolete, $file,
+                $stampAspectRatio, $marginPercent, $stampWidthPercent, $minStampWidth,
+                $posOriginal, $posCopy, $posObsolete,
+            ) {
+                $imagick->setIteratorIndex($iteratorIndex);
                 $imgWidth = $imagick->getImageWidth();
                 $imgHeight = $imagick->getImageHeight();
                 $margin = max(8, (int) (min($imgWidth, $imgHeight) * $marginPercent));
 
-                // 2. Hitung ukuran stempel dinamis
                 $newStampWidth = max($minStampWidth, (int) ($imgWidth * $stampWidthPercent));
                 $newStampHeight = (int) ($newStampWidth / $stampAspectRatio);
-                
-                // 3. Clone dan resize stempel master
+
+                // Resize Stamps
                 $stampOrigResized = $stampOriginal->clone();
                 $stampOrigResized->resizeImage($newStampWidth, $newStampHeight, Imagick::FILTER_LANCZOS, 1);
-                
+
                 $stampCopyResized = $stampCopy->clone();
                 $stampCopyResized->resizeImage($newStampWidth, $newStampHeight, Imagick::FILTER_LANCZOS, 1);
-                
+
                 $stampObsResized = null;
                 if ($isObsolete && $stampObsolete) {
                     $stampObsResized = $stampObsolete->clone();
                     $stampObsResized->resizeImage($newStampWidth, $newStampHeight, Imagick::FILTER_LANCZOS, 1);
                 }
 
-                if ($imgWidth < $newStampWidth) {
-                    Log::warning('Image width is smaller than stamp width, stamp may overlap.', [
-                        'file_id' => $file->id, 'imgW' => $imgWidth, 'stampW' => $newStampWidth
-                    ]);
-                }
-
-                // 4. Gunakan stempel yang sudah di-resize
+                // Composite Stamps
                 list($x, $y) = $this->calculateStampCoordinates($posOriginal, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
                 $imagick->compositeImage($stampOrigResized, Imagick::COMPOSITE_OVER, (int)$x, (int)$y);
 
@@ -1178,18 +1262,38 @@ class ExportController extends Controller
                 if ($stampObsResized) {
                     list($xObs, $yObs) = $this->calculateStampCoordinates($posObsolete, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
                     $imagick->compositeImage($stampObsResized, Imagick::COMPOSITE_OVER, (int)$xObs, (int)$yObs);
+                    $stampObsResized->destroy();
                 }
-                
-                // 5. Hancurkan (destroy) clone stempel
+
                 $stampOrigResized->destroy();
                 $stampCopyResized->destroy();
-                if ($stampObsResized) $stampObsResized->destroy();
+            };
+
+            // Jalankan Proses
+            if ($isPdf) {
+                $totalPages = $imagick->getNumberImages();
+                for ($i = 0; $i < $totalPages; $i++) {
+                    $processPage($i);
+                }
+            } else {
+                // Logic untuk gambar non-PDF (Cari resolusi terbesar)
+                $mainImageIndex = 0;
+                if ($imagick->getNumberImages() > 1) {
+                    $maxResolution = 0;
+                    foreach ($imagick as $i => $frame) {
+                        $res = $frame->getImageWidth() * $frame->getImageHeight();
+                        if ($res > $maxResolution) {
+                            $maxResolution = $res;
+                            $mainImageIndex = $i;
+                        }
+                    }
+                }
+                $processPage($mainImageIndex);
             }
 
+            // Simpan File
             $tempDir = storage_path('app/temp');
-            if (!file_exists($tempDir)) {
-                mkdir($tempDir, 0775, true);
-            }
+            if (!file_exists($tempDir)) mkdir($tempDir, 0775, true);
 
             $outputExt = $isPdf ? 'pdf' : strtolower($imagick->getImageFormat());
             $tempPath = $tempDir . '/' . Str::uuid()->toString() . '.' . $outputExt;
@@ -1200,8 +1304,8 @@ class ExportController extends Controller
                 $imagick->writeImage($tempPath);
             }
 
+            // Cleanup
             $imagick->clear(); $imagick->destroy();
-            // 6. Hancurkan stempel MASTER
             $stampOriginal->clear(); $stampOriginal->destroy();
             $stampCopy->clear(); $stampCopy->destroy();
             if ($stampObsolete) { $stampObsolete->clear(); $stampObsolete->destroy(); }
@@ -1210,10 +1314,6 @@ class ExportController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Imagick stamp burn-in failed: ' . $e->getMessage(), ['file_id' => $file->id, 'path' => $originalPath]);
-            // Hancurkan master stempel jika terjadi error
-            if (isset($stampOriginal)) { $stampOriginal->clear(); $stampOriginal->destroy(); }
-            if (isset($stampCopy)) { $stampCopy->clear(); $stampCopy->destroy(); }
-            if (isset($stampObsolete) && $stampObsolete) { $stampObsolete->clear(); $stampObsolete->destroy(); }
             return $originalPath;
         }
     }

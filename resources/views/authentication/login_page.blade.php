@@ -8,7 +8,6 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=McLaren&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -33,15 +32,15 @@
 
         <div class="text-center">
 
-            <img src="{{ asset('assets/image/favicon.ico') }}" alt="PROMISE Logo" class="mx-auto h-24 w-auto mb-4">
+            <img src="{{ asset('assets/image/logo-promise.png') }}" alt="PROMISE Logo" class="mx-auto h-[180px] w-auto mb-4">
 
             <h1 class="promiseFont text-3xl font-semibold text-gray-900">Promise</h1>
-            <h2 class="mt-2 text-xl font-semibold text-gray-800">
-                Sign In to Your Account
-            </h2>
             <p class="mt-2 text-sm text-gray-600">
                 Project Management Integrated System Engineering
             </p>
+            <h2 class="mt-2 text-xl font-semibold text-gray-800">
+                Summit Adyawinsa Indonesia
+            </h2>
         </div>
 
         @if ($errors->any())

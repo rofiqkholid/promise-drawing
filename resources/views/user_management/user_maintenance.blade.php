@@ -28,10 +28,12 @@
             <th class="px-6 py-3">Name</th>
             <th class="px-6 py-3">Email</th>
             <th class="px-6 py-3">NIK</th>
+            <th class="px-6 py-3">Department</th>
             <th class="px-6 py-3">Status</th>
             <th class="px-6 py-3 text-start">Action</th>
           </tr>
         </thead>
+
         <tbody></tbody>
       </table>
     </div>
@@ -78,6 +80,18 @@
                 required>
               <p id="err-nik" class="text-red-500 text-xs mt-1 hidden"></p>
             </div>
+
+            <div class="flex-1 min-w-[200px]">
+              <label for="f_department" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                Department
+              </label>
+              <select id="f_department" name="id_dept"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                {{-- dikosongkan, nanti diisi lewat Select2 AJAX --}}
+              </select>
+              <p id="err-id_dept" class="text-red-500 text-xs mt-1 hidden"></p>
+            </div>
+
 
             <div class="flex-1 min-w-[220px]">
               <label for="f_password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
@@ -280,22 +294,50 @@
     const $pwdHint = $('#pwdHint');
     let editingId = null;
 
+    // ==== INIT SELECT2: Department ====
+    const $deptSelect = $('#f_department').select2({
+      width: '100%',
+      placeholder: '-- Select Department --',
+      ajax: {
+        url: '{{ route("userMaintenance.departments.select2") }}', // pastikan route ini ada
+        dataType: 'json',
+        delay: 250,
+        data: params => ({
+          q: params.term || '',
+          page: params.page || 1,
+        }),
+        processResults: (data, params) => {
+          params.page = params.page || 1;
+          return {
+            results: data.results, // [{id, text}, ...]
+            pagination: data.pagination // { more: true/false }
+          };
+        },
+      }
+    });
+
+
     function showList() {
       $form.addClass('hidden');
       $list.removeClass('hidden');
       $formEl[0].reset();
-      $('#err-name,#err-email,#err-nik,#err-password').addClass('hidden').text('');
+      $('#err-name,#err-email,#err-nik,#err-password,#err-id_dept').addClass('hidden').text('');
       editingId = null;
       $methodSpoof.val('POST');
       $formEl.attr('action', `{{ route('userMaintenance.store') }}`);
       $('#f_status').val('1');
       $pwd.prop('required', true);
       $pwdHint.text('(required)');
+
+
+      $('#f_department').val(null).trigger('change');
+
       showRoleSection(false);
       toggleRoleSectionEnabled(false);
       setUserMenuVisible(false);
       toggleUserMenuEnabled(false);
     }
+
 
     function showForm() {
       $list.addClass('hidden');
@@ -438,6 +480,7 @@
       $formEl.attr('action', `{{ route('userMaintenance.store') }}`);
       $pwd.prop('required', true);
       $pwdHint.text('(required)');
+      $('#f_department').val(null).trigger('change');
       showRoleSection(false);
       toggleRoleSectionEnabled(false);
       setUserMenuVisible(false);
@@ -456,6 +499,19 @@
       $('#f_status').val(String(user.is_active));
       $pwd.val('').prop('required', false);
       $pwdHint.text('(optional)');
+
+      $('#f_department').empty(); // buang pilihan lama
+      if (user.id_dept) {
+        const option = new Option(
+          user.department_code || `ID ${user.id_dept}`,
+          user.id_dept,
+          true,
+          true
+        );
+        $('#f_department').append(option).trigger('change');
+      } else {
+        $('#f_department').val(null).trigger('change');
+      }
 
       showRoleSection(true);
       toggleRoleSectionEnabled(true);
@@ -492,6 +548,11 @@
         {
           data: 'nik',
           name: 'nik'
+        },
+        {
+          data: 'department_code',
+          name: 'department_code',
+          render: v => v ? v : '-'
         },
         {
           data: 'is_active',
@@ -616,6 +677,9 @@
               themeToast('error', 'Server did not return new user id.');
               return;
             }
+            const deptId = $('#f_department').val();
+            const deptText = $('#f_department').find('option:selected').text();
+
             const userObj = res.data || {
               id: newId,
               name: $('#f_name').val(),

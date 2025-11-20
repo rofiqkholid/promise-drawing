@@ -20,23 +20,20 @@ class RevisionApprovedNotification extends Mailable
     }
 
     public function build()
-    {
-        // Build a clean, informative subject
-        $customer  = $this->approval['customer']  ?? '-';
-        $model     = $this->approval['model']     ?? '-';
-        $docType   = $this->approval['doc_type']  ?? '-';
-        $category  = $this->approval['category']  ?? '-';
-        $revNo     = $this->approval['revision_no'] ?? '-';
-        $partNo    = $this->approval['part_no']   ?? '';
+{
+    // Build a clean, informative subject
+    $customer  = $this->approval['customer']  ?? '-';
+    $model     = $this->approval['model']     ?? '-';
+    $docType   = $this->approval['doc_type']  ?? '-';
+    $category  = $this->approval['category']  ?? '-';
+    $revNo     = $this->approval['revision_no'] ?? '-';
+    $partNo    = $this->approval['part_no']   ?? '';
 
-        // Option A (compact):
-        // $subject = "[PROMISE] Revision Approved – {$customer}-{$model}-{$docType}-{$category} (Rev-{$revNo})";
+    $subject = "[PROMISE] Revision Approved – {$customer}-{$model}-{$docType}-{$category} (Rev-{$revNo})"
+             . ($partNo ? " – {$partNo}" : "");
 
-        // Option B (with part no if available):
-        $subject = "[PROMISE] Revision Approved – {$customer}-{$model}-{$docType}-{$category} (Rev-{$revNo})"
-                 . ($partNo ? " – {$partNo}" : "");
+    return $this->subject($subject)
+                ->markdown('emails.approved_notif'); // ⬅️ ini yang penting
+}
 
-        return $this->subject($subject)
-                    ->view('emails.approved_notif');
-    }
 }

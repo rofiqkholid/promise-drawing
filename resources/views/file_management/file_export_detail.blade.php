@@ -4,7 +4,9 @@
 
 @section('content')
 
-    <div class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen" x-data="exportDetail()" x-init="init()"
+    <div class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen" x-data="exportDetail({
+        userDeptCode: @js($userDeptCode ?? null)
+    })" x-init="init()"
         @mousemove.window="onPan($event)" @mouseup.window="endPan()" @mouseleave.window="endPan()">
 
         <div x-show="isLoadingRevision" x-transition
@@ -66,17 +68,9 @@
                                 <i class="fa-solid fa-history fa-sm mr-1"></i>
                                 Revision History
                             </label>
-                            <select id="revision-selector" x-model="selectedRevisionId" @change="onRevisionChange()"
+                            <select id="revision-selector" x-ref="revisionSelector"
                                 :disabled="isLoadingRevision"
                                 class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:opacity-50 disabled:bg-gray-100 dark:disabled:bg-gray-700">
-
-                                <template x-for="revision in revisionList" :key="revision.id">
-                                    <option :value="revision.id" x-text="revision.text"></option>
-                                </template>
-
-                                <template x-if="revisionList.length === 0">
-                                    <option value="" disabled>No other revisions found</option>
-                                </template>
                             </select>
                         </div>
                     </div>
@@ -84,9 +78,7 @@
 
                     <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
                         <button @click="downloadPackage()"
-                            class="inline-flex items-center text-sm px-3 py-2 rounded-md
-                                                                                                                                                bg-blue-600 text-white hover:bg-blue-700
-                                                                                                                                                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                            class="inline-flex items-center text-sm px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
                             <i class="fa-solid fa-download mr-2"></i>
                             Download All Files
                         </button>
@@ -195,17 +187,15 @@
                         <div x-show="isPdf(selectedFile?.name)"
                             class="mb-3 flex items-center justify-between text-xs text-gray-700 dark:text-gray-200">
                             <div class="flex items-center gap-2">
-                                <button @click="prevPdfPage()" :disabled="pdfPageNum <= 1" class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded
-                                                             hover:bg-gray-100 dark:hover:bg-gray-700
-                                                             disabled:opacity-50 disabled:cursor-not-allowed">
+                                <button @click="prevPdfPage()" :disabled="pdfPageNum <= 1"
+                                    class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
                                     ‹ Prev
                                 </button>
 
                                 <span x-text="`Page ${pdfPageNum} / ${pdfNumPages}`"></span>
 
-                                <button @click="nextPdfPage()" :disabled="pdfPageNum >= pdfNumPages" class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded
-                                                             hover:bg-gray-100 dark:hover:bg-gray-700
-                                                             disabled:opacity-50 disabled:cursor-not-allowed">
+                                <button @click="nextPdfPage()" :disabled="pdfPageNum >= pdfNumPages"
+                                    class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
                                     Next ›
                                 </button>
                             </div>
@@ -227,20 +217,19 @@
                                             <div x-show="pkg.stamp" class="absolute"
                                                 :class="stampPositionClass('original')">
                                                 <div :class="stampOriginClass('original')"
-                                                    class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                                                                       text-[10px] text-blue-700 flex flex-col items-center
-                                                                                       justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
+                                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                    style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine('original')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
-                                                            class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                                                            class="text-xs font-extrabold text-blue-700 uppercase"
                                                             x-text="stampCenterOriginal()"></span>
                                                     </div>
                                                     <div
-                                                        class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
                                                         <span x-text="stampBottomLine('original')"></span>
                                                     </div>
                                                 </div>
@@ -249,9 +238,7 @@
                                             <!-- STAMP COPY -->
                                             <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
                                                 <div :class="stampOriginClass('copy')"
-                                                    class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                                                                       text-[10px] text-blue-700 flex flex-col items-center
-                                                                                       justify-between px-2 py-1 bg-transparent"
+                                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
                                                     style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
@@ -259,36 +246,44 @@
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
-                                                            class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                                                            class="text-xs font-extrabold uppercase text-blue-700"
                                                             x-text="stampCenterCopy()"></span>
                                                     </div>
                                                     <div
-                                                        class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
                                                         <span x-text="stampBottomLine('copy')"></span>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <!-- STAMP OBSOLETE -->
-                                            <div x-show="pkg.stamp?.is_obsolete" class="absolute"
+                                            <div x-show="pkg.stamp?.is_obsolete"
+                                                class="absolute"
                                                 :class="stampPositionClass('obsolete')">
-                                                <div :class="stampOriginClass('obsolete')"
-                                                    class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                                                                               text-[10px] text-blue-700 flex flex-col items-center
-                                                                                               justify-between px-2 py-1 bg-transparent"
+                                                <div
+                                                    :class="stampOriginClass('obsolete')"
+                                                    class="w-65 h-20 border-2 border-red-600 rounded-sm
+                                                    text-[10px] text-red-700 flex flex-col items-center
+                                                    justify-between px-2 py-1 bg-transparent"
                                                     style="transform: scale(0.45);">
-                                                    <div
-                                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                    <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine('obsolete')"></span>
                                                     </div>
+
                                                     <div class="flex-1 flex items-center justify-center">
-                                                        <span
-                                                            class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                                                        <span class="text-xs font-extrabold text-red-700 uppercase"
                                                             x-text="stampCenterObsolete()"></span>
                                                     </div>
-                                                    <div
-                                                        class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                        <span x-text="stampBottomLine('obsolete')"></span>
+
+                                                    <div class="w-full border-t border-red-600 pt-0.5 px-1 flex font-semibold justify-between tracking-tight">
+                                                        <span>
+                                                            Name :
+                                                            <span x-text="obsoleteName()"></span>
+                                                        </span>
+                                                        <span>
+                                                            <span>Dept :</span>
+                                                            <span x-text="obsoleteDept()"></span>
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -310,20 +305,19 @@
                                             <div x-show="pkg.stamp" class="absolute"
                                                 :class="stampPositionClass('original')">
                                                 <div :class="stampOriginClass('original')"
-                                                    class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                                                                   text-[10px] text-blue-700 flex flex-col items-center
-                                                                                   justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
+                                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                    style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine('original')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
-                                                            class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                                                            class="text-xs font-extrabold text-blue-700 uppercase"
                                                             x-text="stampCenterOriginal()"></span>
                                                     </div>
                                                     <div
-                                                        class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
                                                         <span x-text="stampBottomLine('original')"></span>
                                                     </div>
                                                 </div>
@@ -332,45 +326,52 @@
                                             <!-- STAMP COPY -->
                                             <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
                                                 <div :class="stampOriginClass('copy')"
-                                                    class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                                                                   text-[10px] text-blue-700 flex flex-col items-center
-                                                                                   justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
+                                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                    style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine('copy')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
-                                                            class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                                                            class="text-xs font-extrabold uppercase text-blue-700"
                                                             x-text="stampCenterCopy()"></span>
                                                     </div>
                                                     <div
-                                                        class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
                                                         <span x-text="stampBottomLine('copy')"></span>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <!-- STAMP OBSOLETE -->
-                                            <div x-show="pkg.stamp?.is_obsolete" class="absolute"
+                                            <div x-show="pkg.stamp?.is_obsolete"
+                                                class="absolute"
                                                 :class="stampPositionClass('obsolete')">
-                                                <div :class="stampOriginClass('obsolete')"
-                                                    class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                                                                           text-[10px] text-blue-700 flex flex-col items-center
-                                                                                           justify-between px-2 py-1 bg-transparent"
+                                                <div
+                                                    :class="stampOriginClass('obsolete')"
+                                                    class="w-65 h-20 border-2 border-red-600 rounded-sm
+                                                    text-[10px] text-red-700 flex flex-col items-center
+                                                    justify-between px-2 py-1 bg-transparent"
                                                     style="transform: scale(0.45);">
-                                                    <div
-                                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                    <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine('obsolete')"></span>
                                                     </div>
+
                                                     <div class="flex-1 flex items-center justify-center">
-                                                        <span
-                                                            class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                                                        <span class="text-xs font-extrabold text-red-700 uppercase"
                                                             x-text="stampCenterObsolete()"></span>
                                                     </div>
-                                                    <div
-                                                        class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                        <span x-text="stampBottomLine('obsolete')"></span>
+
+                                                    <div class="w-full border-t border-red-600 pt-0.5 px-1 flex font-semibold justify-between tracking-tight">
+                                                        <span>
+                                                            Name :
+                                                            <span x-text="obsoleteName()"></span>
+                                                        </span>
+                                                        <span>
+                                                            <span>Dept :</span>
+                                                            <span x-text="obsoleteDept()"></span>
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -399,9 +400,8 @@
                                             <!-- STAMP ORIGINAL -->
                                             <div x-show="pkg.stamp" class="absolute"
                                                 :class="stampPositionClass('original')">
-                                                <div :class="stampOriginClass('original')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                                                               text-[10px] text-blue-700 flex flex-col items-center
-                                                                               justify-between px-2 py-1 bg-transparent"
+                                                <div :class="stampOriginClass('original')"
+                                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
                                                     style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
@@ -409,11 +409,11 @@
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
-                                                            class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                                                            class="text-xs font-extrabold uppercase text-blue-700"
                                                             x-text="stampCenterOriginal()"></span>
                                                     </div>
                                                     <div
-                                                        class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
                                                         <span x-text="stampBottomLine('original')"></span>
                                                     </div>
                                                 </div>
@@ -421,9 +421,8 @@
 
                                             <!-- STAMP COPY -->
                                             <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
-                                                <div :class="stampOriginClass('copy')" class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                                                               text-[10px] text-blue-700 flex flex-col items-center
-                                                                               justify-between px-2 py-1 bg-transparent"
+                                                <div :class="stampOriginClass('copy')"
+                                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
                                                     style="transform: scale(0.45);">
                                                     <div
                                                         class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
@@ -431,35 +430,44 @@
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
-                                                            class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                                                            class="text-xs font-extrabold uppercase text-blue-700"
                                                             x-text="stampCenterCopy()"></span>
                                                     </div>
                                                     <div
-                                                        class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
                                                         <span x-text="stampBottomLine('copy')"></span>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <!-- STAMP OBSOLETE -->
-                                            <div x-show="pkg.stamp?.is_obsolete" class="absolute"
+                                            <div x-show="pkg.stamp?.is_obsolete"
+                                                class="absolute"
                                                 :class="stampPositionClass('obsolete')">
-                                                <div :class="stampOriginClass('obsolete')"
-                                                    class="w-56 h-20 border-2 border-blue-600 rounded-sm
-                                                                                       text-[10px] text-blue-700 flex flex-col items-center
-                                                                                       justify-between px-2 py-1 bg-transparent" style="transform: scale(0.45);">
-                                                    <div
-                                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                <div
+                                                    :class="stampOriginClass('obsolete')"
+                                                    class="w-65 h-20 border-2 border-red-600 rounded-sm
+                                                    text-[10px] text-red-700 flex flex-col items-center
+                                                    justify-between px-2 py-1 bg-transparent"
+                                                    style="transform: scale(0.45);">
+                                                    <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine('obsolete')"></span>
                                                     </div>
+
                                                     <div class="flex-1 flex items-center justify-center">
-                                                        <span
-                                                            class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                                                        <span class="text-xs font-extrabold text-red-700 uppercase"
                                                             x-text="stampCenterObsolete()"></span>
                                                     </div>
-                                                    <div
-                                                        class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                        <span x-text="stampBottomLine('obsolete')"></span>
+
+                                                    <div class="w-full border-t border-red-600 pt-0.5 px-1 flex font-semibold justify-between tracking-tight">
+                                                        <span>
+                                                            Name :
+                                                            <span x-text="obsoleteName()"></span>
+                                                        </span>
+                                                        <span>
+                                                            <span>Dept :</span>
+                                                            <span x-text="obsoleteDept()"></span>
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -487,7 +495,7 @@
 
                                         <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
                                             <div :class="stampOriginClass('original')"
-                                                class="w-56 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
                                                 style="transform: scale(0.45);">
                                                 <div
                                                     class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
@@ -495,11 +503,11 @@
                                                 </div>
                                                 <div class="flex-1 flex items-center justify-center">
                                                     <span
-                                                        class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                                                        class="text-xs font-extrabold text-blue-700 uppercase"
                                                         x-text="stampCenterOriginal()"></span>
                                                 </div>
                                                 <div
-                                                    class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                                                    class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
                                                     <span x-text="stampBottomLine('original')"></span>
                                                 </div>
                                             </div>
@@ -507,7 +515,7 @@
 
                                         <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
                                             <div :class="stampOriginClass('copy')"
-                                                class="w-56 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
                                                 style="transform: scale(0.45);">
                                                 <div
                                                     class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
@@ -515,33 +523,43 @@
                                                 </div>
                                                 <div class="flex-1 flex items-center justify-center">
                                                     <span
-                                                        class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                                                        class="text-xs font-extrabold text-blue-700 uppercase"
                                                         x-text="stampCenterCopy()"></span>
                                                 </div>
                                                 <div
-                                                    class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                                                    class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
                                                     <span x-text="stampBottomLine('copy')"></span>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div x-show="pkg.stamp?.is_obsolete" class="absolute"
+                                        <div x-show="pkg.stamp?.is_obsolete"
+                                            class="absolute"
                                             :class="stampPositionClass('obsolete')">
-                                            <div :class="stampOriginClass('obsolete')"
-                                                class="w-56 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                            <div
+                                                :class="stampOriginClass('obsolete')"
+                                                class="w-65 h-20 border-2 border-red-600 rounded-sm
+                                                text-[10px] text-red-700 flex flex-col items-center
+                                                justify-between px-2 py-1 bg-transparent"
                                                 style="transform: scale(0.45);">
-                                                <div
-                                                    class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
                                                     <span x-text="stampTopLine('obsolete')"></span>
                                                 </div>
+
                                                 <div class="flex-1 flex items-center justify-center">
-                                                    <span
-                                                        class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                                                    <span class="text-xs font-extrabold text-red-700 uppercase"
                                                         x-text="stampCenterObsolete()"></span>
                                                 </div>
-                                                <div
-                                                    class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                                                    <span x-text="stampBottomLine('obsolete')"></span>
+
+                                                <div class="w-full border-t border-red-600 pt-0.5 px-1 flex font-semibold justify-between tracking-tight">
+                                                    <span>
+                                                        Name :
+                                                        <span x-text="obsoleteName()"></span>
+                                                    </span>
+                                                    <span>
+                                                        <span>Dept :</span>
+                                                        <span x-text="obsoleteDept()"></span>
+                                                    </span>
                                                 </div>
                                             </div>
                                         </div>
@@ -616,7 +634,9 @@
             </div>
         </div>
     </div>
+@endsection
 
+@push('style')
     <style>
         [x-collapse] {
             @apply overflow-hidden transition-all duration-300 ease-in-out;
@@ -635,8 +655,7 @@
             white-space: nowrap;
         }
     </style>
-
-@endsection
+@endpush
 
 @push('scripts')
     <!-- SweetAlert -->
@@ -660,14 +679,13 @@
     <!-- ES Module shims + Import Map untuk Three.js (module) -->
     <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
     <script type="importmap">
-                          {
-                            "imports": {
-                              "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                              "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-                              "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
-                            }
-                          }
-                        </script>
+    {
+    "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+        "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
+    }
+    }</script>
 
     <!-- OCCT: parser STEP/IGES (WASM) -->
     <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
@@ -724,15 +742,24 @@
         window.toastSuccess = toastSuccess; window.toastError = toastError; window.toastWarning = toastWarning; window.toastInfo = toastInfo;
 
         /* ========== Alpine Component ========== */
-        function exportDetail() {
+        function exportDetail(config = {}) {
             let pdfDoc = null;
+            const loadedRevisionList = JSON.parse(`@json($revisionList ?? [])`);
+            const loadedExportId = JSON.parse(`@json($exportId)`);
+            if (loadedRevisionList.length > 0) {
+                loadedRevisionList[0].is_latest = true;
+            }
+            const defaultRevisionId = (loadedRevisionList[0] && loadedRevisionList[0].id) ? loadedRevisionList[0].id : loadedExportId;
             return {
                 exportId: JSON.parse(`@json($exportId)`),
                 pkg: JSON.parse(`@json($detail)`),
-                revisionList: JSON.parse(`@json($revisionList ?? [])`),
+                revisionList: loadedRevisionList,
                 selectedRevisionId: JSON.parse(`@json($exportId)`),
                 isLoadingRevision: false,
+                revisionSelect2: null,
                 stampFormat: JSON.parse(`@json($stampFormat ?? null)`),
+                userDeptCode: config.userDeptCode || null,
+                userName: JSON.parse(`@json($userName ?? null)`),
 
                 // ==== KONFIGURASI POSISI STAMP ====
                 stampDefaults: {
@@ -749,6 +776,17 @@
 
                 selectedFile: null,
                 openSections: [],
+
+                formatRevisionForSelect2(revision) {
+                if (!revision.id) {
+                    return revision.text;
+                }
+                let badge = '';
+                if (revision.is_obsolete) {
+                    badge = '<span style="background-color: #FECACA; color: #DC2626; font-size: 0.75em; font-weight: 600; margin-left: 8px; padding: 2px 6px; border-radius: 99px;">OBSOLETE</span>';
+                }
+                return $(`<span>${revision.text}</span>`).append(badge);
+            },
 
                 // mapping dari integer DB -> key string (0-5) - HARUS SAMA DENGAN APPROVAL DETAIL
                 positionIntToKey(pos) {
@@ -888,77 +926,140 @@
                 },
 
                 // Stamp functions
-                formatStampDate(d) {
-                    return d || '';
+                formatStampDate(dateString) {
+                    if (!dateString) return '';
+                    const d = new Date(dateString);
+                    if (isNaN(d.getTime())) return dateString;
+
+                    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                    const monthName = months[d.getMonth()];
+                    const day = d.getDate();
+                    const year = d.getFullYear();
+
+                    const j = day % 10, k = day % 100;
+
+                    let suffix = "ᵗʰ";
+                    if (j == 1 && k != 11) {
+                        suffix = "ˢᵗ";
+                    } else if (j == 2 && k != 12) {
+                        suffix = "ⁿᵈ";
+                    } else if (j == 3 && k != 13) {
+                        suffix = "ʳᵈ";
+                    }
+                    return `${monthName}.${day}${suffix} ${year}`;
                 },
 
                 // teks tengah stamp ORIGINAL
                 stampCenterOriginal() {
-                    return 'ORIGINAL';
+                    return 'SAI-DRAWING ORIGINAL';
                 },
 
                 // teks tengah stamp Control Copy
                 stampCenterCopy() {
-                    return 'Control COPY';
+                    return 'SAI-DRAWING CONTROLLED COPY';
                 },
 
                 // teks tengah stamp OBSOLETE
                 stampCenterObsolete() {
-                    return 'OBSOLETE';
+                    return 'SAI-DRAWING OBSOLETE';
+                },
+
+                getNormalFormat() {
+                    const list = this.stampFormat || [];
+                    if (Array.isArray(list) && list.length > 0) {
+                        return list[0];
+                    }
+                    return { prefix: 'DATE RECEIVED', suffix: 'DATE UPLOADED' };
+                },
+
+                // getObsoleteFormat() {
+                //     const list = this.stampFormat || [];
+                //     if (Array.isArray(list) && list.length > 1) {
+                //         return list[1];
+                //     }
+                //     return { prefix: 'DATE UPLOAD', suffix: 'Dept' };
+                // },
+
+                getObsoleteInfo() {
+                    return this.pkg?.stamp?.obsolete_info || {};
+                },
+
+                obsoleteName() {
+                    const s = this.pkg?.stamp || {};
+                    const info = s.obsolete_info || {};
+                    return info.name || '';
+                },
+
+                obsoleteDept() {
+                    const s = this.pkg?.stamp || {};
+                    const info = s.obsolete_info || {};
+                    return info.dept || '';
                 },
 
                 stampTopLine(which = 'original') {
-                    let d, label;
+                    const s = this.pkg?.stamp || {};
+                    let date;
+                    let fmt;
 
                     if (which === 'obsolete') {
-                        // Use obsolete format (second format in array)
-                        d = this.pkg?.stamp?.obsolete_date || this.pkg?.stamp?.upload_date || '';
-                        label = (this.stampFormat && this.stampFormat[1] && this.stampFormat[1].prefix) ?
-                            this.stampFormat[1].prefix :
-                            'DATE OBSOLETE';
+                        const info = this.getObsoleteInfo();
+                        date = info.date_text || s.obsolete_date || s.upload_date || '';
+                        return date ? `DATE : ${date}` : '';
+                    } else if (which === 'original') {
+                        fmt = this.getNormalFormat();
+                        date = s.receipt_date || s.upload_date || '';
+                        const label = fmt.prefix || 'DATE RECEIVED';
+                        return date ? `${label} : ${this.formatStampDate(date)}` : '';
                     } else if (which === 'copy') {
-                        // Use original/normal format for copy
-                        d = this.pkg?.stamp?.receipt_date || '';
-                        label = (this.stampFormat && this.stampFormat[0] && this.stampFormat[0].prefix) ?
-                            this.stampFormat[0].prefix :
-                            'DATE RECEIVED';
-                    } else {
-                        // Default to original with normal format
-                        d = this.pkg?.stamp?.receipt_date || '';
-                        label = (this.stampFormat && this.stampFormat[0] && this.stampFormat[0].prefix) ?
-                            this.stampFormat[0].prefix :
-                            'DATE RECEIVED';
-                    }
+                        const now = new Date();
+                        const dateStr = this.formatStampDate(now.toISOString().split('T')[0]);
 
-                    if (!d) return '';
-                    return `${label} : ${this.formatStampDate(d)}`;
+                        // Format Jam (HH:MM:SS)
+                        const hours = String(now.getHours()).padStart(2, '0');
+                        const minutes = String(now.getMinutes()).padStart(2, '0');
+                        const seconds = String(now.getSeconds()).padStart(2, '0');
+                        const timeStr = `${hours}:${minutes}:${seconds}`;
+
+                        const deptCode = this.userDeptCode || '--';
+
+                        return `SAI / ${deptCode} / ${dateStr} ${timeStr}`;
+
+                    } else {
+                        fmt = this.getNormalFormat();
+                        date = s.receipt_date || s.upload_date || '';
+                        const label = fmt.prefix || 'DATE RECEIVED';
+                        return date ? `${label} : ${this.formatStampDate(date)}` : '';
+                    }
                 },
 
                 stampBottomLine(which = 'original') {
-                    let d, label;
+                    const s = this.pkg?.stamp || {};
+                    let fmt;
 
-                    if (which === 'obsolete') {
-                        // Use obsolete format (second format in array)
-                        d = this.pkg?.stamp?.obsolete_date || this.pkg?.stamp?.upload_date || '';
-                        label = (this.stampFormat && this.stampFormat[1] && this.stampFormat[1].suffix) ?
-                            this.stampFormat[1].suffix :
-                            'DATE OBSOLETE';
-                    } else if (which === 'copy') {
-                        // Use original/normal format for copy
-                        d = this.pkg?.stamp?.upload_date || '';
-                        label = (this.stampFormat && this.stampFormat[0] && this.stampFormat[0].suffix) ?
-                            this.stampFormat[0].suffix :
-                            'DATE UPLOADED';
-                    } else {
-                        // Default to original with normal format
-                        d = this.pkg?.stamp?.upload_date || '';
-                        label = (this.stampFormat && this.stampFormat[0] && this.stampFormat[0].suffix) ?
-                            this.stampFormat[0].suffix :
-                            'DATE UPLOADED';
+                    if (which === 'copy') {
+                        const userName = this.userName || '--';
+                        return `DOWNLOADED BY ${userName}`;
                     }
-
-                    if (!d) return '';
-                    return `${label} : ${this.formatStampDate(d)}`;
+                    else if (which === 'obsolete') {
+                        fmt = this.getObsoleteFormat();
+                        const info = this.getObsoleteInfo();
+                        const name = info.name || '';
+                        const dept = info.dept || '';
+                        let value = '';
+                        if (name && dept) {
+                            value = `${name} / ${dept}`;
+                        } else {
+                            value = name || dept || '';
+                        }
+                        const label = fmt.suffix || 'BY';
+                        return value ? `${label} : ${value}` : '';
+                    }
+                    else {
+                        fmt = this.getNormalFormat();
+                        const date = s.upload_date || '';
+                        const label = fmt.suffix || 'DATE UPLOADED';
+                        return date ? `${label} : ${this.formatStampDate(date)}` : '';
+                    }
                 },
 
                 // Helper functions for file size display
@@ -1561,6 +1662,21 @@
                     this.iges.measure.group.add(group);
                 },
 
+                formatRevisionForSelect2(revision) {
+                    if (!revision.id) {
+                        return revision.text;
+                    }
+
+                    let badgesHtml = '';
+                    if (revision.is_latest) {
+                        badgesHtml += '<span style="background-color: #DBEAFE; color: #2563EB; font-size: 0.75em; font-weight: 600; margin-left: 8px; padding: 2px 6px; border-radius: 99px;">LATEST</span>';
+                    }
+                    if (revision.is_obsolete) {
+                        badgesHtml += '<span style="background-color: #FECACA; color: #DC2626; font-size: 0.75em; font-weight: 600; margin-left: 8px; padding: 2px 6px; border-radius: 99px;">OBSOLETE</span>';
+                    }
+                    return $(`<span>${revision.text}</span>`).append(badgesHtml);
+                },
+
                 /* ===== Lifecycle ===== */
                 init() {
                     window.addEventListener('keydown', (e) => {
@@ -1568,6 +1684,38 @@
                         }
                     });
                     window.addEventListener('beforeunload', () => this.disposeCad());
+
+                    const sel = $(this.$refs.revisionSelector);
+                    this.revisionSelect2 = sel.select2({
+                        data: this.revisionList,
+                        templateResult: this.formatRevisionForSelect2.bind(this),
+                        templateSelection: this.formatRevisionForSelect2.bind(this),
+                        width: '100%',
+                        dropdownCssClass: 'select2-dropdown-tailwind',
+                        containerCssClass: 'select2-container-tailwind'
+                    });
+
+                    const defaultValue = this.revisionList.length > 0 ? this.revisionList[0].id : this.exportId;
+                    this.selectedRevisionId = defaultValue;
+                    sel.val(defaultValue).trigger('change.select2');
+
+                    sel.on('change', (e) => {
+                        const newValue = e.target.value;
+                        if (newValue !== this.selectedRevisionId) {
+                            this.selectedRevisionId = newValue;
+                            this.onRevisionChange();
+                        }
+                    });
+
+                    this.$watch('isLoadingRevision', (isLoading) => {
+                        sel.prop('disabled', isLoading);
+                    });
+
+                    this.$watch('selectedRevisionId', (newId) => {
+                        if (sel.val() !== newId) {
+                            sel.val(newId).trigger('change.select2');
+                        }
+                    });
                 },
 
                 /* ===== UI ===== */
@@ -1662,7 +1810,11 @@
                                 this.pkg = data.pkg;
                                 this.exportId = data.exportId;
                                 this.stampFormat = data.stampFormat || null;
-                                toastSuccess('Revision Loaded', `Displaying ${data.pkg.metadata.revision}.`);
+                                let displayText = data.pkg.metadata.revision;
+                                if (data.pkg.metadata.revision_label) {
+                                    displayText += ` (${data.pkg.metadata.revision_label})`;
+                                }
+                                toastSuccess('Revision Loaded', `Displaying ${displayText}.`);
                             } else {
                                 throw new Error(data.message || 'Failed to load revision data.');
                             }

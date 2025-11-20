@@ -186,7 +186,7 @@ class DrawingUploadController extends Controller
             ];
             $packageLabels = $this->getFolderLabels($packageIds);
 
-            $packageId = $this->ensurePackage($packageIds, $packageLabels);
+            $packageId = $this->ensurePackage($packageIds, $packageLabels, $validated['ecn_no'] ?? null);
             $revisionId = $validated['existing_revision_id'] ?? null;
 
             $currentRevisionNo = 0; // Default
@@ -679,7 +679,7 @@ class DrawingUploadController extends Controller
         return response()->json(['has_labels' => true, 'labels' => $labels]);
     }
 
-    private function ensurePackage(array $ids, array $labels): int
+    private function ensurePackage(array $ids, array $labels, ?string $ecnNo = null): int
     {
         $q = DB::table('doc_packages')
             ->where('customer_id', $ids['customer_id'])
@@ -699,11 +699,12 @@ class DrawingUploadController extends Controller
             return $existing->id;
         }
 
-        // create package_no: PKG-{CUSTCODE}-{MODEL}-{PARTNO}-{YmdHis}-{RAND4}
+            // create package_no: SAI-{CUSTCODE}-{MODEL}-{PARTNO}-{ECNNO}-{Ymd}
         $cust = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($labels['customer_code'] ?? 'CUST'));
         $model = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($labels['model_name'] ?? 'MDL'));
         $part = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($labels['part_no'] ?? 'PRT'));
-        $pkgNo = sprintf('PKG-%s-%s-%s-%s-%s', $cust, $model, $part, Carbon::now()->format('YmdHis'), substr(Str::upper(Str::random(6)), 0, 4));
+        $ecnSanitized = isset($ecnNo) ? preg_replace('/[^A-Za-z0-9]/', '', strtoupper($ecnNo)) : 'ECN';
+        $pkgNo = sprintf('SAI-%s-%s-%s-%s-%s', $cust, $model, $part, $ecnSanitized, Carbon::now()->format('Ymd'));
 
         $now = Carbon::now();
         $insert = [

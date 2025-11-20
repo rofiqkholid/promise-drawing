@@ -80,7 +80,7 @@
 
   {{-- Tabel section --}}
   <div class="mt-8 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-    <div class="overflow-x-auto">
+    <!-- <div class="overflow-x-auto"> -->
       <table id="exportTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead class="bg-gray-50 dark:bg-gray-700/50">
           <tr>
@@ -98,7 +98,7 @@
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
         </tbody>
       </table>
-    </div>
+    <!-- </div> -->
   </div>
 
 </div>

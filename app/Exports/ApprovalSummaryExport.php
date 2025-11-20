@@ -24,23 +24,35 @@ class ApprovalSummaryExport implements FromArray, WithTitle, ShouldAutoSize, Wit
 
     public function array(): array
     {
-        return [
-            // A1: judul + tanggal download (tanpa teks "Downloaded At")
-            ['Summary Upload per Item ' . $this->downloadedAt],
-            [],
+        // tambahkan nomor di kiri
+        $numberedRows = [];
+        $no = 1;
+        foreach ($this->rows as $row) {
+            $numberedRows[] = array_merge([$no++], $row);
+        }
 
-            // A3:H3 header tabel (8 kolom)
+        return [
+            // Row 1: judul
+            ['Summary Upload per Item ' . $this->downloadedAt],
+
+            // Row 2: header tabel (12 kolom)
             [
+                'No',
                 'Customer',
                 'Model',
                 'Part Num',
                 'Part Name',
                 'Doc Type',
                 'Category',
+                'ECN No',
                 'Part Group',
+                'Receive Date',
                 'Upload Date',
+                'Is Finish',   // <-- NEW
             ],
-            ...$this->rows,
+
+            // Row 3+: data dengan nomor
+            ...$numberedRows,
         ];
     }
 
@@ -54,14 +66,14 @@ class ApprovalSummaryExport implements FromArray, WithTitle, ShouldAutoSize, Wit
         return [
             AfterSheet::class => function (AfterSheet $event) {
 
-                // ==== Judul di tengah (cover 8 kolom) ====
-                $event->sheet->mergeCells('A1:H1');
+                // ==== Judul di tengah (cover 12 kolom: A1:L1) ====
+                $event->sheet->mergeCells('A1:L1');
                 $event->sheet->getStyle('A1')->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $event->sheet->getStyle('A1')->getFont()->setBold(true);
 
-                // ==== HEADER (Customer .. Upload Date) ====
-                $event->sheet->getStyle('A2:H2')->applyFromArray([
+                // ==== HEADER (row 2) berwarna ====
+                $event->sheet->getStyle('A2:L2')->applyFromArray([
                     'font' => [
                         'bold' => true,
                     ],
@@ -76,8 +88,8 @@ class ApprovalSummaryExport implements FromArray, WithTitle, ShouldAutoSize, Wit
                 ]);
 
                 // ==== Border all untuk header + data ====
-                $lastRow   = 2 + count($this->rows); // header di baris 3
-                $cellRange = "A2:H{$lastRow}";
+                $lastRow   = 2 + count($this->rows); // header row 2, data mulai row 3
+                $cellRange = "A2:L{$lastRow}";
 
                 $event->sheet->getStyle($cellRange)->applyFromArray([
                     'borders' => [

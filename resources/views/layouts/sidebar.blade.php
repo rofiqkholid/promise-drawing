@@ -14,7 +14,7 @@
     class="no-scrollbar fixed top-0 left-0 h-screen z-50 group w-20 hover:w-64 p-4 bg-white dark:bg-gray-900 flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden shadow-lg border-r border-gray-200 dark:border-gray-700">
 
     <div class="flex items-center ml-[3px] h-16 mb-10 flex-shrink-0">
-        <img src="{{ asset('assets/image/favicon.ico') }}" alt="Logo" class="h-10 w-10 object-contain flex-shrink-0">
+        <img src="{{ asset('assets/image/logo-promise.png') }}" alt="Logo" class="h-11 w-11 object-contain flex-shrink-0">
         <span class="titlePromise ml-4 text-[1.5rem] font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">
             Promise
         </span>

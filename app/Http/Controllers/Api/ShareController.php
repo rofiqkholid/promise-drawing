@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ShareNotification;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Contracts\Encryption\DecryptException;
 
 class ShareController extends Controller
 {
@@ -319,6 +321,13 @@ class ShareController extends Controller
             return $item;
         });
 
+         // 🔹 TAMBAHAN: hash untuk link ke share.detail
+        $data = $data->map(function ($row) {
+            // dpr.id yang Tuan select tadi adalah revision_id
+            $row->hash = encrypt($row->id);
+            return $row;
+        });
+
 
         return response()->json([
             "draw"            => (int) $request->get('draw'),
@@ -437,5 +446,128 @@ class ShareController extends Controller
         }
 
         return response()->json(['message' => 'Package shared and emails sent successfully!']);
+    }
+
+    public function showDetail(string $id)
+    {
+        // 1. Dekripsi hash -> revisionId (int)
+        if (ctype_digit($id)) {
+            $revisionId = (int) $id;
+        } else {
+            try {
+                $revisionId = decrypt($id);
+            } catch (DecryptException $e) {
+                abort(404, 'Invalid share ID.');
+            }
+        }
+
+        // 2. Ambil data revisi
+        $revision = DB::table('doc_package_revisions as dpr')
+            ->where('dpr.id', $revisionId)
+            ->first();
+
+        if (!$revision) {
+            abort(404, 'Shared package not found.');
+        }
+
+        // 3. Ambil info package (customer, model, dst)
+        $package = DB::table('doc_packages as dp')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+            ->leftJoin('users as u', 'u.id', '=', 'dp.created_by')
+            ->where('dp.id', $revision->package_id)
+            ->select(
+                'c.code as customer',
+                'm.name as model',
+                'p.part_no',
+                'dtg.name as doc_type',
+                'dsc.name as category',
+                'pg.code_part_group as part_group',
+                'dp.created_at',
+                'u.name as uploader_name'
+            )
+            ->first();
+
+        if (!$package) {
+            abort(404, 'Package not found.');
+        }
+
+        // 4. Ambil file-file di revisi ini, dikelompokkan per kategori
+        $files = DB::table('doc_package_revision_files')
+            ->where('revision_id', $revisionId)
+            ->select('id', 'filename as name', 'category')
+            ->get()
+            ->groupBy('category')
+            ->map(function ($items) {
+                return $items->map(function ($item) {
+                    return [
+                        'id'   => $item->id,
+                        'name' => $item->name,
+                        'url'  => URL::signedRoute('preview.file', ['id' => $item->id]),
+                    ];
+                });
+            })
+            ->mapWithKeys(fn ($items, $key) => [strtolower($key) => $items]);
+
+       
+        // 5. Daftar supplier yang pernah di-share (berdasarkan kolom share_to di doc_package_revisions)
+$shares = collect();
+
+if (!empty($revision->share_to)) {
+    $ids = json_decode($revision->share_to, true);
+
+    if (is_array($ids) && count($ids) > 0) {
+        $supplierRows = DB::table('suppliers as s')
+            ->whereIn('s.id', $ids)
+            ->orderBy('s.code')
+            ->get([
+                's.code as supplier_code',
+                's.name as supplier_name',
+            ]);
+
+        $sharedAt = $revision->shared_at ?? null;
+
+        $shares = $supplierRows->map(function ($row) use ($sharedAt) {
+            return (object) [
+                'supplier_code' => $row->supplier_code,
+                'supplier_name' => $row->supplier_name,
+                'shared_at'     => $sharedAt,
+            ];
+        });
+    }
+}
+
+
+        // 6. Susun data untuk Blade
+        $uploadedAt = optional($package->created_at);
+
+        $detail = [
+            'metadata' => [
+                'customer'    => $package->customer,
+                'model'       => $package->model,
+                'part_group'  => $package->part_group,
+                'doc_type'    => $package->doc_type,
+                'category'    => $package->category,
+                'part_no'     => $package->part_no,
+                'revision'    => 'Rev-' . $revision->revision_no,
+                'ecn_no'      => $revision->ecn_no ?? null,
+                'uploader'    => $package->uploader_name ?? 'System',
+                'uploaded_at' => $uploadedAt ? $uploadedAt->format('Y-m-d H:i') : null,
+            ],
+            'files'   => $files,
+            'shares'  => $shares,
+        ];
+
+        // hash baru untuk link (kalau mau dipakai lagi)
+        $hash = encrypt($revisionId);
+
+        return view('file_management.share_detail', [
+            'shareId' => $hash,
+            'detail'  => $detail,
+        ]);
     }
 }

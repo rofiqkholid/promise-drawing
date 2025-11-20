@@ -560,6 +560,20 @@
                 $shareModal.show();
             });
 
+           // 🔹 TAMBAHAN: klik baris untuk masuk ke share detail
+$('#approvalTable tbody').on('click', 'tr', function(e) {
+    // kalau yang diklik adalah tombol Share, jangan redirect
+    if ($(e.target).closest('.btn-share').length) return;
+
+    const rowData = table.row(this).data();
+    if (!rowData || !rowData.hash) return;
+
+    // pakai placeholder __ID__ lalu di-replace di JS
+    const url = '{{ route("share.detail", ["id" => "__ID__"]) }}'.replace('__ID__', rowData.hash);
+    window.location.href = url;
+});
+
+
             $btnSaveShare.on('click', function() {
                 const $this = $(this);
                 const packageId = $hiddenPackageId.val();

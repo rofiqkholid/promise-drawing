@@ -8,6 +8,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use App\Models\Menu;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -86,6 +87,37 @@ class AppServiceProvider extends ServiceProvider
                 ->toArray();
 
             $view->with('menuItems', $menuItems);
+        });
+
+        // Menambahkan macro Carbon untuk format tanggal khusus "Oct.25th 2025"
+        Carbon::macro('toSaiStampFormat', function () {
+            /** @var Carbon $this */
+
+            $day = $this->day;
+
+            if (in_array($day % 100, [11, 12, 13], true)) {
+                $suffixRaw = 'th';
+            } else {
+                $last = $day % 10;
+                $suffixRaw = match ($last) {
+                    1 => 'st',
+                    2 => 'nd',
+                    3 => 'rd',
+                    default => 'th',
+                };
+            }
+
+            $superscripts = [
+                'st' => 'ˢᵗ',
+                'nd' => 'ⁿᵈ',
+                'rd' => 'ʳᵈ',
+                'th' => 'ᵗʰ',
+            ];
+
+            $suffix = $superscripts[$suffixRaw];
+
+            // Format: Oct.25ᵗʰ 2025
+            return $this->format('M') . '.' . $day . $suffix . ' ' . $this->format('Y');
         });
     }
 }

@@ -240,6 +240,9 @@ Route::middleware(['auth'])->group(function () {
     #Region User Maintenance
     Route::resource('master/userMaintenance', UserMaintenanceController::class)->only(['store', 'show', 'update', 'destroy'])->parameters(['userMaintenance' => 'user'])->names('userMaintenance');
     Route::get('userMaintenance/data', [UserMaintenanceController::class, 'data'])->name('userMaintenance.data');
+    Route::get('/userMaintenance/departments/select2', [UserMaintenanceController::class, 'departmentsSelect2'])
+    ->name('userMaintenance.departments.select2');
+
     #End region
 
     #Region Menu
@@ -249,9 +252,10 @@ Route::middleware(['auth'])->group(function () {
     #End region
 
     #Region Dashboard
+    Route::post('/dashboard/getModels', [DashboardController::class, 'getModels'])->name('dashboard.getModels');
+    Route::post('/dashboard/getCustomers', [DashboardController::class, 'getCustomers'])->name('dashboard.getCustomers');
     Route::post('/dashboard/getDocumentGroups', [DashboardController::class, 'getDocumentGroups'])->name('dashboard.getDocumentGroups');
     Route::post('/dashboard/getSubType', [DashboardController::class, 'getSubType'])->name('dashboard.getSubType');
-    Route::post('/dashboard/get-customer-model', [DashboardController::class, 'getCustomerModel'])->name('dashboard.getCustomerModel');
     Route::post('/dashboard/getPartGroup', [DashboardController::class, 'getPartGroup'])->name('dashboard.getPartGroup');
     Route::post('/dashboard/getStatus', [DashboardController::class, 'getStatus'])->name('dashboard.getStatus');
     Route::post('/dashboard/detDataCardMonitoring', [DashboardController::class, 'detDataCardMonitoring'])->name('dashboard.detDataCardMonitoring');
@@ -332,6 +336,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/approvals/{id}/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
     Route::post('/approvals/{id}/rollback', [ApprovalController::class, 'rollback'])->name('approvals.rollback');
     Route::post('/approvals/files/{fileId}/stamp-positions', [ApprovalController::class, 'updateFileStampPosition'])->name('approvals.files.updateStamp');
+    Route::post('/approvals/share', [ApprovalController::class, 'share'])->name('approvals.share');
 
     Route::get('/approvals/kpi', [ApprovalController::class, 'kpi'])->name('approvals.kpi');
 
@@ -373,6 +378,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/share/list', [ShareController::class, 'listPackage'])->name('share.list');
     Route::get('/share/filters', [ShareController::class, 'choiseFilter'])->name('share.filters');
     Route::post('/share/save', [ShareController::class, 'saveShare'])->name('share.save');
+    Route::get('/share/{id}', [ShareController::class, 'showDetail'])->name('share.detail');
     #end region
 
 

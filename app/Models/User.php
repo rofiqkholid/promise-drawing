@@ -2,7 +2,8 @@
 
 namespace App\Models;
 
-use App\Models\Suppliers; // <-- TAMBAHKAN BARIS INI
+use App\Models\Suppliers;
+use App\Models\Departments; // <-- MODEL DEPARTMENT (SESUIKAN NAMANYA)
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -13,8 +14,11 @@ class User extends Authenticatable
 
     protected $table = 'users';
     protected $primaryKey = 'id';
-    protected $casts = ['is_active' => 'integer'];
 
+    protected $casts = [
+        'is_active' => 'integer',
+        'id_dept'   => 'integer', // <-- CAST KOLOM FK DEPT
+    ];
 
     protected $fillable = [
         'name',
@@ -22,6 +26,7 @@ class User extends Authenticatable
         'nik',
         'password',
         'is_active',
+        'id_dept',   // <-- TAMBAH DI SINI
     ];
 
     protected $hidden = [
@@ -38,18 +43,32 @@ class User extends Authenticatable
     {
         return 'nik';
     }
+
     public function roles()
     {
         return $this->belongsToMany(\App\Models\Role::class, 'user_roles', 'user_id', 'role_id')
-            ->withTimestamps(); // created_at & updated_at di pivot otomatis
+            ->withTimestamps();
     }
+
     public function suppliers()
     {
         return $this->belongsToMany(
             Suppliers::class,
-            'user_supplier', 
-            'user_id',      
-            'supplier_id'    
+            'user_supplier',
+            'user_id',
+            'supplier_id'
         );
+    }
+
+    // ==========================
+    // Relasi ke Department
+    // ==========================
+    public function department()
+    {
+        // PARAM 2 = kolom FK di tabel users
+        // PARAM 3 = kolom PK di tabel departments
+        return $this->belongsTo(Departments::class, 'id_dept', 'id');
+        // kalau PK di tabel departments namanya 'id', ganti jadi:
+        // return $this->belongsTo(Departments::class, 'id_dept', 'id');
     }
 }

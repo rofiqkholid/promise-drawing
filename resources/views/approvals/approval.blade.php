@@ -69,22 +69,22 @@
       <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">Filters</h3>
       <div class="flex items-center gap-2">
         <button id="btnDownloadSummary"
-  type="button"
-  class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-green-500
+          type="button"
+          class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-green-500
      bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200
      hover:bg-green-100 dark:hover:bg-green-900/60">
-  {{-- normal state --}}
-  <span class="btn-label inline-flex items-center gap-2">
-    <i class="fa-solid fa-file-excel"></i>
-    <span>Download Summary</span>
-  </span>
+          {{-- normal state --}}
+          <span class="btn-label inline-flex items-center gap-2">
+            <i class="fa-solid fa-file-excel"></i>
+            <span>Download Summary</span>
+          </span>
 
-  {{-- loading state --}}
-  <span class="btn-spinner hidden inline-flex items-center gap-2">
-    <i class="fa-solid fa-circle-notch fa-spin"></i>
-    <span>Preparing...</span>
-  </span>
-</button>
+          {{-- loading state --}}
+          <span class="btn-spinner hidden inline-flex items-center gap-2">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+            <span>Preparing...</span>
+          </span>
+        </button>
 
 
         <button id="btnResetFilters"
@@ -124,12 +124,79 @@
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Request Date</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Decision Date</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Action</th>
           </tr>
         </thead>
 
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
         </tbody>
       </table>
+    </div>
+  </div>
+
+   {{-- Modal Share ke Dept --}}
+  <div id="shareModal"
+       class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 dark:bg-black/60">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full mx-4">
+      <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+          Share Package to Dept (Purchasing / PUD)
+        </h3>
+        <button type="button" id="btnCloseShare"
+                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="px-5 py-4 space-y-3">
+        <div>
+          <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Package</p>
+          <p id="sharePackageInfo"
+             class="text-sm text-gray-900 dark:text-gray-100 font-medium">
+            <!-- diisi oleh JS -->
+          </p>
+        </div>
+
+        <div>
+          <label for="shareNote"
+                 class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Note <span class="text-red-500">*</span>
+          </label>
+          <textarea id="shareNote"
+                    rows="3"
+                    class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
+                           bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                           text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
+          <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
+            Note ini akan menjadi isi email ke user dept. Wajib diisi.
+          </p>
+          <p id="shareError"
+             class="mt-2 text-xs text-red-500 hidden">
+          </p>
+        </div>
+      </div>
+
+      <div class="px-5 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
+        <button type="button" id="btnCancelShare"
+                class="inline-flex items-center px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600
+                       bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200
+                       hover:bg-gray-50 dark:hover:bg-gray-600">
+          Cancel
+        </button>
+        <button type="button" id="btnConfirmShare"
+                class="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border border-blue-600
+                       bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled>
+          <span class="btn-label inline-flex items-center gap-2">
+            <i class="fa-solid fa-share-nodes"></i>
+            <span>Share</span>
+          </span>
+          <span class="btn-spinner hidden inline-flex items-center gap-2 text-xs">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+            <span>Sharing...</span>
+          </span>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -142,6 +209,10 @@
   $(function() {
     let table;
     const ENDPOINT = '{{ route("approvals.filters") }}';
+    const SHARE_URL = '{{ route("approvals.share") }}';
+
+    let shareRevisionId = null;
+    let shareRowData = null;
 
     // --- helper: reset Select2 ke "All" (pasti sukses untuk AJAX mode) ---
     function resetSelect2ToAll($el) {
@@ -179,7 +250,10 @@
             params.page = params.page || 1;
             const results = Array.isArray(data.results) ? data.results.slice() : [];
             if (!results.some(r => r.id === 'All')) {
-              results.unshift({ id: 'All', text: 'All' });
+              results.unshift({
+                id: 'All',
+                text: 'All'
+              });
             }
             return {
               results,
@@ -264,6 +338,67 @@
       const mm = pad(d.getMinutes());
       return `${dd}-${MM}-${yyyy} ${HH}:${mm}`;
     }
+
+        function openShareModal(rowData) {
+      shareRevisionId = rowData.id;
+      shareRowData = rowData;
+
+      // isi info package di modal
+      const revVal = rowData.revision ?? rowData.revision_no;
+      const revTxt = (revVal !== undefined && revVal !== null && revVal !== '') ? `rev ${revVal}` : '';
+
+      const parts = [
+        rowData.customer,
+        rowData.model,
+        rowData.part_no,
+        rowData.doc_type,
+        rowData.category,
+        rowData.part_group,
+        rowData.ecn_no,
+        revTxt
+      ].filter(Boolean);
+
+      $('#sharePackageInfo').text(parts.join(' - '));
+
+      // reset form
+      $('#shareNote').val('');
+      $('#shareError').addClass('hidden').text('');
+      updateShareButtonState();
+
+      $('#shareModal').removeClass('hidden').addClass('flex');
+      $('body').addClass('overflow-hidden');
+    }
+
+    function closeShareModal() {
+      $('#shareModal').addClass('hidden').removeClass('flex');
+      $('body').removeClass('overflow-hidden');
+      shareRevisionId = null;
+      shareRowData = null;
+    }
+
+    function updateShareButtonState() {
+      const note = $('#shareNote').val().trim();
+      const $btn = $('#btnConfirmShare');
+      if (note.length > 0) {
+        $btn.prop('disabled', false);
+      } else {
+        $btn.prop('disabled', true);
+      }
+    }
+
+    function setShareButtonLoading(isLoading) {
+      const $btn = $('#btnConfirmShare');
+      if (isLoading) {
+        $btn.prop('disabled', true).addClass('opacity-60 cursor-not-allowed');
+        $btn.find('.btn-label').addClass('hidden');
+        $btn.find('.btn-spinner').removeClass('hidden');
+      } else {
+        $btn.find('.btn-label').removeClass('hidden');
+        $btn.find('.btn-spinner').addClass('hidden');
+        updateShareButtonState(); // balik ke state normal tergantung note
+      }
+    }
+
 
     function initTable() {
       table = $('#approvalTable').DataTable({
@@ -365,10 +500,27 @@
               return `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${cls}">${data ?? ''}</span>`;
             }
           },
+          {
+            data: 'id',
+            orderable: false,
+            searchable: false,
+            className: 'text-center whitespace-nowrap',
+            render: function(packageId, type, row) {
+              return `
+                                <button 
+                                    type="button" 
+                                    class="btn-share px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 
+                                           bg-blue-100 dark:bg-blue-900/50 rounded-md hover:bg-blue-200 dark:hover:bg-blue-900/80"
+                                    data-id="${packageId}" 
+                                    title="Share package ${packageId}">
+                                    <i class="fa-solid fa-share-nodes fa-fw"></i> Share
+                                </button>
+                            `;
+            }
+          }
         ],
 
-        columnDefs: [
-          {
+        columnDefs: [{
             targets: 0,
             className: 'text-center w-12',
             width: '48px'
@@ -397,13 +549,15 @@
       // Penomoran ulang setiap draw
       table.on('draw.dt', function() {
         const info = table.page.info();
-        table.column(0, { page: 'current' }).nodes().each(function(cell, i) {
+        table.column(0, {
+          page: 'current'
+        }).nodes().each(function(cell, i) {
           cell.innerHTML = i + 1 + info.start;
         });
       });
     }
 
-    function bindHandlers() {
+        function bindHandlers() {
       // perubahan filter -> reload & refresh KPI
       $('#customer, #model, #document-type, #category, #status').on('change', function() {
         if (table) table.ajax.reload(null, true);
@@ -422,58 +576,117 @@
         loadKPI();
       });
 
-     $('#btnDownloadSummary').on('click', function() {
-  const f = getCurrentFilters();
-  const query = $.param(f);
-  const url = '{{ route("approvals.summary") }}?' + query;
+      $('#btnDownloadSummary').on('click', function() {
+        const f = getCurrentFilters();
+        const query = $.param(f);
+        const url = '{{ route("approvals.summary") }}?' + query;
 
-  const $btn = $(this);
+        const $btn = $(this);
 
-  function setLoading(isLoading) {
-    if (isLoading) {
-      $btn.prop('disabled', true)
-          .addClass('opacity-60 cursor-not-allowed');
-      $btn.find('.btn-label').addClass('hidden');
-      $btn.find('.btn-spinner').removeClass('hidden');
-    } else {
-      $btn.prop('disabled', false)
-          .removeClass('opacity-60 cursor-not-allowed');
-      $btn.find('.btn-label').removeClass('hidden');
-      $btn.find('.btn-spinner').addClass('hidden');
-    }
-  }
+        function setLoading(isLoading) {
+          if (isLoading) {
+            $btn.prop('disabled', true)
+              .addClass('opacity-60 cursor-not-allowed');
+            $btn.find('.btn-label').addClass('hidden');
+            $btn.find('.btn-spinner').removeClass('hidden');
+          } else {
+            $btn.prop('disabled', false)
+              .removeClass('opacity-60 cursor-not-allowed');
+            $btn.find('.btn-label').removeClass('hidden');
+            $btn.find('.btn-spinner').addClass('hidden');
+          }
+        }
 
-  setLoading(true);
+        setLoading(true);
 
-  // buat iframe tersembunyi
-  const $iframe = $('<iframe>', {
-    src: url,
-    style: 'display:none;'
-  }).appendTo('body');
+        const $iframe = $('<iframe>', {
+          src: url,
+          style: 'display:none;'
+        }).appendTo('body');
 
-  let done = false;
+        let done = false;
 
-  function finish() {
-    if (done) return;
-    done = true;
-    setLoading(false);
-    $iframe.remove();
-  }
+        function finish() {
+          if (done) return;
+          done = true;
+          setLoading(false);
+          $iframe.remove();
+        }
 
-  // Fallback: kalau nggak ada event load, reset setelah 7 detik
-  const timeoutId = setTimeout(finish, 7000);
+        const timeoutId = setTimeout(finish, 7000);
 
-  // Kalau iframe bener-bener nge-load, reset lebih cepat
-  $iframe.on('load', function() {
-    clearTimeout(timeoutId);
-    setTimeout(finish, 1000); // biar spinner sempat kelihatan sebentar
-  });
-});
+        $iframe.on('load', function() {
+          clearTimeout(timeoutId);
+          setTimeout(finish, 1000);
+        });
+      });
 
+      // ========= SHARE =========
 
+      // enable/disable tombol Share di modal ketika note diketik
+      $('#shareNote').on('input', function() {
+        updateShareButtonState();
+      });
 
-      // klik row -> detail
-      $('#approvalTable tbody').on('click', 'tr', function() {
+      // klik tombol Share di tabel -> buka modal
+      $('#approvalTable tbody').on('click', '.btn-share', function(e) {
+        e.stopPropagation(); // jangan trigger klik row
+        const $tr = $(this).closest('tr');
+        const rowData = table.row($tr).data();
+        if (!rowData) return;
+        openShareModal(rowData);
+      });
+
+      // klik Cancel / X -> tutup modal
+      $('#btnCancelShare, #btnCloseShare').on('click', function() {
+        closeShareModal();
+      });
+
+      // klik backdrop (area gelap) -> tutup modal
+      $('#shareModal').on('click', function(e) {
+        if ($(e.target).is('#shareModal')) {
+          closeShareModal();
+        }
+      });
+
+      // klik tombol Share di modal -> AJAX ke controller
+      $('#btnConfirmShare').on('click', function() {
+        const note = $('#shareNote').val().trim();
+        if (!shareRevisionId || !note.length) return;
+
+        setShareButtonLoading(true);
+        $('#shareError').addClass('hidden').text('');
+
+        $.ajax({
+          url: SHARE_URL,
+          type: 'POST',
+          dataType: 'json',
+          data: {
+            _token: '{{ csrf_token() }}',
+            revision_id: shareRevisionId,
+            note: note
+          },
+          success: function(res) {
+            closeShareModal();
+            alert(res.message || 'Revision berhasil di-share ke dept.');
+          },
+          error: function(xhr) {
+            let msg = 'Gagal melakukan share.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+              msg = xhr.responseJSON.message;
+            }
+            $('#shareError').removeClass('hidden').text(msg);
+          },
+          complete: function() {
+            setShareButtonLoading(false);
+          }
+        });
+      });
+
+      // klik row -> detail (kecuali kalau klik di tombol Share)
+      $('#approvalTable tbody').on('click', 'tr', function(e) {
+        if ($(e.target).closest('.btn-share').length) return; // abaikan klik dari tombol share
+
         const row = table.row(this).data();
         if (row && row.hash) {
           window.location.href = `{{ url('/approval') }}/${encodeURIComponent(row.hash)}`;
@@ -482,6 +695,7 @@
         $(this).css('cursor', 'pointer');
       });
     }
+
 
     // start
     initTable();
