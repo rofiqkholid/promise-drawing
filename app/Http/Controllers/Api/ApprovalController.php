@@ -603,10 +603,24 @@ class ApprovalController extends Controller
             ->orderBy('id')
             ->get();
 
+        // Mendapatkan kode departemen dan nama pengguna untuk teks stamp "controlled copy"
+        $userDeptCode = null;
+        if (Auth::check() && Auth::user()->id_dept) {
+            $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
+            $userDeptCode = $dept->code ?? null;
+        }
+
+        $userName = null;
+        if (Auth::check()) {
+            $userName = Auth::user()->name ?? null;
+        }
+
         return view('approvals.approval_detail', [
             'approvalId'    => $hash,
             'detail'        => $detail,
             'stampFormats'  => $stampFormats,
+            'userDeptCode'  => $userDeptCode,
+            'userName'      => $userName,
         ]);
     }
 

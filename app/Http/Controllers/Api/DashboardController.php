@@ -252,13 +252,15 @@ class DashboardController extends Controller
 
         $query = DB::connection('sqlsrv')
             ->table('part_groups')
-            ->select('id', 'code_part_group');
+            ->select('code_part_group')
+            ->groupBy('code_part_group');
 
         if ($searchTerm) {
             $query->where('code_part_group', 'LIKE', '%' . $searchTerm . '%');
         }
 
         $totalCount = $query->count();
+
         $groups = $query->orderBy('code_part_group', 'asc')
             ->offset($offset)
             ->limit($resultsPerPage)
@@ -266,7 +268,7 @@ class DashboardController extends Controller
 
         $formattedGroups = $groups->map(function ($group) {
             return [
-                'id'   => $group->id,
+                'id'   => uniqid(),
                 'text' => $group->code_part_group
             ];
         });
@@ -276,6 +278,7 @@ class DashboardController extends Controller
             'total_count' => $totalCount
         ]);
     }
+
     public function getStatus(Request $request): JsonResponse
     {
         $searchTerm = $request->q;

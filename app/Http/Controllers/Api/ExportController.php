@@ -492,13 +492,6 @@ class ExportController extends Controller
             })
             ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
-        // Mendapatkan kode departemen pengguna
-        $userDeptCode = null;
-        if (Auth::check() && Auth::user()->id_dept) {
-            $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
-            $userDeptCode = $dept->code ?? null;
-        }
-
         $detail = [
             'metadata' => [
                 'customer' => $package->customer,
@@ -523,6 +516,13 @@ class ExportController extends Controller
         ];
 
         $stampFormat = StampFormat::where('is_active', true)->first();
+
+        // Mendapatkan kode departemen pengguna
+        $userDeptCode = null;
+        if (Auth::check() && Auth::user()->id_dept) {
+            $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
+            $userDeptCode = $dept->code ?? null;
+        }
 
         $userName = null;
         if (Auth::check()) {
@@ -1070,31 +1070,10 @@ class ExportController extends Controller
         return [$x, $y];
     }
 
-    private function _createStampImage(string $centerText, string $topLine, string $bottomLine, string $colorMode = 'blue'): ?\Imagick
+    private function _createStampImage(string $centerText, string $topLine, string|array $bottomLine, string $colorMode = 'blue'): ?\Imagick
     {
         try {
-            $stamp = new \Imagick();
-            $canvasWidth = 336;
-            $canvasHeight = 120;
-
-            $stamp->newImage($canvasWidth, $canvasHeight, new \ImagickPixel('transparent'));
-            $stamp->setImageFormat('png');
-
             $draw = new \ImagickDraw();
-
-            $opacity = 0.85;
-
-            // --- LOGIKA WARNA (BLUE vs RED) ---
-            if ($colorMode === 'red') {
-                // Warna Merah untuk Obsolete
-                $borderColor = new \ImagickPixel("rgba(220, 38, 38, $opacity)"); // Red-600
-                $textColor   = new \ImagickPixel("rgba(185, 28, 28, $opacity)"); // Red-700
-            } else {
-                // Warna Biru Default (Original/Copy)
-                $borderColor = new \ImagickPixel("rgba(37, 99, 235, $opacity)"); // Blue-600
-                $textColor   = new \ImagickPixel("rgba(29, 78, 216, $opacity)"); // Blue-700
-            }
-
             $font = null;
             $fontsToTry = ['DejaVu-Sans', 'Arial', 'Helvetica', 'Verdana', 'Tahoma', 'sans-serif'];
             foreach ($fontsToTry as $fontName) {
@@ -1105,51 +1084,123 @@ class ExportController extends Controller
                 } catch (\Exception $e) { continue; }
             }
 
+            $dummy = new \Imagick();
+            $dummy->newImage(1, 1, new \ImagickPixel('transparent'));
+
+            // --- 1. UKUR LEBAR TEKS ---
+            
+            // A. Top Line
+            $draw->setFontSize(16);
+            $draw->setFontWeight(600);
+            $metricsTop = $dummy->queryFontMetrics($draw, $topLine);
+            $widthTop = $metricsTop['textWidth'];
+
+            // B. Bottom Line (Bisa String atau Array)
+            $draw->setFontSize(16);
+            $draw->setFontWeight(400); // Berat font bawah
+            
+            if (is_array($bottomLine)) {
+                // Jika Array (Mode Obsolete 2 Kolom)
+                // Ukur teks kiri dan kanan
+                $metricsLeft = $dummy->queryFontMetrics($draw, $bottomLine[0]);
+                $metricsRight = $dummy->queryFontMetrics($draw, $bottomLine[1]);
+                
+                $maxSide = max($metricsLeft['textWidth'], $metricsRight['textWidth']);
+                $widthBot = ($maxSide * 2) + 20; // +20 toleransi garis tengah
+            } else {
+                // Jika String Biasa
+                $metricsBottom = $dummy->queryFontMetrics($draw, $bottomLine);
+                $widthBot = $metricsBottom['textWidth'];
+            }
+
+            // C. Center Text
+            $draw->setFontSize(21);
+            $draw->setFontWeight(900);
+            $metricsCenter = $dummy->queryFontMetrics($draw, $centerText);
+            $widthCen = $metricsCenter['textWidth'];
+
+            // D. Tentukan Lebar Kanvas
+            $paddingHorizontal = 24; 
+            $minWidth = 220;         
+            
+            $calculatedWidth = max($widthTop, $widthBot, $widthCen) + $paddingHorizontal;
+            $canvasWidth = (int) max($minWidth, $calculatedWidth);
+            $canvasHeight = 120; 
+
+            // --- 2. SETUP KANVAS ---
+            $stamp = new \Imagick();
+            $stamp->newImage($canvasWidth, $canvasHeight, new \ImagickPixel('transparent'));
+            $stamp->setImageFormat('png');
+
+            $opacity = 0.85;
+            if ($colorMode === 'red') {
+                $borderColor = new \ImagickPixel("rgba(220, 38, 38, $opacity)");
+                $textColor   = new \ImagickPixel("rgba(185, 28, 28, $opacity)");
+            } else {
+                $borderColor = new \ImagickPixel("rgba(37, 99, 235, $opacity)");
+                $textColor   = new \ImagickPixel("rgba(29, 78, 216, $opacity)");
+            }
+
             $draw->setStrokeColor($borderColor);
             $draw->setFillColor(new \ImagickPixel('transparent'));
             $draw->setStrokeWidth(3);
+            $draw->setFont($font);
 
+            // Gambar Border Luar
             $draw->roundRectangle(2, 2, $canvasWidth - 2, $canvasHeight - 2, 2, 2);
-
+            // Garis Horizontal
             $draw->line(2, 36, $canvasWidth - 2, 36);
             $draw->line(2, 84, $canvasWidth - 2, 84);
+
+            // LOGIKA KHUSUS ARRAY (GARIS VERTIKAL)
+            if (is_array($bottomLine)) {
+                $midX = $canvasWidth / 2;
+                $draw->line($midX, 84, $midX, 118);
+            }
+
             $stamp->drawImage($draw);
 
-            // Setting Text Color
+            // --- 3. RENDER TEKS ---
             $draw->setFillColor($textColor);
-            $draw->setTextAlignment(\Imagick::ALIGN_LEFT);
-            $x_center_canvas = $canvasWidth / 2;
+            $draw->setStrokeWidth(0);
+            
+            $x_center_canvas = $canvasWidth / 2; 
 
-            // Teks Atas (Top Line)
+            // Teks Atas (Center)
+            $draw->setTextAlignment(\Imagick::ALIGN_CENTER);
             $draw->setFontSize(16);
             $draw->setFontWeight(600);
-            $draw->setStrokeWidth(0);
-            $metricsTop = $stamp->queryFontMetrics($draw, $topLine);
-            $x_top = $x_center_canvas - ($metricsTop['textWidth'] / 2);
-            $y_top = 27;
-            $stamp->annotateImage($draw, $x_top, $y_top, 0, $topLine);
+            $stamp->annotateImage($draw, $x_center_canvas, 24, 0, $topLine);
 
-            // Teks Bawah (Bottom Line)
-            $draw->setFontSize(16);
-            $draw->setFontWeight(400);
-            $draw->setStrokeWidth(0);
-            $metricsBottom = $stamp->queryFontMetrics($draw, $bottomLine);
-            $x_bottom = $x_center_canvas - ($metricsBottom['textWidth'] / 2);
-            $y_bottom = 108;
-            $stamp->annotateImage($draw, $x_bottom, $y_bottom, 0, $bottomLine);
-
-            // Teks Tengah (Center Text)
+            // Teks Tengah (Center)
             $draw->setFontSize(21);
             $draw->setFontWeight(900);
-            $draw->setStrokeColor($textColor);
+            $draw->setStrokeColor($textColor); 
             $draw->setStrokeWidth(0.75);
-            $metricsCenter = $stamp->queryFontMetrics($draw, $centerText);
-            $x_center = $x_center_canvas - ($metricsCenter['textWidth'] / 2);
-            $y_center = ($canvasHeight / 2) + ($metricsCenter['textHeight'] / 3);
-            $stamp->annotateImage($draw, $x_center, $y_center, 0, $centerText);
+            $stamp->annotateImage($draw, $x_center_canvas, 68, 0, $centerText);
 
-            $draw->clear();
-            $draw->destroy();
+            // Teks Bawah
+            $draw->setStrokeWidth(0);
+            $draw->setFontSize(16);
+            $draw->setFontWeight(400);
+
+            if (is_array($bottomLine)) {
+                // --- MODE 2 KOLOM (Kiri & Kanan) ---
+                
+                $x_left = $canvasWidth * 0.25;
+                $stamp->annotateImage($draw, $x_left, 105, 0, $bottomLine[0]);
+
+                $x_right = $canvasWidth * 0.75;
+                $stamp->annotateImage($draw, $x_right, 105, 0, $bottomLine[1]);
+
+            } else {
+                // --- MODE 1 KOLOM (Standar) ---
+                $stamp->annotateImage($draw, $x_center_canvas, 105, 0, $bottomLine);
+            }
+
+            // Cleanup
+            $draw->clear(); $draw->destroy();
+            $dummy->clear(); $dummy->destroy();
 
             return $stamp;
 
@@ -1190,8 +1241,8 @@ class ExportController extends Controller
             $receiptDateStr = $formatSaiDate($revision->receipt_date);
             $uploadDateStr  = $formatSaiDate($revision->created_at);
 
-            $topLine    = "DATE RECEIVED : " . $receiptDateStr;
-            $bottomLine = "DATE UPLOADED : " . $uploadDateStr;
+            $topLine    = "Date Received : " . $receiptDateStr;
+            $bottomLine = "Date Uploaded : " . $uploadDateStr;
 
             // --- B. STAMP CONTROL COPY ---
             $now = now();
@@ -1210,7 +1261,7 @@ class ExportController extends Controller
             if (Auth::check()) {
                 $userName = Auth::user()->name ?? '--';
             }
-            $bottomLineCopy = "DOWNLOADED BY {$userName}";
+            $bottomLineCopy = "Downloaded By {$userName}";
 
             // --- POSISI STAMP ---
             $posOriginal = $this->positionIntToKey($file->ori_position ?? 2, 'bottom-right');
@@ -1226,7 +1277,7 @@ class ExportController extends Controller
             $isObsolete = (bool)($revision->is_obsolete ?? 0);
             if ($isObsolete) {
                 $obsDateStr = $formatSaiDate($revision->obsolete_at);
-                $topLineObsolete = "DATE OBSOLETE : {$obsDateStr}";
+                $topLineObsolete = "Date : {$obsDateStr}";
 
                 $obsName = '-'; $obsDept = '-';
                 if (!empty($revision->obsolete_by)) {
@@ -1247,7 +1298,7 @@ class ExportController extends Controller
                      }
                 }
 
-                $bottomLineObsolete = "Nama : {$obsName}          Dept. : {$obsDept}";
+                $bottomLineObsolete = ["Nama : {$obsName}", "Dept. : {$obsDept}"];
 
                 $stampObsolete = $this->_createStampImage('SAI-DRAWING OBSOLETE', $topLineObsolete, $bottomLineObsolete, 'red');
             }
@@ -1279,7 +1330,7 @@ class ExportController extends Controller
             $processPage = function($iteratorIndex) use (
                 $imagick, $stampOriginal, $stampCopy, $stampObsolete, $isObsolete, $file,
                 $stampAspectRatio, $marginPercent, $stampWidthPercent, $minStampWidth,
-                $posOriginal, $posCopy, $posObsolete // <--- Variabel Scope Aman
+                $posOriginal, $posCopy, $posObsolete,
             ) {
                 $imagick->setIteratorIndex($iteratorIndex);
                 $imgWidth = $imagick->getImageWidth();

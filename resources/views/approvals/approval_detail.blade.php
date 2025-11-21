@@ -306,440 +306,376 @@
 
             <!-- IMAGE (JPG/PNG/...) -->
             <template x-if="isImage(selectedFile?.name)">
-              <div
-                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
-                @mousedown.prevent="startPan($event)"
-                @wheel.prevent="onWheelZoom($event)">
-                <div class="w-full h-full flex items-center justify-center">
-                  <div
-                    class="relative inline-block"
-                    :style="imageTransformStyle()">
-                    <img
-                      :src="selectedFile?.url"
-                      alt="File Preview"
-                      class="block pointer-events-none select-none max-w-full max-h-[70vh]"
-                      loading="lazy">
+                <div class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                    @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
+                    <div class="w-full h-full flex items-center justify-center">
+                        <div class="relative inline-block" :style="imageTransformStyle()">
+                            <img :src="selectedFile?.url" alt="File Preview"
+                                class="block pointer-events-none select-none max-w-full max-h-[70vh]"
+                                loading="lazy">
 
-                    <!-- STAMP ORIGINAL -->
-                    <div
-                      x-show="pkg.stamp"
-                      class="absolute"
-                      :class="stampPositionClass('original')">
-                      <div
-                        :class="stampOriginClass('original')"
-                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
-                        style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                          <span x-text="stampTopLine('original')"></span>
+                            <!-- STAMP ORIGINAL -->
+                            <div x-show="pkg.stamp" class="absolute"
+                                :class="stampPositionClass('original')">
+                                <div :class="stampOriginClass('original')"
+                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                    style="transform: scale(0.45);">
+                                    <div
+                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                        <span x-text="stampTopLine('original')"></span>
+                                    </div>
+                                    <div class="flex-1 flex items-center justify-center">
+                                        <span
+                                            class="text-xs font-extrabold text-blue-700 uppercase"
+                                            x-text="stampCenterOriginal()"></span>
+                                    </div>
+                                    <div
+                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                        <span x-text="stampBottomLine('original')"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STAMP COPY -->
+                            <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
+                                <div :class="stampOriginClass('copy')"
+                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                    style="transform: scale(0.45);">
+                                    <div
+                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                        <span x-text="stampTopLine('copy')"></span>
+                                    </div>
+                                    <div class="flex-1 flex items-center justify-center">
+                                        <span
+                                            class="text-xs font-extrabold uppercase text-blue-700"
+                                            x-text="stampCenterCopy()"></span>
+                                    </div>
+                                    <div
+                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                        <span x-text="stampBottomLine('copy')"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STAMP OBSOLETE -->
+                            <div x-show="pkg.stamp?.is_obsolete"
+                                class="absolute"
+                                :class="stampPositionClass('obsolete')">
+                                <div
+                                    :class="stampOriginClass('obsolete')"
+                                    class="w-65 h-20 border-2 border-red-600 rounded-sm
+                                    text-[10px] text-red-700 flex flex-col items-center
+                                    justify-between px-2 py-1 bg-transparent"
+                                    style="transform: scale(0.45);">
+                                    <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                                        <span x-text="stampTopLine('obsolete')"></span>
+                                    </div>
+
+                                    <div class="flex-1 flex items-center justify-center">
+                                        <span class="text-xs font-extrabold text-red-700 uppercase"
+                                            x-text="stampCenterObsolete()"></span>
+                                    </div>
+
+                                    <div class="w-full border-t border-red-600 pt-0.5 px-1 flex font-semibold justify-between tracking-tight">
+                                        <span>
+                                            Name :
+                                            <span x-text="obsoleteName()"></span>
+                                        </span>
+                                        <span>
+                                            <span>Dept :</span>
+                                            <span x-text="obsoleteDept()"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
-                            x-text="stampCenterOriginal()"></span>
-                        </div>
-                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine('original')"></span>
-                        </div>
-                      </div>
                     </div>
-
-                    <!-- STAMP COPY -->
-                    <div
-                      x-show="pkg.stamp"
-                      class="absolute"
-                      :class="stampPositionClass('copy')">
-                      <div
-                        :class="stampOriginClass('copy')"
-                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
-                        style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                          <span x-text="stampTopLine('copy')"></span>
-                        </div>
-                        <div class="flex-1 flex items-center justify-center">
-                          <span
-                            class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
-                            x-text="stampCenterCopy()"></span>
-                        </div>
-                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine('copy')"></span>
-                        </div>
-                      </div>
-                    </div>
-
-
-                    <!-- STAMP OBSOLETE -->
-                    <div
-                      x-show="pkg.stamp?.is_obsolete"
-                      class="absolute"
-                      :class="stampPositionClass('obsolete')">
-                      <div
-                        :class="stampOriginClass('obsolete')"
-                        class="w-65 h-20 border-2 border-red-600 rounded-sm
-           text-[10px] text-red-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
-                        style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
-                          <!-- top line: Date : Oct.25th 2025 -->
-                          <span x-text="stampTopLine('obsolete')"></span>
-                        </div>
-
-                        <div class="flex-1 flex items-center justify-center">
-                          <!-- middle: SAI-DRAWING OBSOLETE -->
-                          <span class="text-xs font-extrabold tracking-[0.25em] text-red-700 uppercase"
-                            x-text="stampCenterObsolete()"></span>
-                        </div>
-
-                        <!-- bottom: Nama & Dept -->
-                        <div class="w-full border-t border-red-600 pt-0.5 px-1 flex justify-between tracking-tight">
-                          <span>
-                            Nama :
-                            <span x-text="obsoleteName()"></span>
-                          </span>
-                          <span>
-                            <span x-text="(getObsoleteFormat().suffix || 'Dept.') + ' :'"></span>
-                            <span x-text="obsoleteDept()"></span>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              </div>
             </template>
 
-            <!-- PDF via pdf.js + canvas -->
             <template x-if="isPdf(selectedFile?.name)">
-              <div
-                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
-                @mousedown.prevent="startPan($event)"
-                @wheel.prevent="onWheelZoom($event)">
-                <div class="w-full h-full flex items-center justify-center">
-                  <div class="relative inline-block" :style="imageTransformStyle()">
-                    <canvas
-                      x-ref="pdfCanvas"
-                      class="block pointer-events-none select-none max-w-full max-h-[70vh]">
-                    </canvas>
+                <div class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                    @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
+                    <div class="w-full h-full flex items-center justify-center">
+                        <div class="relative inline-block" :style="imageTransformStyle()">
+                            <canvas x-ref="pdfCanvas"
+                                class="block pointer-events-none select-none max-w-full max-h-[70vh]">
+                            </canvas>
 
-                    <!-- STAMP ORIGINAL -->
-                    <div
-                      x-show="pkg.stamp"
-                      class="absolute"
-                      :class="stampPositionClass('original')">
-                      <div
-                        :class="stampOriginClass('original')"
-                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
-                        style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                          <span x-text="stampTopLine('original')"></span>
+                            <!-- STAMP ORIGINAL -->
+                            <div x-show="pkg.stamp" class="absolute"
+                                :class="stampPositionClass('original')">
+                                <div :class="stampOriginClass('original')"
+                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                    style="transform: scale(0.45);">
+                                    <div
+                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                        <span x-text="stampTopLine('original')"></span>
+                                    </div>
+                                    <div class="flex-1 flex items-center justify-center">
+                                        <span
+                                            class="text-xs font-extrabold text-blue-700 uppercase"
+                                            x-text="stampCenterOriginal()"></span>
+                                    </div>
+                                    <div
+                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                        <span x-text="stampBottomLine('original')"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STAMP COPY -->
+                            <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
+                                <div :class="stampOriginClass('copy')"
+                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                    style="transform: scale(0.45);">
+                                    <div
+                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                        <span x-text="stampTopLine('copy')"></span>
+                                    </div>
+                                    <div class="flex-1 flex items-center justify-center">
+                                        <span
+                                            class="text-xs font-extrabold uppercase text-blue-700"
+                                            x-text="stampCenterCopy()"></span>
+                                    </div>
+                                    <div
+                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                        <span x-text="stampBottomLine('copy')"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STAMP OBSOLETE -->
+                            <div x-show="pkg.stamp?.is_obsolete"
+                                class="absolute"
+                                :class="stampPositionClass('obsolete')">
+                                <div
+                                    :class="stampOriginClass('obsolete')"
+                                    class="w-65 h-20 border-2 border-red-600 rounded-sm
+                                    text-[10px] text-red-700 flex flex-col items-center
+                                    justify-between px-2 py-1 bg-transparent"
+                                    style="transform: scale(0.45);">
+                                    <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                                        <span x-text="stampTopLine('obsolete')"></span>
+                                    </div>
+
+                                    <div class="flex-1 flex items-center justify-center">
+                                        <span class="text-xs font-extrabold text-red-700 uppercase"
+                                            x-text="stampCenterObsolete()"></span>
+                                    </div>
+
+                                    <div class="w-full border-t border-red-600 pt-0.5 px-1 flex font-semibold justify-between tracking-tight">
+                                        <span>
+                                            Name :
+                                            <span x-text="obsoleteName()"></span>
+                                        </span>
+                                        <span>
+                                            <span>Dept :</span>
+                                            <span x-text="obsoleteDept()"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
-                            x-text="stampCenterOriginal()"></span>
-                        </div>
-                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine('original')"></span>
-                        </div>
-                      </div>
                     </div>
 
-                    <!-- STAMP COPY -->
-                    <div
-                      x-show="pkg.stamp"
-                      class="absolute"
-                      :class="stampPositionClass('copy')">
-                      <div
-                        :class="stampOriginClass('copy')"
-                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
-                        style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                          <span x-text="stampTopLine('copy')"></span>
-                        </div>
-                        <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
-                            x-text="stampCenterCopy()"></span>
-                        </div>
-                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine('copy')"></span>
-                        </div>
-                      </div>
+                    <div x-show="pdfLoading"
+                        class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
+                        Rendering PDF…
                     </div>
-
-                   <!-- STAMP OBSOLETE -->
-                    <div
-                      x-show="pkg.stamp?.is_obsolete"
-                      class="absolute"
-                      :class="stampPositionClass('obsolete')">
-                      <div
-                        :class="stampOriginClass('obsolete')"
-                        class="w-65 h-20 border-2 border-red-600 rounded-sm
-           text-[10px] text-red-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
-                        style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
-                          <!-- top line: Date : Oct.25th 2025 -->
-                          <span x-text="stampTopLine('obsolete')"></span>
-                        </div>
-
-                        <div class="flex-1 flex items-center justify-center">
-                          <!-- middle: SAI-DRAWING OBSOLETE -->
-                          <span class="text-xs font-extrabold tracking-[0.25em] text-red-700 uppercase"
-                            x-text="stampCenterObsolete()"></span>
-                        </div>
-
-                        <!-- bottom: Nama & Dept -->
-                        <div class="w-full border-t border-red-600 pt-0.5 px-1 flex justify-between tracking-tight">
-                          <span>
-                            Nama :
-                            <span x-text="obsoleteName()"></span>
-                          </span>
-                          <span>
-                            <span x-text="(getObsoleteFormat().suffix || 'Dept.') + ' :'"></span>
-                            <span x-text="obsoleteDept()"></span>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    <div x-show="pdfError"
+                        class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
+                        x-text="pdfError"></div>
                 </div>
-
-                <!-- status render PDF -->
-                <div
-                  x-show="pdfLoading"
-                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
-                  Rendering PDF…
-                </div>
-                <div
-                  x-show="pdfError"
-                  class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
-                  x-text="pdfError"></div>
-              </div>
             </template>
 
-            <!-- TIFF -->
+
             <template x-if="isTiff(selectedFile?.name)">
-              <div
-                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
-                @mousedown.prevent="startPan($event)"
-                @wheel.prevent="onWheelZoom($event)">
-                <div class="w-full h-full flex items-center justify-center">
-                  <!-- wrapper yang di-zoom + pan -->
-                  <div class="relative inline-block" :style="imageTransformStyle()">
-                    <img
-                      x-ref="tifImg"
-                      alt="TIFF Preview"
-                      class="block pointer-events-none select-none max-w-full max-h-[70vh]" />
+                <div class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                    @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
+                    <div class="w-full h-full flex items-center justify-center">
+                        <div class="relative inline-block" :style="imageTransformStyle()">
+                            <img x-ref="tifImg" alt="TIFF Preview"
+                                class="block pointer-events-none select-none max-w-full max-h-[70vh]" />
 
-                    <!-- STAMP ORIGINAL -->
-                    <div
-                      x-show="pkg.stamp"
-                      class="absolute"
-                      :class="stampPositionClass('original')">
-                      <div
-                        :class="stampOriginClass('original')"
-                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
-                        style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                          <span x-text="stampTopLine('original')"></span>
+                            <!-- STAMP ORIGINAL -->
+                            <div x-show="pkg.stamp" class="absolute"
+                                :class="stampPositionClass('original')">
+                                <div :class="stampOriginClass('original')"
+                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                    style="transform: scale(0.45);">
+                                    <div
+                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                        <span x-text="stampTopLine('original')"></span>
+                                    </div>
+                                    <div class="flex-1 flex items-center justify-center">
+                                        <span
+                                            class="text-xs font-extrabold uppercase text-blue-700"
+                                            x-text="stampCenterOriginal()"></span>
+                                    </div>
+                                    <div
+                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                        <span x-text="stampBottomLine('original')"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STAMP COPY -->
+                            <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
+                                <div :class="stampOriginClass('copy')"
+                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                    style="transform: scale(0.45);">
+                                    <div
+                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                        <span x-text="stampTopLine('copy')"></span>
+                                    </div>
+                                    <div class="flex-1 flex items-center justify-center">
+                                        <span
+                                            class="text-xs font-extrabold uppercase text-blue-700"
+                                            x-text="stampCenterCopy()"></span>
+                                    </div>
+                                    <div
+                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                        <span x-text="stampBottomLine('copy')"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STAMP OBSOLETE -->
+                            <div x-show="pkg.stamp?.is_obsolete"
+                                class="absolute"
+                                :class="stampPositionClass('obsolete')">
+                                <div
+                                    :class="stampOriginClass('obsolete')"
+                                    class="w-65 h-20 border-2 border-red-600 rounded-sm
+                                    text-[10px] text-red-700 flex flex-col items-center
+                                    justify-between px-2 py-1 bg-transparent"
+                                    style="transform: scale(0.45);">
+                                    <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                                        <span x-text="stampTopLine('obsolete')"></span>
+                                    </div>
+
+                                    <div class="flex-1 flex items-center justify-center">
+                                        <span class="text-xs font-extrabold text-red-700 uppercase"
+                                            x-text="stampCenterObsolete()"></span>
+                                    </div>
+
+                                    <div class="w-full border-t border-red-600 pt-0.5 px-1 flex font-semibold justify-between tracking-tight">
+                                        <span>
+                                            Name :
+                                            <span x-text="obsoleteName()"></span>
+                                        </span>
+                                        <span>
+                                            <span>Dept :</span>
+                                            <span x-text="obsoleteDept()"></span>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
-                            x-text="stampCenterOriginal()"></span>
-                        </div>
-                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine('original')"></span>
-                        </div>
-                      </div>
                     </div>
 
-                    <!-- STAMP COPY -->
-                    <div
-                      x-show="pkg.stamp"
-                      class="absolute"
-                      :class="stampPositionClass('copy')">
-                      <div
-                        :class="stampOriginClass('copy')"
-                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
-                        style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                          <span x-text="stampTopLine('copy')"></span>
-                        </div>
-                        <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
-                            x-text="stampCenterCopy()"></span>
-                        </div>
-                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                          <span x-text="stampBottomLine('copy')"></span>
-                        </div>
-                      </div>
+                    <div x-show="tifLoading"
+                        class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
+                        Rendering TIFF…
                     </div>
-
-                    <!-- STAMP OBSOLETE -->
-                    <div
-                      x-show="pkg.stamp?.is_obsolete"
-                      class="absolute"
-                      :class="stampPositionClass('obsolete')">
-                      <div
-                        :class="stampOriginClass('obsolete')"
-                        class="w-65 h-20 border-2 border-red-600 rounded-sm
-           text-[10px] text-red-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
-                        style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
-                          <!-- top line: Date : Oct.25th 2025 -->
-                          <span x-text="stampTopLine('obsolete')"></span>
-                        </div>
-
-                        <div class="flex-1 flex items-center justify-center">
-                          <!-- middle: SAI-DRAWING OBSOLETE -->
-                          <span class="text-xs font-extrabold tracking-[0.25em] text-red-700 uppercase"
-                            x-text="stampCenterObsolete()"></span>
-                        </div>
-
-                        <!-- bottom: Nama & Dept -->
-                        <div class="w-full border-t border-red-600 pt-0.5 px-1 flex justify-between tracking-tight">
-                          <span>
-                            Nama :
-                            <span x-text="obsoleteName()"></span>
-                          </span>
-                          <span>
-                            <span x-text="(getObsoleteFormat().suffix || 'Dept.') + ' :'"></span>
-                            <span x-text="obsoleteDept()"></span>
-                          </span>
-                        </div>
-                      </div>
+                    <div x-show="tifError"
+                        class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
+                        x-text="tifError">
                     </div>
-                  </div>
                 </div>
-
-                <!-- status render -->
-                <div
-                  x-show="tifLoading"
-                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
-                  Rendering TIFF…
-                </div>
-                <div
-                  x-show="tifError"
-                  class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
-                  x-text="tifError"></div>
-              </div>
             </template>
 
-            <!-- HPGL -->
+
             <template x-if="isHpgl(selectedFile?.name)">
-              <div
-                class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
-                @mousedown.prevent="startPan($event)"
-                @wheel.prevent="onWheelZoom($event)">
-                <div class="relative w-full h-full flex items-center justify-center" :style="imageTransformStyle()">
-                  <canvas
-                    x-ref="hpglCanvas"
-                    class="pointer-events-none select-none"></canvas>
+                <div class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                    @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
+                    <div class="relative w-full h-full flex items-center justify-center"
+                        :style="imageTransformStyle()">
+                        <canvas x-ref="hpglCanvas" class="pointer-events-none select-none"></canvas>
 
-                  <!-- STAMP ORIGINAL -->
-                  <div
-                    x-show="pkg.stamp"
-                    class="absolute"
-                    :class="stampPositionClass('original')">
-                    <div
-                      :class="stampOriginClass('original')"
-                      class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
-                      style="transform: scale(0.45);">
-                      <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                        <span x-text="stampTopLine('original')"></span>
-                      </div>
-                      <div class="flex-1 flex items-center justify-center">
-                        <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
-                          x-text="stampCenterOriginal()"></span>
-                      </div>
-                      <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                        <span x-text="stampBottomLine('original')"></span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- STAMP COPY -->
-                  <div
-                    x-show="pkg.stamp"
-                    class="absolute"
-                    :class="stampPositionClass('copy')">
-                    <div
-                      :class="stampOriginClass('copy')"
-                      class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
-                      style="transform: scale(0.45);">
-                      <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
-                        <span x-text="stampTopLine('copy')"></span>
-                      </div>
-                      <div class="flex-1 flex items-center justify-center">
-                        <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
-                          x-text="stampCenterCopy()"></span>
-                      </div>
-                      <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
-                        <span x-text="stampBottomLine('copy')"></span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- STAMP OBSOLETE -->
-                    <div
-                      x-show="pkg.stamp?.is_obsolete"
-                      class="absolute"
-                      :class="stampPositionClass('obsolete')">
-                      <div
-                        :class="stampOriginClass('obsolete')"
-                        class="w-65 h-20 border-2 border-red-600 rounded-sm
-           text-[10px] text-red-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
-                        style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
-                          <!-- top line: Date : Oct.25th 2025 -->
-                          <span x-text="stampTopLine('obsolete')"></span>
+                        <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
+                            <div :class="stampOriginClass('original')"
+                                class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                style="transform: scale(0.45);">
+                                <div
+                                    class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                    <span x-text="stampTopLine('original')"></span>
+                                </div>
+                                <div class="flex-1 flex items-center justify-center">
+                                    <span
+                                        class="text-xs font-extrabold text-blue-700 uppercase"
+                                        x-text="stampCenterOriginal()"></span>
+                                </div>
+                                <div
+                                    class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                    <span x-text="stampBottomLine('original')"></span>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="flex-1 flex items-center justify-center">
-                          <!-- middle: SAI-DRAWING OBSOLETE -->
-                          <span class="text-xs font-extrabold tracking-[0.25em] text-red-700 uppercase"
-                            x-text="stampCenterObsolete()"></span>
+                        <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
+                            <div :class="stampOriginClass('copy')"
+                                class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                style="transform: scale(0.45);">
+                                <div
+                                    class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                    <span x-text="stampTopLine('copy')"></span>
+                                </div>
+                                <div class="flex-1 flex items-center justify-center">
+                                    <span
+                                        class="text-xs font-extrabold text-blue-700 uppercase"
+                                        x-text="stampCenterCopy()"></span>
+                                </div>
+                                <div
+                                    class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                    <span x-text="stampBottomLine('copy')"></span>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- bottom: Nama & Dept -->
-                        <div class="w-full border-t border-red-600 pt-0.5 px-1 flex justify-between tracking-tight">
-                          <span>
-                            Nama :
-                            <span x-text="obsoleteName()"></span>
-                          </span>
-                          <span>
-                            <span x-text="(getObsoleteFormat().suffix || 'Dept.') + ' :'"></span>
-                            <span x-text="obsoleteDept()"></span>
-                          </span>
+                        <div x-show="pkg.stamp?.is_obsolete"
+                            class="absolute"
+                            :class="stampPositionClass('obsolete')">
+                            <div
+                                :class="stampOriginClass('obsolete')"
+                                class="w-65 h-20 border-2 border-red-600 rounded-sm
+                                text-[10px] text-red-700 flex flex-col items-center
+                                justify-between px-2 py-1 bg-transparent"
+                                style="transform: scale(0.45);">
+                                <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                                    <span x-text="stampTopLine('obsolete')"></span>
+                                </div>
+
+                                <div class="flex-1 flex items-center justify-center">
+                                    <span class="text-xs font-extrabold text-red-700 uppercase"
+                                        x-text="stampCenterObsolete()"></span>
+                                </div>
+
+                                <div class="w-full border-t border-red-600 pt-0.5 px-1 flex font-semibold justify-between tracking-tight">
+                                    <span>
+                                        Name :
+                                        <span x-text="obsoleteName()"></span>
+                                    </span>
+                                    <span>
+                                        <span>Dept :</span>
+                                        <span x-text="obsoleteDept()"></span>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                      </div>
+
                     </div>
 
-                <div
-                  x-show="hpglLoading"
-                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
-                  Rendering HPGL…
+                    <div x-show="hpglLoading"
+                        class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
+                        Rendering HPGL…
+                    </div>
+                    <div x-show="hpglError"
+                        class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
+                        x-text="hpglError">
+                    </div>
                 </div>
-                <div
-                  x-show="hpglError"
-                  class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
-                  x-text="hpglError"></div>
-              </div>
             </template>
 
             <!-- CAD: IGES / STEP via occt-import-js -->
@@ -1084,9 +1020,11 @@
     // <- private variable, tidak ikut diproxy Alpine
     let pdfDoc = null;
     return {
-      approvalId: JSON.parse(`@json($approvalId)`),
-      pkg: JSON.parse(`@json($detail)`),
-      stampFormats: JSON.parse(`@json($stampFormats)`),
+    approvalId: JSON.parse(`@json($approvalId)`),
+    pkg: JSON.parse(`@json($detail)`),
+    stampFormats: JSON.parse(`@json($stampFormats)`),
+    userDeptCode: JSON.parse(`@json($userDeptCode ?? null)`),
+    userName: JSON.parse(`@json($userName ?? null)`),
 
       // URL template update posisi stamp per file
       updateStampUrlTemplate: `{{ route('approvals.files.updateStamp', ['fileId' => '__FILE_ID__']) }}`,
@@ -1331,21 +1269,54 @@
 
       fileSizeInfo() {
         if (!this.selectedFile) return '';
-        // sesuaikan nama field size dari backend
         const bytes = this.selectedFile.size ?? this.selectedFile.filesize ?? 0;
         if (!bytes) return 'Size: -';
         return 'Size: ' + this.formatBytes(bytes);
       },
 
+      formatStampDate(dateString) {
+          if (!dateString) return '';
+          const d = new Date(dateString);
+          if (isNaN(d.getTime())) return dateString;
 
-      // ==== pilih format normal vs obsolete dari array stampFormats ====
+          const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          const monthName = months[d.getMonth()];
+          const day = d.getDate();
+          const year = d.getFullYear();
+
+          const j = day % 10, k = day % 100;
+
+          let suffix = "ᵗʰ";
+          if (j == 1 && k != 11) {
+              suffix = "ˢᵗ";
+          } else if (j == 2 && k != 12) {
+              suffix = "ⁿᵈ";
+          } else if (j == 3 && k != 13) {
+              suffix = "ʳᵈ";
+          }
+          return `${monthName}.${day}${suffix} ${year}`;
+      },
+
+      // teks tengah stamp ORIGINAL
+      stampCenterOriginal() {
+          return 'SAI-DRAWING ORIGINAL';
+      },
+
+      // teks tengah stamp Control Copy
+      stampCenterCopy() {
+          return 'SAI-DRAWING CONTROLLED COPY';
+      },
+
+      // teks tengah stamp OBSOLETE
+      stampCenterObsolete() {
+          return 'SAI-DRAWING OBSOLETE';
+      },
+
       getNormalFormat() {
         const list = this.stampFormats || [];
-        // anggap index 0 = normal (Date Received / Date Upload)
         if (Array.isArray(list) && list.length > 0) {
           return list[0];
         }
-        // fallback kalau kosong
         return {
           prefix: 'DATE RECEIVED',
           suffix: 'DATE UPLOADED'
@@ -1354,39 +1325,13 @@
 
       getObsoleteFormat() {
         const list = this.stampFormats || [];
-        // anggap index 1 = obsolete (Date Upload / Date Obsolete)
         if (Array.isArray(list) && list.length > 1) {
           return list[1];
         }
-        // fallback kalau kosong
         return {
           prefix: 'DATE UPLOAD',
           suffix: 'DATE OBSOLETE'
         };
-      },
-
-      getObsoleteInfo() {
-        return this.pkg?.stamp?.obsolete_info || {};
-      },
-
-
-      formatStampDate(d) {
-        return d || '';
-      },
-
-      // teks tengah stamp ORIGINAL
-      stampCenterOriginal() {
-        return 'SAI-DRAWING ORIGINAL';
-      },
-
-      // teks tengah stamp Control Copy
-      stampCenterCopy() {
-        return 'SAI-DRAWING CONTROL COPY';
-      },
-
-      // teks tengah leteLETE
-      stampCenterObsolete() {
-        return 'SAI-DRAWING OBSOLETE';
       },
 
       obsoleteName() {
@@ -1401,63 +1346,75 @@
         return info.dept || '';
       },
 
+      getObsoleteInfo() {
+        return this.pkg?.stamp?.obsolete_info || {};
+      },
 
       stampTopLine(which = 'original') {
-        const s = this.pkg?.stamp || {};
-        let date;
-        let fmt;
+          const s = this.pkg?.stamp || {};
+          let date;
+          let fmt;
 
-        if (which === 'obsolete') {
-          fmt = this.getObsoleteFormat();
+          if (which === 'obsolete') {
+              const info = this.getObsoleteInfo();
+              date = info.date_text || s.obsolete_date || s.upload_date || '';
+              return date ? `DATE : ${date}` : '';
+          } else if (which === 'original') {
+              fmt = this.getNormalFormat();
+              date = s.receipt_date || s.upload_date || '';
+              const label = fmt.prefix || 'DATE RECEIVED';
+              return date ? `${label} : ${this.formatStampDate(date)}` : '';
+          } else if (which === 'copy') {
+              const now = new Date();
+              const dateStr = this.formatStampDate(now.toISOString().split('T')[0]);
 
-          const info = this.getObsoleteInfo();
-          // pakai date_text (Oct.25th 2025) kalau ada
-          date =
-            info.date_text ||
-            s.obsolete_date ||
-            s.upload_date ||
-            s.receipt_date ||
-            '';
+              // Format Jam (HH:MM:SS)
+              const hours = String(now.getHours()).padStart(2, '0');
+              const minutes = String(now.getMinutes()).padStart(2, '0');
+              const seconds = String(now.getSeconds()).padStart(2, '0');
+              const timeStr = `${hours}:${minutes}:${seconds}`;
 
-          const label = fmt.prefix || 'DATE OBSOLETE';
-          return date ? `${label} : ${date}` : '';
-        } else {
-          fmt = this.getNormalFormat();
-          date = s.receipt_date || s.upload_date || '';
-          const label = fmt.prefix || 'DATE RECEIVED';
-          return date ? `${label} : ${this.formatStampDate(date)}` : '';
-        }
+              const deptCode = this.userDeptCode || '--';
+
+              return `SAI / ${deptCode} / ${dateStr} ${timeStr}`;
+
+          } else {
+              fmt = this.getNormalFormat();
+              date = s.receipt_date || s.upload_date || '';
+              const label = fmt.prefix || 'DATE RECEIVED';
+              return date ? `${label} : ${this.formatStampDate(date)}` : '';
+          }
       },
-
 
       stampBottomLine(which = 'original') {
-        const s = this.pkg?.stamp || {};
-        let fmt;
+          const s = this.pkg?.stamp || {};
+          let fmt;
 
-        if (which === 'obsolete') {
-          fmt = this.getObsoleteFormat();
-          const info = this.getObsoleteInfo();
-
-          const name = info.name || '';
-          const dept = info.dept || '';
-
-          let value = '';
-          if (name && dept) {
-            value = `${name} / ${dept}`;
-          } else {
-            value = name || dept || '';
+          if (which === 'copy') {
+              const userName = this.userName || '--';
+              return `DOWNLOADED BY ${userName}`;
           }
-
-          const label = fmt.suffix || 'BY';
-          return value ? `${label} : ${value}` : '';
-        } else {
-          fmt = this.getNormalFormat();
-          const date = s.upload_date || '';
-          const label = fmt.suffix || 'DATE UPLOADED';
-          return date ? `${label} : ${this.formatStampDate(date)}` : '';
-        }
+          else if (which === 'obsolete') {
+              fmt = this.getObsoleteFormat();
+              const info = this.getObsoleteInfo();
+              const name = info.name || '';
+              const dept = info.dept || '';
+              let value = '';
+              if (name && dept) {
+                  value = `${name} / ${dept}`;
+              } else {
+                  value = name || dept || '';
+              }
+              const label = fmt.suffix || 'BY';
+              return value ? `${label} : ${value}` : '';
+          }
+          else {
+              fmt = this.getNormalFormat();
+              const date = s.upload_date || '';
+              const label = fmt.suffix || 'DATE UPLOADED';
+              return date ? `${label} : ${this.formatStampDate(date)}` : '';
+          }
       },
-
 
       // ===== helper key per file (pakai id kalau ada) =====
       getFileKey(file) {

@@ -186,124 +186,164 @@
 
           </div>
 
-          <!-- STAMP POSITION PER FILE -->
-          <div x-show="selectedFile" class="mb-3 flex flex-wrap items-center gap-2 text-xs">
-            <!-- ORIGINAL -->
-            <div class="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-              <span>Original:</span>
-              <select x-model="stampConfig.original"
-                @change="onStampChange()"
-                class="border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 bg-white dark:bg-gray-900">
-                <option value="top-left">Top Left</option>
-                <option value="top-center">Top Center</option>
-                <option value="top-right">Top Right</option>
-                <option value="bottom-left">Bottom Left</option>
-                <option value="bottom-center">Bottom Center</option>
-                <option value="bottom-right">Bottom Right</option>
-              </select>
-            </div>
+      <!-- STAMP + BLOCK + ZOOM TOOLBAR -->
+<div x-show="selectedFile" x-cloak class="mb-4 space-y-3 text-xs">
 
-            <!-- COPY -->
-            <div class="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-              <span>Copy:</span>
-              <select x-model="stampConfig.copy"
-                @change="onStampChange()"
-                class="border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 bg-white dark:bg-gray-900">
-                <option value="top-left">Top Left</option>
-                <option value="top-center">Top Center</option>
-                <option value="top-right">Top Right</option>
-                <option value="bottom-left">Bottom Left</option>
-                <option value="bottom-center">Bottom Center</option>
-                <option value="bottom-right">Bottom Right</option>
-              </select>
-            </div>
+  <!-- ===== BARIS 1: KONFIGURASI STAMP ===== -->
+  <div class="flex flex-wrap items-center gap-4 text-gray-600 dark:text-gray-300">
 
-            <!-- OBSOLETE -->
-            <div class="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-              <span>Obsolete:</span>
-              <select x-model="stampConfig.obsolete"
-                @change="onStampChange()"
-                class="border border-gray-300 dark:border-gray-600 rounded px-1 py-0.5 bg-white dark:bg-gray-900">
-                <option value="top-left">Top Left</option>
-                <option value="top-center">Top Center</option>
-                <option value="top-right">Top Right</option>
-                <option value="bottom-left">Bottom Left</option>
-                <option value="bottom-center">Bottom Center</option>
-                <option value="bottom-right">Bottom Right</option>
-              </select>
-            </div>
-          </div>
+    <!-- ORIGINAL -->
+    <div class="flex items-center gap-2">
+      <span class="font-medium">Original</span>
+      <select
+        x-model="stampConfig.original"
+        @change="onStampChange()"
+        class="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-900">
+        <option value="top-left">Top Left</option>
+        <option value="top-center">Top Center</option>
+        <option value="top-right">Top Right</option>
+        <option value="bottom-left">Bottom Left</option>
+        <option value="bottom-center">Bottom Center</option>
+        <option value="bottom-right">Bottom Right</option>
+      </select>
+    </div>
 
-          <!-- ZOOM TOOLBAR untuk JPG/PNG/TIFF/HPGL/PDF -->
-          <div
-            x-show="isImage(selectedFile?.name) || isTiff(selectedFile?.name) || isHpgl(selectedFile?.name) || isPdf(selectedFile?.name)"
-            class="mb-3 flex items-center justify-between text-xs text-gray-700 dark:text-gray-200">
+    <!-- DIVIDER -->
+    <span class="hidden md:inline-block h-4 w-px bg-gray-200 dark:bg-gray-700"></span>
 
-            
-            <!-- KIRI: tombol white block (multi) -->
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                @click.stop="addMask()"
-                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-                + Add Block
-              </button>
+    <!-- COPY -->
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="font-medium">Copy</span>
 
-              <button
-                type="button"
-                @click.stop="removeActiveMask()"
-                x-show="getActiveMask()"
-                x-cloak
-                class="px-2 py-1 border border-red-300 text-red-600 dark:border-red-500 rounded hover:bg-red-50 dark:hover:bg-red-900/40">
-                Delete Block
-              </button>
-            </div>
+      <!-- Posisi copy -->
+      <select
+        x-model="stampConfig.copy"
+        @change="onStampChange()"
+        class="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-900">
+        <option value="top-left">Top Left</option>
+        <option value="top-center">Top Center</option>
+        <option value="top-right">Top Right</option>
+        <option value="bottom-left">Bottom Left</option>
+        <option value="bottom-center">Bottom Center</option>
+        <option value="bottom-right">Bottom Right</option>
+      </select>
 
-            <!-- KANAN: kontrol zoom -->
-            <div class="flex items-center gap-2">
-              <span x-text="Math.round(imageZoom * 100) + '%'"></span>
-              <button @click="zoomOut()"
-                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-                -
-              </button>
-              <button @click="resetZoom()"
-                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-                Fit
-              </button>
-              <button @click="zoomIn()"
-                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
-                +
-              </button>
-            </div>
-          </div>
+      <!-- Tipe copy -->
+      <select
+        x-model="copyType"
+        @change="onStampChange()"
+        class="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-900">
+        <option value="controlled">Controlled Copy</option>
+        <option value="uncontrolled">Uncontrolled Copy</option>
+      </select>
+    </div>
+
+    <!-- DIVIDER -->
+    <span class="hidden md:inline-block h-4 w-px bg-gray-200 dark:bg-gray-700"></span>
+
+    <!-- OBSOLETE -->
+    <div class="flex items-center gap-2">
+      <span class="font-medium">Obsolete</span>
+      <select
+        x-model="stampConfig.obsolete"
+        @change="onStampChange()"
+        class="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-900">
+        <option value="top-left">Top Left</option>
+        <option value="top-center">Top Center</option>
+        <option value="top-right">Top Right</option>
+        <option value="bottom-left">Bottom Left</option>
+        <option value="bottom-center">Bottom Center</option>
+        <option value="bottom-right">Bottom Right</option>
+      </select>
+    </div>
+
+  </div>
+
+  <!-- ===== BARIS 2: ZOOM (DI ATAS PAGE NAV) ===== -->
+  <div
+    x-show="isImage(selectedFile?.name) || isTiff(selectedFile?.name) || isHpgl(selectedFile?.name) || isPdf(selectedFile?.name)"
+    class="flex items-center justify-end gap-2 text-gray-700 dark:text-gray-200">
+
+    <span x-text="Math.round(imageZoom * 100) + '%'"></span>
+    <button
+      @click="zoomOut()"
+      class="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900
+             hover:bg-gray-100 dark:hover:bg-gray-700">
+      –
+    </button>
+    <button
+      @click="resetZoom()"
+      class="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900
+             hover:bg-gray-100 dark:hover:bg-gray-700">
+      Fit
+    </button>
+    <button
+      @click="zoomIn()"
+      class="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900
+             hover:bg-gray-100 dark:hover:bg-gray-700">
+      +
+    </button>
+  </div>
+
+  <!-- ===== BARIS 3: BLOCK BUTTONS + PAGE NAV (SEJAJAR) ===== -->
+  <div class="flex flex-wrap items-center justify-between gap-3 text-gray-700 dark:text-gray-200">
+
+    <!-- KIRI: BLOCK BUTTONS -->
+    <div class="flex flex-wrap items-center gap-2">
+      <button
+        @click="saveCurrentMask()"
+        class="px-3 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900
+               hover:bg-gray-100 dark:hover:bg-gray-700">
+        Save Block
+      </button>
+
+      <button
+        type="button"
+        @click.stop="addMask()"
+        class="px-3 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900
+               hover:bg-gray-100 dark:hover:bg-gray-700">
+        + Add Block
+      </button>
+
+      <button
+        type="button"
+        @click.stop="removeActiveMask()"
+        x-show="getActiveMask()"
+        x-cloak
+        class="px-3 py-1 rounded-md border border-red-300 text-red-600 dark:border-red-500 bg-white dark:bg-gray-900
+               hover:bg-red-50 dark:hover:bg-red-900/40">
+        Delete Block
+      </button>
+    </div>
+
+    <!-- KANAN: PAGE NAV PDF -->
+    <div
+      x-show="isPdf(selectedFile?.name)"
+      class="flex items-center gap-2">
+      <button
+        @click="prevPdfPage()"
+        :disabled="pdfPageNum <= 1"
+        class="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900
+               hover:bg-gray-100 dark:hover:bg-gray-700
+               disabled:opacity-50 disabled:cursor-not-allowed">
+        ‹ Prev
+      </button>
+
+      <span x-text="`Page ${pdfPageNum} / ${pdfNumPages}`"></span>
+
+      <button
+        @click="nextPdfPage()"
+        :disabled="pdfPageNum >= pdfNumPages"
+        class="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900
+               hover:bg-gray-100 dark:hover:bg-gray-700
+               disabled:opacity-50 disabled:cursor-not-allowed">
+        Next ›
+      </button>
+    </div>
+  </div>
+</div>
 
 
-          <!-- PDF PAGE NAV -->
-          <div
-            x-show="isPdf(selectedFile?.name)"
-            class="mb-3 flex items-center justify-between text-xs text-gray-700 dark:text-gray-200">
-            <div class="flex items-center gap-2">
-              <button
-                @click="prevPdfPage()"
-                :disabled="pdfPageNum <= 1"
-                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded
-             hover:bg-gray-100 dark:hover:bg-gray-700
-             disabled:opacity-50 disabled:cursor-not-allowed">
-                ‹ Prev
-              </button>
-
-              <span x-text="`Page ${pdfPageNum} / ${pdfNumPages}`"></span>
-
-              <button
-                @click="nextPdfPage()"
-                :disabled="pdfPageNum >= pdfNumPages"
-                class="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded
-             hover:bg-gray-100 dark:hover:bg-gray-700
-             disabled:opacity-50 disabled:cursor-not-allowed">
-                Next ›
-              </button>
-            </div>
-          </div>
 
           <!-- PREVIEW AREA (image/pdf/tiff/cad) -->
           <div
@@ -326,65 +366,65 @@
                       class="block pointer-events-none select-none max-w-full max-h-[70vh]"
                       loading="lazy">
 
-                   <!-- WHITE BLOCKS (MULTI) -->
-<template x-for="mask in masks" :key="mask.id">
-  <div
-    x-show="mask.visible"
-    x-cloak
-    :style="maskStyle(mask)"
-    class="absolute bg-white/95 shadow-sm cursor-move"
-    @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
-    @click.stop="activateMask(mask)">
+                    <!-- WHITE BLOCKS (MULTI) -->
+                    <template x-for="mask in masks" :key="mask.id">
+                      <div
+                        x-show="mask.visible"
+                        x-cloak
+                        :style="maskStyle(mask)"
+                        class="absolute bg-white/95 shadow-sm cursor-move"
+                        @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
+                        @click.stop="activateMask(mask)">
 
-    <!-- BORDER hanya saat aktif -->
-    <div
-      x-show="mask.active"
-      x-cloak
-      class="absolute inset-0 border border-blue-500 pointer-events-none">
-    </div>
+                        <!-- BORDER hanya saat aktif -->
+                        <div
+                          x-show="mask.active"
+                          x-cloak
+                          class="absolute inset-0 border border-blue-500 pointer-events-none">
+                        </div>
 
-    <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
-    <div
-      x-show="mask.active && mask.editable"
-      x-cloak
-      class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
-      @mousedown.stop.prevent="startMaskRotate($event, mask)">
-    </div>
+                        <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
+                        <div
+                          x-show="mask.active && mask.editable"
+                          x-cloak
+                          class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
+                          @mousedown.stop.prevent="startMaskRotate($event, mask)">
+                        </div>
 
-    <!-- ZONA RESIZE: transparan di tepian blok -->
-    <template x-if="mask.active && mask.editable">
-      <div>
-        <!-- atas / bawah -->
-        <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
-        <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
+                        <!-- ZONA RESIZE: transparan di tepian blok -->
+                        <template x-if="mask.active && mask.editable">
+                          <div>
+                            <!-- atas / bawah -->
+                            <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
+                            <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
 
-        <!-- kiri / kanan -->
-        <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
-        <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
+                            <!-- kiri / kanan -->
+                            <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
+                            <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
 
-        <!-- pojok -->
-        <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
-        <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
-        <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
-        <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
-      </div>
-    </template>
-  </div>
-</template>
+                            <!-- pojok -->
+                            <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
+                            <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
+                            <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
+                            <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
+                          </div>
+                        </template>
+                      </div>
+                    </template>
 
 
 
                     <!-- STAMP ORIGINAL -->
                     <div
-                      x-show="pkg.stamp"
+                      x-show="pkg.stamp"  
                       class="absolute"
                       :class="stampPositionClass('original')">
                       <div
@@ -409,6 +449,7 @@
                     <!-- STAMP COPY -->
                     <div
                       x-show="pkg.stamp"
+                      x-cloak
                       class="absolute"
                       :class="stampPositionClass('copy')">
                       <div
@@ -485,60 +526,60 @@
                       class="block pointer-events-none select-none max-w-full max-h-[70vh]">
                     </canvas>
 
-                   
+
                     <!-- WHITE BLOCKS (MULTI) -->
-<template x-for="mask in masks" :key="mask.id">
-  <div
-    x-show="mask.visible"
-    x-cloak
-    :style="maskStyle(mask)"
-    class="absolute bg-white/95 shadow-sm cursor-move"
-    @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
-    @click.stop="activateMask(mask)">
+                    <template x-for="mask in masks" :key="mask.id">
+                      <div
+                        x-show="mask.visible"
+                        x-cloak
+                        :style="maskStyle(mask)"
+                        class="absolute bg-white/95 shadow-sm cursor-move"
+                        @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
+                        @click.stop="activateMask(mask)">
 
-    <!-- BORDER hanya saat aktif -->
-    <div
-      x-show="mask.active"
-      x-cloak
-      class="absolute inset-0 border border-blue-500 pointer-events-none">
-    </div>
+                        <!-- BORDER hanya saat aktif -->
+                        <div
+                          x-show="mask.active"
+                          x-cloak
+                          class="absolute inset-0 border border-blue-500 pointer-events-none">
+                        </div>
 
-    <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
-    <div
-      x-show="mask.active && mask.editable"
-      x-cloak
-      class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
-      @mousedown.stop.prevent="startMaskRotate($event, mask)">
-    </div>
+                        <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
+                        <div
+                          x-show="mask.active && mask.editable"
+                          x-cloak
+                          class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
+                          @mousedown.stop.prevent="startMaskRotate($event, mask)">
+                        </div>
 
-    <!-- ZONA RESIZE: transparan di tepian blok -->
-    <template x-if="mask.active && mask.editable">
-      <div>
-        <!-- atas / bawah -->
-        <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
-        <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
+                        <!-- ZONA RESIZE: transparan di tepian blok -->
+                        <template x-if="mask.active && mask.editable">
+                          <div>
+                            <!-- atas / bawah -->
+                            <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
+                            <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
 
-        <!-- kiri / kanan -->
-        <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
-        <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
+                            <!-- kiri / kanan -->
+                            <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
+                            <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
 
-        <!-- pojok -->
-        <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
-        <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
-        <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
-        <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
-      </div>
-    </template>
-  </div>
-</template>
+                            <!-- pojok -->
+                            <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
+                            <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
+                            <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
+                            <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
+                          </div>
+                        </template>
+                      </div>
+                    </template>
 
 
                     <!-- STAMP ORIGINAL -->
@@ -568,6 +609,7 @@
                     <!-- STAMP COPY -->
                     <div
                       x-show="pkg.stamp"
+                      x-cloak
                       class="absolute"
                       :class="stampPositionClass('copy')">
                       <div
@@ -654,60 +696,60 @@
                       alt="TIFF Preview"
                       class="block pointer-events-none select-none max-w-full max-h-[70vh]" />
 
-                    
-                   <!-- WHITE BLOCKS (MULTI) -->
-<template x-for="mask in masks" :key="mask.id">
-  <div
-    x-show="mask.visible"
-    x-cloak
-    :style="maskStyle(mask)"
-    class="absolute bg-white/95 shadow-sm cursor-move"
-    @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
-    @click.stop="activateMask(mask)">
 
-    <!-- BORDER hanya saat aktif -->
-    <div
-      x-show="mask.active"
-      x-cloak
-      class="absolute inset-0 border border-blue-500 pointer-events-none">
-    </div>
+                    <!-- WHITE BLOCKS (MULTI) -->
+                    <template x-for="mask in masks" :key="mask.id">
+                      <div
+                        x-show="mask.visible"
+                        x-cloak
+                        :style="maskStyle(mask)"
+                        class="absolute bg-white/95 shadow-sm cursor-move"
+                        @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
+                        @click.stop="activateMask(mask)">
 
-    <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
-    <div
-      x-show="mask.active && mask.editable"
-      x-cloak
-      class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
-      @mousedown.stop.prevent="startMaskRotate($event, mask)">
-    </div>
+                        <!-- BORDER hanya saat aktif -->
+                        <div
+                          x-show="mask.active"
+                          x-cloak
+                          class="absolute inset-0 border border-blue-500 pointer-events-none">
+                        </div>
 
-    <!-- ZONA RESIZE: transparan di tepian blok -->
-    <template x-if="mask.active && mask.editable">
-      <div>
-        <!-- atas / bawah -->
-        <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
-        <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
+                        <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
+                        <div
+                          x-show="mask.active && mask.editable"
+                          x-cloak
+                          class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
+                          @mousedown.stop.prevent="startMaskRotate($event, mask)">
+                        </div>
 
-        <!-- kiri / kanan -->
-        <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
-        <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
+                        <!-- ZONA RESIZE: transparan di tepian blok -->
+                        <template x-if="mask.active && mask.editable">
+                          <div>
+                            <!-- atas / bawah -->
+                            <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
+                            <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
 
-        <!-- pojok -->
-        <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
-        <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
-        <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
-        <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
-      </div>
-    </template>
-  </div>
-</template>
+                            <!-- kiri / kanan -->
+                            <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
+                            <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
+
+                            <!-- pojok -->
+                            <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
+                            <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
+                            <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
+                            <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
+                              @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
+                          </div>
+                        </template>
+                      </div>
+                    </template>
 
 
 
@@ -738,6 +780,7 @@
                     <!-- STAMP COPY -->
                     <div
                       x-show="pkg.stamp"
+                      x-cloak
                       class="absolute"
                       :class="stampPositionClass('copy')">
                       <div
@@ -821,60 +864,60 @@
                     x-ref="hpglCanvas"
                     class="pointer-events-none select-none"></canvas>
 
-              
+
                   <!-- WHITE BLOCKS (MULTI) -->
-<template x-for="mask in masks" :key="mask.id">
-  <div
-    x-show="mask.visible"
-    x-cloak
-    :style="maskStyle(mask)"
-    class="absolute bg-white/95 shadow-sm cursor-move"
-    @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
-    @click.stop="activateMask(mask)">
+                  <template x-for="mask in masks" :key="mask.id">
+                    <div
+                      x-show="mask.visible"
+                      x-cloak
+                      :style="maskStyle(mask)"
+                      class="absolute bg-white/95 shadow-sm cursor-move"
+                      @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
+                      @click.stop="activateMask(mask)">
 
-    <!-- BORDER hanya saat aktif -->
-    <div
-      x-show="mask.active"
-      x-cloak
-      class="absolute inset-0 border border-blue-500 pointer-events-none">
-    </div>
+                      <!-- BORDER hanya saat aktif -->
+                      <div
+                        x-show="mask.active"
+                        x-cloak
+                        class="absolute inset-0 border border-blue-500 pointer-events-none">
+                      </div>
 
-    <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
-    <div
-      x-show="mask.active && mask.editable"
-      x-cloak
-      class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
-      @mousedown.stop.prevent="startMaskRotate($event, mask)">
-    </div>
+                      <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
+                      <div
+                        x-show="mask.active && mask.editable"
+                        x-cloak
+                        class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
+                        @mousedown.stop.prevent="startMaskRotate($event, mask)">
+                      </div>
 
-    <!-- ZONA RESIZE: transparan di tepian blok -->
-    <template x-if="mask.active && mask.editable">
-      <div>
-        <!-- atas / bawah -->
-        <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
-        <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
+                      <!-- ZONA RESIZE: transparan di tepian blok -->
+                      <template x-if="mask.active && mask.editable">
+                        <div>
+                          <!-- atas / bawah -->
+                          <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
+                            @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
+                          <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
+                            @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
 
-        <!-- kiri / kanan -->
-        <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
-        <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
+                          <!-- kiri / kanan -->
+                          <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
+                            @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
+                          <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
+                            @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
 
-        <!-- pojok -->
-        <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
-        <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
-        <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
-        <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
-          @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
-      </div>
-    </template>
-  </div>
-</template>
+                          <!-- pojok -->
+                          <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
+                            @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
+                          <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
+                            @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
+                          <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
+                            @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
+                          <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
+                            @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
 
 
 
@@ -905,6 +948,7 @@
                   <!-- STAMP COPY -->
                   <div
                     x-show="pkg.stamp"
+                    x-cloak
                     class="absolute"
                     :class="stampPositionClass('copy')">
                     <div
@@ -972,6 +1016,8 @@
                     class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
                     x-text="hpglError"></div>
                 </div>
+              </div>
+
             </template>
 
             <!-- CAD: IGES / STEP via occt-import-js -->
@@ -1231,8 +1277,13 @@
         copy: 'bottom-center',
         obsolete: 'bottom-left',
       },
-      
-            // ===== WHITE BLOCKS (MULTI MASK) =====
+
+           // per file: jenis Copy stamp
+      copyTypePerFile: {}, // { [fileKey]: 'controlled' | 'uncontrolled' }
+      copyType: 'controlled',
+
+
+      // ===== WHITE BLOCKS (MULTI MASK) =====
       masks: [],
       nextMaskId: 1,
 
@@ -1269,16 +1320,6 @@
       panOriginX: 0,
       panOriginY: 0,
 
-      activateMask() {
-        if (!this.mask.visible) return;
-        this.mask.active = true;
-      },
-
-      deactivateMask() {
-        this.mask.active = false;
-        this.mask._mode = null;
-      },
-
 
       zoomIn() {
         this.imageZoom = Math.min(this.imageZoom + this.zoomStep, this.maxZoom);
@@ -1306,7 +1347,7 @@
         this.panOriginX = this.panX;
         this.panOriginY = this.panY;
       },
-            onPan(e) {
+      onPan(e) {
         if (!this.isPanning) return;
         const dx = e.clientX - this.panStartX;
         const dy = e.clientY - this.panStartY;
@@ -1493,9 +1534,14 @@
       stampCenterOriginal() {
         return 'SAI-DRAWING ORIGINAL';
       },
-      stampCenterCopy() {
-        return 'SAI-DRAWING CONTROL COPY';
+           stampCenterCopy() {
+        const type = this.copyType || 'controlled';
+        return type === 'uncontrolled'
+          ? 'SAI-DRAWING UNCONTROLLED COPY'
+          : 'SAI-DRAWING CONTROLLED COPY';
       },
+
+
       stampCenterObsolete() {
         return 'SAI-DRAWING OBSOLETE';
       },
@@ -1559,31 +1605,54 @@
       getFileKey(file) {
         return (file?.id ?? file?.name ?? '').toString();
       },
-      loadStampConfigFor(file) {
+
+            loadStampConfigFor(file) {
         const key = this.getFileKey(file);
         if (!key) {
-          this.stampConfig = {
-            ...this.stampDefaults
-          };
+          this.stampConfig = { ...this.stampDefaults };
+          this.copyType   = 'controlled';
           return;
         }
 
         if (!this.stampPerFile[key]) {
           this.stampPerFile[key] = {
-            original: this.positionIntToKey(file.ori_position ?? 2),
-            copy: this.positionIntToKey(file.copy_position ?? 1),
+            original: this.positionIntToKey(file.ori_position  ?? 2),
+            copy:     this.positionIntToKey(file.copy_position ?? 1),
             obsolete: this.positionIntToKey(file.obslt_position ?? 0),
           };
         }
         this.stampConfig = this.stampPerFile[key];
+
+        // load type Copy per file
+        if (!this.copyTypePerFile[key]) {
+          // kalau backend nanti kirim copy_type di file, pakai itu
+          const initial =
+            file.copy_type === 'uncontrolled'
+              ? 'uncontrolled'
+              : 'controlled';
+
+          this.copyTypePerFile[key] = initial;
+          this.copyType             = initial;
+        } else {
+          this.copyType = this.copyTypePerFile[key];
+        }
       },
-      saveStampConfigForCurrent() {
+
+
+
+
+            saveStampConfigForCurrent() {
         const key = this.getFileKey(this.selectedFile);
         if (!key) return;
+
         this.stampPerFile[key] = {
-          ...this.stampConfig
+          ...this.stampConfig,
         };
+
+        this.copyTypePerFile[key] = this.copyType || 'controlled';
       },
+
+
 
       async onStampChange() {
         this.saveStampConfigForCurrent();
@@ -1595,6 +1664,7 @@
           ori_position: this.positionKeyToInt(this.stampConfig.original),
           copy_position: this.positionKeyToInt(this.stampConfig.copy),
           obslt_position: this.positionKeyToInt(this.stampConfig.obsolete),
+          copy_type:     this.copyType || 'controlled',
         };
 
         try {
@@ -1776,6 +1846,7 @@
           this.pdfError = e?.message || 'Failed to render PDF page';
         }
       },
+
 
       nextPdfPage() {
         if (!pdfDoc) return;
@@ -2256,6 +2327,52 @@
         // load konfigurasi posisi stamp untuk file yang dipilih
         this.loadStampConfigFor(this.selectedFile);
 
+        // ==== RESET & LOAD BLOCKS DARI DB UNTUK FILE INI ====
+        this.masks = [];
+        this.nextMaskId = 1;
+
+        // kalau backend sudah kirim blocks_position (array), pakai itu
+        const blocks = file.blocks_position || [];
+
+        blocks.forEach((b, idx) => {
+          const idNum = (() => {
+            if (!b.id) return idx + 1;
+            const match = b.id.toString().match(/\d+$/);
+            return match ? parseInt(match[0], 10) : idx + 1;
+          })();
+
+          this.masks.push({
+            id: idNum,
+            visible: true,
+            editable: true,
+            active: idx === 0, // blok pertama jadi aktif
+
+            x: b.x ?? 150,
+            y: b.y ?? 150,
+            width: b.width ?? 250,
+            height: b.height ?? 60,
+            rotation: b.rotation ?? 0,
+
+            _mode: null,
+            _edge: null,
+            _startX: 0,
+            _startY: 0,
+            _startLeft: 0,
+            _startTop: 0,
+            _startW: 0,
+            _startH: 0,
+            _centerX: 0,
+            _centerY: 0,
+            _startRot: 0,
+          });
+
+          this.nextMaskId = Math.max(this.nextMaskId, idNum + 1);
+        });
+
+        // kalau nggak ada blok dari DB, boleh otomatis buat 1 blok awal (opsional)
+        // if (this.masks.length === 0) this.addMask();
+
+
         this.$nextTick(() => {
           if (this.isTiff(file?.name)) {
             this.renderTiff(file.url);
@@ -2431,7 +2548,7 @@
         }
       },
 
-           // ===== White block helper (MULTI) =====
+      // ===== White block helper (MULTI) =====
       addMask() {
         const m = {
           id: this.nextMaskId++,
@@ -2549,7 +2666,8 @@
           mask.y = mask._startTop + dy;
 
         } else if (mask._mode === 'resize') {
-          const minW = 20, minH = 20;
+          const minW = 20,
+            minH = 20;
 
           if (mask._edge.includes('e')) {
             mask.width = Math.max(minW, mask._startW + dx);
@@ -2585,6 +2703,68 @@
         if (!active) return;
         this.masks = this.masks.filter(m => m.id !== active.id);
       },
+
+      updateBlocksUrlTemplate: `{{ route('share.files.updateBlocks', ['fileId' => '__FILE_ID__']) }}`,
+
+      async saveBlocks(blocks) {
+        if (!this.selectedFile?.id) return;
+
+        const url = this.updateBlocksUrlTemplate.replace('__FILE_ID__', this.selectedFile.id);
+
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+            body: JSON.stringify({
+              blocks
+            }),
+          });
+
+          const json = await res.json();
+
+          if (!res.ok) {
+            throw new Error(json.message || 'Failed to save blocks position');
+          }
+
+          toastSuccess('Saved', json.message || 'Blocks position saved.');
+        } catch (e) {
+          console.error(e);
+          toastError('Error', e.message || 'Failed to save blocks position');
+        }
+      },
+      saveCurrentMask() {
+        if (!this.selectedFile?.id) {
+          toastWarning('No file selected', 'Pilih file dulu sebelum menyimpan block.');
+          return;
+        }
+
+        if (this.masks.length === 0) {
+          toastWarning('No block', 'Tambah block dulu sebelum menyimpan.');
+          return;
+        }
+
+        // kalau mau pakai hanya blok aktif:
+        // const active = this.getActiveMask();
+        // if (!active) { ... }
+
+        const blocks = this.masks.map((m, idx) => ({
+          id: m.id ? `blk-${m.id}` : `blk-${idx + 1}`,
+          x: m.x,
+          y: m.y,
+          width: m.width,
+          height: m.height,
+          rotation: m.rotation,
+        }));
+
+        this.saveBlocks(blocks);
+      }
+
+
+
 
 
 

@@ -16,6 +16,7 @@ class DocPackageRevisionFile extends Model
         'ori_position'   => 'integer',
         'copy_position'  => 'integer',
         'obslt_position' => 'integer',
+        'blocks_position' => 'array',
     ];
 
     /**
@@ -39,6 +40,6 @@ class DocPackageRevisionFile extends Model
      */
     public function extension(): BelongsTo
     {
-        return $this->belongsTo(FileExtension::class, 'file_extension_id');
+        return $this->belongsTo(FileExtensions::class, 'file_extension_id');
     }
 }

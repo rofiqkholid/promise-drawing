@@ -217,10 +217,10 @@
                                             <div x-show="pkg.stamp" class="absolute"
                                                 :class="stampPositionClass('original')">
                                                 <div :class="stampOriginClass('original')"
-                                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                    class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                                     style="transform: scale(0.45);">
                                                     <div
-                                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                        class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine('original')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
@@ -229,7 +229,7 @@
                                                             x-text="stampCenterOriginal()"></span>
                                                     </div>
                                                     <div
-                                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                                        class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                                                         <span x-text="stampBottomLine('original')"></span>
                                                     </div>
                                                 </div>
@@ -238,19 +238,19 @@
                                             <!-- STAMP COPY -->
                                             <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
                                                 <div :class="stampOriginClass('copy')"
-                                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                    class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                                     style="transform: scale(0.45);">
                                                     <div
-                                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                        class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine('copy')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
-                                                            class="text-xs font-extrabold uppercase text-blue-700"
+                                                            class="text-xs font-extrabold uppercase text-blue-700 px-2"
                                                             x-text="stampCenterCopy()"></span>
                                                     </div>
                                                     <div
-                                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                                        class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                                                         <span x-text="stampBottomLine('copy')"></span>
                                                     </div>
                                                 </div>
@@ -262,28 +262,24 @@
                                                 :class="stampPositionClass('obsolete')">
                                                 <div
                                                     :class="stampOriginClass('obsolete')"
-                                                    class="w-65 h-20 border-2 border-red-600 rounded-sm
-                                                    text-[10px] text-red-700 flex flex-col items-center
-                                                    justify-between px-2 py-1 bg-transparent"
+                                                    class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                                     style="transform: scale(0.45);">
-                                                    <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                                                    <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine('obsolete')"></span>
                                                     </div>
 
                                                     <div class="flex-1 flex items-center justify-center">
-                                                        <span class="text-xs font-extrabold text-red-700 uppercase"
+                                                        <span class="text-xs font-extrabold text-red-700 uppercase px-2 px-2"
                                                             x-text="stampCenterObsolete()"></span>
                                                     </div>
 
-                                                    <div class="w-full border-t border-red-600 pt-0.5 px-1 flex font-semibold justify-between tracking-tight">
-                                                        <span>
-                                                            Name :
-                                                            <span x-text="obsoleteName()"></span>
-                                                        </span>
-                                                        <span>
-                                                            <span>Dept :</span>
-                                                            <span x-text="obsoleteDept()"></span>
-                                                        </span>
+                                                    <div class="w-full border-t-2 border-red-600 flex font-semibold tracking-tight">
+                                                        <div class="flex-1 border-r-2 border-red-600 text-center py-0.5 px-2">
+                                                            Nama : <span x-text="obsoleteName()"></span>
+                                                        </div>
+                                                        <div class="flex-1 text-center py-0.5 px-2">
+                                                            Dept. : <span x-text="obsoleteDept()"></span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -305,19 +301,19 @@
                                             <div x-show="pkg.stamp" class="absolute"
                                                 :class="stampPositionClass('original')">
                                                 <div :class="stampOriginClass('original')"
-                                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                    class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                                     style="transform: scale(0.45);">
                                                     <div
-                                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                        class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine('original')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
-                                                            class="text-xs font-extrabold text-blue-700 uppercase"
+                                                            class="text-xs font-extrabold text-blue-700 uppercase px-2"
                                                             x-text="stampCenterOriginal()"></span>
                                                     </div>
                                                     <div
-                                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                                        class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                                                         <span x-text="stampBottomLine('original')"></span>
                                                     </div>
                                                 </div>
@@ -326,19 +322,19 @@
                                             <!-- STAMP COPY -->
                                             <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
                                                 <div :class="stampOriginClass('copy')"
-                                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                    class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                                     style="transform: scale(0.45);">
                                                     <div
-                                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                        class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine('copy')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
-                                                            class="text-xs font-extrabold uppercase text-blue-700"
+                                                            class="text-xs font-extrabold uppercase text-blue-700 px-2 px-2"
                                                             x-text="stampCenterCopy()"></span>
                                                     </div>
                                                     <div
-                                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                                        class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                                                         <span x-text="stampBottomLine('copy')"></span>
                                                     </div>
                                                 </div>
@@ -350,28 +346,24 @@
                                                 :class="stampPositionClass('obsolete')">
                                                 <div
                                                     :class="stampOriginClass('obsolete')"
-                                                    class="w-65 h-20 border-2 border-red-600 rounded-sm
-                                                    text-[10px] text-red-700 flex flex-col items-center
-                                                    justify-between px-2 py-1 bg-transparent"
+                                                    class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                                     style="transform: scale(0.45);">
-                                                    <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                                                    <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine('obsolete')"></span>
                                                     </div>
 
                                                     <div class="flex-1 flex items-center justify-center">
-                                                        <span class="text-xs font-extrabold text-red-700 uppercase"
+                                                        <span class="text-xs font-extrabold text-red-700 uppercase px-2"
                                                             x-text="stampCenterObsolete()"></span>
                                                     </div>
 
-                                                    <div class="w-full border-t border-red-600 pt-0.5 px-1 flex font-semibold justify-between tracking-tight">
-                                                        <span>
-                                                            Name :
-                                                            <span x-text="obsoleteName()"></span>
-                                                        </span>
-                                                        <span>
-                                                            <span>Dept :</span>
-                                                            <span x-text="obsoleteDept()"></span>
-                                                        </span>
+                                                    <div class="w-full border-t-2 border-red-600 flex font-semibold tracking-tight">
+                                                        <div class="flex-1 border-r-2 border-red-600 text-center py-0.5 px-2">
+                                                            Nama : <span x-text="obsoleteName()"></span>
+                                                        </div>
+                                                        <div class="flex-1 text-center py-0.5 px-2">
+                                                            Dept. : <span x-text="obsoleteDept()"></span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -401,19 +393,19 @@
                                             <div x-show="pkg.stamp" class="absolute"
                                                 :class="stampPositionClass('original')">
                                                 <div :class="stampOriginClass('original')"
-                                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                    class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                                     style="transform: scale(0.45);">
                                                     <div
-                                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                        class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine('original')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
-                                                            class="text-xs font-extrabold uppercase text-blue-700"
+                                                            class="text-xs font-extrabold uppercase text-blue-700 px-2"
                                                             x-text="stampCenterOriginal()"></span>
                                                     </div>
                                                     <div
-                                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                                        class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                                                         <span x-text="stampBottomLine('original')"></span>
                                                     </div>
                                                 </div>
@@ -422,19 +414,19 @@
                                             <!-- STAMP COPY -->
                                             <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
                                                 <div :class="stampOriginClass('copy')"
-                                                    class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                    class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                                     style="transform: scale(0.45);">
                                                     <div
-                                                        class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                        class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine('copy')"></span>
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
-                                                            class="text-xs font-extrabold uppercase text-blue-700"
+                                                            class="text-xs font-extrabold uppercase text-blue-700 px-2"
                                                             x-text="stampCenterCopy()"></span>
                                                     </div>
                                                     <div
-                                                        class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                                        class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                                                         <span x-text="stampBottomLine('copy')"></span>
                                                     </div>
                                                 </div>
@@ -446,28 +438,24 @@
                                                 :class="stampPositionClass('obsolete')">
                                                 <div
                                                     :class="stampOriginClass('obsolete')"
-                                                    class="w-65 h-20 border-2 border-red-600 rounded-sm
-                                                    text-[10px] text-red-700 flex flex-col items-center
-                                                    justify-between px-2 py-1 bg-transparent"
+                                                    class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                                     style="transform: scale(0.45);">
-                                                    <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                                                    <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
                                                         <span x-text="stampTopLine('obsolete')"></span>
                                                     </div>
 
                                                     <div class="flex-1 flex items-center justify-center">
-                                                        <span class="text-xs font-extrabold text-red-700 uppercase"
+                                                        <span class="text-xs font-extrabold text-red-700 uppercase px-2"
                                                             x-text="stampCenterObsolete()"></span>
                                                     </div>
 
-                                                    <div class="w-full border-t border-red-600 pt-0.5 px-1 flex font-semibold justify-between tracking-tight">
-                                                        <span>
-                                                            Name :
-                                                            <span x-text="obsoleteName()"></span>
-                                                        </span>
-                                                        <span>
-                                                            <span>Dept :</span>
-                                                            <span x-text="obsoleteDept()"></span>
-                                                        </span>
+                                                    <div class="w-full border-t-2 border-red-600 flex font-semibold tracking-tight">
+                                                        <div class="flex-1 border-r-2 border-red-600 text-center py-0.5 px-2">
+                                                            Nama : <span x-text="obsoleteName()"></span>
+                                                        </div>
+                                                        <div class="flex-1 text-center py-0.5 px-2">
+                                                            Dept. : <span x-text="obsoleteDept()"></span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -495,10 +483,10 @@
 
                                         <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
                                             <div :class="stampOriginClass('original')"
-                                                class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                                 style="transform: scale(0.45);">
                                                 <div
-                                                    class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                    class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                                                     <span x-text="stampTopLine('original')"></span>
                                                 </div>
                                                 <div class="flex-1 flex items-center justify-center">
@@ -507,7 +495,7 @@
                                                         x-text="stampCenterOriginal()"></span>
                                                 </div>
                                                 <div
-                                                    class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                                    class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                                                     <span x-text="stampBottomLine('original')"></span>
                                                 </div>
                                             </div>
@@ -515,10 +503,10 @@
 
                                         <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
                                             <div :class="stampOriginClass('copy')"
-                                                class="w-65 h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col items-center justify-between px-2 py-1 bg-transparent"
+                                                class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                                 style="transform: scale(0.45);">
                                                 <div
-                                                    class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                                                    class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                                                     <span x-text="stampTopLine('copy')"></span>
                                                 </div>
                                                 <div class="flex-1 flex items-center justify-center">
@@ -527,7 +515,7 @@
                                                         x-text="stampCenterCopy()"></span>
                                                 </div>
                                                 <div
-                                                    class="w-full border-t border-blue-600 pt-0.5 text-center font-semibold tracking-tight">
+                                                    class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                                                     <span x-text="stampBottomLine('copy')"></span>
                                                 </div>
                                             </div>
@@ -542,16 +530,16 @@
                                                 text-[10px] text-red-700 flex flex-col items-center
                                                 justify-between px-2 py-1 bg-transparent"
                                                 style="transform: scale(0.45);">
-                                                <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                                                <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
                                                     <span x-text="stampTopLine('obsolete')"></span>
                                                 </div>
 
                                                 <div class="flex-1 flex items-center justify-center">
-                                                    <span class="text-xs font-extrabold text-red-700 uppercase"
+                                                    <span class="text-xs font-extrabold text-red-700 uppercase px-2"
                                                         x-text="stampCenterObsolete()"></span>
                                                 </div>
 
-                                                <div class="w-full border-t border-red-600 pt-0.5 px-1 flex font-semibold justify-between tracking-tight">
+                                                <div class="w-full border-t-2 border-red-600 py-0.5 px-4 text-center font-semibold justify-between tracking-tight">
                                                     <span>
                                                         Name :
                                                         <span x-text="obsoleteName()"></span>
@@ -969,7 +957,7 @@
                     if (Array.isArray(list) && list.length > 0) {
                         return list[0];
                     }
-                    return { prefix: 'DATE RECEIVED', suffix: 'DATE UPLOADED' };
+                    return { prefix: 'Date Received', suffix: 'Date Uploaded' };
                 },
 
                 // getObsoleteFormat() {
@@ -1004,11 +992,11 @@
                     if (which === 'obsolete') {
                         const info = this.getObsoleteInfo();
                         date = info.date_text || s.obsolete_date || s.upload_date || '';
-                        return date ? `DATE : ${date}` : '';
+                        return date ? `Date : ${date}` : '';
                     } else if (which === 'original') {
                         fmt = this.getNormalFormat();
                         date = s.receipt_date || s.upload_date || '';
-                        const label = fmt.prefix || 'DATE RECEIVED';
+                        const label = fmt.prefix || 'Date Received';
                         return date ? `${label} : ${this.formatStampDate(date)}` : '';
                     } else if (which === 'copy') {
                         const now = new Date();
@@ -1027,7 +1015,7 @@
                     } else {
                         fmt = this.getNormalFormat();
                         date = s.receipt_date || s.upload_date || '';
-                        const label = fmt.prefix || 'DATE RECEIVED';
+                        const label = fmt.prefix || 'Date Received';
                         return date ? `${label} : ${this.formatStampDate(date)}` : '';
                     }
                 },
@@ -1038,7 +1026,7 @@
 
                     if (which === 'copy') {
                         const userName = this.userName || '--';
-                        return `DOWNLOADED BY ${userName}`;
+                        return `Downloaded By ${userName}`;
                     }
                     else if (which === 'obsolete') {
                         fmt = this.getObsoleteFormat();

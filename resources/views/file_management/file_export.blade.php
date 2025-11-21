@@ -542,6 +542,37 @@ $(function () {
       };
   }
 
+  const BaseToast = Swal.mixin({
+      toast: true, position: 'top-end', showConfirmButton: false,
+      timer: 2600, timerProgressBar: true,
+      showClass: { popup: 'swal2-animate-toast-in' },
+      hideClass: { popup: 'swal2-animate-toast-out' },
+      didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer);
+          toast.addEventListener('mouseleave', Swal.resumeTimer);
+      }
+  });
+  function renderToast({ icon = 'success', title = 'Success', text = '' } = {}) {
+      const t = detectTheme();
+      BaseToast.fire({
+          icon, title, text,
+          iconColor: t.icon[icon] || t.icon.success,
+          background: t.bg, color: t.fg,
+          customClass: { popup: 'swal2-toast border', title: '', timerProgressBar: '' },
+          didOpen: (toast) => {
+              const bar = toast.querySelector('.swal2-timer-progress-bar'); if (bar) bar.style.background = t.progress;
+              const popup = toast.querySelector('.swal2-popup'); if (popup) popup.style.borderColor = t.border;
+              toast.addEventListener('mouseenter', Swal.stopTimer);
+              toast.addEventListener('mouseleave', Swal.resumeTimer);
+          }
+      });
+  }
+  function toastSuccess(title = 'Berhasil', text = 'Operasi berhasil dijalankan.') { renderToast({ icon: 'success', title, text }); }
+  function toastError(title = 'Gagal', text = 'Terjadi kesalahan.') { BaseToast.update({ timer: 3400 }); renderToast({ icon: 'error', title, text }); BaseToast.update({ timer: 2600 }); }
+  function toastWarning(title = 'Peringatan', text = 'Periksa kembali data Anda.') { renderToast({ icon: 'warning', title, text }); }
+  function toastInfo(title = 'Informasi', text = '') { renderToast({ icon: 'info', title, text }); }
+  window.toastSuccess = toastSuccess; window.toastError = toastError; window.toastWarning = toastWarning; window.toastInfo = toastInfo;
+
   function formatTimeAgo(date) {
       const seconds = Math.floor((new Date() - date) / 1000);
       let interval = seconds / 31536000;
@@ -923,150 +954,143 @@ $(function () {
     const t = detectTheme();
 
     Swal.fire({
-      title: 'Confirm Download',
-      text: "This package will be prepared on the server first. Do you want to continue?",
-      icon: 'info',
-      iconColor: t.icon.info,
-      background: t.bg,
-      color: t.fg,
-      customClass: { popup: 'swal2-popup border' },
-      didOpen: (popup) => {
-          const p = popup.querySelector('.swal2-popup');
-          if (p) p.style.borderColor = t.border;
-      },
-      showCancelButton: true,
-      confirmButtonText: 'Yes, Prepare It!',
-      cancelButtonText: 'Cancel',
-      confirmButtonColor: '#2563eb',
-      cancelButtonColor: '#6b7280',
+        title: 'Confirm Download',
+        text: "This package will be prepared on the server first. Do you want to continue?",
+        icon: 'info',
+        iconColor: t.icon.info,
+        background: t.bg,
+        color: t.fg,
+        customClass: { popup: 'swal2-popup border' },
+        didOpen: (popup) => {
+            const p = popup.querySelector('.swal2-popup');
+            if (p) p.style.borderColor = t.border;
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Prepare It!',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#2563eb',
+        cancelButtonColor: '#6b7280',
     }).then((result) => {
-      if (!result.isConfirmed) {
-          return;
-      }
+        if (!result.isConfirmed) {
+            return;
+        }
 
-      if (downloadAbortController) {
-          downloadAbortController.abort('New download started');
-      }
-      downloadAbortController = new AbortController();
-      const signal = downloadAbortController.signal;
+        if (this._downloadAbortController) {
+            this._downloadAbortController.abort('New download started');
+        }
+        this._downloadAbortController = new AbortController();
+        const signal = this._downloadAbortController.signal;
 
-      const t_prep = detectTheme();
-      Swal.fire({
-          title: 'Preparing your file...',
-          text: 'This may take a moment. Please wait.',
-          icon: 'info',
-          iconColor: t_prep.icon.info,
-          background: t_prep.bg,
-          color: t_prep.fg,
-          customClass: { popup: 'swal2-popup border' },
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          showCancelButton: true,
-          cancelButtonText: 'Cancel',
-          showConfirmButton: false,
-          didOpen: (popup) => {
-              Swal.showLoading();
-              const p = popup.querySelector('.swal2-popup');
-              if (p) p.style.borderColor = t_prep.border;
-          },
-      }).then((modalResult) => {
-          if (modalResult.dismiss === Swal.DismissReason.cancel) {
-              if (downloadAbortController) {
-                  downloadAbortController.abort('User canceled preparing');
-              }
-          }
-      });
+        const t_prep = detectTheme();
+        Swal.fire({
+            title: 'Preparing your file...',
+            text: 'This may take a moment. Please wait.',
+            icon: 'info',
+            iconColor: t_prep.icon.info,
+            background: t_prep.bg,
+            color: t_prep.fg,
+            customClass: { popup: 'swal2-popup border' },
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showCancelButton: true,
+            cancelButtonText: 'Cancel',
+            showConfirmButton: false,
+            didOpen: (popup) => {
+                Swal.showLoading();
+                const p = popup.querySelector('.swal2-popup');
+                if (p) p.style.borderColor = t_prep.border;
+            },
+        }).then((modalResult) => {
+            if (modalResult.dismiss === Swal.DismissReason.cancel) {
+                if (this._downloadAbortController) {
+                    this._downloadAbortController.abort('User canceled preparing');
+                }
+            }
+        });
 
-      fetch(`/api/export/prepare-zip/${packageIdToDownload}`, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-TOKEN': '{{ csrf_token() }}'
-          },
-          signal: signal
-      })
-      .then(response => {
-          if (signal.aborted) {
-              throw new Error('Aborted');
-          }
-          if (!response.ok) {
-              return response.json().then(err => {
-                  throw new Error(err.message || 'Server error. Could not prepare file.');
-              });
-          }
-          return response.json();
-      })
-      .then(data => {
-          if (signal.aborted) return;
-          downloadAbortController = null;
+        fetch(`/api/export/prepare-zip/${packageIdToDownload}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            signal: signal
+        })
+            .then(response => {
+                if (signal.aborted) {
+                    throw new Error('Aborted');
+                }
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.message || 'Server error. Could not prepare file.');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (signal.aborted) return;
+                this._downloadAbortController = null;
 
-          if (data.success && data.download_url) {
-              const t_ready = detectTheme();
-              Swal.fire({
-                  title: 'File is Ready!',
-                  text: `Your file (${data.file_name}) has been prepared.`,
-                  icon: 'success',
-                  iconColor: t_ready.icon.success,
-                  background: t_ready.bg,
-                  color: t_ready.fg,
-                  customClass: { popup: 'swal2-popup border' },
-                  didOpen: (popup) => {
-                      const p = popup.querySelector('.swal2-popup');
-                      if (p) p.style.borderColor = t_ready.border;
-                  },
-                  confirmButtonText: '<i class="fa-solid fa-download mr-1"></i> Download Now',
-                  confirmButtonColor: '#28a745',
-                  allowOutsideClick: false,
-                  showCancelButton: true,
-                  cancelButtonText: 'Close',
-                  cancelButtonColor: '#6b7280',
-              }).then((dlResult) => {
-                  if (dlResult.isConfirmed) {
-                      window.location.href = data.download_url;
-                  }
-              });
-          } else {
-              throw new Error(data.message || 'Failed to prepare file response.');
-          }
-      })
-      .catch(error => {
-          if (error.name === 'AbortError' || error.message === 'Aborted') {
-              console.log('File preparation canceled by user.');
-              const t_cancel = detectTheme();
-              Swal.fire({
-                  title: 'Canceled',
-                  text: 'File preparation was canceled.',
-                  icon: 'info',
-                  iconColor: t_cancel.icon.info,
-                  background: t_cancel.bg,
-                  color: t_cancel.fg,
-                  customClass: { popup: 'swal2-popup border' },
-                  didOpen: (popup) => {
-                      const p = popup.querySelector('.swal2-popup');
-                      if (p) p.style.borderColor = t_cancel.border;
-                  },
-                  confirmButtonColor: '#2563eb',
-              });
-              return;
-          }
+                if (data.success && data.download_url) {
+                    const t_ready = detectTheme();
+                    Swal.fire({
+                        title: 'File is Ready!',
+                        text: `Your file (${data.file_name}) has been prepared.`,
+                        icon: 'success',
+                        iconColor: t_ready.icon.success,
+                        background: t_ready.bg,
+                        color: t_ready.fg,
+                        customClass: { popup: 'swal2-popup border' },
+                        didOpen: (popup) => {
+                            const p = popup.querySelector('.swal2-popup');
+                            if (p) p.style.borderColor = t_ready.border;
+                        },
+                        confirmButtonText: '<i class="fa-solid fa-download mr-1"></i> Download Now',
+                        confirmButtonColor: '#28a745',
+                        allowOutsideClick: false,
+                        showCancelButton: true,
+                        cancelButtonText: 'Close',
+                        cancelButtonColor: '#6b7280',
+                    }).then((dlResult) => {
+                        if (dlResult.isConfirmed) {
+                            window.location.href = data.download_url;
+                        }
+                    });
+                } else {
+                    throw new Error(data.message || 'Failed to prepare file response.');
+                }
+            })
+            .catch(error => {
+                if (signal.aborted || error.name === 'AbortError' || error.message === 'Aborted' || error === 'Aborted') {
+                    console.log('Download canceled by user.');
+                    const t_cancel = detectTheme();
+                    BaseToast.fire({
+                        icon: 'info',
+                        title: 'Canceled',
+                        text: 'Download preparation canceled.',
+                        background: t_cancel.bg,
+                        color: t_cancel.fg
+                    });
+                    return;
+                }
 
-          downloadAbortController = null;
-          const t_err = detectTheme();
-          Swal.fire({
-              title: 'An Error Occurred',
-              text: error.message || 'Could not prepare the file. Please try again.',
-              icon: 'error',
-              iconColor: t_err.icon.error,
-              background: t_err.bg,
-              color: t_err.fg,
-              customClass: { popup: 'swal2-popup border' },
-              didOpen: (popup) => {
-                  const p = popup.querySelector('.swal2-popup');
-                  if (p) p.style.borderColor = t_err.border;
-              },
-              confirmButtonColor: '#2563eb',
-          });
-      });
+                this._downloadAbortController = null;
+                const t_err = detectTheme();
+                Swal.fire({
+                    title: 'An Error Occurred',
+                    text: error.message || 'Could not prepare the file. Please try again.',
+                    icon: 'error',
+                    iconColor: t_err.icon.error,
+                    background: t_err.bg,
+                    color: t_err.fg,
+                    customClass: { popup: 'swal2-popup border' },
+                    didOpen: (popup) => {
+                        const p = popup.querySelector('.swal2-popup');
+                        if (p) p.style.borderColor = t_err.border;
+                    },
+                    confirmButtonColor: '#2563eb',
+                });
+            });
     });
   };
 

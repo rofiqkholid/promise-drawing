@@ -379,6 +379,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/share/filters', [ShareController::class, 'choiseFilter'])->name('share.filters');
     Route::post('/share/save', [ShareController::class, 'saveShare'])->name('share.save');
     Route::get('/share/{id}', [ShareController::class, 'showDetail'])->name('share.detail');
+    Route::post('/share/files/{fileId}/blocks', [ShareController::class, 'updateBlocks'])
+    ->name('share.files.updateBlocks');
     #end region
 
 

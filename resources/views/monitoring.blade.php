@@ -130,7 +130,7 @@
         </div>
     </div>
 
-    <div class="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div id="filterCard" style="display: none;" class="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
         <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
             <i class="fa-solid fa-filter mr-2 text-gray-500"></i> Filter Data
         </h3>
@@ -186,21 +186,30 @@
         </div>
     </div>
 
-    <div class="mt-6 flex flex-col lg:flex-row gap-6">
-        <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col h-full">
-            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
-                <i class="fa-solid fa-chart-bar mr-2 text-blue-500"></i> Upload Monitoring (Plan vs Actual)
-            </h3>
+    <div class="flex flex-col lg:flex-row w-full mt-6 gap-6 items-stretch">
+
+        <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                    <i class="fa-solid fa-chart-bar mr-2 text-blue-500"></i> Upload Monitoring (Plan vs Actual)
+                </h3>
+                <button type="button" id="toggleFilterBtn" class="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700" title="Toggle Filter">
+                    <i class="fa-solid fa-filter fa-lg"></i>
+                </button>
+            </div>
+
             <div class="relative w-full flex-1 min-h-[350px]">
                 <canvas id="monitoringChart"></canvas>
             </div>
         </div>
 
-        <div class="w-full lg:w-[30%] h-full bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-900 p-6 rounded-lg border border-emerald-200 dark:border-emerald-900/30 flex flex-col">
+        <div class="w-full lg:w-[30%] bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-900 p-6 rounded-lg border border-emerald-200 dark:border-emerald-900/30 flex flex-col">
             <h3 class="text-xl font-semibold text-emerald-800 dark:text-emerald-400 mb-4 flex items-center">
                 <i class="fa-solid fa-leaf mr-2"></i> Environmental Impact
             </h3>
+
             <div class="flex-1 flex flex-col gap-4">
+
                 <div class="flex-1 flex flex-col justify-center items-center text-center bg-white dark:bg-gray-800/50 p-4 rounded-xl shadow-sm border border-emerald-100 dark:border-emerald-900/20">
                     <div class="bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300 w-14 h-14 rounded-full flex items-center justify-center mb-2">
                         <i class="fa-solid fa-tree fa-xl"></i>
@@ -211,6 +220,7 @@
                     </h4>
                     <p class="text-xs text-gray-400 mt-1">1 tree ≈ 80k sheets</p>
                 </div>
+
                 <div class="flex-1 flex flex-col justify-center items-center text-center bg-white dark:bg-gray-800/50 p-4 rounded-xl shadow-sm border border-teal-100 dark:border-teal-900/20">
                     <div class="bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300 w-14 h-14 rounded-full flex items-center justify-center mb-2">
                         <i class="fa-solid fa-wind fa-xl"></i>
@@ -221,8 +231,10 @@
                     </h4>
                     <p class="text-xs text-gray-400 mt-1">0.275g / download</p>
                 </div>
+
             </div>
         </div>
+
     </div>
 
     <div class="mt-6 flex flex-col lg:flex-row gap-6">
@@ -935,24 +947,26 @@
                 }
             }).on('change', function() {
                 const d = $(this).select2('data')[0];
-                if (d && d.id) {
+
+                if (d && d.text) {
+
                     if (self.selectedCustomers.length > 1) {
                         self.selectedPartGroup = [{
-                            id: d.id,
                             text: d.text
                         }];
                     } else {
-                        if (!self.selectedPartGroup.find(x => x.id === d.id)) {
+                        if (!self.selectedPartGroup.find(x => x.text === d.text)) {
                             self.selectedPartGroup.push({
-                                id: d.id,
                                 text: d.text
                             });
                         }
                     }
+
                     self.renderFilterPills();
                     $(this).val(null).trigger('change.select2');
                 }
             });
+
 
             $('#project_status').select2({
                 dropdownParent: $('#project_status').parent(),
@@ -1083,6 +1097,41 @@
             const btnApply = document.getElementById('btnApply');
             const btnText = document.getElementById('btnApplyText');
             const btnLoader = document.getElementById('btnApplyLoader');
+
+            // --- UPDATE: ANIMASI FILTER ---
+            const toggleBtn = document.getElementById('toggleFilterBtn');
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    const $card = $('#filterCard');
+                    const $icon = $(toggleBtn).find('i');
+
+                    // Animasi Slide (Durasi 400ms agar smooth)
+                    $card.stop(true, true).slideToggle(300, 'swing', function() {
+                        // Fix agar select2 tidak glitch setelah animasi selesai
+                        $(this).css('overflow', 'visible');
+                    });
+
+                    // Animasi Icon Filter (Berputar sedikit saat diklik)
+                    if ($card.is(':visible')) {
+                        // Jika sedang mau nutup
+                        $icon.css({
+                            'transform': 'rotate(0deg)',
+                            'transition': 'transform 0.3s ease'
+                        });
+                        toggleBtn.classList.remove('text-blue-600', 'bg-blue-50', 'dark:bg-gray-700');
+                    } else {
+                        // Jika sedang mau buka
+                        $icon.css({
+                            'transform': 'rotate(180deg)',
+                            'transition': 'transform 0.3s ease'
+                        });
+                        toggleBtn.classList.add('text-blue-600', 'bg-blue-50', 'dark:bg-gray-700');
+                    }
+                });
+            }
+            // ------------------------------
+
             btnApply.addEventListener('click', async () => {
                 if (this.isLoading) return;
                 this.isLoading = true;
@@ -1095,6 +1144,7 @@
                 btnText.style.display = 'inline-block';
                 btnLoader.style.display = 'none';
             });
+
             document.getElementById('btnReset').addEventListener('click', () => {
                 this.selectedCustomers = [];
                 this.selectedModels = [];

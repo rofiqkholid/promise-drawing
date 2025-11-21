@@ -131,8 +131,8 @@ class ReceiptController extends Controller
 
     public function receiptList(Request $request): JsonResponse
     {
-        $userId = Auth::user()->id ?? 1;
-        $userRole = DB::table('user_roles')->where('user_id', $userId)->first();
+        $userId = Auth::user()->id;
+        $userRole = DB::table('user_supplier')->where('user_id', $userId)->first();
 
         if (!$userRole) {
             return response()->json([
@@ -143,7 +143,7 @@ class ReceiptController extends Controller
             ]);
         }
 
-        $userRoleId = (string) $userRole->role_id;
+        $userRoleId = (string) $userRole->supplier_id;
 
         $start       = (int) $request->get('start', 0);
         $length      = (int) $request->get('length', 10);
