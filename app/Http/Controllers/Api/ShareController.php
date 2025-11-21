@@ -653,6 +653,7 @@ class ShareController extends Controller
 
     $detail = [
         'metadata' => [
+             'revision_id' => $revisionId,
             'customer'    => $package->customer,
             'model'       => $package->model,
             'part_group'  => $package->part_group,
@@ -686,6 +687,7 @@ class ShareController extends Controller
 
     return view('file_management.share_detail', [
         'shareId'       => $hash,
+        'revisionId'    => $revisionId,
         'detail'        => $detail,
         'stampFormats'  => $stampFormats,
     ]);

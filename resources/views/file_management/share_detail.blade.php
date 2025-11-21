@@ -23,24 +23,40 @@
         class="self-start bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
         <!-- Header -->
         <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 md:justify-between">
-            <h2 class="text-lg lg:text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-              <i class="fa-solid fa-share-nodes mr-2 text-blue-600"></i>
-              Share Metadata
-            </h2>
+         <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 md:justify-between">
+  <h2 class="text-lg lg:text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+    <i class="fa-solid fa-share-nodes mr-2 text-blue-600"></i>
+    Share Metadata
+  </h2>
 
-            @php
-            $backUrl = url()->previous();
-            $backUrl = ($backUrl && $backUrl !== url()->current())
-            ? $backUrl
-            : route('file-manager.share'); // fallback ke list share
-            @endphp
-            <a href="{{ $backUrl }}"
-              class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
-              <i class="fa-solid fa-arrow-left"></i>
-              Back
-            </a>
-          </div>
+  @php
+    $backUrl = url()->previous();
+    $backUrl = ($backUrl && $backUrl !== url()->current())
+        ? $backUrl
+        : route('file-manager.share'); // fallback ke list share
+  @endphp
+
+  <div class="flex items-center gap-2">
+    {{-- tombol Share dari halaman detail --}}
+    <button
+  type="button"
+  id="btnOpenShareFromDetail"
+  data-id="{{ $detail['metadata']['revision_id'] ?? $revisionId ?? '' }}"
+  class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-blue-500 text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus:ring-offset-gray-800">
+  <i class="fa-solid fa-paper-plane"></i>
+  Share
+</button>
+
+
+    {{-- tombol Back lama --}}
+    <a href="{{ $backUrl }}"
+      class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
+      <i class="fa-solid fa-arrow-left"></i>
+      Back
+    </a>
+  </div>
+</div>
+
         </div>
 
         <!-- Body: ringkasan metadata -->
@@ -1077,10 +1093,51 @@
   </div>
   <!-- ================= /MAIN LAYOUT ================= -->
 
-  <!-- ========================== MODALS ========================== -->
-  {{-- DI SHARE DETAIL: tidak ada modal Approve / Reject / Rollback --}}
 
-</div>
+ <!-- ====== MODAL SHARE (COPY DARI HALAMAN LIST) ====== -->
+  <div id="shareModal"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75"
+      style="display: none;">
+
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+          <div class="flex items-center justify-between p-4 border-b dark:border-gray-700">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Share Document Package</h3>
+              <button type="button" class="btn-close-modal text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                  <i class="fa-solid fa-times fa-lg"></i>
+              </button>
+          </div>
+
+          <div class="p-6">
+              <p class="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                  Select one or more suppliers to share this package with.
+              </p>
+
+              <div>
+                  <label for="supplierListContainer" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select to Share</label>
+                  <div class="relative mt-1">
+                      <select id="supplierListContainer" name="supplierListContainer" class="w-full"></select>
+                  </div>
+                  <div id="selectedSupplierContainer" class="mt-2"></div>
+              </div>
+
+              <input type="hidden" id="hiddenPackageId" value="">
+          </div>
+
+          <div class="flex justify-end p-4 bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700 rounded-b-lg space-x-3">
+              <button type="button"
+                  class="btn-close-modal px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+                  Cancel
+              </button>
+              <button id="btnSaveShare"
+                  type="button"
+                  class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                  Share
+              </button>
+          </div>
+
+      </div>
+  </div>
+  <!-- ====== /MODAL SHARE ====== -->
 
 <style>
   [x-collapse] {
@@ -2770,6 +2827,174 @@
 
     }
   }
+    // ========== SHARE DARI HALAMAN DETAIL ==========
+  document.addEventListener('DOMContentLoaded', function () {
+    const $ = window.jQuery;
+    if (!$) return; // jaga-jaga kalau jQuery belum ada
+
+    const $shareModal            = $('#shareModal');
+    const $supplierListContainer = $('#supplierListContainer');
+    const $hiddenPackageId       = $('#hiddenPackageId');
+    const $btnSaveShare          = $('#btnSaveShare');
+
+    let selectedSupplier = [];
+
+    function renderSelectSuppliers() {
+      const $container = $('#selectedSupplierContainer');
+      $container.empty();
+
+      selectedSupplier.forEach(supplier => {
+        const item = $(`
+          <div class="flex items-center justify-between 
+                      bg-gray-200 dark:bg-gray-700 
+                      text-gray-700 dark:text-gray-200 
+                      px-3 py-2 rounded-md mb-1 transition-colors">
+            <span class="text-sm">${supplier.text}</span>
+            <button 
+              type="button" 
+              class="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-gray-300 
+                     remove-select transition"
+              data-id="${supplier.id}">
+              &times;
+            </button>
+          </div>
+        `);
+
+        $container.append(item);
+      });
+    }
+
+    function loadSuppliers() {
+      $supplierListContainer.empty();
+
+      $supplierListContainer.select2({
+        dropdownParent: $('#shareModal'),
+        width: '100%',
+        placeholder: 'Select suppliers...',
+        allowClear: true,
+        ajax: {
+          url: "{{ route('share.getSuppliers') }}",
+          method: 'GET',
+          dataType: 'json',
+          delay: 250,
+          data: function (params) {
+            return {
+              q: params.term || '',
+              page: params.page || 1
+            };
+          },
+          processResults: function (data) {
+            const formatted = data.map(item => ({
+              id: item.id,
+              text: item.code
+            }));
+            return { results: formatted };
+          },
+          cache: true
+        }
+      });
+
+      $supplierListContainer.off('select2:select').on('select2:select', function (e) {
+        const data   = e.params.data;
+        const exists = selectedSupplier.find(r => r.id === data.id);
+
+        if (!exists) {
+          selectedSupplier.push(data);
+          renderSelectSuppliers();
+        }
+
+        // reset dropdown setelah pilih
+        $supplierListContainer.val(null).trigger('change');
+      });
+    }
+
+    // 🔹 tombol di halaman detail untuk buka modal share
+    // pastikan Tuan punya button dengan id="btnOpenShareFromDetail" dan data-id="{{ $revisionId }}"
+    $('#btnOpenShareFromDetail').on('click', function () {
+      const packageId = $(this).data('id');
+      if (!packageId) {
+        toastError('Error', 'Revision / package ID tidak ditemukan.');
+        return;
+      }
+
+      selectedSupplier = [];
+      renderSelectSuppliers();
+
+      $hiddenPackageId.val(packageId);
+      loadSuppliers();
+      $btnSaveShare.prop('disabled', false).text('Share');
+
+      $shareModal.show();
+    });
+
+    // tombol close (ikon X & tombol Cancel)
+    $('body').on('click', '.btn-close-modal', function () {
+      $shareModal.hide();
+    });
+
+    // klik backdrop tutup modal
+    $shareModal.on('click', function (e) {
+      if ($(e.target).is($shareModal)) {
+        $shareModal.hide();
+      }
+    });
+
+    // hapus supplier yang terpilih (badge kecil X)
+    $(document).on('click', '.remove-select', function () {
+      const id = $(this).data('id');
+      $(this).parent().fadeOut(150, function () {
+        selectedSupplier = selectedSupplier.filter(r => r.id != id);
+        renderSelectSuppliers();
+      });
+    });
+
+    // klik Share -> kirim ke controller yang sama (ShareController@saveShare)
+    $btnSaveShare.on('click', function () {
+      const $this               = $(this);
+      const packageId           = $hiddenPackageId.val();
+      const selectedSupplierIds = selectedSupplier.map(r => r.id);
+
+      if (!packageId) {
+        toastError('Error', 'Package ID tidak ditemukan.');
+        return;
+      }
+
+      if (selectedSupplierIds.length === 0) {
+        toastWarning('No supplier', 'Pilih minimal satu supplier.');
+        return;
+      }
+
+      $this.prop('disabled', true).text('Sharing...');
+
+      $.ajax({
+  url: '{{ route("share.save") }}',
+  type: 'POST',
+  data: {
+    _token: $('meta[name="csrf-token"]').attr('content'),
+    package_id:   packageId,
+    supplier_ids: selectedSupplierIds
+  },
+
+        dataType: 'json',
+        success: function (response) {
+          $shareModal.hide();
+          toastSuccess('Shared', 'Package shared successfully!');
+        },
+        error: function (xhr) {
+          console.error('Failed to share:', xhr.responseText);
+          let errorMsg = 'Failed to share package. Please try again later.';
+          if (xhr.responseJSON && xhr.responseJSON.message) {
+            errorMsg = xhr.responseJSON.message;
+          }
+          toastError('Error', errorMsg);
+        },
+        complete: function () {
+          $this.prop('disabled', false).text('Share');
+        }
+      });
+    });
+  });
+
 </script>
 
 @endpush

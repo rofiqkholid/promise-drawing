@@ -33,6 +33,6 @@ class DeptShareNotification extends Mailable
         $subject  = "[PROMISE] Package Shared to Dept – {$customer}-{$model}-{$docType}-{$category}";
 
         return $this->subject($subject)
-            ->markdown('emails.dept_share'); // mirip approve yang pakai mail::message
+            ->markdown('emails.dept_share'); 
     }
 }
