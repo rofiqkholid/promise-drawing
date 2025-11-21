@@ -140,7 +140,6 @@ class DrawingUploadController extends Controller
                 'mode' => 'create_new',
                 'next_rev' => $nextRev
             ]);
-
         }
 
         $nextRev = 0;
@@ -516,19 +515,26 @@ class DrawingUploadController extends Controller
         $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
-        $query = DB::table('models')->select('id', 'name')->where('customer_id', $customer_id);
+        $query = DB::table('models as m')
+            ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
+            ->select('m.id', 'm.name', 'ps.name as status_name')
+            ->where('m.customer_id', $customer_id);
 
         if ($searchTerm) {
-            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+            $query->where('m.name', 'LIKE', '%' . $searchTerm . '%');
         }
 
         $totalCount = $query->count();
-        $groups = $query->orderBy('name', 'asc')->offset($offset)->limit($resultsPerPage)->get();
+
+        $groups = $query->orderBy('m.name', 'asc')
+            ->offset($offset)
+            ->limit($resultsPerPage)
+            ->get();
 
         $formattedGroups = $groups->map(function ($group) {
             return [
                 'id' => $group->id,
-                'text' => $group->name,
+                'text' => "{$group->name} - {$group->status_name}",
             ];
         });
 
@@ -537,6 +543,7 @@ class DrawingUploadController extends Controller
             'total_count' => $totalCount,
         ]);
     }
+
 
     public function getProductData(Request $request): JsonResponse
     {
@@ -699,7 +706,7 @@ class DrawingUploadController extends Controller
             return $existing->id;
         }
 
-            // create package_no: SAI-{CUSTCODE}-{MODEL}-{PARTNO}-{ECNNO}-{Ymd}
+        // create package_no: SAI-{CUSTCODE}-{MODEL}-{PARTNO}-{ECNNO}-{Ymd}
         $cust = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($labels['customer_code'] ?? 'CUST'));
         $model = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($labels['model_name'] ?? 'MDL'));
         $part = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($labels['part_no'] ?? 'PRT'));
@@ -1220,7 +1227,6 @@ class DrawingUploadController extends Controller
                 'success' => true,
                 'message' => 'Draft revision and all associated files have been deleted.'
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to delete draft revision', [

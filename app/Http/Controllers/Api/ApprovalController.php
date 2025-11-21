@@ -1209,7 +1209,10 @@ class ApprovalController extends Controller
         'shared_by'   => $currentUser->name ?? 'System',
         'shared_at'   => now()->format('Y-m-d H:i'),
         'dept_codes'  => $deptCode,              
-        'app_url'     => url('/'),               
+        'app_url'     => route('share.detail', [
+        // ⬇️ ini yang tadinya $revisionId langsung
+        'id' => encrypt($revisionId),      // atau Crypt::encryptString($revisionId)   
+    ]),              
     ];
 
     // 6. Kirim email ke masing-masing user pakai Mailable (Markdown)

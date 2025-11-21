@@ -269,7 +269,7 @@
                                                     </div>
 
                                                     <div class="flex-1 flex items-center justify-center">
-                                                        <span class="text-xs font-extrabold text-red-700 uppercase px-2 px-2"
+                                                        <span class="text-xs font-extrabold text-red-700 uppercase px-2"
                                                             x-text="stampCenterObsolete()"></span>
                                                     </div>
 
@@ -330,7 +330,7 @@
                                                     </div>
                                                     <div class="flex-1 flex items-center justify-center">
                                                         <span
-                                                            class="text-xs font-extrabold uppercase text-blue-700 px-2 px-2"
+                                                            class="text-xs font-extrabold uppercase text-blue-700 px-2"
                                                             x-text="stampCenterCopy()"></span>
                                                     </div>
                                                     <div
