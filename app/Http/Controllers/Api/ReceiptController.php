@@ -490,13 +490,18 @@ class ReceiptController extends Controller
 
         // Check if user has access to this receipt
         $userId = Auth::user()->id ?? 1;
-        $userRole = DB::table('user_roles')->where('user_id', $userId)->first();
 
-        if (!$userRole) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        // Support both supplier-based mapping (legacy) and role-based mapping
+        $userSupplier = DB::table('user_supplier')->where('user_id', $userId)->first();
+        if ($userSupplier) {
+            $userRoleId = (string) $userSupplier->supplier_id;
+        } else {
+            $userRole = DB::table('user_roles')->where('user_id', $userId)->first();
+            if (!$userRole) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+            }
+            $userRoleId = (string) $userRole->role_id;
         }
-
-        $userRoleId = (string) $userRole->role_id;
 
         // Check if revision is shared to this user
         if ($revision->share_to) {
@@ -541,7 +546,7 @@ class ReceiptController extends Controller
         $lastApproval = DB::table('package_approvals as pa')
             ->leftJoin('users as u', 'u.id', '=', 'pa.decided_by')
             ->leftJoin('departments as d', 'd.id', '=', 'u.id_dept')
-            ->where('pa.revision_id', $revisionId)
+            ->where('pa.revision_id', $decrypted_id)
             ->orderByRaw('COALESCE(pa.decided_at, pa.requested_at) DESC')
             ->first([
                 'u.name as approver_name',
@@ -562,7 +567,7 @@ class ReceiptController extends Controller
         ];
 
         $fileRows = DB::table('doc_package_revision_files')
-            ->where('revision_id', $revisionId)
+            ->where('revision_id', $decrypted_id)
             ->select('id', 'filename as name', 'category', 'storage_path', 'file_size', 'ori_position', 'copy_position', 'obslt_position')
             ->get();
 
@@ -641,7 +646,7 @@ class ReceiptController extends Controller
 
         return response()->json([
             'success' => true,
-            'exportId' => $revisionId,
+            'exportId' => $decrypted_id,
             'detail' => $detail,
             'revisionList' => [],
             'stampFormat' => $stampFormat,
@@ -660,54 +665,65 @@ class ReceiptController extends Controller
         $file = DocPackageRevisionFile::find($file_id);
 
         if (!$file) {
-            return response()->json(['error' => 'File not found'], 404);
+            abort(404, 'File not found.');
         }
 
         $revision = DB::table('doc_package_revisions as dpr')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
             ->where('dpr.id', $file->revision_id)
             ->where('dpr.revision_status', '=', 'approved')
+            ->select('dpr.*', 'dp.id as package_id')
             ->first();
 
         if (!$revision) {
-            return response()->json(['error' => 'Revision not found'], 404);
+            abort(403, 'Access denied. File is not part of an approved revision.');
         }
 
         $path = Storage::disk('datacenter')->path($file->storage_path);
 
         if (!file_exists($path)) {
-            return response()->json(['error' => 'File not found on storage'], 404);
+            abort(404, 'File not found on server storage.');
         }
 
         $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
         $stampableTypes = ['jpg', 'jpeg', 'png', 'tif', 'tiff', 'pdf'];
 
         if (in_array($ext, $stampableTypes) && class_exists('\Imagick')) {
+            $package = DB::table('doc_packages as dp')
+                ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+                ->join('models as m', 'dp.model_id', '=', 'm.id')
+                ->join('products as p', 'dp.product_id', '=', 'p.id')
+                ->where('dp.id', $revision->package_id)
+                ->select('c.code as customer', 'm.name as model', 'p.part_no')
+                ->first();
+
             $stampFormat = StampFormat::where('is_active', true)->first();
 
-            if ($stampFormat && Auth::check()) {
-                $tempPath = $this->_burnStamps($path, $file, $revision,
-                    DB::table('doc_packages')->where('id', $revision->package_id)->first(),
-                    $stampFormat);
+            if ($package && $stampFormat) {
+                try {
+                    $tempPath = $this->_burnStamps($path, $file, $revision, $package, $stampFormat);
 
-                if ($tempPath && file_exists($tempPath)) {
-                    return response()->download($tempPath, $file->filename)->deleteFileAfterSend(true);
+                    if ($tempPath !== $path) {
+                        return response()->download($tempPath, $file->filename)->deleteFileAfterSend(true);
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Stamp burn-in failed for single download', [
+                        'file_id' => $file_id,
+                        'error' => $e->getMessage()
+                    ]);
                 }
             }
         }
-
         return response()->download($path, $file->filename);
     }
 
-    /**
-     * Prepare zip file for download containing all files from receipt
-     */
     public function preparePackageZip($revision_id)
     {
         set_time_limit(0);
         try {
-            $decrypted_id = (int)$revision_id;
+            $decrypted_id = decrypt(str_replace('-', '=', $revision_id));
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Invalid revision ID.'], 404);
+            return response()->json(['success' => false, 'message' => 'Package not found or not approved.'], 404);
         }
 
         $revision = DB::table('doc_package_revisions')
@@ -716,7 +732,7 @@ class ReceiptController extends Controller
             ->first();
 
         if (!$revision) {
-            return response()->json(['success' => false, 'message' => 'Receipt revision not found.'], 404);
+            return response()->json(['success' => false, 'message' => 'Package not found or not approved.'], 404);
         }
 
         $package = DB::table('doc_packages as dp')
@@ -724,17 +740,17 @@ class ReceiptController extends Controller
             ->join('models as m', 'dp.model_id', '=', 'm.id')
             ->join('products as p', 'dp.product_id', '=', 'p.id')
             ->where('dp.id', $revision->package_id)
-            ->select('c.code as customer', 'm.name as model', 'p.part_no')
+            ->select('c.code as customer', 'm.name as model', 'p.part_no', 'dp.part_group_id')
             ->first();
 
         if (!$package) {
-            return response()->json(['success' => false, 'message' => 'Package not found.'], 404);
+            return response()->json(['success' => false, 'message' => 'Associated package details not found.'], 404);
         }
 
         $files = DocPackageRevisionFile::where('revision_id', $decrypted_id)->get();
 
         if ($files->isEmpty()) {
-            return response()->json(['success' => false, 'message' => 'No files found.'], 404);
+            return response()->json(['success' => false, 'message' => 'No files found for this package revision.'], 404);
         }
 
         $stampFormat = StampFormat::where('is_active', true)->first();
@@ -750,15 +766,20 @@ class ReceiptController extends Controller
         $zipFileName = strtoupper("{$customer}-{$model}-{$partNo}-{$ecn}-{$timestamp}") . ".zip";
 
         $zipDirectory = storage_path('app/public');
-        $zipDirectory = str_replace('/', DIRECTORY_SEPARATOR, $zipDirectory);
+        $zipDirectory = str_replace('/', DIRECTORY_SEPARATOR, $zipDirectory); // Normalisasi path
 
         if (!file_exists($zipDirectory)) {
-            mkdir($zipDirectory, 0755, true);
+            if (!mkdir($zipDirectory, 0775, true)) {
+                $errorMsg = 'Failed to create zip directory. Check permissions for storage/app.';
+                Log::error($errorMsg, ['path' => $zipDirectory]);
+                return response()->json(['success' => false, 'message' => $errorMsg], 500);
+            }
         }
 
         if (!is_writable($zipDirectory)) {
-            Log::error('Zip directory not writable', ['path' => $zipDirectory]);
-            return response()->json(['success' => false, 'message' => 'Storage directory not writable.'], 500);
+            $errorMsg = 'Zip directory exists but is not writable. Check permissions for storage/app/public.';
+            Log::error($errorMsg, ['path' => $zipDirectory]);
+            return response()->json(['success' => false, 'message' => $errorMsg], 500);
         }
 
         $zipFilePath = $zipDirectory . DIRECTORY_SEPARATOR . $zipFileName;
@@ -768,138 +789,202 @@ class ReceiptController extends Controller
         Log::info('Attempting to open ZipArchive at normalized path', ['path' => $zipFilePath]);
 
         if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
-            Log::error('ZipArchive open failed', ['path' => $zipFilePath]);
-            return response()->json(['success' => false, 'message' => 'Failed to create zip file.'], 500);
+            Log::error('ZipArchive::open() failed. Check permissions and path.', ['path' => $zipFilePath]);
+            return response()->json(['success' => false, 'message' => 'Could not create zip file on server.'], 500);
         }
 
         $filesAddedCount = 0;
         $tempFilesToDelete = [];
 
         foreach ($files as $file) {
-            $filePath = Storage::disk('datacenter')->path($file->storage_path);
+            $filePath = str_replace('/', DIRECTORY_SEPARATOR, Storage::disk('datacenter')->path($file->storage_path));
 
-            if (!file_exists($filePath)) {
-                Log::warning('File not found in storage', ['path' => $filePath, 'file_id' => $file->id]);
-                continue;
-            }
-
+            $fileToAdd = $filePath;
+            $deleteAfterAdd = false;
             $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
 
-            if ($canStamp && in_array($ext, $stampableTypes)) {
-                $stampedPath = $this->_burnStamps($filePath, $file, $revision, $package, $stampFormat);
-
-                if ($stampedPath && file_exists($stampedPath)) {
-                    $zip->addFile($stampedPath, $file->filename);
-                    $filesAddedCount++;
-                    $tempFilesToDelete[] = $stampedPath;
-                } else {
-                    $zip->addFile($filePath, $file->filename);
-                    $filesAddedCount++;
+            if ($canStamp && in_array($ext, $stampableTypes) && file_exists($filePath)) {
+                try {
+                    $tempPath = $this->_burnStamps($filePath, $file, $revision, $package, $stampFormat);
+                    if ($tempPath !== $filePath) {
+                        $fileToAdd = $tempPath;
+                        $deleteAfterAdd = true;
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Imagick stamp burn failed for zip', [
+                        'file_id' => $file->id,
+                        'error' => $e->getMessage()
+                    ]);
                 }
-            } else {
-                $zip->addFile($filePath, $file->filename);
+            }
+
+            if (file_exists($fileToAdd)) {
+                $category = strtolower(trim($file->category));
+                $folderInZip = 'ecn';
+                if ($category === '2d') {
+                    $folderInZip = '2d';
+                } elseif ($category === '3d') {
+                    $folderInZip = '3d';
+                }
+
+                $pathInZip = str_replace('/', DIRECTORY_SEPARATOR, $folderInZip . '/' . $file->filename);
+
+                $zip->addFile($fileToAdd, $pathInZip);
+
+                $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
+                if (in_array($ext, ['jpg', 'jpeg', 'png', 'hpgl', 'tif', 'pdf', 'zip', 'rar', 'step', 'stp', 'igs', 'iges', 'catpart', 'catproduct'])) {
+                    $zip->setCompressionName($pathInZip, ZipArchive::CM_STORE);
+                }
+
                 $filesAddedCount++;
+
+                if ($deleteAfterAdd) {
+                    $tempFilesToDelete[] = $fileToAdd;
+                }
+
+            } else {
+                Log::warning('File not found and skipped for zipping: ' . $filePath . ' (or temp file: ' . $fileToAdd . ')');
             }
         }
 
         $closeSuccess = false;
         try {
             $closeSuccess = $zip->close();
+            if (!$closeSuccess) {
+                 Log::error('zip->close() returned false.', ['path' => $zipFilePath, 'status' => $zip->status, 'statusString' => $zip->getStatusString()]);
+            }
         } catch (\Exception $e) {
-            Log::error('ZipArchive close failed', ['error' => $e->getMessage()]);
+            Log::error('Exception at zip->close(). This is likely a source file issue.', ['path' => $zipFilePath, 'error' => $e->getMessage()]);
+            $closeSuccess = false;
         }
 
         foreach ($tempFilesToDelete as $tempFile) {
             @unlink($tempFile);
         }
-
         if (!$closeSuccess) {
-            @unlink($zipFilePath);
-            return response()->json(['success' => false, 'message' => 'Failed to close zip file.'], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to finalize zip file. Check logs for details.'], 500);
         }
 
         if ($filesAddedCount === 0) {
-            @unlink($zipFilePath);
-            return response()->json([
-                'success' => false,
-                'message' => 'No files were added to the zip.',
-            ], 404);
+            if (file_exists($zipFilePath)) {
+                @unlink($zipFilePath);
+            }
+            return response()->json(['success' => false, 'message' => 'No physical files were found to add to the zip package.'], 404);
         }
 
         $downloadUrl = URL::temporarySignedRoute(
-            'receipts.download-zip',
-            now()->addHours(2),
-            ['file_name' => $zipFileName, 'rev_id' => encrypt($decrypted_id)]
+            'export.get-zip',
+            now()->addMinutes(5),
+            [
+                'file_name' => $zipFileName,
+                'rev_id'    => $revision_id
+            ]
         );
 
         return response()->json([
             'success'      => true,
+            'message'      => 'File prepared successfully.',
             'download_url' => $downloadUrl,
             'file_name'    => $zipFileName
         ]);
     }
 
-    /**
-     * Download prepared zip file
-     */
     public function getPreparedZip(Request $request, $file_name)
     {
         set_time_limit(0);
 
         if (!$request->hasValidSignature()) {
-            return response()->json(['error' => 'Invalid signature'], 403);
+            abort(403, 'Invalid or expired download link.');
         }
 
         $safe_filename = basename($file_name);
         $zipFilePath = storage_path('app/public/' . $safe_filename);
 
         if (!file_exists($zipFilePath)) {
-            return response()->json(['error' => 'Zip file not found'], 404);
+            Log::warning('Prepared zip file not found for download.', ['path' => $zipFilePath]);
+            abort(404, 'File not found. It may have expired or already been downloaded.');
         }
 
         $encrypted_rev_id = $request->get('rev_id');
         $decrypted_id = null;
         if ($encrypted_rev_id) {
             try {
-                $decrypted_id = decrypt($encrypted_rev_id);
+                $decrypted_id = decrypt(str_replace('-', '=', $encrypted_rev_id));
             } catch (\Exception $e) {
-                Log::warning('Failed to decrypt revision ID', ['error' => $e->getMessage()]);
+                Log::warning('Could not decrypt rev_id for logging in getPreparedZip', ['rev_id' => $encrypted_rev_id]);
             }
         }
 
         if ($decrypted_id && Auth::check()) {
-            DB::table('activity_logs')->insert([
-                'user_id'      => Auth::user()->id ?? null,
-                'activity_code' => 'DOWNLOAD_RECEIPT_ZIP',
-                'scope_type'   => 'receipt',
-                'scope_id'     => $decrypted_id,
-                'revision_id'  => $decrypted_id,
-                'meta'         => json_encode(['file_name' => $safe_filename]),
-                'created_at'   => now(),
-                'updated_at'   => now(),
-            ]);
+            try {
+                $revision = DB::table('doc_package_revisions')->where('id', $decrypted_id)->first();
+                $package = null;
+                if ($revision) {
+                    $package = DB::table('doc_packages as dp')
+                        ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+                        ->join('models as m', 'dp.model_id', '=', 'm.id')
+                        ->join('products as p', 'dp.product_id', '=', 'p.id')
+                        ->where('dp.id', $revision->package_id)
+                        ->select('c.code as customer', 'm.name as model', 'p.part_no', 'dp.part_group_id')
+                        ->first();
+                }
+
+                if ($revision && $package) {
+                    $labelName = null;
+                    if (!empty($revision->revision_label_id)) {
+                        $labelName = DB::table('customer_revision_labels')->where('id', $revision->revision_label_id)->value('label');
+                    }
+                    $partGroupCode = null;
+                    if (!empty($package->part_group_id)) {
+                        $partGroupCode = DB::table('part_groups')->where('id', $package->part_group_id)->value('code_part_group');
+                    }
+
+                    $metaLogData = [
+                        'part_no' => $package->part_no,
+                        'customer_code' => $package->customer,
+                        'model_name' => $package->model,
+                        'part_group_code' => $partGroupCode,
+                        'package_id' => $revision->package_id,
+                        'revision_no' => $revision->revision_no,
+                        'ecn_no' => $revision->ecn_no,
+                        'revision_label' => $labelName,
+                        'downloaded_file' => $safe_filename
+                    ];
+
+                    ActivityLog::create([
+                        'user_id' => Auth::user()->id,
+                        'activity_code' => 'DOWNLOAD',
+                        'scope_type' => 'revision',
+                        'scope_id' => $revision->package_id,
+                        'revision_id' => $revision->id,
+                        'meta' => $metaLogData,
+                    ]);
+                }
+
+            } catch (\Exception $e) {
+                Log::error('Failed to create download activity log in getPreparedZip', [
+                    'error' => $e->getMessage(),
+                    'revision_id' => $decrypted_id,
+                ]);
+            }
         }
 
         return response()->download($zipFilePath)->deleteFileAfterSend(true);
     }
 
-    /**
-     * Helper: Convert position int to key
-     */
     private function positionIntToKey(?int $pos, string $default = 'bottom-right'): string
     {
         switch ($pos) {
-            case 0: return 'top-left';
-            case 1: return 'top-right';
-            case 2: return 'bottom-left';
-            case 3: return 'bottom-right';
+            case 0: return 'bottom-left';
+            case 1: return 'bottom-center';
+            case 2: return 'bottom-right';
+            case 3: return 'top-left';
+            case 4: return 'top-center';
+            case 5: return 'top-right';
             default: return $default;
         }
     }
 
-    /**
-     * Calculate stamp coordinates based on position
-     */
     private function calculateStampCoordinates(string $posKey, int $imgW, int $imgH, int $stampW, int $stampH, int $margin): array
     {
         $x = 0;
@@ -910,90 +995,176 @@ class ReceiptController extends Controller
                 $x = $margin;
                 $y = $margin;
                 break;
+            case 'top-center':
+                $x = max($margin, (int) (($imgW - $stampW) / 2));
+                $y = $margin;
+                break;
             case 'top-right':
-                $x = $imgW - $stampW - $margin;
+                $x = max($margin, $imgW - $stampW - $margin);
                 $y = $margin;
                 break;
             case 'bottom-left':
                 $x = $margin;
-                $y = $imgH - $stampH - $margin;
+                $y = max($margin, $imgH - $stampH - $margin);
+                break;
+            case 'bottom-center':
+                $x = max($margin, (int) (($imgW - $stampW) / 2));
+                $y = max($margin, $imgH - $stampH - $margin);
                 break;
             case 'bottom-right':
             default:
-                $x = $imgW - $stampW - $margin;
-                $y = $imgH - $stampH - $margin;
+                $x = max($margin, $imgW - $stampW - $margin);
+                $y = max($margin, $imgH - $stampH - $margin);
                 break;
         }
 
+        // Final boundary check
         $x = max(0, min($x, $imgW - $stampW));
         $y = max(0, min($y, $imgH - $stampH));
 
         return [$x, $y];
     }
 
-    /**
-     * Create stamp image
-     */
     private function _createStampImage(string $centerText, string $topLine, string|array $bottomLine, string $colorMode = 'blue'): ?\Imagick
     {
         try {
-            $stampW = 250;
-            $stampH = 180;
+            $draw = new \ImagickDraw();
+            $font = null;
+            $fontsToTry = ['DejaVu-Sans', 'Arial', 'Helvetica', 'Verdana', 'Tahoma', 'sans-serif'];
+            foreach ($fontsToTry as $fontName) {
+                try {
+                    $draw->setFont($fontName);
+                    $font = $fontName;
+                    break;
+                } catch (\Exception $e) { continue; }
+            }
 
-            $stamp = new Imagick();
-            $stamp->newImage($stampW, $stampH, new ImagickPixel('white'));
+            $dummy = new \Imagick();
+            $dummy->newImage(1, 1, new \ImagickPixel('transparent'));
+
+            // --- 1. UKUR LEBAR TEKS ---
+
+            // A. Top Line
+            $draw->setFontSize(16);
+            $draw->setFontWeight(600);
+            $metricsTop = $dummy->queryFontMetrics($draw, $topLine);
+            $widthTop = $metricsTop['textWidth'];
+
+            // B. Bottom Line (Bisa String atau Array)
+            $draw->setFontSize(16);
+            $draw->setFontWeight(400); // Berat font bawah
+
+            if (is_array($bottomLine)) {
+                // Jika Array (Mode Obsolete 2 Kolom)
+                // Ukur teks kiri dan kanan
+                $metricsLeft = $dummy->queryFontMetrics($draw, $bottomLine[0]);
+                $metricsRight = $dummy->queryFontMetrics($draw, $bottomLine[1]);
+
+                $maxSide = max($metricsLeft['textWidth'], $metricsRight['textWidth']);
+                $widthBot = ($maxSide * 2) + 20; // +20 toleransi garis tengah
+            } else {
+                // Jika String Biasa
+                $metricsBottom = $dummy->queryFontMetrics($draw, $bottomLine);
+                $widthBot = $metricsBottom['textWidth'];
+            }
+
+            // C. Center Text
+            $draw->setFontSize(21);
+            $draw->setFontWeight(900);
+            $metricsCenter = $dummy->queryFontMetrics($draw, $centerText);
+            $widthCen = $metricsCenter['textWidth'];
+
+            // D. Tentukan Lebar Kanvas
+            $paddingHorizontal = 24;
+            $minWidth = 220;
+
+            $calculatedWidth = max($widthTop, $widthBot, $widthCen) + $paddingHorizontal;
+            $canvasWidth = (int) max($minWidth, $calculatedWidth);
+            $canvasHeight = 120;
+
+            // --- 2. SETUP KANVAS ---
+            $stamp = new \Imagick();
+            $stamp->newImage($canvasWidth, $canvasHeight, new \ImagickPixel('transparent'));
             $stamp->setImageFormat('png');
 
-            $draw = new ImagickDraw();
-            $draw->setFillColor(new ImagickPixel('white'));
-            $draw->rectangle(0, 0, $stampW, $stampH);
-
-            $borderColor = match ($colorMode) {
-                'red'   => '#FF0000',
-                'green' => '#00AA00',
-                default => '#0066CC',
-            };
-
-            $draw->setStrokeColor(new ImagickPixel($borderColor));
-            $draw->setStrokeWidth(3);
-            $draw->rectangle(5, 5, $stampW - 5, $stampH - 5);
-
-            $draw->setFont('/Windows/Fonts/arial.ttf');
-            $draw->setFillColor(new ImagickPixel('#333333'));
-
-            $draw->setFontSize(9);
-            $draw->annotation(10, 25, $topLine);
-
-            $draw->setFontSize(12);
-            $draw->setFillColor(new ImagickPixel($borderColor));
-            $draw->setTextAlignment(\Imagick::ALIGN_CENTER);
-            $draw->annotation($stampW / 2, 95, $centerText);
-
-            $draw->setFontSize(9);
-            $draw->setFillColor(new ImagickPixel('#333333'));
-            $draw->setTextAlignment(\Imagick::ALIGN_LEFT);
-
-            $bottomY = $stampH - 20;
-            if (is_array($bottomLine)) {
-                foreach ($bottomLine as $idx => $line) {
-                    $draw->annotation(10, $bottomY - ($idx * 12), $line);
-                }
+            $opacity = 0.85;
+            if ($colorMode === 'red') {
+                $borderColor = new \ImagickPixel("rgba(220, 38, 38, $opacity)");
+                $textColor   = new \ImagickPixel("rgba(185, 28, 28, $opacity)");
             } else {
-                $draw->annotation(10, $bottomY, $bottomLine);
+                $borderColor = new \ImagickPixel("rgba(37, 99, 235, $opacity)");
+                $textColor   = new \ImagickPixel("rgba(29, 78, 216, $opacity)");
+            }
+
+            $draw->setStrokeColor($borderColor);
+            $draw->setFillColor(new \ImagickPixel('transparent'));
+            $draw->setStrokeWidth(3);
+            $draw->setFont($font);
+
+            // Gambar Border Luar
+            $draw->roundRectangle(2, 2, $canvasWidth - 2, $canvasHeight - 2, 2, 2);
+            // Garis Horizontal
+            $draw->line(2, 36, $canvasWidth - 2, 36);
+            $draw->line(2, 84, $canvasWidth - 2, 84);
+
+            // LOGIKA KHUSUS ARRAY (GARIS VERTIKAL)
+            if (is_array($bottomLine)) {
+                $midX = $canvasWidth / 2;
+                $draw->line($midX, 84, $midX, 118);
             }
 
             $stamp->drawImage($draw);
 
+            // --- 3. RENDER TEKS ---
+            $draw->setFillColor($textColor);
+            $draw->setStrokeWidth(0);
+
+            $x_center_canvas = $canvasWidth / 2;
+
+            // Teks Atas (Center)
+            $draw->setTextAlignment(\Imagick::ALIGN_CENTER);
+            $draw->setFontSize(16);
+            $draw->setFontWeight(600);
+            $stamp->annotateImage($draw, $x_center_canvas, 24, 0, $topLine);
+
+            // Teks Tengah (Center)
+            $draw->setFontSize(21);
+            $draw->setFontWeight(900);
+            $draw->setStrokeColor($textColor);
+            $draw->setStrokeWidth(0.75);
+            $stamp->annotateImage($draw, $x_center_canvas, 68, 0, $centerText);
+
+            // Teks Bawah
+            $draw->setStrokeWidth(0);
+            $draw->setFontSize(16);
+            $draw->setFontWeight(400);
+
+            if (is_array($bottomLine)) {
+                // --- MODE 2 KOLOM (Kiri & Kanan) ---
+
+                $x_left = $canvasWidth * 0.25;
+                $stamp->annotateImage($draw, $x_left, 105, 0, $bottomLine[0]);
+
+                $x_right = $canvasWidth * 0.75;
+                $stamp->annotateImage($draw, $x_right, 105, 0, $bottomLine[1]);
+
+            } else {
+                // --- MODE 1 KOLOM (Standar) ---
+                $stamp->annotateImage($draw, $x_center_canvas, 105, 0, $bottomLine);
+            }
+
+            // Cleanup
+            $draw->clear(); $draw->destroy();
+            $dummy->clear(); $dummy->destroy();
+
             return $stamp;
+
         } catch (\Exception $e) {
-            Log::error('Error creating stamp image', ['error' => $e->getMessage()]);
+            Log::error('Failed to create stamp image: ' . $e->getMessage());
             return null;
         }
     }
 
-    /**
-     * Burn stamps onto document (image/PDF)
-     */
     private function _burnStamps(string $originalPath, DocPackageRevisionFile $file, object $revision, object $package, ?StampFormat $stampFormat): string
     {
         if (!class_exists('Imagick') || !file_exists($originalPath)) {
@@ -1001,44 +1172,203 @@ class ReceiptController extends Controller
         }
 
         try {
+            // Helper Format Tanggal (Lokal)
+            $formatSaiDate = function ($dateInput) {
+                if (!$dateInput) return '-';
+                try {
+                    $d = Carbon::parse($dateInput);
+                    $day = $d->day;
+                    if (in_array($day % 100, [11, 12, 13], true)) {
+                        $suffixRaw = 'th';
+                    } else {
+                        $last = $day % 10;
+                        $suffixRaw = match ($last) { 1 => 'st', 2 => 'nd', 3 => 'rd', default => 'th' };
+                    }
+                    $superscripts = ['st' => 'ˢᵗ', 'nd' => 'ⁿᵈ', 'rd' => 'ʳᵈ', 'th' => 'ᵗʰ'];
+                    $suffix = $superscripts[$suffixRaw] ?? $suffixRaw;
+                    return $d->format('M') . '.' . $day . $suffix . ' ' . $d->format('Y');
+                } catch (\Exception $e) {
+                    return '-';
+                }
+            };
+
+            // --- A. STAMP ORIGINAL ---
+            $receiptDateStr = $formatSaiDate($revision->receipt_date);
+            $uploadDateStr  = $formatSaiDate($revision->created_at);
+
+            $topLine    = "Date Received : " . $receiptDateStr;
+            $bottomLine = "Date Uploaded : " . $uploadDateStr;
+
+            // --- B. STAMP CONTROL COPY ---
+            $now = now();
+            $datePart = $formatSaiDate($now);
+            $timePart = $now->format('H:i:s');
+
+            $deptCode = '--';
+            if (Auth::check() && Auth::user()->id_dept) {
+                $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
+                if ($dept && isset($dept->code)) $deptCode = $dept->code;
+            }
+
+            $topLineCopy = "SAI / {$deptCode} / {$datePart} {$timePart}";
+
+            $userName = '--';
+            if (Auth::check()) {
+                $userName = Auth::user()->name ?? '--';
+            }
+            $bottomLineCopy = "Downloaded By {$userName}";
+
+            // --- POSISI STAMP ---
+            $posOriginal = $this->positionIntToKey($file->ori_position ?? 2, 'bottom-right');
+            $posCopy     = $this->positionIntToKey($file->copy_position ?? 1, 'bottom-center');
+            $posObsolete = $this->positionIntToKey($file->obslt_position ?? 0, 'bottom-left');
+
+            // --- GENERATE MASTER GAMBAR ---
+            // Original & Copy (Default Blue)
+            $stampOriginal = $this->_createStampImage('SAI-DRAWING ORIGINAL', $topLine, $bottomLine, 'blue');
+            $stampCopy     = $this->_createStampImage('SAI-DRAWING CONTROLLED COPY', $topLineCopy, $bottomLineCopy, 'blue');
+            $stampObsolete = null;
+
+            $isObsolete = (bool)($revision->is_obsolete ?? 0);
+            if ($isObsolete) {
+                $obsDateStr = $formatSaiDate($revision->obsolete_at);
+                $topLineObsolete = "Date : {$obsDateStr}";
+
+                $obsName = '-'; $obsDept = '-';
+                if (!empty($revision->obsolete_by)) {
+                    $u = DB::table('users')->where('id', $revision->obsolete_by)->first(['name', 'id_dept']);
+                    if ($u) {
+                        $obsName = $u->name;
+                        if ($u->id_dept) {
+                            $d = DB::table('departments')->where('id', $u->id_dept)->value('code');
+                            $obsDept = $d ?? '-';
+                        }
+                    }
+                }
+                if ($obsName === '-') {
+                     $lastReject = DB::table('package_approvals')->where('revision_id', $revision->id)->where('decision', 'rejected')->orderByDesc('id')->first();
+                     if ($lastReject && $lastReject->decided_by) {
+                         $u = DB::table('users')->where('id', $lastReject->decided_by)->first();
+                         if ($u) { $obsName = $u->name; $d = DB::table('departments')->where('id', $u->id_dept)->value('code'); $obsDept = $d ?? '-'; }
+                     }
+                }
+
+                $bottomLineObsolete = ["Nama : {$obsName}", "Dept. : {$obsDept}"];
+
+                $stampObsolete = $this->_createStampImage('SAI-DRAWING OBSOLETE', $topLineObsolete, $bottomLineObsolete, 'red');
+            }
+
+            if (!$stampOriginal || !$stampCopy) {
+                Log::warning('Could not create master stamp images, returning original file.');
+                return $originalPath;
+            }
+
+            // 3. Proses Imagick
+            $masterStampWidth = $stampOriginal->getImageWidth();
+            $masterStampHeight = $stampOriginal->getImageHeight();
+            $stampAspectRatio = $masterStampWidth / $masterStampHeight;
+
+            $imagick = new \Imagick();
             $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
-            $tempPath = tempnam(sys_get_temp_dir(), 'stamp_');
+            $isPdf = ($ext === 'pdf');
 
-            if ($ext === 'pdf') {
-                $pdf = new Imagick();
-                $pdf->readImage($originalPath . '[0]');
-                $pdf->setImageFormat('png');
+            if ($isPdf) {
+                $imagick->setResolution(150, 150);
+            }
+            $imagick->readImage($originalPath);
+
+            $marginPercent = 0.03;
+            $stampWidthPercent = 0.15;
+            $minStampWidth = 224;
+
+            // --- DEFINISI CLOSURE ---
+            $processPage = function($iteratorIndex) use (
+                $imagick, $stampOriginal, $stampCopy, $stampObsolete, $isObsolete, $file,
+                $stampAspectRatio, $marginPercent, $stampWidthPercent, $minStampWidth,
+                $posOriginal, $posCopy, $posObsolete,
+            ) {
+                $imagick->setIteratorIndex($iteratorIndex);
+                $imgWidth = $imagick->getImageWidth();
+                $imgHeight = $imagick->getImageHeight();
+                $margin = max(8, (int) (min($imgWidth, $imgHeight) * $marginPercent));
+
+                $newStampWidth = max($minStampWidth, (int) ($imgWidth * $stampWidthPercent));
+                $newStampHeight = (int) ($newStampWidth / $stampAspectRatio);
+
+                // Resize Stamps
+                $stampOrigResized = $stampOriginal->clone();
+                $stampOrigResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
+
+                $stampCopyResized = $stampCopy->clone();
+                $stampCopyResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
+
+                $stampObsResized = null;
+                if ($isObsolete && $stampObsolete) {
+                    $stampObsResized = $stampObsolete->clone();
+                    $stampObsResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
+                }
+
+                // Composite Stamps
+                list($x, $y) = $this->calculateStampCoordinates($posOriginal, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
+                $imagick->compositeImage($stampOrigResized, \Imagick::COMPOSITE_OVER, (int)$x, (int)$y);
+
+                list($xCopy, $yCopy) = $this->calculateStampCoordinates($posCopy, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
+                $imagick->compositeImage($stampCopyResized, \Imagick::COMPOSITE_OVER, (int)$xCopy, (int)$yCopy);
+
+                if ($stampObsResized) {
+                    list($xObs, $yObs) = $this->calculateStampCoordinates($posObsolete, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
+                    $imagick->compositeImage($stampObsResized, \Imagick::COMPOSITE_OVER, (int)$xObs, (int)$yObs);
+                    $stampObsResized->destroy();
+                }
+
+                $stampOrigResized->destroy();
+                $stampCopyResized->destroy();
+            };
+
+            // Jalankan Proses
+            if ($isPdf) {
+                $totalPages = $imagick->getNumberImages();
+                for ($i = 0; $i < $totalPages; $i++) {
+                    $processPage($i);
+                }
             } else {
-                $pdf = new Imagick($originalPath);
+                $mainImageIndex = 0;
+                if ($imagick->getNumberImages() > 1) {
+                    $maxResolution = 0;
+                    foreach ($imagick as $i => $frame) {
+                        $res = $frame->getImageWidth() * $frame->getImageHeight();
+                        if ($res > $maxResolution) {
+                            $maxResolution = $res;
+                            $mainImageIndex = $i;
+                        }
+                    }
+                }
+                $processPage($mainImageIndex);
             }
 
-            $imgW = (int)$pdf->getImageWidth();
-            $imgH = (int)$pdf->getImageHeight();
+            // Simpan File
+            $tempDir = storage_path('app/temp');
+            if (!file_exists($tempDir)) mkdir($tempDir, 0775, true);
 
-            $topLine = 'Date: ' . (new \DateTime())->format('Y-m-d');
-            $bottomLine = 'Dept: ' . (Auth::user()->department?->code ?? '-');
+            $outputExt = $isPdf ? 'pdf' : strtolower($imagick->getImageFormat());
+            $tempPath = $tempDir . '/' . Str::uuid()->toString() . '.' . $outputExt;
 
-            $centerText = 'SAI-DRAWING ORIGINAL';
-            $stamp = $this->_createStampImage($centerText, $topLine, $bottomLine, 'blue');
-
-            if ($stamp) {
-                $stampW = (int)$stamp->getImageWidth();
-                $stampH = (int)$stamp->getImageHeight();
-
-                $posKey = $this->positionIntToKey($file->ori_position, 'bottom-right');
-                [$x, $y] = $this->calculateStampCoordinates($posKey, $imgW, $imgH, $stampW, $stampH, 10);
-
-                $pdf->compositeImage($stamp, \Imagick::COMPOSITE_OVER, $x, $y);
-                $stamp->destroy();
+            if ($isPdf) {
+                $imagick->writeImages($tempPath, true);
+            } else {
+                $imagick->writeImage($tempPath);
             }
 
-            $pdf->setImageFormat($ext === 'pdf' ? 'pdf' : 'png');
-            $pdf->writeImage($tempPath);
-            $pdf->destroy();
+            // Cleanup
+            $imagick->clear(); $imagick->destroy();
+            $stampOriginal->clear(); $stampOriginal->destroy();
+            $stampCopy->clear(); $stampCopy->destroy();
+            if ($stampObsolete) { $stampObsolete->clear(); $stampObsolete->destroy(); }
 
             return $tempPath;
+
         } catch (\Exception $e) {
-            Log::error('Error burning stamps', ['error' => $e->getMessage(), 'file_id' => $file->id]);
+            Log::error('Imagick stamp burn-in failed: ' . $e->getMessage(), ['file_id' => $file->id, 'path' => $originalPath]);
             return $originalPath;
         }
     }

@@ -53,7 +53,7 @@
         <div class="flex-1 flex flex-col pl-20">
             @include('layouts.header')
 
-            <main class="flex-1 overflow-x-hidden overflow-y-auto p-6 pb-20 pt-24">
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-2 pt-[6%]">
                 @yield('content')
             </main>
 

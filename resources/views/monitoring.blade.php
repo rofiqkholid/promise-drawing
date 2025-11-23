@@ -1,235 +1,179 @@
 @extends('layouts.app')
 @section('title', 'Dashboard - PROMISE')
 @section('header-title', 'Dashboard')
+
 @section('content')
-<style>
-    .d-none-custom {
-        display: none !important;
-    }
+<div class="flex flex-col gap-2 h-[calc(100vh-110px)] w-full overflow-hidden">
 
-    .select2-container--default .select2-selection--single .select2-selection__rendered:empty {
-        display: none;
-    }
-
-    .filter-pill-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-    }
-
-    .filter-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background-color: #E0E7FF;
-        border-radius: 9999px;
-        padding: 4px 10px;
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: #3730A3;
-    }
-
-    .filter-pill-remove {
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 0;
-        margin-left: 2px;
-        color: #4338CA;
-        line-height: 1;
-    }
-
-    .filter-pill-remove:hover {
-        color: #C7D2FE;
-    }
-
-    .dark .filter-pill {
-        background-color: #3730A3;
-        color: #E0E7FF;
-    }
-
-    .dark .filter-pill-remove {
-        color: #A5B4FC;
-    }
-
-    .dark .filter-pill-remove:hover {
-        color: #E0E7FF;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background-color: rgba(156, 163, 175, 0.5);
-        border-radius: 20px;
-    }
-</style>
-
-<div>
-    <div class="w-full grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
-        <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="flex-none grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        <div class="relative bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
                 <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-500 dark:text-blue-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
                     <i class="fa-solid fa-file-lines fa-xl"></i>
                 </div>
                 <div>
                     <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Total Files</h3>
-                    <p id="docCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                    <p id="docCount" class="text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
                 </div>
             </div>
         </div>
-        <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="relative bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
                 <div class="bg-green-100 dark:bg-green-900/50 text-green-500 dark:text-green-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
                     <i class="fa-solid fa-cloud-arrow-up fa-xl"></i>
                 </div>
                 <div>
                     <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Upload</h3>
-                    <p id="uploadCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                    <p id="uploadCount" class="text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
                 </div>
             </div>
         </div>
-        <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="relative bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
                 <div class="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-500 dark:text-yellow-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
                     <i class="fa-solid fa-cloud-arrow-down fa-xl"></i>
                 </div>
                 <div>
                     <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Download</h3>
-                    <p id="downloadCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                    <p id="downloadCount" class="text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
                 </div>
             </div>
         </div>
-        <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="relative bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
                 <div class="bg-red-100 dark:bg-red-900/50 text-red-500 dark:text-red-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
                     <i class="fa-solid fa-users fa-xl"></i>
                 </div>
                 <div>
                     <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">User Active</h3>
-                    <p id="activeUserCount" class="text-2xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                    <p id="activeUserCount" class="text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
                 </div>
             </div>
         </div>
-        <div class="relative bg-white dark:bg-gray-800 p-5 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="relative bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
                 <div class="bg-purple-100 dark:bg-purple-900/50 text-purple-500 dark:text-purple-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
                     <i class="fa-solid fa-hard-drive fa-xl"></i>
                 </div>
                 <div>
                     <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Server Storage</h3>
-                    <p class="text-lg font-bold text-gray-800 dark:text-gray-100"><span id="freeSpace">...</span> free</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400"><span id="usedSpace">...</span> / <span id="totalSpace">...</span></p>
+                    <p class="text-md font-bold text-gray-800 dark:text-gray-100">
+                        <span id="usedSpace">...</span> / <span id="totalSpace">...</span>
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="filterCard" style="display: none;" class="mt-6 bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
+    <div id="filterCard" style="display: none;" class="flex-none mt-2 bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+
+        <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
             <i class="fa-solid fa-filter mr-2 text-gray-500"></i> Filter Data
         </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-start">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-start">
+
             <div>
-                <label for="date_range_input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date Range</label>
-                <div class="relative mt-1">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Date Range</label>
+                <div class="relative">
                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                         <i class="fa-solid fa-calendar-days text-gray-400"></i>
                     </div>
-                    <input type="text" id="date_range_input" name="date_range_input" class="block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:placeholder-gray-500 focus:ring-0 focus:outline-none sm:text-sm py-2 pl-10 pr-3" placeholder="Select date range...">
+                    <input type="text" id="date_range_input" class="block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:ring-0 focus:outline-none sm:text-sm py-2 pl-10 pr-3">
                 </div>
             </div>
+
             <div>
-                <label for="customer_input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
-                <div class="relative mt-1">
-                    <select id="customer_input" name="customer_input" class="w-full"></select>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Customer</label>
+                <div class="relative">
+                    <select id="customer_input" class="w-full"></select>
                 </div>
             </div>
+
             <div>
-                <label for="model_input" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
-                <div class="relative mt-1">
-                    <select id="model_input" name="model_input" class="w-full"></select>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Model</label>
+                <div class="relative">
+                    <select id="model_input" class="w-full"></select>
                 </div>
             </div>
+
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group</label>
-                <div class="relative mt-1">
-                    <select id="part_group_multi_input" name="part_group_multi_input" class="w-full"></select>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Part Group</label>
+                <div class="relative">
+                    <select id="part_group_multi_input" class="w-full"></select>
                 </div>
             </div>
+
             <div>
-                <label for="project_status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Project Status</label>
-                <div class="relative mt-1">
-                    <select id="project_status" name="project_status" class="w-full"></select>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Status</label>
+                <div class="relative">
+                    <select id="project_status" class="w-full"></select>
                 </div>
             </div>
         </div>
-        <div class="w-full flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div id="filterPillContainer" class="filter-pill-container flex-grow pr-6"></div>
-            <div class="flex-shrink-0 flex space-x-3">
-                <button type="button" id="btnReset" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"> Reset </button>
-                <button type="button" id="btnApply" class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed min-w-[150px]">
-                    <span id="btnApplyText"> <i class="fa-solid fa-check mr-2"></i> Apply Filter </span>
-                    <span id="btnApplyLoader" style="display: none;">
-                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    </span>
+
+        <div class="w-full flex justify-between items-center mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+            <div id="filterPillContainer" class="flex-grow pr-6"></div>
+            <div class="flex space-x-3">
+                <button type="button" id="btnReset" class="px-3 py-1.5 text-xs font-medium border rounded hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300">Reset</button>
+                <button type="button" id="btnApply" class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 min-w-[120px]">
+                    <span id="btnApplyText"><i class="fa-solid fa-check mr-2"></i> Apply Filter</span>
+                    <span id="btnApplyLoader" style="display:none;"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
                 </button>
             </div>
         </div>
     </div>
 
-    <div class="flex flex-col lg:flex-row w-full mt-6 gap-6 items-stretch">
+    <div class="flex-1 min-h-0 flex flex-col lg:flex-row gap-2 items-stretch">
 
-        <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+        <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
+            <div class="flex-none flex justify-between items-center mb-2">
+                <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                     <i class="fa-solid fa-chart-bar mr-2 text-blue-500"></i> Upload Monitoring (Plan vs Actual)
                 </h3>
-                <button type="button" id="toggleFilterBtn" class="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700" title="Toggle Filter">
-                    <i class="fa-solid fa-filter fa-lg"></i>
+                <button type="button" id="toggleFilterBtn" class="text-gray-500 text-xs p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700" title="Toggle Filter">
+                    <i class="fa-solid fa-filter"></i>
                 </button>
             </div>
-
-            <div class="relative w-full flex-1 min-h-[350px]">
+            <div class="relative w-full flex-1 min-h-0">
                 <canvas id="monitoringChart"></canvas>
             </div>
         </div>
 
-        <div class="w-full lg:w-[30%] bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-900 p-6 rounded-lg border border-emerald-200 dark:border-emerald-900/30 flex flex-col">
-            <h3 class="text-xl font-semibold text-emerald-800 dark:text-emerald-400 mb-4 flex items-center">
+        <div class="w-full lg:w-[30%] bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-900 p-4 rounded-lg border border-emerald-200 dark:border-emerald-900/30 flex flex-col overflow-hidden">
+
+            <h3 class="flex-none text-sm font-semibold text-emerald-800 dark:text-emerald-400 mb-2 flex items-center">
                 <i class="fa-solid fa-leaf mr-2"></i> Environmental Impact
             </h3>
 
-            <div class="flex-1 flex flex-col gap-4">
+            <div class="flex-1 flex flex-col gap-2 min-h-0">
 
-                <div class="flex-1 flex flex-col justify-center items-center text-center bg-white dark:bg-gray-800/50 p-4 rounded-xl shadow-sm border border-emerald-100 dark:border-emerald-900/20">
-                    <div class="bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300 w-14 h-14 rounded-full flex items-center justify-center mb-2">
-                        <i class="fa-solid fa-tree fa-xl"></i>
+                <div class="flex-1 flex flex-row items-center bg-white dark:bg-gray-800/50 px-3 py-2 rounded-xl shadow-sm border border-emerald-100 dark:border-emerald-900/20 overflow-hidden">
+
+                    <div class="bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300 w-8 h-8 rounded-full flex items-center justify-center shrink-0 mr-3">
+                        <i class="fa-solid fa-tree"></i>
                     </div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">Trees Saved</p>
-                    <h4 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mt-1">
-                        <span id="ecoTrees">0.00140</span>
-                    </h4>
-                    <p class="text-xs text-gray-400 mt-1">1 tree ≈ 80k sheets</p>
+
+                    <div class="flex flex-wrap items-baseline gap-x-2 min-w-0">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">Trees Saved</span>
+                        <span class="text-lg font-bold text-gray-800 dark:text-gray-100" id="ecoTrees">0.00140</span>
+                        <span class="text-[10px] text-gray-400 truncate">1 tree ≈ 80k sheets</span>
+                    </div>
                 </div>
 
-                <div class="flex-1 flex flex-col justify-center items-center text-center bg-white dark:bg-gray-800/50 p-4 rounded-xl shadow-sm border border-teal-100 dark:border-teal-900/20">
-                    <div class="bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300 w-14 h-14 rounded-full flex items-center justify-center mb-2">
-                        <i class="fa-solid fa-wind fa-xl"></i>
+                <div class="flex-1 flex flex-row items-center bg-white dark:bg-gray-800/50 px-3 py-2 rounded-xl shadow-sm border border-teal-100 dark:border-teal-900/20 overflow-hidden">
+
+                    <div class="bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300 w-8 h-8 rounded-full flex items-center justify-center shrink-0 mr-3">
+                        <i class="fa-solid fa-wind"></i>
                     </div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">CO2 Reduced</p>
-                    <h4 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mt-1">
-                        <span id="ecoCO2">0,031</span> <span class="text-sm font-normal text-gray-500">kg</span>
-                    </h4>
-                    <p class="text-xs text-gray-400 mt-1">0.275g / download</p>
+
+                    <div class="flex flex-wrap items-baseline gap-x-2 min-w-0">
+                        <span class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">CO2 Reduced</span>
+                        <span class="text-lg font-bold text-gray-800 dark:text-gray-100">
+                            <span id="ecoCO2">0,031</span> <span class="text-xs font-normal text-gray-500">kg</span>
+                        </span>
+                        <span class="text-[10px] text-gray-400 truncate">0.275g / download</span>
+                    </div>
                 </div>
 
             </div>
@@ -237,22 +181,25 @@
 
     </div>
 
-    <div class="mt-6 flex flex-col lg:flex-row gap-6">
-        <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col h-full">
-            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
+    <div class="flex-1 min-h-0 flex flex-col lg:flex-row gap-2 items-stretch">
+
+        <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
+            <h3 class="flex-none text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
                 <i class="fa-solid fa-arrow-trend-up mr-2 text-purple-500"></i> Trend Upload & Download
             </h3>
-            <div class="relative w-full flex-1 min-h-[350px]">
+            <div class="relative w-full flex-1 min-h-0">
                 <canvas id="trendChart"></canvas>
             </div>
         </div>
 
-        <div class="w-full lg:w-[30%] bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
-            <h3 class="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
+        <div class="w-full lg:w-[30%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
+            <h3 class="flex-none text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
                 <i class="fa-solid fa-newspaper mr-2 text-gray-500"></i> Activity Log
             </h3>
-            <div id="activityLogContainer" class="divide-y divide-gray-200 dark:divide-gray-700 h-[350px] overflow-y-auto pr-2 custom-scrollbar"></div>
+            <div id="activityLogContainer" class="flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0 divide-y divide-gray-200 dark:divide-gray-700">
+            </div>
         </div>
+
     </div>
 </div>
 
@@ -327,20 +274,19 @@
             fetchText('/api/download-count', 'downloadCount');
             fetchText('/api/doc-count', 'docCount');
 
-            const f = document.getElementById('freeSpace'),
+            const
                 u = document.getElementById('usedSpace'),
                 t = document.getElementById('totalSpace');
-            if (f && u && t) {
+            if (u && t) {
                 try {
                     const res = await fetch('/api/disk-space');
                     const data = await res.json();
                     if (data.status === 'success') {
-                        f.textContent = data.free;
                         u.textContent = data.used;
                         t.textContent = data.total;
                     }
                 } catch (e) {
-                    f.textContent = 'Err';
+                    u.textContent = 'Err';
                 }
             }
         }
@@ -438,10 +384,10 @@
                             backgroundColor: 'rgba(59, 130, 246, 1)',
                             borderColor: 'transparent',
                             borderWidth: 0,
-                            borderRadius: 50,
+                            borderRadius: 20,
                             borderSkipped: 'bottom',
-                            categoryPercentage: 0.3,
-                            barPercentage: 0.98,
+                            categoryPercentage: 0.9,
+                            barPercentage: 0.73,
                             order: 2,
                             yAxisID: 'y',
                             animation: {
@@ -455,10 +401,10 @@
                             backgroundColor: 'rgba(34, 197, 94, 1)',
                             borderColor: 'transparent',
                             borderWidth: 0,
-                            borderRadius: 50,
+                            borderRadius: 20,
                             borderSkipped: 'bottom',
-                            categoryPercentage: 0.3,
-                            barPercentage: 0.98,
+                            categoryPercentage: 0.9,
+                            barPercentage: 0.73,
                             order: 3,
                             yAxisID: 'y',
                             animation: {
@@ -529,7 +475,7 @@
                             offset: 4,
                             font: {
                                 weight: 'bold',
-                                size: 11
+                                size: 12
                             },
                             formatter: Math.round
                         }
@@ -562,7 +508,7 @@
                             suggestedMax: suggestedMaxCount,
                             ticks: {
                                 color: textColor,
-                                maxTicksLimit: 6,
+                                maxTicksLimit: 3,
                                 font: {
                                     size: 11
                                 },
@@ -587,7 +533,7 @@
                             },
                             ticks: {
                                 color: textColor,
-                                maxTicksLimit: 6,
+                                maxTicksLimit: 3,
                                 font: {
                                     size: 11
                                 },

@@ -111,3 +111,69 @@ button:disabled:hover {
     background-color: #1e293b;
     border-bottom-color: #374151;
 }
+
+.d-none-custom {
+    display: none !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered:empty {
+    display: none;
+}
+
+.filter-pill-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.filter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #E0E7FF;
+    border-radius: 9999px;
+    padding: 4px 10px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #3730A3;
+}
+
+.filter-pill-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 2px;
+    color: #4338CA;
+    line-height: 1;
+}
+
+.filter-pill-remove:hover {
+    color: #C7D2FE;
+}
+
+.dark .filter-pill {
+    background-color: #3730A3;
+    color: #E0E7FF;
+}
+
+.dark .filter-pill-remove {
+    color: #A5B4FC;
+}
+
+.dark .filter-pill-remove:hover {
+    color: #E0E7FF;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 20px;
+}
