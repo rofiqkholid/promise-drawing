@@ -16,44 +16,51 @@ class PartGroupsController extends Controller
      */
     public function data(Request $request)
     {
-        // Base query (tanpa join), aman untuk hitung filtered count
         $base = PartGroups::query()
-            ->with(['customer:id,code,name', 'model:id,name'])
+            ->with([
+                'customer:id,code,name',
+                'model:id,name,status_id',
+                'model.status:id,name' // <-- kalau pakai relasi status di model
+            ])
             ->select('part_groups.*');
 
-        // Global search
+        // Global Search
         if ($request->filled('search')) {
             $search = $request->input('search');
+
             $base->where(function ($q) use ($search) {
                 $q->where('code_part_group', 'like', "%{$search}%")
-                  ->orWhere('code_part_group_desc', 'like', "%{$search}%")
-                  ->orWhereHas('customer', function ($cq) use ($search) {
-                      $cq->where('code', 'like', "%{$search}%")
-                         ->orWhere('name', 'like', "%{$search}%");
-                  })
-                  ->orWhereHas('model', function ($mq) use ($search) {
-                      $mq->where('name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('code_part_group_desc', 'like', "%{$search}%")
+                    ->orWhereHas('customer', function ($cq) use ($search) {
+                        $cq->where('code', 'like', "%{$search}%")
+                            ->orWhere('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('model', function ($mq) use ($search) {
+                        $mq->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('model.status', function ($sq) use ($search) { // search status juga
+                        $sq->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
         $filteredQuery = clone $base;
 
         // Sorting
-        $sortBy    = $request->get('order')[0]['column'] ?? 1;
-        $sortDir   = $request->get('order')[0]['dir'] ?? 'asc';
-        $sortCol   = $request->get('columns')[$sortBy]['data'] ?? 'code_part_group';
+        $sortBy  = $request->get('order')[0]['column'] ?? 1;
+        $sortDir = $request->get('order')[0]['dir'] ?? 'asc';
+        $sortCol = $request->get('columns')[$sortBy]['data'] ?? 'code_part_group';
 
         $dataQuery = clone $base;
 
         if ($sortCol === 'customer_code') {
             $dataQuery->leftJoin('customers', 'part_groups.customer_id', '=', 'customers.id')
-                      ->orderBy('customers.code', $sortDir)
-                      ->select('part_groups.*'); // pastikan kolom utama tetap part_groups.*
+                ->orderBy('customers.code', $sortDir)
+                ->select('part_groups.*');
         } elseif ($sortCol === 'model_name') {
             $dataQuery->leftJoin('models', 'part_groups.model_id', '=', 'models.id')
-                      ->orderBy('models.name', $sortDir)
-                      ->select('part_groups.*');
+                ->orderBy('models.name', $sortDir)
+                ->select('part_groups.*');
         } else {
             $dataQuery->orderBy($sortCol, $sortDir);
         }
@@ -63,22 +70,26 @@ class PartGroupsController extends Controller
         $start   = (int) $request->get('start', 0);
         $draw    = (int) $request->get('draw', 1);
 
-        $totalRecords     = PartGroups::count();
-        $recordsFiltered  = (clone $filteredQuery)->count(); // tanpa join: aman tidak dobel
-        $rows             = $dataQuery->skip($start)->take($perPage)->get();
+        $totalRecords    = PartGroups::count();
+        $recordsFiltered = (clone $filteredQuery)->count();
+        $rows            = $dataQuery->skip($start)->take($perPage)->get();
 
         return response()->json([
             'draw'            => $draw,
             'recordsTotal'    => $totalRecords,
             'recordsFiltered' => $recordsFiltered,
             'data'            => $rows->map(function ($pg) {
+                $modelName  = optional($pg->model)->name ?? '-';
+                $statusName = optional(optional($pg->model)->status)->name ?? 'No Status';
+
                 return [
                     'id'                  => $pg->id,
                     'customer_code'       => optional($pg->customer)->code ?? '-',
-                    'model_name'          => optional($pg->model)->name ?? '-',
+                    'model_name'          => $modelName,    // ⬅ hanya nama model
+                    'model_status'        => $statusName,   // ⬅ status dipisah
                     'code_part_group'     => $pg->code_part_group,
-                    'planning'           => $pg->planning,
-                    'code_part_group_desc'=> $pg->code_part_group_desc,
+                    'planning'            => $pg->planning,
+                    'code_part_group_desc' => $pg->code_part_group_desc,
                 ];
             }),
         ]);
@@ -94,7 +105,7 @@ class PartGroupsController extends Controller
             'model_id'           => 'required|exists:models,id',
             'planning'           => 'required|integer',
             'code_part_group'    => 'required|string|max:10',
-            'code_part_group_desc'=> 'nullable|string|max:50',
+            'code_part_group_desc' => 'nullable|string|max:50',
         ]);
 
         PartGroups::create($validated);
@@ -129,8 +140,8 @@ class PartGroupsController extends Controller
             'customer_id'        => 'required|exists:customers,id',
             'model_id'           => 'required|exists:models,id',
             'planning'           => 'required|integer',
-            'code_part_group'    => ['required','string','max:50'],
-            'code_part_group_desc'=> 'nullable|string|max:50',
+            'code_part_group'    => ['required', 'string', 'max:50'],
+            'code_part_group_desc' => 'nullable|string|max:50',
         ]);
 
         $partGroup->update($validated);
@@ -154,7 +165,7 @@ class PartGroupsController extends Controller
     {
         $customerId = $request->get('customer_id');
         $models = Models::where('customer_id', $customerId)
-                        ->select('id', 'name')->orderBy('name')->get();
+            ->select('id', 'name')->orderBy('name')->get();
 
         return response()->json($models);
     }
@@ -169,11 +180,10 @@ class PartGroupsController extends Controller
         $per   = 10;
         $skip  = ($page - 1) * $per;
 
-        $builder = Customers::query()->select('id','code');
+        $builder = Customers::query()->select('id', 'code');
         if ($q !== '') {
             $builder->where(function ($w) use ($q) {
-                $w->where('code','like',"%{$q}%")
-                 ;
+                $w->where('code', 'like', "%{$q}%");
             });
         }
 
@@ -181,7 +191,7 @@ class PartGroupsController extends Controller
         $rows  = $builder->orderBy('code')->skip($skip)->take($per)->get();
 
         return response()->json([
-            'results'    => $rows->map(fn($c)=>[
+            'results'    => $rows->map(fn($c) => [
                 'id'   => $c->id,
                 'text' => "{$c->code}",
             ]),
@@ -195,7 +205,7 @@ class PartGroupsController extends Controller
     public function select2Models(Request $request)
     {
         $request->validate([
-            'customer_id' => ['required','integer','exists:customers,id'],
+            'customer_id' => ['required', 'integer', 'exists:customers,id'],
         ]);
 
         $customerId = (int) $request->customer_id;
@@ -204,21 +214,27 @@ class PartGroupsController extends Controller
         $per   = 10;
         $skip  = ($page - 1) * $per;
 
-        $builder = Models::query()->where('customer_id',$customerId)
-                    ->select('id','name');
+        $builder = Models::query()
+            ->where('customer_id', $customerId)
+            ->with('status:id,name') 
+            ->select('id', 'name', 'status_id');
 
         if ($q !== '') {
-            $builder->where('name','like',"%{$q}%");
+            $builder->where('name', 'like', "%{$q}%");
         }
 
         $total = (clone $builder)->count();
         $rows  = $builder->orderBy('name')->skip($skip)->take($per)->get();
 
         return response()->json([
-            'results'    => $rows->map(fn($m)=>[
-                'id'   => $m->id,
-                'text' => $m->name,
-            ]),
+            'results'    => $rows->map(function ($m) {
+                $status = $m->status->name ?? 'No Status';
+
+                return [
+                    'id'   => $m->id,
+                    'text' => "{$m->name} - {$status}",  
+                ];
+            }),
             'pagination' => ['more' => ($skip + $per) < $total],
         ]);
     }

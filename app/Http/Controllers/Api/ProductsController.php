@@ -20,24 +20,23 @@ class ProductsController extends Controller
         $orderColIdx = (int) $request->input('order.0.column', 1);
         $orderDir    = $request->input('order.0.dir', 'asc');
 
-        // 0: rownum, 1: customer_code, 2: model_name, 3: part_no, 4: part_name
         $columnsMap = [
             0 => 'p.id',
             1 => 'c.code',
             2 => 'm.name',
             3 => 'p.part_no',
             4 => 'p.part_name',
+            5 => 'ps.name',
         ];
         $orderCol = $columnsMap[$orderColIdx] ?? 'c.code';
 
-        // base total (tanpa filter)
         $totalBase = DB::table('products as p')
             ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
-            ->leftJoin('customers as c', 'c.id', '=', 'p.customer_id');
+            ->leftJoin('customers as c', 'c.id', '=', 'p.customer_id')
+            ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id'); 
 
         $recordsTotal = (clone $totalBase)->count();
 
-        // base query dengan select kolom
         $base = $totalBase->select([
             'p.id',
             'p.customer_id',
@@ -46,6 +45,7 @@ class ProductsController extends Controller
             'p.part_name',
             DB::raw("COALESCE(m.name,'') as model_name"),
             DB::raw("COALESCE(c.code,'') as customer_code"),
+            DB::raw("COALESCE(ps.name,'No Status') as status_name"), 
         ]);
 
         // global search
@@ -53,9 +53,10 @@ class ProductsController extends Controller
         if ($search !== '') {
             $base->where(function ($q) use ($search) {
                 $q->where('p.part_no', 'like', "%{$search}%")
-                  ->orWhere('p.part_name', 'like', "%{$search}%")
-                  ->orWhere('m.name', 'like', "%{$search}%")
-                  ->orWhere('c.code', 'like', "%{$search}%");
+                    ->orWhere('p.part_name', 'like', "%{$search}%")
+                    ->orWhere('m.name', 'like', "%{$search}%")
+                    ->orWhere('c.code', 'like', "%{$search}%")
+                    ->orWhere('ps.name', 'like', "%{$search}%"); 
             });
         }
 
@@ -72,6 +73,7 @@ class ProductsController extends Controller
             'customer_code' => $r->customer_code,
             'model_id'      => $r->model_id,
             'model_name'    => $r->model_name,
+            'status'        => $r->status_name, 
             'part_no'       => $r->part_no,
             'part_name'     => $r->part_name,
         ]);
@@ -84,42 +86,51 @@ class ProductsController extends Controller
         ]);
     }
 
-    // ===== Select2-friendly: Models =====
+
+
     public function getModels(Request $request)
     {
         $customerId = $request->get('customer_id');
-        $q     = trim((string) $request->get('q', ''));
-        $page  = max(1, (int) $request->get('page', 1));
+        $searchTerm = trim((string) $request->get('q', ''));
+        $page = max(1, (int) $request->get('page', 1));
         $limit = 10;
-        $skip  = ($page - 1) * $limit;
+        $skip = ($page - 1) * $limit;
 
-        $base = Models::query()->select('id', 'name');
+        $query = DB::connection('sqlsrv')
+            ->table('models as m')
+            ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
+            ->select('m.id', 'm.name', 'm.customer_id', 'ps.name as status_name');
+
         if (!empty($customerId)) {
-            $base->where('customer_id', (int) $customerId);
-        }
-        if ($q !== '') {
-            $base->where('name', 'like', "%{$q}%");
+            $query->where('m.customer_id', (int)$customerId);
         }
 
-        // Jika dipanggil oleh Select2 (ada q/page atau expects JSON) -> format Select2
-        if ($request->has('q') || $request->has('page') || $request->wantsJson()) {
-            $total = (clone $base)->count();
-            $rows  = $base->orderBy('name')->skip($skip)->take($limit)->get();
-
-            return response()->json([
-                'results' => $rows->map(fn($m) => [
-                    'id'   => $m->id,
-                    'text' => $m->name,
-                ]),
-                'pagination' => ['more' => ($skip + $limit) < $total],
-            ]);
+        if ($searchTerm !== '') {
+            $query->where('m.name', 'LIKE', "%{$searchTerm}%");
         }
 
-        // Fallback "mode lama" (array sederhana)
-        return $base->orderBy('name')
-            ->get()
-            ->map(fn($m) => ['id' => $m->id, 'label' => $m->name]);
+        $totalCount = $query->count();
+
+        $results = $query->orderBy('m.name')
+            ->skip($skip)
+            ->take($limit)
+            ->get();
+
+        $formattedResults = $results->map(fn($model) => [
+            'id'   => $model->id,
+            'text' => "{$model->name} - {$model->status_name}",
+            'customer_id' => $model->customer_id,
+            'status' => $model->status_name,
+        ]);
+
+        return response()->json([
+            'results' => $formattedResults,
+            'pagination' => [
+                'more' => ($page * $limit) < $totalCount
+            ]
+        ]);
     }
+
 
     // ===== Select2-friendly: Customers =====
     public function getCustomers(Request $request)
@@ -132,8 +143,7 @@ class ProductsController extends Controller
         $base = Customers::query()->select('id', 'code');
         if ($q !== '') {
             $base->where(function ($w) use ($q) {
-                $w->where('code', 'like', "%{$q}%")
-                 ;
+                $w->where('code', 'like', "%{$q}%");
             });
         }
 
@@ -171,12 +181,12 @@ class ProductsController extends Controller
     }
 
     public function show($id)
-{
-    $row = DB::table('products as p')
-        ->leftJoin('customers as c', 'c.id', '=', 'p.customer_id')
-        ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
-        ->where('p.id', $id)
-        ->selectRaw("
+    {
+        $row = DB::table('products as p')
+            ->leftJoin('customers as c', 'c.id', '=', 'p.customer_id')
+            ->leftJoin('models as m', 'm.id', '=', 'p.model_id')
+            ->where('p.id', $id)
+            ->selectRaw("
             p.id,
             p.customer_id,
             p.model_id,
@@ -185,12 +195,12 @@ class ProductsController extends Controller
             ISNULL(c.code, '')  AS customer_label,  -- label utk Select2 (hanya code)
             ISNULL(m.name, '')  AS model_label      -- label utk Select2 (nama model)
         ")
-        ->first();
+            ->first();
 
-    abort_if(!$row, 404);
+        abort_if(!$row, 404);
 
-    return response()->json($row);
-}
+        return response()->json($row);
+    }
 
 
     public function update(Request $r, $id)

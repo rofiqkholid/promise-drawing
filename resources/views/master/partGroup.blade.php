@@ -18,7 +18,6 @@
         </div>
     </div>
 
-    {{-- Main Content: Table Card --}}
     <div class="bg-white dark:bg-gray-800 shadow-md sm:rounded-lg overflow-hidden">
         <div class="p-4 md:p-6 overflow-x-auto">
             <table id="partGroupsTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -27,6 +26,7 @@
                         <th scope="col" class="px-6 py-3 w-16">No</th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="customer_code">Customer Code</th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="model_name">Model Code</th>
+                        <th scope="col" class="px-6 py-3 sorting" data-column="model_status">Status</th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="code_part_group">Part Group Code</th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="planning">Planning</th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="code_part_group_desc">Description</th>
@@ -331,6 +331,10 @@
                 {
                     data: 'model_name',
                     name: 'model_name'
+                },
+                {
+                    data: 'model_status',
+                    name: 'model_status'
                 },
                 {
                     data: 'code_part_group',

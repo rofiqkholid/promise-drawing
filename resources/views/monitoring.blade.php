@@ -120,7 +120,7 @@
         <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
             <div class="flex-none flex justify-between items-center mb-2">
                 <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex items-center">
-                    <i class="fa-solid fa-chart-bar mr-2 text-blue-500"></i> Upload Monitoring (Plan vs Actual)
+                    <i class="fa-solid fa-chart-simple mr-2 text-blue-500"></i> Upload Monitoring
                 </h3>
                 <button type="button" id="toggleFilterBtn" class="text-gray-500 text-xs p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700" title="Toggle Filter">
                     <i class="fa-solid fa-filter"></i>
@@ -153,7 +153,7 @@
 
         <div class="w-full lg:w-[25%] bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-900 p-4 rounded-lg border border-emerald-200 dark:border-emerald-900/30 flex flex-col overflow-hidden">
             <h3 class="flex-none text-sm font-semibold text-emerald-800 dark:text-emerald-400 mb-2 flex items-center">
-                <i class="fa-solid fa-leaf mr-2"></i> Environmental Impact
+                <i class="fa-solid fa-seedling mr-2"></i> Environmental Impact
             </h3>
             <div class="flex-1 flex flex-col gap-2 min-h-0 justify-center">
                 <div class="flex flex-row items-center bg-white dark:bg-gray-800/50 px-3 py-2 rounded-xl shadow-sm border border-emerald-100 dark:border-emerald-900/20 overflow-hidden">
@@ -747,7 +747,9 @@
                                     let value = context.raw;
                                     let total = context.chart._metasets[context.datasetIndex].total;
                                     let percentage = Math.round((value / total) * 100) + '%';
-                                    return label + value + ' (' + percentage + ')';
+
+                                    // PERUBAHAN DI SINI: Format dibalik menjadi "Label: 25% (10)"
+                                    return label + percentage + ' (' + value + ')';
                                 }
                             }
                         },
@@ -760,7 +762,9 @@
                             formatter: (value, ctx) => {
                                 let total = ctx.chart._metasets[ctx.datasetIndex].total;
                                 let percentage = (value / total) * 100;
-                                return percentage > 5 ? value : '';
+
+                                // PERUBAHAN DI SINI: Return persentase, bukan value
+                                return percentage > 5 ? Math.round(percentage) + '%' : '';
                             }
                         }
                     }
