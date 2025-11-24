@@ -522,6 +522,7 @@ class ReceiptController extends Controller
             ->select(
                 'c.code as customer',
                 'm.name as model',
+                'm.status_id',
                 'p.part_no',
                 'dtg.name as doctype_group',
                 'dsc.name as doctype_subcategory',
@@ -566,9 +567,13 @@ class ReceiptController extends Controller
                 ?? '-',
         ];
 
+        $sharedAtDate = $revision->shared_at
+            ? Carbon::parse($revision->shared_at)
+            : null;
+
         $fileRows = DB::table('doc_package_revision_files')
             ->where('revision_id', $decrypted_id)
-            ->select('id', 'filename as name', 'category', 'storage_path', 'file_size', 'ori_position', 'copy_position', 'obslt_position')
+            ->select('id', 'filename as name', 'category', 'storage_path', 'file_size', 'ori_position', 'copy_position', 'obslt_position', 'blocks_position')
             ->get();
 
         $extList = $fileRows
@@ -603,6 +608,7 @@ class ReceiptController extends Controller
                         'ori_position' => $item->ori_position,
                         'copy_position' => $item->copy_position,
                         'obslt_position' => $item->obslt_position,
+                        'blocks_position' => $item->blocks_position ? json_decode($item->blocks_position, true) : [],
                         'size'          => $item->file_size,
                     ];
                 });
@@ -613,6 +619,7 @@ class ReceiptController extends Controller
             'metadata' => [
                 'customer' => $package->customer,
                 'model'    => $package->model,
+                'model_status_id' => $package->status_id,
                 'part_no'  => $package->part_no,
                 'revision' => 'Rev-' . $revision->revision_no,
                 'revision_label' => $revision->revision_label ?? null,
@@ -627,6 +634,7 @@ class ReceiptController extends Controller
             'stamp'        => [
                 'receipt_date' => $receiptDate?->toDateString(),
                 'upload_date'  => $uploadDateRevision?->toDateString(),
+                'shared_at'    => $sharedAtDate?->toDateString(),
                 'is_obsolete'  => $isObsolete,
                 'obsolete_info' => $obsoleteStampInfo,
             ],
@@ -694,7 +702,7 @@ class ReceiptController extends Controller
                 ->join('models as m', 'dp.model_id', '=', 'm.id')
                 ->join('products as p', 'dp.product_id', '=', 'p.id')
                 ->where('dp.id', $revision->package_id)
-                ->select('c.code as customer', 'm.name as model', 'p.part_no')
+                ->select('c.code as customer', 'm.name as model', 'm.status_id', 'p.part_no')
                 ->first();
 
             $stampFormat = StampFormat::where('is_active', true)->first();
@@ -740,7 +748,7 @@ class ReceiptController extends Controller
             ->join('models as m', 'dp.model_id', '=', 'm.id')
             ->join('products as p', 'dp.product_id', '=', 'p.id')
             ->where('dp.id', $revision->package_id)
-            ->select('c.code as customer', 'm.name as model', 'p.part_no', 'dp.part_group_id')
+            ->select('c.code as customer', 'm.name as model', 'm.status_id', 'p.part_no', 'dp.part_group_id')
             ->first();
 
         if (!$package) {
@@ -1200,23 +1208,38 @@ class ReceiptController extends Controller
             $bottomLine = "Date Uploaded : " . $uploadDateStr;
 
             // --- B. STAMP CONTROL COPY ---
-            $now = now();
-            $datePart = $formatSaiDate($now);
-            $timePart = $now->format('H:i:s');
+            $modelStatusId = $package->status_id ?? 0;
 
-            $deptCode = '--';
-            if (Auth::check() && Auth::user()->id_dept) {
-                $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
-                if ($dept && isset($dept->code)) $deptCode = $dept->code;
+            if ($modelStatusId == 4) {
+                // === LOGIKA UNCONTROLLED COPY ===
+                $centerTextCopy = 'SAI-DRAWING UNCONTROLLED COPY';
+                $topLineCopy    = 'SAI / PUD / For Quotation';
+
+                // Format Shared At
+                $sharedAtStr = $formatSaiDate($revision->shared_at);
+                $bottomLineCopy = "Date Share : " . $sharedAtStr;
+
+            } else {
+                // === LOGIKA CONTROLLED COPY (EXISTING) ===
+                $centerTextCopy = 'SAI-DRAWING CONTROLLED COPY';
+
+                $now = now();
+                $datePart = $formatSaiDate($now);
+                $timePart = $now->format('H:i:s');
+
+                $deptCode = '--';
+                if (Auth::check() && Auth::user()->id_dept) {
+                    $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
+                    if ($dept && isset($dept->code)) $deptCode = $dept->code;
+                }
+                $topLineCopy = "SAI / {$deptCode} / {$datePart} {$timePart}";
+
+                $userName = '--';
+                if (Auth::check()) {
+                    $userName = Auth::user()->name ?? '--';
+                }
+                $bottomLineCopy = "Downloaded By {$userName}";
             }
-
-            $topLineCopy = "SAI / {$deptCode} / {$datePart} {$timePart}";
-
-            $userName = '--';
-            if (Auth::check()) {
-                $userName = Auth::user()->name ?? '--';
-            }
-            $bottomLineCopy = "Downloaded By {$userName}";
 
             // --- POSISI STAMP ---
             $posOriginal = $this->positionIntToKey($file->ori_position ?? 2, 'bottom-right');

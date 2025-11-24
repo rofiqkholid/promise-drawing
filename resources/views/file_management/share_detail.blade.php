@@ -445,18 +445,16 @@
                       :class="stampPositionClass('original')">
                       <div
                         :class="stampOriginClass('original')"
-                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
+                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                        <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                           <span x-text="stampTopLine('original')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                          <span class="text-xs font-extrabold text-blue-700 uppercase"
                             x-text="stampCenterOriginal()"></span>
                         </div>
-                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                        <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                           <span x-text="stampBottomLine('original')"></span>
                         </div>
                       </div>
@@ -470,19 +468,17 @@
                       :class="stampPositionClass('copy')">
                       <div
                         :class="stampOriginClass('copy')"
-                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
+                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                        <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                           <span x-text="stampTopLine('copy')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
                           <span
-                            class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                            class="text-xs font-extrabold text-blue-700 uppercase"
                             x-text="stampCenterCopy()"></span>
                         </div>
-                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                        <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                           <span x-text="stampBottomLine('copy')"></span>
                         </div>
                       </div>
@@ -496,31 +492,27 @@
                       :class="stampPositionClass('obsolete')">
                       <div
                         :class="stampOriginClass('obsolete')"
-                        class="w-65 h-20 border-2 border-red-600 rounded-sm
-           text-[10px] text-red-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
+                        class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                        <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
                           <!-- top line: Date : Oct.25th 2025 -->
                           <span x-text="stampTopLine('obsolete')"></span>
                         </div>
 
                         <div class="flex-1 flex items-center justify-center">
                           <!-- middle: SAI-DRAWING OBSOLETE -->
-                          <span class="text-xs font-extrabold tracking-[0.25em] text-red-700 uppercase"
+                          <span class="text-xs font-extrabold text-red-700 uppercase px-2"
                             x-text="stampCenterObsolete()"></span>
                         </div>
 
                         <!-- bottom: Nama & Dept -->
-                        <div class="w-full border-t border-red-600 pt-0.5 px-1 flex justify-between tracking-tight">
-                          <span>
-                            Nama :
-                            <span x-text="obsoleteName()"></span>
-                          </span>
-                          <span>
-                            <span x-text="(getObsoleteFormat().suffix || 'Dept.') + ' :'"></span>
-                            <span x-text="obsoleteDept()"></span>
-                          </span>
+                        <div class="w-full border-t-2 border-red-600 flex font-semibold tracking-tight">
+                            <div class="flex-1 border-r-2 border-red-600 text-center py-0.5 px-2">
+                                Nama : <span x-text="obsoleteName()"></span>
+                            </div>
+                            <div class="flex-1 text-center py-0.5 px-2">
+                                Dept. : <span x-text="obsoleteDept()"></span>
+                            </div>
                         </div>
                       </div>
                     </div>
@@ -605,18 +597,16 @@
                       :class="stampPositionClass('original')">
                       <div
                         :class="stampOriginClass('original')"
-                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
+                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                        <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                           <span x-text="stampTopLine('original')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                          <span class="text-xs font-extrabold text-blue-700 uppercase"
                             x-text="stampCenterOriginal()"></span>
                         </div>
-                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                        <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                           <span x-text="stampBottomLine('original')"></span>
                         </div>
                       </div>
@@ -630,18 +620,16 @@
                       :class="stampPositionClass('copy')">
                       <div
                         :class="stampOriginClass('copy')"
-                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
+                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                        <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                           <span x-text="stampTopLine('copy')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                          <span class="text-xs font-extrabold text-blue-700 uppercase"
                             x-text="stampCenterCopy()"></span>
                         </div>
-                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                        <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                           <span x-text="stampBottomLine('copy')"></span>
                         </div>
                       </div>
@@ -654,31 +642,27 @@
                       :class="stampPositionClass('obsolete')">
                       <div
                         :class="stampOriginClass('obsolete')"
-                        class="w-65 h-20 border-2 border-red-600 rounded-sm
-           text-[10px] text-red-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
+                        class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                        <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
                           <!-- top line: Date : Oct.25th 2025 -->
                           <span x-text="stampTopLine('obsolete')"></span>
                         </div>
 
                         <div class="flex-1 flex items-center justify-center">
                           <!-- middle: SAI-DRAWING OBSOLETE -->
-                          <span class="text-xs font-extrabold tracking-[0.25em] text-red-700 uppercase"
+                          <span class="text-xs font-extrabold text-red-700 uppercase px-2"
                             x-text="stampCenterObsolete()"></span>
                         </div>
 
                         <!-- bottom: Nama & Dept -->
-                        <div class="w-full border-t border-red-600 pt-0.5 px-1 flex justify-between tracking-tight">
-                          <span>
-                            Nama :
-                            <span x-text="obsoleteName()"></span>
-                          </span>
-                          <span>
-                            <span x-text="(getObsoleteFormat().suffix || 'Dept.') + ' :'"></span>
-                            <span x-text="obsoleteDept()"></span>
-                          </span>
+                          <div class="w-full border-t-2 border-red-600 flex font-semibold tracking-tight">
+                            <div class="flex-1 border-r-2 border-red-600 text-center py-0.5 px-2">
+                                Nama : <span x-text="obsoleteName()"></span>
+                            </div>
+                            <div class="flex-1 text-center py-0.5 px-2">
+                                Dept. : <span x-text="obsoleteDept()"></span>
+                            </div>
                         </div>
                       </div>
                     </div>
@@ -776,18 +760,16 @@
                       :class="stampPositionClass('original')">
                       <div
                         :class="stampOriginClass('original')"
-                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
+                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                        <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                           <span x-text="stampTopLine('original')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                          <span class="text-xs font-extrabold text-blue-700 uppercase"
                             x-text="stampCenterOriginal()"></span>
                         </div>
-                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                        <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                           <span x-text="stampBottomLine('original')"></span>
                         </div>
                       </div>
@@ -801,18 +783,16 @@
                       :class="stampPositionClass('copy')">
                       <div
                         :class="stampOriginClass('copy')"
-                        class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
+                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                        <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                           <span x-text="stampTopLine('copy')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                          <span class="text-xs font-extrabold text-blue-700 uppercase"
                             x-text="stampCenterCopy()"></span>
                         </div>
-                        <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                        <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                           <span x-text="stampBottomLine('copy')"></span>
                         </div>
                       </div>
@@ -825,31 +805,27 @@
                       :class="stampPositionClass('obsolete')">
                       <div
                         :class="stampOriginClass('obsolete')"
-                        class="w-65 h-20 border-2 border-red-600 rounded-sm
-           text-[10px] text-red-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
+                        class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                        <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
                           <!-- top line: Date : Oct.25th 2025 -->
                           <span x-text="stampTopLine('obsolete')"></span>
                         </div>
 
                         <div class="flex-1 flex items-center justify-center">
                           <!-- middle: SAI-DRAWING OBSOLETE -->
-                          <span class="text-xs font-extrabold tracking-[0.25em] text-red-700 uppercase"
+                          <span class="text-xs font-extrabold text-red-700 uppercase px-2"
                             x-text="stampCenterObsolete()"></span>
                         </div>
 
                         <!-- bottom: Nama & Dept -->
-                        <div class="w-full border-t border-red-600 pt-0.5 px-1 flex justify-between tracking-tight">
-                          <span>
-                            Nama :
-                            <span x-text="obsoleteName()"></span>
-                          </span>
-                          <span>
-                            <span x-text="(getObsoleteFormat().suffix || 'Dept.') + ' :'"></span>
-                            <span x-text="obsoleteDept()"></span>
-                          </span>
+                          <div class="w-full border-t-2 border-red-600 flex font-semibold tracking-tight">
+                            <div class="flex-1 border-r-2 border-red-600 text-center py-0.5 px-2">
+                                Nama : <span x-text="obsoleteName()"></span>
+                            </div>
+                            <div class="flex-1 text-center py-0.5 px-2">
+                                Dept. : <span x-text="obsoleteDept()"></span>
+                            </div>
                         </div>
                       </div>
                     </div>
@@ -944,18 +920,16 @@
                     :class="stampPositionClass('original')">
                     <div
                       :class="stampOriginClass('original')"
-                      class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
+                      class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                       style="transform: scale(0.45);">
-                      <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                      <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                         <span x-text="stampTopLine('original')"></span>
                       </div>
                       <div class="flex-1 flex items-center justify-center">
-                        <span class="text-xs font-extrabold tracking-[0.25em] text-blue-700 uppercase"
+                        <span class="text-xs font-extrabold text-blue-700 uppercase"
                           x-text="stampCenterOriginal()"></span>
                       </div>
-                      <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                      <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                         <span x-text="stampBottomLine('original')"></span>
                       </div>
                     </div>
@@ -969,18 +943,16 @@
                     :class="stampPositionClass('copy')">
                     <div
                       :class="stampOriginClass('copy')"
-                      class="w-65 h-20 border-2 border-blue-600 rounded-sm
-           text-[10px] text-blue-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
+                      class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                       style="transform: scale(0.45);">
-                      <div class="w-full text-center border-b border-blue-600 pb-0.5 font-semibold tracking-tight">
+                      <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                         <span x-text="stampTopLine('copy')"></span>
                       </div>
                       <div class="flex-1 flex items-center justify-center">
-                        <span class="text-xs font-extrabold tracking-[0.25em] uppercase text-blue-700"
+                        <span class="text-xs font-extrabold text-blue-700 uppercase"
                           x-text="stampCenterCopy()"></span>
                       </div>
-                      <div class="w-full border-t border-blue-600 pt-0.5 text-center tracking-tight">
+                      <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                         <span x-text="stampBottomLine('copy')"></span>
                       </div>
                     </div>
@@ -993,18 +965,16 @@
                     :class="stampPositionClass('obsolete')">
                     <div
                       :class="stampOriginClass('obsolete')"
-                      class="w-65 h-20 border-2 border-red-600 rounded-sm
-           text-[10px] text-red-700 flex flex-col items-center
-           justify-between px-2 py-1 bg-transparent"
+                      class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
                       style="transform: scale(0.45);">
-                      <div class="w-full text-center border-b border-red-600 pb-0.5 font-semibold tracking-tight">
+                      <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
                         <!-- top line: Date : Oct.25th 2025 -->
                         <span x-text="stampTopLine('obsolete')"></span>
                       </div>
 
                       <div class="flex-1 flex items-center justify-center">
                         <!-- middle: SAI-DRAWING OBSOLETE -->
-                        <span class="text-xs font-extrabold tracking-[0.25em] text-red-700 uppercase"
+                        <span class="text-xs font-extrabold text-red-700 uppercase px-2"
                           x-text="stampCenterObsolete()"></span>
                       </div>
 
@@ -1562,100 +1532,161 @@
       },
 
       // ==== format stamp normal vs obsolete ====
-      getNormalFormat() {
-        const list = this.stampFormats || [];
-        if (Array.isArray(list) && list.length > 0) {
-          return list[0];
-        }
-        return {
-          prefix: 'DATE RECEIVED',
-          suffix: 'DATE UPLOADED'
-        };
+      formatStampDate(dateString) {
+          if (!dateString) return '';
+          const d = new Date(dateString);
+          if (isNaN(d.getTime())) return dateString;
+
+          const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          const monthName = months[d.getMonth()];
+          const day = d.getDate();
+          const year = d.getFullYear();
+
+          const j = day % 10, k = day % 100;
+
+          let suffix = "ᵗʰ";
+          if (j == 1 && k != 11) {
+              suffix = "ˢᵗ";
+          } else if (j == 2 && k != 12) {
+              suffix = "ⁿᵈ";
+          } else if (j == 3 && k != 13) {
+              suffix = "ʳᵈ";
+          }
+          return `${monthName}.${day}${suffix} ${year}`;
       },
-      getObsoleteFormat() {
-        const list = this.stampFormats || [];
-        if (Array.isArray(list) && list.length > 1) {
-          return list[1];
-        }
-        return {
-          prefix: 'DATE UPLOAD',
-          suffix: 'DATE OBSOLETE'
-        };
-      },
-      getObsoleteInfo() {
-        return this.pkg?.stamp?.obsolete_info || {};
-      },
-      formatStampDate(d) {
-        return d || '';
-      },
+
+      // teks tengah stamp ORIGINAL
       stampCenterOriginal() {
-        return 'SAI-DRAWING ORIGINAL';
-      },
-           stampCenterCopy() {
-        const type = this.copyType || 'controlled';
-        return type === 'uncontrolled'
-          ? 'SAI-DRAWING UNCONTROLLED COPY'
-          : 'SAI-DRAWING CONTROLLED COPY';
+          return 'SAI-DRAWING ORIGINAL';
       },
 
+      // teks tengah stamp Control Copy
+      stampCenterCopy() {
+          const statusId = this.pkg?.metadata?.model_status_id;
+          if (statusId == 4) {
+              return 'SAI-DRAWING UNCONTROLLED COPY';
+          }
+          return 'SAI-DRAWING CONTROLLED COPY';
+      },
 
+      // teks tengah stamp OBSOLETE
       stampCenterObsolete() {
-        return 'SAI-DRAWING OBSOLETE';
+          return 'SAI-DRAWING OBSOLETE';
       },
+
+      getNormalFormat() {
+          const list = this.stampFormat || [];
+          if (Array.isArray(list) && list.length > 0) {
+              return list[0];
+          }
+          return { prefix: 'Date Received', suffix: 'Date Uploaded' };
+      },
+
+      // getObsoleteFormat() {
+      //     const list = this.stampFormat || [];
+      //     if (Array.isArray(list) && list.length > 1) {
+      //         return list[1];
+      //     }
+      //     return { prefix: 'DATE UPLOAD', suffix: 'Dept' };
+      // },
+
+      getObsoleteInfo() {
+          return this.pkg?.stamp?.obsolete_info || {};
+      },
+
       obsoleteName() {
-        const info = this.getObsoleteInfo();
-        return info.name || '';
+          const s = this.pkg?.stamp || {};
+          const info = s.obsolete_info || {};
+          return info.name || '';
       },
+
       obsoleteDept() {
-        const info = this.getObsoleteInfo();
-        return info.dept || '';
+          const s = this.pkg?.stamp || {};
+          const info = s.obsolete_info || {};
+          return info.dept || '';
       },
 
       stampTopLine(which = 'original') {
-        const s = this.pkg?.stamp || {};
-        let date, fmt;
+          const s = this.pkg?.stamp || {};
+          let date;
+          let fmt;
 
-        if (which === 'obsolete') {
-          fmt = this.getObsoleteFormat();
-          const info = this.getObsoleteInfo();
-          date =
-            info.date_text ||
-            s.obsolete_date ||
-            s.upload_date ||
-            s.receipt_date ||
-            '';
-          const label = fmt.prefix || 'DATE OBSOLETE';
-          return date ? `${label} : ${date}` : '';
-        } else {
-          fmt = this.getNormalFormat();
-          date = s.receipt_date || s.upload_date || '';
-          const label = fmt.prefix || 'DATE RECEIVED';
-          return date ? `${label} : ${this.formatStampDate(date)}` : '';
-        }
+          if (which === 'obsolete') {
+              const info = this.getObsoleteInfo();
+              date = info.date_text || s.obsolete_date || s.upload_date || '';
+              return date ? `Date : ${date}` : '';
+          } else if (which === 'original') {
+              fmt = this.getNormalFormat();
+              date = s.receipt_date || s.upload_date || '';
+              const label = fmt.prefix || 'Date Received';
+              return date ? `${label} : ${this.formatStampDate(date)}` : '';
+          } else if (which === 'copy') {
+              const statusId = this.pkg?.metadata?.model_status_id;
+
+              if (statusId == 4) {
+                  // UNCONTROLLED
+                  return 'SAI / PUD / For Quotation';
+              } else {
+                  // CONTROLLED (Existing logic)
+                  const now = new Date();
+                  const dateStr = this.formatStampDate(now.toISOString().split('T')[0]);
+
+                  const hours = String(now.getHours()).padStart(2, '0');
+                  const minutes = String(now.getMinutes()).padStart(2, '0');
+                  const seconds = String(now.getSeconds()).padStart(2, '0');
+                  const timeStr = `${hours}:${minutes}:${seconds}`;
+
+                  const deptCode = this.userDeptCode || '--';
+
+                  return `SAI / ${deptCode} / ${dateStr} ${timeStr}`;
+              }
+
+          } else {
+              fmt = this.getNormalFormat();
+              date = s.receipt_date || s.upload_date || '';
+              const label = fmt.prefix || 'Date Received';
+              return date ? `${label} : ${this.formatStampDate(date)}` : '';
+          }
       },
 
       stampBottomLine(which = 'original') {
-        const s = this.pkg?.stamp || {};
-        let fmt;
+          const s = this.pkg?.stamp || {};
+          let fmt;
 
-        if (which === 'obsolete') {
-          fmt = this.getObsoleteFormat();
-          const info = this.getObsoleteInfo();
+          if (which === 'copy') {
+              const statusId = this.pkg?.metadata?.model_status_id;
 
-          const name = info.name || '';
-          const dept = info.dept || '';
-          let value = '';
-          if (name && dept) value = `${name} / ${dept}`;
-          else value = name || dept || '';
-
-          const label = fmt.suffix || 'BY';
-          return value ? `${label} : ${value}` : '';
-        } else {
-          fmt = this.getNormalFormat();
-          const date = s.upload_date || '';
-          const label = fmt.suffix || 'DATE UPLOADED';
-          return date ? `${label} : ${this.formatStampDate(date)}` : '';
-        }
+              if (statusId == 4) {
+                  // UNCONTROLLED
+                  // Mengambil tanggal shared_at dari pkg.stamp
+                  const sharedDate = s.shared_at || '';
+                  return `Date Share : ${this.formatStampDate(sharedDate)}`;
+              } else {
+                  // CONTROLLED (Existing logic)
+                  const userName = this.userName || '--';
+                  return `External - Ditributed To Supplier`;
+              }
+          }
+          else if (which === 'obsolete') {
+              fmt = this.getObsoleteFormat();
+              const info = this.getObsoleteInfo();
+              const name = info.name || '';
+              const dept = info.dept || '';
+              let value = '';
+              if (name && dept) {
+                  value = `${name} / ${dept}`;
+              } else {
+                  value = name || dept || '';
+              }
+              const label = fmt.suffix || 'BY';
+              return value ? `${label} : ${value}` : '';
+          }
+          else {
+              fmt = this.getNormalFormat();
+              const date = s.upload_date || '';
+              const label = fmt.suffix || 'DATE UPLOADED';
+              return date ? `${label} : ${this.formatStampDate(date)}` : '';
+          }
       },
 
       // ===== helper key per file =====

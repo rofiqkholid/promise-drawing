@@ -214,6 +214,14 @@
                                                 class="block pointer-events-none select-none max-w-full max-h-[70vh]"
                                                 loading="lazy">
 
+                                            <!-- READ-ONLY BLOCK OVERLAYS (from share) -->
+                                            <template x-for="mask in masks" :key="mask.id">
+                                                <div x-show="mask.visible" x-cloak :style="maskStyle(mask)"
+                                                    class="absolute bg-white/100 shadow-sm pointer-events-none">
+                                                    <div class="absolute inset-0"></div>
+                                                </div>
+                                            </template>
+
                                             <!-- STAMP ORIGINAL -->
                                             <div x-show="pkg.stamp" class="absolute"
                                                 :class="stampPositionClass('original')">
@@ -297,6 +305,14 @@
                                             <canvas x-ref="pdfCanvas"
                                                 class="block pointer-events-none select-none max-w-full max-h-[70vh]">
                                             </canvas>
+
+                                            <!-- READ-ONLY BLOCK OVERLAYS (from share) -->
+                                            <template x-for="mask in masks" :key="mask.id">
+                                                <div x-show="mask.visible" x-cloak :style="maskStyle(mask)"
+                                                    class="absolute bg-white/85 shadow-sm pointer-events-none">
+                                                    <div class="absolute inset-0 border border-blue-500"></div>
+                                                </div>
+                                            </template>
 
                                             <!-- STAMP ORIGINAL -->
                                             <div x-show="pkg.stamp" class="absolute"
@@ -390,6 +406,14 @@
                                             <img x-ref="tifImg" alt="TIFF Preview"
                                                 class="block pointer-events-none select-none max-w-full max-h-[70vh]" />
 
+                                            <!-- READ-ONLY BLOCK OVERLAYS (from share) -->
+                                            <template x-for="mask in masks" :key="mask.id">
+                                                <div x-show="mask.visible" x-cloak :style="maskStyle(mask)"
+                                                    class="absolute bg-white/85 shadow-sm pointer-events-none">
+                                                    <div class="absolute inset-0 border border-blue-500"></div>
+                                                </div>
+                                            </template>
+
                                             <!-- STAMP ORIGINAL -->
                                             <div x-show="pkg.stamp" class="absolute"
                                                 :class="stampPositionClass('original')">
@@ -481,6 +505,14 @@
                                     <div class="relative w-full h-full flex items-center justify-center"
                                         :style="imageTransformStyle()">
                                         <canvas x-ref="hpglCanvas" class="pointer-events-none select-none"></canvas>
+
+                                        <!-- READ-ONLY BLOCK OVERLAYS (from share) -->
+                                        <template x-for="mask in masks" :key="mask.id">
+                                            <div x-show="mask.visible" x-cloak :style="maskStyle(mask)"
+                                                class="absolute bg-white/85 shadow-sm pointer-events-none">
+                                                <div class="absolute inset-0 border border-blue-500"></div>
+                                            </div>
+                                        </template>
 
                                         <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
                                             <div :class="stampOriginClass('original')"
@@ -758,6 +790,10 @@
                     obsolete: 'bottom-left',
                 },
 
+                // READ-ONLY blocks (loaded from DB / share settings)
+                masks: [],
+                nextMaskId: 1,
+
                 selectedFile: null,
                 openSections: [],
 
@@ -940,6 +976,10 @@
 
                 // teks tengah stamp Control Copy
                 stampCenterCopy() {
+                    const statusId = this.pkg?.metadata?.model_status_id;
+                    if (statusId == 4) {
+                        return 'SAI-DRAWING UNCONTROLLED COPY';
+                    }
                     return 'SAI-DRAWING CONTROLLED COPY';
                 },
 
@@ -995,18 +1035,25 @@
                         const label = fmt.prefix || 'Date Received';
                         return date ? `${label} : ${this.formatStampDate(date)}` : '';
                     } else if (which === 'copy') {
-                        const now = new Date();
-                        const dateStr = this.formatStampDate(now.toISOString().split('T')[0]);
+                        const statusId = this.pkg?.metadata?.model_status_id;
 
-                        // Format Jam (HH:MM:SS)
-                        const hours = String(now.getHours()).padStart(2, '0');
-                        const minutes = String(now.getMinutes()).padStart(2, '0');
-                        const seconds = String(now.getSeconds()).padStart(2, '0');
-                        const timeStr = `${hours}:${minutes}:${seconds}`;
+                        if (statusId == 4) {
+                            // UNCONTROLLED
+                            return 'SAI / PUD / For Quotation';
+                        } else {
+                            // CONTROLLED (Existing logic)
+                            const now = new Date();
+                            const dateStr = this.formatStampDate(now.toISOString().split('T')[0]);
 
-                        const deptCode = this.userDeptCode || '--';
+                            const hours = String(now.getHours()).padStart(2, '0');
+                            const minutes = String(now.getMinutes()).padStart(2, '0');
+                            const seconds = String(now.getSeconds()).padStart(2, '0');
+                            const timeStr = `${hours}:${minutes}:${seconds}`;
 
-                        return `SAI / ${deptCode} / ${dateStr} ${timeStr}`;
+                            const deptCode = this.userDeptCode || '--';
+
+                            return `SAI / ${deptCode} / ${dateStr} ${timeStr}`;
+                        }
 
                     } else {
                         fmt = this.getNormalFormat();
@@ -1021,8 +1068,18 @@
                     let fmt;
 
                     if (which === 'copy') {
-                        const userName = this.userName || '--';
-                        return `Downloaded By ${userName}`;
+                        const statusId = this.pkg?.metadata?.model_status_id;
+
+                        if (statusId == 4) {
+                            // UNCONTROLLED
+                            // Mengambil tanggal shared_at dari pkg.stamp
+                            const sharedDate = s.shared_at || '';
+                            return `Date Share : ${this.formatStampDate(sharedDate)}`;
+                        } else {
+                            // CONTROLLED (Existing logic)
+                            const userName = this.userName || '--';
+                            return `Downloaded By ${userName}`;
+                        }
                     }
                     else if (which === 'obsolete') {
                         fmt = this.getObsoleteFormat();
@@ -1086,6 +1143,16 @@
                 getFileKey(file) {
                     return (file?.id ?? file?.name ?? '').toString();
                 },
+                                maskStyle(mask) {
+                                        return `
+                                            left:${mask.x}px;
+                                            top:${mask.y}px;
+                                            width:${mask.width}px;
+                                            height:${mask.height}px;
+                                            transform: rotate(${mask.rotation}deg);
+                                            transform-origin:center center;
+                                        `;
+                                },
                 tifLoading: false, tifError: '',
 
                 // HPGL state
@@ -1769,6 +1836,45 @@
 
                     this.selectedFile = { ...file };
                     this.loadStampConfigFor(this.selectedFile);
+
+                    // Load read-only blocks (if backend provided `blocks_position` for this file)
+                    this.masks = [];
+                    this.nextMaskId = 1;
+                    const blocks = (file.blocks_position) ? file.blocks_position : [];
+                    (blocks || []).forEach((b, idx) => {
+                        const idNum = (() => {
+                            if (!b.id) return idx + 1;
+                            const match = b.id.toString().match(/\d+$/);
+                            return match ? parseInt(match[0], 10) : idx + 1;
+                        })();
+
+                        this.masks.push({
+                            id: idNum,
+                            visible: true,
+                            editable: false,
+                            active: false,
+
+                            x: b.x ?? 150,
+                            y: b.y ?? 150,
+                            width: b.width ?? 250,
+                            height: b.height ?? 60,
+                            rotation: b.rotation ?? 0,
+
+                            _mode: null,
+                            _edge: null,
+                            _startX: 0,
+                            _startY: 0,
+                            _startLeft: 0,
+                            _startTop: 0,
+                            _startW: 0,
+                            _startH: 0,
+                            _centerX: 0,
+                            _centerY: 0,
+                            _startRot: 0,
+                        });
+
+                        this.nextMaskId = Math.max(this.nextMaskId, idNum + 1);
+                    });
                     this.$nextTick(() => {
                         if (this.isTiff(file?.name)) {
                             this.renderTiff(file.url);

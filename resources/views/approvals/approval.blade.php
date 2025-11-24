@@ -134,16 +134,16 @@
     </div>
   </div>
 
-   {{-- Modal Share ke Dept --}}
+  {{-- Modal Share ke Dept --}}
   <div id="shareModal"
-       class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 dark:bg-black/60">
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 dark:bg-black/60">
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full mx-4">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
         <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
           Share Package to Dept (Purchasing / PUD)
         </h3>
         <button type="button" id="btnCloseShare"
-                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -152,41 +152,41 @@
         <div>
           <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Package</p>
           <p id="sharePackageInfo"
-             class="text-sm text-gray-900 dark:text-gray-100 font-medium">
+            class="text-sm text-gray-900 dark:text-gray-100 font-medium">
             <!-- diisi oleh JS -->
           </p>
         </div>
 
         <div>
           <label for="shareNote"
-                 class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Note <span class="text-red-500">*</span>
           </label>
           <textarea id="shareNote"
-                    rows="3"
-                    class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
+            rows="3"
+            class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
                            bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
                            text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
           <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
             Note ini akan menjadi isi email ke user dept. Wajib diisi.
           </p>
           <p id="shareError"
-             class="mt-2 text-xs text-red-500 hidden">
+            class="mt-2 text-xs text-red-500 hidden">
           </p>
         </div>
       </div>
 
       <div class="px-5 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
         <button type="button" id="btnCancelShare"
-                class="inline-flex items-center px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600
+          class="inline-flex items-center px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600
                        bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200
                        hover:bg-gray-50 dark:hover:bg-gray-600">
           Cancel
         </button>
         <button type="button" id="btnConfirmShare"
-                class="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border border-blue-600
+          class="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border border-blue-600
                        bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled>
+          disabled>
           <span class="btn-label inline-flex items-center gap-2">
             <i class="fa-solid fa-share-nodes"></i>
             <span>Share</span>
@@ -206,6 +206,114 @@
 
 @push('scripts')
 <script>
+  function detectTheme() {
+    const isDark = document.documentElement.classList.contains('dark');
+    return isDark ? {
+      mode: 'dark',
+      bg: 'rgba(30, 41, 59, 0.95)',
+      fg: '#E5E7EB',
+      border: 'rgba(71, 85, 105, 0.5)',
+      progress: 'rgba(255,255,255,.9)',
+      icon: {
+        success: '#22c55e',
+        error: '#ef4444',
+        warning: '#f59e0b',
+        info: '#3b82f6'
+      }
+    } : {
+      mode: 'light',
+      bg: 'rgba(255, 255, 255, 0.98)',
+      fg: '#0f172a',
+      border: 'rgba(226, 232, 240, 1)',
+      progress: 'rgba(15,23,42,.8)',
+      icon: {
+        success: '#16a34a',
+        error: '#dc2626',
+        warning: '#d97706',
+        info: '#2563eb'
+      }
+    };
+  }
+
+  const BaseToast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 2600,
+    timerProgressBar: true,
+    showClass: {
+      popup: 'swal2-animate-toast-in'
+    },
+    hideClass: {
+      popup: 'swal2-animate-toast-out'
+    },
+    didOpen: (toast) => {
+      toast.addEventListener('mouseenter', Swal.stopTimer);
+      toast.addEventListener('mouseleave', Swal.resumeTimer);
+    }
+  });
+
+  function renderToast({
+    icon = 'success',
+    title = 'Success',
+    text = ''
+  } = {}) {
+    const t = detectTheme();
+    BaseToast.fire({
+      icon,
+      title,
+      text,
+      iconColor: t.icon[icon] || t.icon.success,
+      background: t.bg,
+      color: t.fg,
+      customClass: {
+        popup: 'swal2-toast border',
+        title: '',
+        timerProgressBar: ''
+      },
+      didOpen: (toast) => {
+        const bar = toast.querySelector('.swal2-timer-progress-bar');
+        if (bar) bar.style.background = t.progress;
+        const popup = toast.querySelector('.swal2-popup');
+        if (popup) popup.style.borderColor = t.border;
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
+      }
+    });
+  }
+
+  function toastSuccess(title = 'Success', text = 'Operation completed successfully.') {
+    renderToast({
+      icon: 'success',
+      title,
+      text
+    });
+  }
+
+  function toastError(title = 'Error', text = 'An error occurred.') {
+    renderToast({
+      icon: 'error',
+      title,
+      text
+    });
+  }
+
+  function toastWarning(title = 'Warning', text = 'Please check your data.') {
+    renderToast({
+      icon: 'warning',
+      title,
+      text
+    });
+  }
+
+  function toastInfo(title = 'Information', text = '') {
+    renderToast({
+      icon: 'info',
+      title,
+      text
+    });
+  }
+
   $(function() {
     let table;
     const ENDPOINT = '{{ route("approvals.filters") }}';
@@ -339,7 +447,7 @@
       return `${dd}-${MM}-${yyyy} ${HH}:${mm}`;
     }
 
-        function openShareModal(rowData) {
+    function openShareModal(rowData) {
       shareRevisionId = rowData.id;
       shareRowData = rowData;
 
@@ -557,7 +665,7 @@
       });
     }
 
-        function bindHandlers() {
+    function bindHandlers() {
       // perubahan filter -> reload & refresh KPI
       $('#customer, #model, #document-type, #category, #status').on('change', function() {
         if (table) table.ajax.reload(null, true);
@@ -668,14 +776,20 @@
           },
           success: function(res) {
             closeShareModal();
-            alert(res.message || 'Revision berhasil di-share ke dept.');
+            toastSuccess('Shared', res.message || 'Revision has been successfully shared to the department.');
+            if (table) {
+              table.ajax.reload(null, false);
+            }
           },
           error: function(xhr) {
-            let msg = 'Gagal melakukan share.';
+
+            let msg = 'Failed to share revision.';
             if (xhr.responseJSON && xhr.responseJSON.message) {
               msg = xhr.responseJSON.message;
             }
+
             $('#shareError').removeClass('hidden').text(msg);
+            toastError('Share Failed', msg);
           },
           complete: function() {
             setShareButtonLoading(false);
@@ -685,7 +799,7 @@
 
       // klik row -> detail (kecuali kalau klik di tombol Share)
       $('#approvalTable tbody').on('click', 'tr', function(e) {
-        if ($(e.target).closest('.btn-share').length) return; // abaikan klik dari tombol share
+        if ($(e.target).closest('.btn-share').length) return;
 
         const row = table.row(this).data();
         if (row && row.hash) {
