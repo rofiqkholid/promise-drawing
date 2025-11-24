@@ -66,13 +66,10 @@
     </div>
 
     <div id="filterCard" style="display: none;" class="flex-none mt-2 bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-
         <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
             <i class="fa-solid fa-filter mr-2 text-gray-500"></i> Filter Data
         </h3>
-
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-start">
-
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Date Range</label>
                 <div class="relative">
@@ -82,28 +79,24 @@
                     <input type="text" id="date_range_input" class="block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:ring-0 focus:outline-none sm:text-sm py-2 pl-10 pr-3">
                 </div>
             </div>
-
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Customer</label>
                 <div class="relative">
                     <select id="customer_input" class="w-full"></select>
                 </div>
             </div>
-
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Model</label>
                 <div class="relative">
                     <select id="model_input" class="w-full"></select>
                 </div>
             </div>
-
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Part Group</label>
                 <div class="relative">
                     <select id="part_group_multi_input" class="w-full"></select>
                 </div>
             </div>
-
             <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Status</label>
                 <div class="relative">
@@ -111,7 +104,6 @@
                 </div>
             </div>
         </div>
-
         <div class="w-full flex justify-between items-center mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
             <div id="filterPillContainer" class="flex-grow pr-6"></div>
             <div class="flex space-x-3">
@@ -125,7 +117,6 @@
     </div>
 
     <div class="flex-1 min-h-0 flex flex-col lg:flex-row gap-2 items-stretch">
-
         <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
             <div class="flex-none flex justify-between items-center mb-2">
                 <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex items-center">
@@ -140,50 +131,18 @@
             </div>
         </div>
 
-        <div class="w-full lg:w-[30%] bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-900 p-4 rounded-lg border border-emerald-200 dark:border-emerald-900/30 flex flex-col overflow-hidden">
-
-            <h3 class="flex-none text-sm font-semibold text-emerald-800 dark:text-emerald-400 mb-2 flex items-center">
-                <i class="fa-solid fa-leaf mr-2"></i> Environmental Impact
+        <div class="w-full lg:w-[30%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
+            <h3 class="flex-none text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
+                <i class="fa-solid fa-chart-pie mr-2 text-orange-500"></i> Phase Status
             </h3>
-
-            <div class="flex-1 flex flex-col gap-2 min-h-0">
-
-                <div class="flex-1 flex flex-row items-center bg-white dark:bg-gray-800/50 px-3 py-2 rounded-xl shadow-sm border border-emerald-100 dark:border-emerald-900/20 overflow-hidden">
-
-                    <div class="bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300 w-8 h-8 rounded-full flex items-center justify-center shrink-0 mr-3">
-                        <i class="fa-solid fa-tree"></i>
-                    </div>
-
-                    <div class="flex flex-wrap items-baseline gap-x-2 min-w-0">
-                        <span class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">Trees Saved</span>
-                        <span class="text-lg font-bold text-gray-800 dark:text-gray-100" id="ecoTrees">0.00140</span>
-                        <span class="text-[10px] text-gray-400 truncate">1 tree ≈ 80k sheets</span>
-                    </div>
-                </div>
-
-                <div class="flex-1 flex flex-row items-center bg-white dark:bg-gray-800/50 px-3 py-2 rounded-xl shadow-sm border border-teal-100 dark:border-teal-900/20 overflow-hidden">
-
-                    <div class="bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300 w-8 h-8 rounded-full flex items-center justify-center shrink-0 mr-3">
-                        <i class="fa-solid fa-wind"></i>
-                    </div>
-
-                    <div class="flex flex-wrap items-baseline gap-x-2 min-w-0">
-                        <span class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">CO2 Reduced</span>
-                        <span class="text-lg font-bold text-gray-800 dark:text-gray-100">
-                            <span id="ecoCO2">0,031</span> <span class="text-xs font-normal text-gray-500">kg</span>
-                        </span>
-                        <span class="text-[10px] text-gray-400 truncate">0.275g / download</span>
-                    </div>
-                </div>
-
+            <div class="relative w-full flex-1 min-h-0 flex justify-center items-center">
+                <canvas id="phaseStatusChart"></canvas>
             </div>
         </div>
-
     </div>
 
-    <div class="flex-1 min-h-0 flex flex-col lg:flex-row gap-2 items-stretch">
-
-        <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
+    <div class="flex-1 min-h-0 flex flex-col lg:flex-row gap-2 items-stretch mb-2">
+        <div class="w-full lg:w-[45%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
             <h3 class="flex-none text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
                 <i class="fa-solid fa-arrow-trend-up mr-2 text-purple-500"></i> Trend Upload & Download
             </h3>
@@ -192,14 +151,43 @@
             </div>
         </div>
 
+        <div class="w-full lg:w-[25%] bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-900 p-4 rounded-lg border border-emerald-200 dark:border-emerald-900/30 flex flex-col overflow-hidden">
+            <h3 class="flex-none text-sm font-semibold text-emerald-800 dark:text-emerald-400 mb-2 flex items-center">
+                <i class="fa-solid fa-leaf mr-2"></i> Environmental Impact
+            </h3>
+            <div class="flex-1 flex flex-col gap-2 min-h-0 justify-center">
+                <div class="flex flex-row items-center bg-white dark:bg-gray-800/50 px-3 py-2 rounded-xl shadow-sm border border-emerald-100 dark:border-emerald-900/20 overflow-hidden">
+                    <div class="bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300 w-8 h-8 rounded-full flex items-center justify-center shrink-0 mr-3">
+                        <i class="fa-solid fa-tree"></i>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Trees Saved</span>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-lg font-bold text-gray-800 dark:text-gray-100" id="ecoTrees">0.00140</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-row items-center bg-white dark:bg-gray-800/50 px-3 py-2 rounded-xl shadow-sm border border-teal-100 dark:border-teal-900/20 overflow-hidden">
+                    <div class="bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300 w-8 h-8 rounded-full flex items-center justify-center shrink-0 mr-3">
+                        <i class="fa-solid fa-wind"></i>
+                    </div>
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-xs text-gray-500 dark:text-gray-400">CO2 Reduced</span>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-lg font-bold text-gray-800 dark:text-gray-100" id="ecoCO2">0,031</span>
+                            <span class="text-xs font-normal text-gray-500">kg</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="w-full lg:w-[30%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
             <h3 class="flex-none text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
                 <i class="fa-solid fa-newspaper mr-2 text-gray-500"></i> Activity Log
             </h3>
-            <div id="activityLogContainer" class="flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0 divide-y divide-gray-200 dark:divide-gray-700">
-            </div>
+            <div id="activityLogContainer" class="flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0 divide-y divide-gray-200 dark:divide-gray-700"></div>
         </div>
-
     </div>
 </div>
 
@@ -222,6 +210,7 @@
             this.selectedPartGroup = [];
             this.monitoringChart = null;
             this.trendChart = null;
+            this.phaseChart = null;
             this.currentChartData = [];
             this.currentTrendData = [];
         }
@@ -234,6 +223,7 @@
             this.loadActivityLog();
             this.loadMonitoringChart();
             this.loadTrendChart();
+            this.loadPhaseStatusChart();
             this.attachButtonEvents();
         }
 
@@ -274,8 +264,7 @@
             fetchText('/api/download-count', 'downloadCount');
             fetchText('/api/doc-count', 'docCount');
 
-            const
-                u = document.getElementById('usedSpace'),
+            const u = document.getElementById('usedSpace'),
                 t = document.getElementById('totalSpace');
             if (u && t) {
                 try {
@@ -296,7 +285,6 @@
             const co2Factor = 0.000275;
             const treesSaved = downloadCount / treeFactor;
             const co2Reduced = downloadCount * co2Factor;
-
             const elTrees = document.getElementById('ecoTrees');
             const elCO2 = document.getElementById('ecoCO2');
 
@@ -319,20 +307,16 @@
         async loadMonitoringChart() {
             const ctx = document.getElementById('monitoringChart');
             if (!ctx) return;
-
             if (this.monitoringChart) {
                 this.monitoringChart.destroy();
                 this.monitoringChart = null;
             }
-
             const statusData = $('#project_status').select2('data');
             const statusVal = (statusData && statusData.length > 0) ? statusData[0].text.trim() : '';
             const params = new URLSearchParams();
-
             if (this.dateStart) params.append('date_start', this.dateStart);
             if (this.dateEnd) params.append('date_end', this.dateEnd);
             if (statusVal && statusVal !== 'ALL') params.append('project_status', statusVal);
-
             this.selectedCustomers.forEach(item => params.append('customer[]', item.text.trim()));
             this.selectedModels.forEach(item => params.append('model[]', item.text.trim()));
             this.selectedPartGroup.forEach(item => params.append('part_group[]', item.text.trim()));
@@ -356,19 +340,14 @@
 
         renderChart(data) {
             const ctx = document.getElementById('monitoringChart').getContext('2d');
-            if (this.monitoringChart) {
-                this.monitoringChart.destroy();
-            }
+            if (this.monitoringChart) this.monitoringChart.destroy();
 
             const labels = data.map(item => `${item.customer_name} - ${item.model_name}`);
             const planData = data.map(item => parseFloat(item.plan_count));
             const actualData = data.map(item => parseFloat(item.actual_count));
             const percentageData = data.map(item => parseFloat(item.percentage));
-
             const maxDataValue = Math.max(...planData, ...actualData, 0);
             const suggestedMaxCount = maxDataValue > 0 ? Math.ceil(maxDataValue * 1.3) : 10;
-
-            // Warna dinamis berdasarkan tema
             const gridColor = this.isDarkMode ? '#374151' : '#E5E7EB';
             const textColor = this.isDarkMode ? '#D1D5DB' : '#4B5563';
             const bgColor = this.isDarkMode ? '#1F2937' : '#FFFFFF';
@@ -379,64 +358,61 @@
                 data: {
                     labels: labels,
                     datasets: [{
-                            label: 'Plan Count',
-                            data: planData,
-                            backgroundColor: 'rgba(59, 130, 246, 1)',
-                            borderColor: 'transparent',
-                            borderWidth: 0,
-                            borderRadius: 20,
-                            borderSkipped: 'bottom',
-                            categoryPercentage: 0.9,
-                            barPercentage: 0.73,
-                            order: 2,
-                            yAxisID: 'y',
-                            animation: {
-                                duration: 1200,
-                                easing: 'easeOutQuart'
-                            }
-                        },
-                        {
-                            label: 'Actual Count',
-                            data: actualData,
-                            backgroundColor: 'rgba(34, 197, 94, 1)',
-                            borderColor: 'transparent',
-                            borderWidth: 0,
-                            borderRadius: 20,
-                            borderSkipped: 'bottom',
-                            categoryPercentage: 0.9,
-                            barPercentage: 0.73,
-                            order: 3,
-                            yAxisID: 'y',
-                            animation: {
-                                duration: 1200,
-                                easing: 'easeOutQuart',
-                                delay: 300
-                            }
-                        },
-                        {
-                            label: 'Percentage',
-                            data: percentageData,
-                            type: 'line',
-                            borderColor: '#F59E0B',
-                            backgroundColor: '#F59E0B',
-                            borderWidth: 2,
-                            tension: 0.3,
-                            pointRadius: 4,
-                            order: 1,
-                            yAxisID: 'y1',
-                            datalabels: {
-                                align: 'top',
-                                anchor: 'end',
-                                formatter: (value) => value + '%',
-                                color: textColor
-                            },
-                            animation: {
-                                duration: 1500,
-                                easing: 'easeOutQuart',
-                                delay: 600
-                            }
+                        label: 'Plan Count',
+                        data: planData,
+                        backgroundColor: 'rgba(59, 130, 246, 1)',
+                        borderColor: 'transparent',
+                        borderWidth: 0,
+                        borderRadius: 20,
+                        borderSkipped: 'bottom',
+                        categoryPercentage: 0.9,
+                        barPercentage: 0.73,
+                        order: 2,
+                        yAxisID: 'y',
+                        animation: {
+                            duration: 500,
+                            easing: 'easeOutQuart'
                         }
-                    ]
+                    }, {
+                        label: 'Actual Count',
+                        data: actualData,
+                        backgroundColor: 'rgba(34, 197, 94, 1)',
+                        borderColor: 'transparent',
+                        borderWidth: 0,
+                        borderRadius: 20,
+                        borderSkipped: 'bottom',
+                        categoryPercentage: 0.9,
+                        barPercentage: 0.73,
+                        order: 3,
+                        yAxisID: 'y',
+                        animation: {
+                            duration: 500,
+                            easing: 'easeOutQuart',
+                            delay: 200
+                        }
+                    }, {
+                        label: 'Percentage',
+                        data: percentageData,
+                        type: 'line',
+                        borderColor: '#F59E0B',
+                        backgroundColor: '#F59E0B',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        order: 1,
+                        yAxisID: 'y1',
+                        datalabels: {
+                            align: 'top',
+                            anchor: 'end',
+                            formatter: (value) => value + '%',
+                            color: textColor
+                        },
+                        animation: {
+                            duration: 500,
+                            easing: 'easeOutQuart',
+                            delay: 200
+                        }
+                    }]
                 },
                 options: {
                     responsive: true,
@@ -449,11 +425,13 @@
                         legend: {
                             position: 'bottom',
                             labels: {
+                                usePointStyle: true,
+                                pointStyle: 'rect',
                                 color: textColor,
+                                padding: 15,
                                 font: {
-                                    size: 12
-                                },
-                                padding: 15
+                                    size: 11
+                                }
                             }
                         },
                         tooltip: {
@@ -554,7 +532,6 @@
         async loadTrendChart() {
             const ctx = document.getElementById('trendChart');
             if (!ctx) return;
-
             try {
                 const response = await fetch("{{ route('api.trend-upload-download') }}");
                 const result = await response.json();
@@ -573,16 +550,12 @@
 
         renderTrendChart(data) {
             const ctx = document.getElementById('trendChart').getContext('2d');
-            if (this.trendChart) {
-                this.trendChart.destroy();
-            }
+            if (this.trendChart) this.trendChart.destroy();
 
-            // Setup 12 months labels and data containers
             const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
             const uploadData = new Array(12).fill(0);
             const downloadData = new Array(12).fill(0);
 
-            // Populate data from API
             if (data && Array.isArray(data)) {
                 data.forEach(item => {
                     const monthIndex = item.month - 1;
@@ -593,7 +566,6 @@
                 });
             }
 
-            // Warna dinamis berdasarkan tema
             const gridColor = this.isDarkMode ? '#374151' : '#E5E7EB';
             const textColor = this.isDarkMode ? '#D1D5DB' : '#4B5563';
             const bgColor = this.isDarkMode ? '#1F2937' : '#FFFFFF';
@@ -604,41 +576,39 @@
                 data: {
                     labels: monthNames,
                     datasets: [{
-                            label: 'Uploads',
-                            data: uploadData,
-                            borderColor: 'rgba(34, 197, 94, 1)',
-                            backgroundColor: 'rgba(34, 197, 94, 1)',
-                            borderWidth: 2,
-                            tension: 0.4,
-                            fill: false,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                            pointBackgroundColor: 'rgba(34, 197, 94, 1)',
-                            pointBorderWidth: 0,
-                            animation: {
-                                duration: 1500,
-                                easing: 'easeOutQuart'
-                            }
-                        },
-                        {
-                            label: 'Downloads',
-                            data: downloadData,
-                            borderColor: 'rgba(234, 179, 8, 1)',
-                            backgroundColor: 'rgba(234, 179, 8, 1)',
-                            borderWidth: 2,
-                            tension: 0.4,
-                            fill: false,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                            pointBackgroundColor: 'rgba(234, 179, 8, 1)',
-                            pointBorderWidth: 0,
-                            animation: {
-                                duration: 1500,
-                                easing: 'easeOutQuart',
-                                delay: 500
-                            }
+                        label: 'Uploads',
+                        data: uploadData,
+                        borderColor: 'rgba(34, 197, 94, 1)',
+                        backgroundColor: 'rgba(34, 197, 94, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: false,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: 'rgba(34, 197, 94, 1)',
+                        pointBorderWidth: 0,
+                        animation: {
+                            duration: 200,
+                            easing: 'easeOutQuart'
                         }
-                    ]
+                    }, {
+                        label: 'Downloads',
+                        data: downloadData,
+                        borderColor: 'rgba(234, 179, 8, 1)',
+                        backgroundColor: 'rgba(234, 179, 8, 1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: false,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: 'rgba(234, 179, 8, 1)',
+                        pointBorderWidth: 0,
+                        animation: {
+                            duration: 200,
+                            easing: 'easeOutQuart',
+                            delay: 100
+                        }
+                    }]
                 },
                 options: {
                     responsive: true,
@@ -651,12 +621,12 @@
                         legend: {
                             position: 'bottom',
                             labels: {
-                                color: textColor,
                                 usePointStyle: true,
-                                boxWidth: 8,
-                                padding: 20,
+                                pointStyle: 'rect',
+                                color: textColor,
+                                padding: 15,
                                 font: {
-                                    size: 12
+                                    size: 11
                                 }
                             }
                         },
@@ -707,16 +677,104 @@
             });
         }
 
+        async loadPhaseStatusChart() {
+            const ctx = document.getElementById('phaseStatusChart');
+            if (!ctx) return;
+            try {
+                const response = await fetch("{{ route('api.upload-phase-status') }}");
+                const result = await response.json();
+                if (result.status === 'success') {
+                    this.renderPhaseChart(result.data);
+                } else {
+                    this.renderPhaseChart([]);
+                }
+            } catch (error) {
+                this.renderPhaseChart([]);
+            }
+        }
+
+        renderPhaseChart(data) {
+            const ctx = document.getElementById('phaseStatusChart').getContext('2d');
+            if (this.phaseChart) this.phaseChart.destroy();
+
+            const aggregated = {};
+            if (Array.isArray(data)) {
+                data.forEach(item => {
+                    const status = item.project_status || 'Unknown';
+                    const count = parseInt(item.total) || 0;
+                    aggregated[status] = (aggregated[status] || 0) + count;
+                });
+            }
+
+            const labels = Object.keys(aggregated);
+            const values = Object.values(aggregated);
+            const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#6366F1'];
+            const textColor = this.isDarkMode ? '#D1D5DB' : '#4B5563';
+            const borderColor = this.isDarkMode ? '#1F2937' : '#FFFFFF';
+
+            this.phaseChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels.length ? labels : ['No Data'],
+                    datasets: [{
+                        data: values.length ? values : [1],
+                        backgroundColor: values.length ? colors.slice(0, values.length) : ['#9CA3AF'],
+                        borderColor: borderColor,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'rect',
+                                color: textColor,
+                                padding: 15,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) label += ': ';
+                                    let value = context.raw;
+                                    let total = context.chart._metasets[context.datasetIndex].total;
+                                    let percentage = Math.round((value / total) * 100) + '%';
+                                    return label + value + ' (' + percentage + ')';
+                                }
+                            }
+                        },
+                        datalabels: {
+                            color: '#fff',
+                            font: {
+                                weight: 'bold',
+                                size: 10
+                            },
+                            formatter: (value, ctx) => {
+                                let total = ctx.chart._metasets[ctx.datasetIndex].total;
+                                let percentage = (value / total) * 100;
+                                return percentage > 5 ? value : '';
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         async loadActivityLog() {
             const container = document.getElementById('activityLogContainer');
             if (!container) return;
-
             container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400">Loading activities...</div>`;
-
             try {
                 const response = await fetch("{{ route('api.getDataActivityLog') }}");
                 const result = await response.json();
-
                 if (result.status === 'success') {
                     container.innerHTML = '';
                     if (result.data && result.data.length > 0) {
@@ -743,19 +801,15 @@
                 }
             };
             const logInfo = iconMap[log.activity_code] || iconMap['DEFAULT'];
-
             let message = log.activity_code === 'UPLOAD' ?
                 `<strong>${log.user_name || 'System'}</strong> uploaded a new document.` :
                 `<strong>${log.user_name || 'System'}</strong> performed action: <strong>${log.activity_code}</strong>.`;
-
             const date = log.created_at ? new Date(log.created_at.replace(' ', 'T')) : new Date();
-
             let metaDetails = '';
             if (log.meta && log.activity_code === 'UPLOAD') {
                 const details = [log.meta.customer_code, log.meta.model_name, log.meta.part_no, log.meta.doctype_group, log.meta.part_group_code].filter(Boolean);
                 if (details.length) metaDetails = `<p class="mt-2 text-sm text-gray-600 dark:text-gray-400 font-mono">${details.join(' - ')}</p>`;
             }
-
             const timeAgo = (d) => {
                 const diff = Math.floor((new Date() - d) / 1000);
                 if (diff < 5) return "just now";
@@ -772,7 +826,6 @@
                 }
                 return `${diff} seconds ago`;
             };
-
             return `<div class="py-3 px-2 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
                 <div class="flex-shrink-0 pt-1"><i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i></div>
                 <div class="flex-1 min-w-0">
@@ -788,7 +841,6 @@
 
         initSelect2() {
             const self = this;
-
             $('#customer_input').select2({
                 dropdownParent: $('#customer_input').parent(),
                 width: '100%',
@@ -893,26 +945,20 @@
                 }
             }).on('change', function() {
                 const d = $(this).select2('data')[0];
-
                 if (d && d.text) {
-
                     if (self.selectedCustomers.length > 1) {
                         self.selectedPartGroup = [{
                             text: d.text
                         }];
                     } else {
-                        if (!self.selectedPartGroup.find(x => x.text === d.text)) {
-                            self.selectedPartGroup.push({
-                                text: d.text
-                            });
-                        }
+                        if (!self.selectedPartGroup.find(x => x.text === d.text)) self.selectedPartGroup.push({
+                            text: d.text
+                        });
                     }
-
                     self.renderFilterPills();
                     $(this).val(null).trigger('change.select2');
                 }
             });
-
 
             $('#project_status').select2({
                 dropdownParent: $('#project_status').parent(),
@@ -1007,32 +1053,20 @@
                         const newDarkMode = document.documentElement.classList.contains('dark');
                         if (newDarkMode !== this.isDarkMode) {
                             this.isDarkMode = newDarkMode;
-
-                            // Update date picker theme
                             if (this.dateRangeInstance && this.dateRangeInstance.ui) {
-                                this.isDarkMode ?
-                                    this.dateRangeInstance.ui.classList.add('dark') :
-                                    this.dateRangeInstance.ui.classList.remove('dark');
+                                this.isDarkMode ? this.dateRangeInstance.ui.classList.add('dark') : this.dateRangeInstance.ui.classList.remove('dark');
                             }
+                            if (this.currentChartData && this.currentChartData.length > 0) this.renderChart(this.currentChartData);
+                            else if (this.monitoringChart) this.renderChart([]);
 
-                            // Update monitoring chart
-                            if (this.currentChartData && this.currentChartData.length > 0) {
-                                this.renderChart(this.currentChartData);
-                            } else if (this.monitoringChart) {
-                                this.renderChart([]);
-                            }
+                            if (this.currentTrendData && this.currentTrendData.length > 0) this.renderTrendChart(this.currentTrendData);
+                            else if (this.trendChart) this.renderTrendChart([]);
 
-                            // Update trend chart
-                            if (this.currentTrendData && this.currentTrendData.length > 0) {
-                                this.renderTrendChart(this.currentTrendData);
-                            } else if (this.trendChart) {
-                                this.renderTrendChart([]);
-                            }
+                            this.loadPhaseStatusChart();
                         }
                     }
                 });
             });
-
             observer.observe(document.documentElement, {
                 attributes: true,
                 attributeFilter: ['class']
@@ -1043,31 +1077,22 @@
             const btnApply = document.getElementById('btnApply');
             const btnText = document.getElementById('btnApplyText');
             const btnLoader = document.getElementById('btnApplyLoader');
-
-            // --- UPDATE: ANIMASI FILTER ---
             const toggleBtn = document.getElementById('toggleFilterBtn');
 
             if (toggleBtn) {
                 toggleBtn.addEventListener('click', () => {
                     const $card = $('#filterCard');
                     const $icon = $(toggleBtn).find('i');
-
-                    // Animasi Slide (Durasi 400ms agar smooth)
                     $card.stop(true, true).slideToggle(300, 'swing', function() {
-                        // Fix agar select2 tidak glitch setelah animasi selesai
                         $(this).css('overflow', 'visible');
                     });
-
-                    // Animasi Icon Filter (Berputar sedikit saat diklik)
                     if ($card.is(':visible')) {
-                        // Jika sedang mau nutup
                         $icon.css({
                             'transform': 'rotate(0deg)',
                             'transition': 'transform 0.3s ease'
                         });
                         toggleBtn.classList.remove('text-blue-600', 'bg-blue-50', 'dark:bg-gray-700');
                     } else {
-                        // Jika sedang mau buka
                         $icon.css({
                             'transform': 'rotate(180deg)',
                             'transition': 'transform 0.3s ease'
@@ -1076,7 +1101,6 @@
                     }
                 });
             }
-            // ------------------------------
 
             btnApply.addEventListener('click', async () => {
                 if (this.isLoading) return;

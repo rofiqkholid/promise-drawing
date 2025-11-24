@@ -212,20 +212,21 @@ class DashboardController extends Controller
         $offset = ($page - 1) * $resultsPerPage;
 
         $query = DB::connection('sqlsrv')
-            ->table('models')
-            ->select('id', 'name', 'customer_id');
+            ->table('models as m')
+            ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
+            ->select('m.id', 'm.name', 'm.customer_id', 'ps.name as status_name');
 
         if ($request->filled('customer_ids')) {
-            $query->whereIn('customer_id', $request->customer_ids);
+            $query->whereIn('m.customer_id', $request->customer_ids);
         }
 
-        if ($searchTerm) {
-            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
+        if (!empty($searchTerm)) {
+            $query->where('m.name', 'LIKE', '%' . $searchTerm . '%');
         }
 
         $totalCount = $query->count();
 
-        $models = $query->orderBy('name', 'asc')
+        $models = $query->orderBy('m.name', 'asc')
             ->offset($offset)
             ->limit($resultsPerPage)
             ->get();
@@ -233,16 +234,20 @@ class DashboardController extends Controller
         $formattedResults = $models->map(function ($model) {
             return [
                 'id' => $model->id,
-                'text' => $model->name,
-                'customer_id' => $model->customer_id
+                'text' => "{$model->name} - {$model->status_name}",
+                'customer_id' => $model->customer_id,
+                'status' => $model->status_name,
             ];
         });
 
         return response()->json([
             'results' => $formattedResults,
-            'pagination' => ['more' => ($page * $resultsPerPage) < $totalCount]
+            'pagination' => [
+                'more' => ($page * $resultsPerPage) < $totalCount
+            ]
         ]);
     }
+
 
     public function getPartGroup(Request $request): JsonResponse
     {
@@ -436,6 +441,52 @@ class DashboardController extends Controller
             'data' => $results
         ]);
     }
+
+    public function getPhaseStatus(Request $request)
+    {
+        $query = DB::connection('sqlsrv')
+            ->table('UploadActual')
+            ->select(
+                'customer_name',
+                'project_status',
+                DB::raw('COUNT(*) as total')
+            );
+
+        if ($request->filled('date_start') && $request->filled('date_end')) {
+            $query->whereBetween('created_at', [
+                $request->date_start,
+                $request->date_end
+            ]);
+        }
+
+        if ($request->filled('project_status') && $request->project_status !== 'ALL') {
+            $query->where('project_status', $request->project_status);
+        }
+
+        if ($request->filled('customer')) {
+            $query->whereIn('customer_name', $request->customer);
+        }
+
+        if ($request->filled('model')) {
+            $query->whereIn('model_name', $request->model);
+        }
+
+        if ($request->filled('part_group')) {
+            $query->whereIn('part_group', $request->part_group);
+        }
+
+        // **Group by setelah filter**
+        $query->groupBy('customer_name', 'project_status');
+
+        $results = $query->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $results
+        ]);
+    }
+
+
 
 
     public function getUploadDashboardData(Request $request)
