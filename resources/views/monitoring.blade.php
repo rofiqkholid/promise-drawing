@@ -3,6 +3,7 @@
 @section('header-title', 'Dashboard')
 
 @section('content')
+{{-- CSS untuk Animasi Panah "Travel & Disappear" --}}
 
 <div id="dashboardWrapper" class="flex flex-col gap-2 h-[calc(100vh-90px)] w-full overflow-hidden">
 
@@ -146,7 +147,12 @@
     </div>
 
     {{-- BARIS 3: TREND, ENV, LOG --}}
-    <div class="h-[40%] flex-none flex flex-col lg:flex-row gap-2 items-stretch mb-2">
+    {{--
+        UPDATE: Menggunakan h-[40vh] sebagai pengganti h-[40%] yang lebih aman.
+        Ini membuat tingginya proporsional dengan layar (besar di layar besar),
+        tapi tidak 'bug' (mengecil) saat filter dibuka.
+    --}}
+    <div class="h-[35vh] flex-none flex flex-col lg:flex-row gap-2 items-stretch mb-2">
         <div class="w-full lg:w-[45%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
             <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
                 <i class="fa-solid fa-arrow-trend-up mr-2 text-purple-500"></i> Trend Upload & Download
@@ -156,56 +162,102 @@
             </div>
         </div>
 
-        {{-- ENVIRONMENTAL IMPACT CARD (FIXED ALIGNMENT - V2) --}}
         <div class="w-full lg:w-[25%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+
+            {{-- CSS Kustom untuk Animasi Mengalir --}}
+            <style>
+                @keyframes flowRight {
+                    0% {
+                        opacity: 0;
+                        transform: translateX(-60px);
+                        /* Mulai dari posisi Icon Kiri */
+                    }
+
+                    30% {
+                        opacity: 1;
+                    }
+
+                    70% {
+                        opacity: 1;
+                    }
+
+                    100% {
+                        opacity: 0;
+                        transform: translateX(50px);
+                        /* Berakhir di dekat Icon Kanan */
+                    }
+                }
+
+                .animate-flow {
+                    animation: flowRight 2s infinite ease-in-out;
+                }
+            </style>
+
             <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3 flex items-center">
                 <i class="fa-solid fa-seedling mr-2 text-emerald-500"></i> Eco Impact
             </h3>
 
-            <div class="relative flex-1 grid grid-cols-2 gap-x-6 gap-y-4 min-h-0 p-1">
-                {{-- Layer Panah Animasi --}}
-                <div class="pointer-events-none absolute inset-0 z-10">
+            {{-- Container Utama --}}
+            <div class="flex-1 flex flex-col justify-center gap-6 min-h-0 p-1">
 
-                  
-                    <div class="absolute top-[4%] left-[35%] -translate-y-1/2 text-gray-300 dark:text-gray-600 text-xl anim-arrow-right">
-                        <i class="fa-solid fa-arrow-right-long"></i>
+                {{-- BARIS 1: Paper -> Arrow -> Saved --}}
+                <div class="flex flex-row items-center justify-between w-full relative">
+
+                    {{-- Panah (Absolute Overlay) --}}
+                    {{-- UPDATED: Menggunakan 'absolute inset-0' agar memenuhi area baris, pb-6 untuk naik ke atas --}}
+                    <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pb-6">
+                        <div class="text-gray-300 dark:text-gray-600 text-lg animate-flow">
+                            <i class="fa-solid fa-arrow-right-long"></i>
+                        </div>
                     </div>
 
-                    {{-- Panah 2: Paper ke Trees (Bawah) --}}
-                    <div class="absolute top-[30%] left-[21.5%] -translate-x-1/2 text-gray-300 dark:text-gray-600 text-xl anim-arrow-down">
-                        <i class="fa-solid fa-arrow-down-long"></i>
+                    {{-- Item Kiri: Paper --}}
+                    <div class="flex-1 flex flex-col items-center text-center z-20">
+                        <div class="text-emerald-600 dark:text-emerald-400 mb-1"><i class="fa-solid fa-scroll fa-2xl"></i></div>
+                        <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">Paper</span>
+                        <span class="text-lg font-bold text-gray-800 dark:text-gray-100 leading-tight" id="ecoPaper">0</span>
                     </div>
 
-                    {{-- Panah 3: Paper ke CO2 (Diagonal) --}}
-                    <div class="absolute top-[20%] left-[30%] -translate-x-1/3 -translate-y-1/2 text-gray-300 dark:text-gray-600 text-xl anim-arrow-diagonal">
-                        <i class="fa-solid fa-arrow-right-long"></i>
+                    {{-- Spacer Kosong (Agar layout kiri-kanan tetap terjaga proporsinya) --}}
+                    <div class="w-24 shrink-0"></div>
+
+                    {{-- Item Kanan: Saved --}}
+                    <div class="flex-1 flex flex-col items-center text-center z-20">
+                        <div class="text-yellow-600 dark:text-yellow-400 mb-1"><i class="fa-solid fa-coins fa-2xl"></i></div>
+                        <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">Saved</span>
+                        <span class="text-sm font-bold text-gray-800 dark:text-gray-100 leading-tight" id="ecoCost">0</span>
                     </div>
                 </div>
 
-                {{-- Item 1: Paper --}}
-                <div class="relative z-20 flex flex-col justify-start pt-1 items-center text-center">
-                    <div class="text-emerald-600 dark:text-emerald-400 mb-1"><i class="fa-solid fa-scroll fa-2xl"></i></div>
-                    <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">Paper</span>
-                    <span class="text-lg font-bold text-gray-800 dark:text-gray-100 leading-tight" id="ecoPaper">0</span>
+                {{-- BARIS 2: Trees -> Arrow -> CO2 --}}
+                <div class="flex flex-row items-center justify-between w-full relative">
+
+                    {{-- Panah (Absolute Overlay) --}}
+                    {{-- UPDATED: Sama seperti di atas --}}
+                    <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pb-6">
+                        <div class="text-gray-300 dark:text-gray-600 text-lg animate-flow">
+                            <i class="fa-solid fa-arrow-right-long"></i>
+                        </div>
+                    </div>
+
+                    {{-- Item Kiri: Trees --}}
+                    <div class="flex-1 flex flex-col items-center text-center z-20">
+                        <div class="text-green-600 dark:text-green-400 mb-1"><i class="fa-solid fa-tree fa-2xl"></i></div>
+                        <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">Trees</span>
+                        <span class="text-sm font-bold text-gray-800 dark:text-gray-100 leading-tight" id="ecoTrees">0</span>
+                    </div>
+
+                    {{-- Spacer Kosong --}}
+                    <div class="w-24 shrink-0"></div>
+
+                    {{-- Item Kanan: CO2 --}}
+                    <div class="flex-1 flex flex-col items-center text-center z-20">
+                        <div class="text-teal-600 dark:text-teal-400 mb-1"><i class="fa-solid fa-wind fa-2xl"></i></div>
+                        <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">CO2 (kg)</span>
+                        <span class="text-sm font-bold text-gray-800 dark:text-gray-100 leading-tight" id="ecoCO2">0</span>
+                    </div>
                 </div>
-                {{-- Item 2: Cost --}}
-                <div class="relative z-20 flex flex-col justify-start pt-1 items-center text-center">
-                    <div class="text-yellow-600 dark:text-yellow-400 mb-1"><i class="fa-solid fa-coins fa-2xl"></i></div>
-                    <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">Saved</span>
-                    <span class="text-sm font-bold text-gray-800 dark:text-gray-100 leading-tight" id="ecoCost">0</span>
-                </div>
-                {{-- Item 3: Tree --}}
-                <div class="relative z-20 flex flex-col justify-center items-center text-center">
-                    <div class="text-green-600 dark:text-green-400 mb-1"><i class="fa-solid fa-tree fa-2xl"></i></div>
-                    <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">Trees</span>
-                    <span class="text-sm font-bold text-gray-800 dark:text-gray-100 leading-tight" id="ecoTrees">0</span>
-                </div>
-                {{-- Item 4: CO2 --}}
-                <div class="relative z-20 flex flex-col justify-center items-center text-center">
-                    <div class="text-teal-600 dark:text-teal-400 mb-1"><i class="fa-solid fa-wind fa-2xl"></i></div>
-                    <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">CO2 (kg)</span>
-                    <span class="text-sm font-bold text-gray-800 dark:text-gray-100 leading-tight" id="ecoCO2">0</span>
-                </div>
+
             </div>
         </div>
 
@@ -316,7 +368,6 @@
                 // 2. Cost (Rupiah)
                 const elCost = document.getElementById('ecoCost');
                 if (elCost) {
-                    // Format singkat untuk harga (misal 4.2K atau full)
                     let harga = parseInt(data.harga || 0);
                     if (harga > 1000000) {
                         elCost.textContent = (harga / 1000000).toFixed(1) + 'Jt';

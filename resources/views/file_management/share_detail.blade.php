@@ -343,7 +343,6 @@
                 @wheel.prevent="onWheelZoom($event)">
                 <div class="w-full h-full flex items-center justify-center">
                   <div
-                  x-ref="previewInner"
                     class="relative inline-block"
                     :style="imageTransformStyle()">
                     <img
@@ -498,7 +497,7 @@
                 @mousedown.prevent="startPan($event)"
                 @wheel.prevent="onWheelZoom($event)">
                 <div class="w-full h-full flex items-center justify-center">
-                  <div x-ref="previewInner" class="relative inline-block" :style="imageTransformStyle()">
+                  <div class="relative inline-block" :style="imageTransformStyle()">
                     <canvas
                       x-ref="pdfCanvas"
                       class="block pointer-events-none select-none max-w-full max-h-[70vh]">
@@ -660,7 +659,7 @@
                 @wheel.prevent="onWheelZoom($event)">
                 <div class="w-full h-full flex items-center justify-center">
                   <!-- wrapper yang di-zoom + pan -->
-                  <div  x-ref="previewInner" class="relative inline-block" :style="imageTransformStyle()">
+                  <div class="relative inline-block" :style="imageTransformStyle()">
                     <img
                       x-ref="tifImg"
                       alt="TIFF Preview"
@@ -821,12 +820,10 @@
                 class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
                 @mousedown.prevent="startPan($event)"
                 @wheel.prevent="onWheelZoom($event)">
-               <div class="w-full h-full flex items-center justify-center">
-  <div
-    x-ref="previewInner"
-    class="relative inline-block"
-    :style="imageTransformStyle()">
-    <canvas x-ref="hpglCanvas" class="pointer-events-none select-none"></canvas>
+                <div class="relative w-full h-full flex items-center justify-center" :style="imageTransformStyle()">
+                  <canvas
+                    x-ref="hpglCanvas"
+                    class="pointer-events-none select-none"></canvas>
 
 
                   <!-- WHITE BLOCKS (MULTI) -->
@@ -1366,30 +1363,6 @@ tifDecoder: null,
       imageTransformStyle() {
         return `transform: translate(${this.panX}px, ${this.panY}px) scale(${this.imageZoom}); transform-origin: center center;`;
       },
-
-      getBaseSize() {
-  const inner = this.$refs.previewInner;
-  const el = inner?.parentElement || inner;
-
-  if (!el) {
-    return { width: 1000, height: 1000 }; // fallback kasar
-  }
-
-  let rect = el.getBoundingClientRect();
-  let width = rect.width;
-  let height = rect.height;
-
-  // kalau masih terlalu kecil, kasih default biar ratio nggak 0
-  if (width < 10 || height < 10) {
-    width  = 1000;
-    height = 1000;
-  }
-
-  return { width, height };
-},
-
-
-
 
       // mapping posisi
       positionIntToKey(pos) {
@@ -2478,73 +2451,47 @@ prevTifPage() {
         // load konfigurasi posisi stamp untuk file yang dipilih
         this.loadStampConfigFor(this.selectedFile);
 
-       // ==== RESET & LOAD BLOCKS DARI DB UNTUK FILE INI ====
-this.masks = [];
-this.nextMaskId = 1;
+        // ==== RESET & LOAD BLOCKS DARI DB UNTUK FILE INI ====
+        this.masks = [];
+        this.nextMaskId = 1;
 
-const blocks = file.blocks_position || [];
+        // kalau backend sudah kirim blocks_position (array), pakai itu
+        const blocks = file.blocks_position || [];
 
-this.$nextTick(() => {
-  const base = this.getBaseSize();
+        blocks.forEach((b, idx) => {
+          const idNum = (() => {
+            if (!b.id) return idx + 1;
+            const match = b.id.toString().match(/\d+$/);
+            return match ? parseInt(match[0], 10) : idx + 1;
+          })();
 
-  blocks.forEach((b, idx) => {
-    const idNum = (() => {
-      if (!b.id) return idx + 1;
-      const match = b.id.toString().match(/\d+$/);
-      return match ? parseInt(match[0], 10) : idx + 1;
-    })();
+          this.masks.push({
+            id: idNum,
+            visible: true,
+            editable: true,
+            active: idx === 0, // blok pertama jadi aktif
 
-    let x, y, width, height;
+            x: b.x ?? 150,
+            y: b.y ?? 150,
+            width: b.width ?? 250,
+            height: b.height ?? 60,
+            rotation: b.rotation ?? 0,
 
-    if (typeof b.x_ratio === 'number' && typeof b.y_ratio === 'number') {
-      // 🔹 DATA BARU: disimpan sebagai ratio → convert ke px
-      const xr = b.x_ratio ?? 0.2;
-      const yr = b.y_ratio ?? 0.2;
-      const wr = b.w_ratio ?? 0.3;
-      const hr = b.h_ratio ?? 0.08;
+            _mode: null,
+            _edge: null,
+            _startX: 0,
+            _startY: 0,
+            _startLeft: 0,
+            _startTop: 0,
+            _startW: 0,
+            _startH: 0,
+            _centerX: 0,
+            _centerY: 0,
+            _startRot: 0,
+          });
 
-      x      = xr * base.width;
-      y      = yr * base.height;
-      width  = wr * base.width;
-      height = hr * base.height;
-    } else {
-      // 🔹 DATA LAMA: pakai px apa adanya
-      x      = (typeof b.x === 'number')      ? b.x      : 150;
-      y      = (typeof b.y === 'number')      ? b.y      : 150;
-      width  = (typeof b.width === 'number')  ? b.width  : 250;
-      height = (typeof b.height === 'number') ? b.height : 60;
-    }
-
-    this.masks.push({
-      id: idNum,
-      visible: true,
-      editable: true,
-      active: idx === 0,
-
-      x,
-      y,
-      width,
-      height,
-      rotation: b.rotation ?? 0,
-
-      _mode: null,
-      _edge: null,
-      _startX: 0,
-      _startY: 0,
-      _startLeft: 0,
-      _startTop: 0,
-      _startW: 0,
-      _startH: 0,
-      _centerX: 0,
-      _centerY: 0,
-      _startRot: 0,
-    });
-
-    this.nextMaskId = Math.max(this.nextMaskId, idNum + 1);
-  });
-});
-
-
+          this.nextMaskId = Math.max(this.nextMaskId, idNum + 1);
+        });
 
         // kalau nggak ada blok dari DB, boleh otomatis buat 1 blok awal (opsional)
         // if (this.masks.length === 0) this.addMask();
@@ -2914,33 +2861,31 @@ this.$nextTick(() => {
         }
       },
       saveCurrentMask() {
-  if (!this.selectedFile?.id) {
-    toastWarning('No file selected', 'Pilih file dulu sebelum menyimpan block.');
-    return;
-  }
+        if (!this.selectedFile?.id) {
+          toastWarning('No file selected', 'Pilih file dulu sebelum menyimpan block.');
+          return;
+        }
 
-  if (this.masks.length === 0) {
-    toastWarning('No block', 'Tambah block dulu sebelum menyimpan.');
-    return;
-  }
+        if (this.masks.length === 0) {
+          toastWarning('No block', 'Tambah block dulu sebelum menyimpan.');
+          return;
+        }
 
-  const base = this.getBaseSize();
+        // kalau mau pakai hanya blok aktif:
+        // const active = this.getActiveMask();
+        // if (!active) { ... }
 
-  const blocks = this.masks.map((m, idx) => ({
-    id: m.id ? `blk-${m.id}` : `blk-${idx + 1}`,
+        const blocks = this.masks.map((m, idx) => ({
+          id: m.id ? `blk-${m.id}` : `blk-${idx + 1}`,
+          x: m.x,
+          y: m.y,
+          width: m.width,
+          height: m.height,
+          rotation: m.rotation,
+        }));
 
-    // simpan RELATIVE (0–1)
-    x_ratio: m.x / base.width,
-    y_ratio: m.y / base.height,
-    w_ratio: m.width / base.width,
-    h_ratio: m.height / base.height,
-
-    rotation: m.rotation,
-  }));
-
-  this.saveBlocks(blocks);
-}
-
+        this.saveBlocks(blocks);
+      }
 
 
 

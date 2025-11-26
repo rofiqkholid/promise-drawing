@@ -183,79 +183,28 @@ button:disabled:hover {
 Eco Animation in Monitoring
 
 /* Animasi Jalan ke Kanan */
-@keyframes travel-right {
+@keyframes flowRight {
     0% {
-        transform: translateX(0) scaleX(1.5);
         opacity: 0;
+        transform: translateX(-60px);
+        /* Mulai dari posisi Icon Kiri */
     }
 
-    10% {
+    30% {
         opacity: 1;
     }
 
-    80% {
+    70% {
         opacity: 1;
     }
 
     100% {
-        transform: translateX(120px) scaleX(1.5);
         opacity: 0;
+        transform: translateX(50px);
+        /* Berakhir di dekat Icon Kanan */
     }
 }
 
-/* Animasi Jalan ke Bawah */
-@keyframes travel-down {
-    0% {
-        transform: translateY(0) scaleY(1.5);
-        opacity: 0;
-    }
-
-    10% {
-        opacity: 1;
-    }
-
-    80% {
-        opacity: 1;
-    }
-
-    100% {
-        transform: translateY(90px) scaleY(1.5);
-        opacity: 0;
-    }
-}
-
-/* Animasi Jalan Diagonal */
-@keyframes travel-diagonal {
-
-    /* Rotate 45deg, lalu scaleX agar panjang mengikuti arah diagonal */
-    0% {
-        transform: translate(0, 0) rotate(45deg) scaleX(1.5);
-        opacity: 0;
-    }
-
-    10% {
-        opacity: 1;
-    }
-
-    80% {
-        opacity: 1;
-    }
-
-    100% {
-        transform: translate(120px, 90px) rotate(45deg) scaleX(1.5);
-        opacity: 0;
-    }
-}
-
-/* Kelas Aplikasi Animasi - Berbarengan (Tanpa Delay) */
-.anim-arrow-right {
-    animation: travel-right 2s infinite linear;
-}
-
-.anim-arrow-down {
-    animation: travel-down 2s infinite linear;
-}
-
-.anim-arrow-diagonal {
-    animation: travel-diagonal 2s infinite linear;
+.animate-flow {
+    animation: flowRight 2s infinite ease-in-out;
 }
