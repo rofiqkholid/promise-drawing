@@ -185,181 +185,150 @@
                 x-text="fileSizeInfo()">
               </p>
             </div>
-            <a
-              x-show="selectedFile?.url"
-              :href="selectedFile?.url"
-              :download="isCad(selectedFile?.name) ? selectedFile?.name : null"
-              target="_blank"
-              rel="noopener"
-              class="inline-flex items-center px-3 py-1.5 text-xs text-gray-900 dark:text-gray-100 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-              :title="isCad(selectedFile?.name)
-    ? 'Download file ini lalu buka di eDrawings'
-    : 'Open file in new tab'">
-
-              <i class="fa-solid fa-up-right-from-square mr-2"></i>
-              <span x-text="isCad(selectedFile?.name) ? 'Download for eDrawings' : 'Open'"></span>
-            </a>
-
           </div>
 
       <!-- STAMP + BLOCK + ZOOM TOOLBAR -->
-<div x-show="selectedFile" x-cloak class="mb-4 space-y-3 text-xs">
+      <div x-show="selectedFile" x-cloak class="mb-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+    
+        <div x-show="!isCad(selectedFile?.name)" class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-stamp"></i> Stamp Configuration
+                </span>
+            </div>
 
-  <!-- ===== BARIS 1: KONFIGURASI STAMP ===== -->
-  <div class="flex flex-wrap items-center gap-4 text-gray-600 dark:text-gray-300">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Position: Original</label>
+                    <div class="relative">
+                        <select x-model="stampConfig.original" @change="onStampChange()"
+                            class="block w-full pl-3 pr-8 py-2 text-xs text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:focus:ring-blue-500">
+                            <option value="top-left">Top Left</option>
+                            <option value="top-center">Top Center</option>
+                            <option value="top-right">Top Right</option>
+                            <option value="bottom-left">Bottom Left</option>
+                            <option value="bottom-center">Bottom Center</option>
+                            <option value="bottom-right">Bottom Right</option>
+                        </select>
+                    </div>
+                </div>
 
-    <!-- ORIGINAL -->
-    <div class="flex items-center gap-2">
-      <span class="font-medium">Original</span>
-      <select
-        x-model="stampConfig.original"
-        @change="onStampChange()"
-        class="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-900">
-        <option value="top-left">Top Left</option>
-        <option value="top-center">Top Center</option>
-        <option value="top-right">Top Right</option>
-        <option value="bottom-left">Bottom Left</option>
-        <option value="bottom-center">Bottom Center</option>
-        <option value="bottom-right">Bottom Right</option>
-      </select>
-    </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Position: Copy</label>
+                    <div class="relative">
+                        <select x-model="stampConfig.copy" @change="onStampChange()"
+                            class="block w-full pl-3 pr-8 py-2 text-xs text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:focus:ring-blue-500">
+                            <option value="top-left">Top Left</option>
+                            <option value="top-center">Top Center</option>
+                            <option value="top-right">Top Right</option>
+                            <option value="bottom-left">Bottom Left</option>
+                            <option value="bottom-center">Bottom Center</option>
+                            <option value="bottom-right">Bottom Right</option>
+                        </select>
+                    </div>
+                </div>
 
-    <!-- DIVIDER -->
-    <span class="hidden md:inline-block h-4 w-px bg-gray-200 dark:bg-gray-700"></span>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Type: Copy</label>
+                    <div class="relative">
+                        <select x-model="copyType" @change="onStampChange()"
+                            class="block w-full pl-3 pr-8 py-2 text-xs text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:focus:ring-blue-500">
+                            <option value="controlled">Controlled Copy</option>
+                            <option value="uncontrolled">Uncontrolled Copy</option>
+                        </select>
+                    </div>
+                </div>
 
-    <!-- COPY -->
-    <div class="flex flex-wrap items-center gap-2">
-      <span class="font-medium">Copy</span>
+                <div>
+                    <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Position: Obsolete</label>
+                    <div class="relative">
+                        <select x-model="stampConfig.obsolete" @change="onStampChange()"
+                            class="block w-full pl-3 pr-8 py-2 text-xs text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:focus:ring-blue-500">
+                            <option value="top-left">Top Left</option>
+                            <option value="top-center">Top Center</option>
+                            <option value="top-right">Top Right</option>
+                            <option value="bottom-left">Bottom Left</option>
+                            <option value="bottom-center">Bottom Center</option>
+                            <option value="bottom-right">Bottom Right</option>
+                        </select>
+                    </div>
+                </div>
 
-      <!-- Posisi copy -->
-      <select
-        x-model="stampConfig.copy"
-        @change="onStampChange()"
-        class="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-900">
-        <option value="top-left">Top Left</option>
-        <option value="top-center">Top Center</option>
-        <option value="top-right">Top Right</option>
-        <option value="bottom-left">Bottom Left</option>
-        <option value="bottom-center">Bottom Center</option>
-        <option value="bottom-right">Bottom Right</option>
-      </select>
+            </div>
+        </div>
 
-      <!-- Tipe copy -->
-      <select
-        x-model="copyType"
-        @change="onStampChange()"
-        class="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-900">
-        <option value="controlled">Controlled Copy</option>
-        <option value="uncontrolled">Uncontrolled Copy</option>
-      </select>
-    </div>
+        <div x-show="!isCad(selectedFile?.name)" class="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 flex flex-col md:flex-row items-center justify-between gap-3 border-t border-gray-100 dark:border-gray-700">
+            
+            <div class="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+                <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mr-2 flex-shrink-0">
+                    Blocks
+                </span>
+                <div class="inline-flex rounded-md shadow-sm isolate flex-shrink-0">
+                    <button type="button" @click.stop="addMask()"
+                        class="relative inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 focus:z-10 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 transition-colors">
+                        <i class="fa-solid fa-plus mr-1.5 text-green-600"></i> Add
+                    </button>
+                    <button type="button" @click="saveCurrentMask()"
+                        class="relative -ml-px inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 focus:z-10 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 transition-colors">
+                        <i class="fa-solid fa-floppy-disk mr-1.5 text-blue-600"></i> Save
+                    </button>
+                    <button type="button" @click.stop="removeActiveMask()" x-show="getActiveMask()" x-cloak
+                        class="relative -ml-px inline-flex items-center px-3 py-1.5 text-xs font-medium text-red-600 bg-white border border-gray-300 rounded-r-md hover:bg-red-50 focus:z-10 focus:border-red-500 focus:ring-1 focus:ring-red-500 dark:bg-gray-700 dark:text-red-400 dark:border-gray-600 dark:hover:bg-gray-600 transition-colors">
+                        <i class="fa-solid fa-trash-can mr-1.5"></i> Delete
+                    </button>
+                </div>
+            </div>
 
-    <!-- DIVIDER -->
-    <span class="hidden md:inline-block h-4 w-px bg-gray-200 dark:bg-gray-700"></span>
+            <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+                
+                <div x-show="isImage(selectedFile?.name) || isTiff(selectedFile?.name) || isHpgl(selectedFile?.name) || isPdf(selectedFile?.name)"
+                    class="flex items-center bg-white dark:bg-gray-700 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm">
+                    <button @click="zoomOut()" class="p-1.5 px-3 text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-l-md transition-colors" title="Zoom Out">
+                        <i class="fa-solid fa-minus fa-xs"></i>
+                    </button>
+                    <span class="px-2 text-xs font-mono font-semibold text-gray-600 dark:text-gray-300 border-l border-r border-gray-200 dark:border-gray-600 min-w-[3.5rem] text-center" 
+                          x-text="Math.round(imageZoom * 100) + '%'"></span>
+                    <button @click="zoomIn()" class="p-1.5 px-3 text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors" title="Zoom In">
+                        <i class="fa-solid fa-plus fa-xs"></i>
+                    </button>
+                    <button @click="resetZoom()" class="p-1.5 px-3 text-gray-500 dark:text-gray-400 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-600 border-l border-gray-200 dark:border-gray-600 rounded-r-md transition-colors" title="Reset Fit">
+                        <i class="fa-solid fa-compress fa-xs"></i>
+                    </button>
+                </div>
 
-    <!-- OBSOLETE -->
-    <div class="flex items-center gap-2">
-      <span class="font-medium">Obsolete</span>
-      <select
-        x-model="stampConfig.obsolete"
-        @change="onStampChange()"
-        class="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-900">
-        <option value="top-left">Top Left</option>
-        <option value="top-center">Top Center</option>
-        <option value="top-right">Top Right</option>
-        <option value="bottom-left">Bottom Left</option>
-        <option value="bottom-center">Bottom Center</option>
-        <option value="bottom-right">Bottom Right</option>
-      </select>
-    </div>
-
-  </div>
-
-  <!-- ===== BARIS 2: ZOOM (DI ATAS PAGE NAV) ===== -->
-  <div
-    x-show="isImage(selectedFile?.name) || isTiff(selectedFile?.name) || isHpgl(selectedFile?.name) || isPdf(selectedFile?.name)"
-    class="flex items-center justify-end gap-2 text-gray-700 dark:text-gray-200">
-
-    <span x-text="Math.round(imageZoom * 100) + '%'"></span>
-    <button
-      @click="zoomOut()"
-      class="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900
-             hover:bg-gray-100 dark:hover:bg-gray-700">
-      –
-    </button>
-    <button
-      @click="resetZoom()"
-      class="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900
-             hover:bg-gray-100 dark:hover:bg-gray-700">
-      Fit
-    </button>
-    <button
-      @click="zoomIn()"
-      class="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900
-             hover:bg-gray-100 dark:hover:bg-gray-700">
-      +
-    </button>
-  </div>
-
-  <!-- ===== BARIS 3: BLOCK BUTTONS + PAGE NAV (SEJAJAR) ===== -->
-  <div class="flex flex-wrap items-center justify-between gap-3 text-gray-700 dark:text-gray-200">
-
-    <!-- KIRI: BLOCK BUTTONS -->
-    <div class="flex flex-wrap items-center gap-2">
-      <button
-        @click="saveCurrentMask()"
-        class="px-3 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900
-               hover:bg-gray-100 dark:hover:bg-gray-700">
-        Save Block
-      </button>
-
-      <button
-        type="button"
-        @click.stop="addMask()"
-        class="px-3 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900
-               hover:bg-gray-100 dark:hover:bg-gray-700">
-        + Add Block
-      </button>
-
-      <button
-        type="button"
-        @click.stop="removeActiveMask()"
-        x-show="getActiveMask()"
-        x-cloak
-        class="px-3 py-1 rounded-md border border-red-300 text-red-600 dark:border-red-500 bg-white dark:bg-gray-900
-               hover:bg-red-50 dark:hover:bg-red-900/40">
-        Delete Block
-      </button>
-    </div>
-
-    <!-- KANAN: PAGE NAV PDF -->
-    <div
-      x-show="isPdf(selectedFile?.name)"
-      class="flex items-center gap-2">
-      <button
-        @click="prevPdfPage()"
-        :disabled="pdfPageNum <= 1"
-        class="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900
-               hover:bg-gray-100 dark:hover:bg-gray-700
-               disabled:opacity-50 disabled:cursor-not-allowed">
-        ‹ Prev
-      </button>
-
-      <span x-text="`Page ${pdfPageNum} / ${pdfNumPages}`"></span>
-
-      <button
-        @click="nextPdfPage()"
-        :disabled="pdfPageNum >= pdfNumPages"
-        class="px-2 py-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900
-               hover:bg-gray-100 dark:hover:bg-gray-700
-               disabled:opacity-50 disabled:cursor-not-allowed">
-        Next ›
-      </button>
-    </div>
-  </div>
+                <div x-show="isPdf(selectedFile?.name)" class="flex items-center gap-2 pl-3 border-l border-gray-300 dark:border-gray-600">
+                    <button @click="prevPdfPage()" :disabled="pdfPageNum <= 1"
+                        class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <span class="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap min-w-[3rem] text-center">
+                        <span x-text="pdfPageNum"></span> / <span x-text="pdfNumPages"></span>
+                    </span>
+                    <button @click="nextPdfPage()" :disabled="pdfPageNum >= pdfNumPages"
+                        class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div x-show="isTiff(selectedFile?.name) && tifNumPages > 1"
+     class="flex items-center gap-2 pl-3 border-l border-gray-300 dark:border-gray-600">
+  <button @click="prevTifPage()" :disabled="tifPageNum <= 1"
+          class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
+    <i class="fa-solid fa-chevron-left"></i>
+  </button>
+  <span class="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap min-w-[3rem] text-center">
+    <span x-text="tifPageNum"></span> / <span x-text="tifNumPages"></span>
+  </span>
+  <button @click="nextTifPage()" :disabled="tifPageNum >= tifNumPages"
+          class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
+    <i class="fa-solid fa-chevron-right"></i>
+  </button>
 </div>
 
+            </div>
 
+        </div>
+    </div>
 
           <!-- PREVIEW AREA (image/pdf/tiff/cad) -->
           <div
@@ -388,7 +357,7 @@
                         x-show="mask.visible"
                         x-cloak
                         :style="maskStyle(mask)"
-                        class="absolute bg-white/95 shadow-sm cursor-move"
+                        class="absolute bg-white/100 shadow-sm cursor-move"
                         @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
                         @click.stop="activateMask(mask)">
 
@@ -440,18 +409,18 @@
 
                     <!-- STAMP ORIGINAL -->
                     <div
-                      x-show="pkg.stamp"  
+                      x-show="pkg.stamp && !isUncontrolledCopy()"  
                       class="absolute"
                       :class="stampPositionClass('original')">
                       <div
                         :class="stampOriginClass('original')"
-                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                           <span x-text="stampTopLine('original')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold text-blue-700 uppercase"
+                          <span class="text-xs font-extrabold uppercase text-blue-700 px-2 px-2"
                             x-text="stampCenterOriginal()"></span>
                         </div>
                         <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
@@ -468,14 +437,14 @@
                       :class="stampPositionClass('copy')">
                       <div
                         :class="stampOriginClass('copy')"
-                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                           <span x-text="stampTopLine('copy')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
                           <span
-                            class="text-xs font-extrabold text-blue-700 uppercase"
+                            class="text-xs font-extrabold uppercase text-blue-700 px-2"
                             x-text="stampCenterCopy()"></span>
                         </div>
                         <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
@@ -492,7 +461,7 @@
                       :class="stampPositionClass('obsolete')">
                       <div
                         :class="stampOriginClass('obsolete')"
-                        class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                        class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
                           <!-- top line: Date : Oct.25th 2025 -->
@@ -505,10 +474,10 @@
                             x-text="stampCenterObsolete()"></span>
                         </div>
 
-                        <!-- bottom: Nama & Dept -->
+                        <!-- bottom: Name & Dept -->
                         <div class="w-full border-t-2 border-red-600 flex font-semibold tracking-tight">
                             <div class="flex-1 border-r-2 border-red-600 text-center py-0.5 px-2">
-                                Nama : <span x-text="obsoleteName()"></span>
+                                Name : <span x-text="obsoleteName()"></span>
                             </div>
                             <div class="flex-1 text-center py-0.5 px-2">
                                 Dept. : <span x-text="obsoleteDept()"></span>
@@ -541,7 +510,7 @@
                         x-show="mask.visible"
                         x-cloak
                         :style="maskStyle(mask)"
-                        class="absolute bg-white/95 shadow-sm cursor-move"
+                        class="absolute bg-white/100 shadow-sm cursor-move"
                         @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
                         @click.stop="activateMask(mask)">
 
@@ -592,18 +561,18 @@
 
                     <!-- STAMP ORIGINAL -->
                     <div
-                      x-show="pkg.stamp"
+                      x-show="pkg.stamp && !isUncontrolledCopy()"
                       class="absolute"
                       :class="stampPositionClass('original')">
                       <div
                         :class="stampOriginClass('original')"
-                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                           <span x-text="stampTopLine('original')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold text-blue-700 uppercase"
+                          <span class="text-xs font-extrabold uppercase text-blue-700 px-2"
                             x-text="stampCenterOriginal()"></span>
                         </div>
                         <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
@@ -620,13 +589,13 @@
                       :class="stampPositionClass('copy')">
                       <div
                         :class="stampOriginClass('copy')"
-                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                           <span x-text="stampTopLine('copy')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold text-blue-700 uppercase"
+                          <span class="text-xs font-extrabold uppercase text-blue-700 px-2"
                             x-text="stampCenterCopy()"></span>
                         </div>
                         <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
@@ -642,7 +611,7 @@
                       :class="stampPositionClass('obsolete')">
                       <div
                         :class="stampOriginClass('obsolete')"
-                        class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                        class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
                           <!-- top line: Date : Oct.25th 2025 -->
@@ -655,10 +624,10 @@
                             x-text="stampCenterObsolete()"></span>
                         </div>
 
-                        <!-- bottom: Nama & Dept -->
+                        <!-- bottom: Name & Dept -->
                           <div class="w-full border-t-2 border-red-600 flex font-semibold tracking-tight">
                             <div class="flex-1 border-r-2 border-red-600 text-center py-0.5 px-2">
-                                Nama : <span x-text="obsoleteName()"></span>
+                                Name : <span x-text="obsoleteName()"></span>
                             </div>
                             <div class="flex-1 text-center py-0.5 px-2">
                                 Dept. : <span x-text="obsoleteDept()"></span>
@@ -703,7 +672,7 @@
                         x-show="mask.visible"
                         x-cloak
                         :style="maskStyle(mask)"
-                        class="absolute bg-white/95 shadow-sm cursor-move"
+                        class="absolute bg-white/100 shadow-sm cursor-move"
                         @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
                         @click.stop="activateMask(mask)">
 
@@ -755,18 +724,18 @@
 
                     <!-- STAMP ORIGINAL -->
                     <div
-                      x-show="pkg.stamp"
+                      x-show="pkg.stamp && !isUncontrolledCopy()"
                       class="absolute"
                       :class="stampPositionClass('original')">
                       <div
                         :class="stampOriginClass('original')"
-                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                           <span x-text="stampTopLine('original')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold text-blue-700 uppercase"
+                          <span class="text-xs font-extrabold uppercase text-blue-700 px-2"
                             x-text="stampCenterOriginal()"></span>
                         </div>
                         <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
@@ -783,13 +752,13 @@
                       :class="stampPositionClass('copy')">
                       <div
                         :class="stampOriginClass('copy')"
-                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                           <span x-text="stampTopLine('copy')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold text-blue-700 uppercase"
+                          <span class="text-xs font-extrabold uppercase text-blue-700 px-2"
                             x-text="stampCenterCopy()"></span>
                         </div>
                         <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
@@ -805,7 +774,7 @@
                       :class="stampPositionClass('obsolete')">
                       <div
                         :class="stampOriginClass('obsolete')"
-                        class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                        class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
                         <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
                           <!-- top line: Date : Oct.25th 2025 -->
@@ -818,10 +787,10 @@
                             x-text="stampCenterObsolete()"></span>
                         </div>
 
-                        <!-- bottom: Nama & Dept -->
+                        <!-- bottom: Name & Dept -->
                           <div class="w-full border-t-2 border-red-600 flex font-semibold tracking-tight">
                             <div class="flex-1 border-r-2 border-red-600 text-center py-0.5 px-2">
-                                Nama : <span x-text="obsoleteName()"></span>
+                                Name : <span x-text="obsoleteName()"></span>
                             </div>
                             <div class="flex-1 text-center py-0.5 px-2">
                                 Dept. : <span x-text="obsoleteDept()"></span>
@@ -863,7 +832,7 @@
                       x-show="mask.visible"
                       x-cloak
                       :style="maskStyle(mask)"
-                      class="absolute bg-white/95 shadow-sm cursor-move"
+                      class="absolute bg-white/100 shadow-sm cursor-move"
                       @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
                       @click.stop="activateMask(mask)">
 
@@ -915,18 +884,18 @@
 
                   <!-- STAMP ORIGINAL -->
                   <div
-                    x-show="pkg.stamp"
+                    x-show="pkg.stamp && !isUncontrolledCopy()"
                     class="absolute"
                     :class="stampPositionClass('original')">
                     <div
                       :class="stampOriginClass('original')"
-                      class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                      class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                       style="transform: scale(0.45);">
                       <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                         <span x-text="stampTopLine('original')"></span>
                       </div>
                       <div class="flex-1 flex items-center justify-center">
-                        <span class="text-xs font-extrabold text-blue-700 uppercase"
+                        <span class="text-xs font-extrabold uppercase text-blue-700 px-2"
                           x-text="stampCenterOriginal()"></span>
                       </div>
                       <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
@@ -943,13 +912,13 @@
                     :class="stampPositionClass('copy')">
                     <div
                       :class="stampOriginClass('copy')"
-                      class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                      class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                       style="transform: scale(0.45);">
                       <div class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
                         <span x-text="stampTopLine('copy')"></span>
                       </div>
                       <div class="flex-1 flex items-center justify-center">
-                        <span class="text-xs font-extrabold text-blue-700 uppercase"
+                        <span class="text-xs font-extrabold uppercase text-blue-700 px-2"
                           x-text="stampCenterCopy()"></span>
                       </div>
                       <div class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
@@ -965,7 +934,7 @@
                     :class="stampPositionClass('obsolete')">
                     <div
                       :class="stampOriginClass('obsolete')"
-                      class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                      class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                       style="transform: scale(0.45);">
                       <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
                         <!-- top line: Date : Oct.25th 2025 -->
@@ -978,10 +947,10 @@
                           x-text="stampCenterObsolete()"></span>
                       </div>
 
-                      <!-- bottom: Nama & Dept -->
+                      <!-- bottom: Name & Dept -->
                       <div class="w-full border-t border-red-600 pt-0.5 px-1 flex justify-between tracking-tight">
                         <span>
-                          Nama :
+                          Name :
                           <span x-text="obsoleteName()"></span>
                         </span>
                         <span>
@@ -1294,15 +1263,15 @@
 
       // ==== KONFIGURASI POSISI STAMP ====
       stampDefaults: {
-        original: 'bottom-right',
-        copy: 'bottom-center',
-        obsolete: 'bottom-left',
+          original: 'bottom-left',
+          copy: 'bottom-center',
+          obsolete: 'bottom-right',
       },
       stampPerFile: {}, // { [fileKey]: { original, copy, obsolete } }
       stampConfig: {
-        original: 'bottom-right',
-        copy: 'bottom-center',
-        obsolete: 'bottom-left',
+          original: 'bottom-left',
+          copy: 'bottom-center',
+          obsolete: 'bottom-right',
       },
 
            // per file: jenis Copy stamp
@@ -1320,8 +1289,13 @@
       openSections: [],
 
       // TIFF state
-      tifLoading: false,
-      tifError: '',
+tifLoading: false,
+tifError: '',
+tifPageNum: 1,
+tifNumPages: 1,
+tifIfds: [],
+tifDecoder: null,
+
 
       // HPGL state
       hpglLoading: false,
@@ -1606,6 +1580,23 @@
           return info.dept || '';
       },
 
+      isUncontrolledCopy() {
+  const statusId = this.pkg?.metadata?.model_status_id;
+
+  // Kalau user pilih dari dropdown => pakai itu
+  if (this.copyType === 'uncontrolled') {
+    return true;
+  }
+
+  // Fallback: kalau masih mau pakai rule dari status_id (misal =4 = uncontrolled)
+  if (Number(statusId) === 4) {
+    return true;
+  }
+
+  return false;
+},
+
+
       stampTopLine(which = 'original') {
           const s = this.pkg?.stamp || {};
           let date;
@@ -1821,63 +1812,103 @@
       },
 
       /* ===== TIFF renderer ===== */
-      async renderTiff(url) {
-        if (!url || typeof window.UTIF === 'undefined') return;
+      /* ===== TIFF renderer (multi-page) ===== */
+async renderTiff(url) {
+  if (!url || typeof window.UTIF === 'undefined') return;
 
-        this.tifLoading = true;
-        this.tifError = '';
+  this.tifLoading = true;
+  this.tifError = '';
+  this.tifIfds = [];
+  this.tifDecoder = null;
+  this.tifPageNum = 1;
+  this.tifNumPages = 1;
 
-        try {
-          const resp = await fetch(url, {
-            cache: 'no-store',
-            credentials: 'same-origin'
-          });
-          if (!resp.ok) throw new Error('Failed to fetch TIFF file');
-          const buf = await resp.arrayBuffer();
+  try {
+    const resp = await fetch(url, {
+      cache: 'no-store',
+      credentials: 'same-origin'
+    });
+    if (!resp.ok) throw new Error('Failed to fetch TIFF file');
+    const buf = await resp.arrayBuffer();
 
-          const U =
-            (window.UTIF && typeof window.UTIF.decode === 'function') ? window.UTIF :
-            (window.UTIF && window.UTIF.UTIF && typeof window.UTIF.UTIF.decode === 'function') ? window.UTIF.UTIF :
-            null;
+    const U =
+      (window.UTIF && typeof window.UTIF.decode === 'function') ? window.UTIF :
+      (window.UTIF && window.UTIF.UTIF && typeof window.UTIF.UTIF.decode === 'function') ? window.UTIF.UTIF :
+      null;
 
-          if (!U) throw new Error('UTIF library is not compatible (decode() not found)');
+    if (!U) throw new Error('UTIF library is not compatible (decode() not found)');
 
-          const ifds = U.decode(buf);
-          if (!ifds || !ifds.length) throw new Error('TIFF file does not contain any frame');
+    const ifds = U.decode(buf);
+    if (!ifds || !ifds.length) throw new Error('TIFF file does not contain any frame');
 
-          const first = ifds[0];
+    // decode semua frame
+    if (typeof U.decodeImages === 'function') {
+      U.decodeImages(buf, ifds);
+    } else if (typeof U.decodeImage === 'function') {
+      ifds.forEach(ifd => U.decodeImage(buf, ifd));
+    }
 
-          if (typeof U.decodeImage === 'function') {
-            U.decodeImage(buf, first);
-          } else if (typeof U.decodeImages === 'function') {
-            U.decodeImages(buf, ifds);
-          }
+    // simpan ke state untuk multi-page
+    this.tifDecoder = U;
+    this.tifIfds = ifds;
+    this.tifNumPages = ifds.length;
+    this.tifPageNum = 1;
 
-          const rgba = U.toRGBA8(first);
-          const w = first.width;
-          const h = first.height;
+    await this.renderTiffPage();
+  } catch (e) {
+    console.error(e);
+    this.tifError = e?.message || 'Failed to render TIFF';
+  } finally {
+    this.tifLoading = false;
+  }
+},
 
-          const off = document.createElement('canvas');
-          const ctx = off.getContext('2d');
-          off.width = w;
-          off.height = h;
+async renderTiffPage() {
+  if (!this.tifDecoder || !this.tifIfds || !this.tifIfds.length) return;
 
-          const imgData = ctx.createImageData(w, h);
-          imgData.data.set(rgba);
-          ctx.putImageData(imgData, 0, 0);
+  const pageIndex = this.tifPageNum - 1;
+  const ifd = this.tifIfds[pageIndex];
+  if (!ifd) return;
 
-          const dataUrl = off.toDataURL('image/png');
+  try {
+    const U = this.tifDecoder;
+    const rgba = U.toRGBA8(ifd);
+    const w = ifd.width;
+    const h = ifd.height;
 
-          await this.$nextTick();
-          const img = this.$refs.tifImg;
-          if (img) img.src = dataUrl;
-        } catch (e) {
-          console.error(e);
-          this.tifError = e?.message || 'Failed to render TIFF';
-        } finally {
-          this.tifLoading = false;
-        }
-      },
+    const off = document.createElement('canvas');
+    const ctx = off.getContext('2d');
+    off.width = w;
+    off.height = h;
+
+    const imgData = ctx.createImageData(w, h);
+    imgData.data.set(rgba);
+    ctx.putImageData(imgData, 0, 0);
+
+    const dataUrl = off.toDataURL('image/png');
+
+    await this.$nextTick();
+    const img = this.$refs.tifImg;
+    if (img) img.src = dataUrl;
+  } catch (e) {
+    console.error(e);
+    this.tifError = e?.message || 'Failed to render TIFF page';
+  }
+},
+
+nextTifPage() {
+  if (this.tifPageNum >= this.tifNumPages) return;
+  this.tifPageNum++;
+  this.renderTiffPage();
+},
+
+prevTifPage() {
+  if (this.tifPageNum <= 1) return;
+  this.tifPageNum--;
+  this.renderTiffPage();
+},
+
+
 
       /* ===== PDF renderer (pdf.js) ===== */
       async renderPdf(url) {
@@ -2379,10 +2410,15 @@
         if (this.isCad(this.selectedFile?.name)) this.disposeCad();
 
         if (this.isTiff(this.selectedFile?.name)) {
-          this.tifError = '';
-          this.tifLoading = false;
-          if (this.$refs.tifImg) this.$refs.tifImg.src = '';
-        }
+  this.tifError = '';
+  this.tifLoading = false;
+  this.tifIfds = [];
+  this.tifDecoder = null;
+  this.tifPageNum = 1;
+  this.tifNumPages = 1;
+  if (this.$refs.tifImg) this.$refs.tifImg.src = '';
+}
+
 
         if (this.isHpgl(this.selectedFile?.name)) {
           this.hpglError = '';

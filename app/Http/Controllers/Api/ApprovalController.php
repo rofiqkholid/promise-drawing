@@ -677,10 +677,11 @@ class ApprovalController extends Controller
         try {
             DB::beginTransaction();
 
+            // --- ambil revisi (tambahkan ecn_no) ---
             $revision = DB::table('doc_package_revisions')
                 ->where('id', $revisionId)
                 ->lockForUpdate()
-                ->first(['id', 'package_id', 'revision_no', 'revision_status']);
+                ->first(['id', 'package_id', 'revision_no', 'revision_status', 'ecn_no']);
 
             if (!$revision) {
                 DB::rollBack();
@@ -716,7 +717,7 @@ class ApprovalController extends Controller
                     ->update([
                         'is_obsolete' => 1,
                         'obsolete_at' => Carbon::now(),
-                        'obsolete_by' => $userId,      // <--- siapa yang meng-obsolete-kan
+                        'obsolete_by' => $userId,
                         'updated_at'  => Carbon::now(),
                     ]);
 
@@ -729,7 +730,6 @@ class ApprovalController extends Controller
                         'obsolete_by'     => null,
                         'updated_at'      => Carbon::now(),
                     ]);
-
 
                 DB::table('doc_packages')
                     ->where('id', $packageId)
@@ -768,15 +768,28 @@ class ApprovalController extends Controller
                 'meta'          => ['note' => 'Revision approved'],
             ]);
 
+            // --- ambil info package (tambahkan part_group) ---
             $packageInfo = DB::table('doc_packages as dp')
                 ->join('customers as c', 'dp.customer_id', '=', 'c.id')
                 ->join('models as m', 'dp.model_id', '=', 'm.id')
                 ->join('products as p', 'dp.product_id', '=', 'p.id')
                 ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
                 ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+                ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+                ->leftJoin('project_status as ps', 'dp.project_status_id', '=', 'ps.id') // <--- baru
                 ->where('dp.id', $packageId)
-                ->select('dp.id', 'c.code as customer', 'm.name as model', 'p.part_no', 'dtg.name as doc_type', 'dsc.name as category')
+                ->select(
+                    'dp.id',
+                    'c.code as customer',
+                    'm.name as model',
+                    'p.part_no',
+                    'dtg.name as doc_type',
+                    'dsc.name as category',
+                    'pg.code_part_group as part_group',
+                    'ps.name as project_status' // <- sesuaikan nama kolom di tabel master (name / status / dll)
+                )
                 ->first();
+
 
             $filenames = DB::table('doc_package_revision_files')
                 ->where('revision_id', $revisionId)
@@ -784,12 +797,26 @@ class ApprovalController extends Controller
                 ->pluck('filename')
                 ->toArray();
 
-            $rawToken = encrypt((string) $revision->id);
-            $token    = str_replace('=', '-', $rawToken);
-
+            $rawToken    = encrypt((string) $revision->id);
+            $token       = str_replace('=', '-', $rawToken);
             $downloadUrl = route('file-manager.export.detail', ['id' => $token]);
 
+            // --- SUSUN STRING PACKAGE DATA (tanpa rev) ---
+            $segments = array_filter([
+                $packageInfo->customer ?? null,
+                $packageInfo->model ?? null,
+                $packageInfo->part_no ?? null,
+                $packageInfo->doc_type ?? null,
+                $packageInfo->category ?? null,
+                $packageInfo->part_group ?? null,
+                $revision->ecn_no ?? null,
+            ], fn($v) => !is_null($v) && $v !== '');
+
+            $packageData = implode(' - ', $segments);
+
+            // --- data untuk email ---
             $approvalData = [
+                'package_data'  => $packageData,
                 'revision_id'   => $revision->id,
                 'revision_no'   => $revision->revision_no,
                 'customer'      => $packageInfo->customer ?? '-',
@@ -797,6 +824,10 @@ class ApprovalController extends Controller
                 'part_no'       => $packageInfo->part_no ?? '-',
                 'doc_type'      => $packageInfo->doc_type ?? '-',
                 'category'      => $packageInfo->category ?? '-',
+                'part_group'    => $packageInfo->part_group ?? '-',
+                'ecn_no'        => $revision->ecn_no ?? '-',
+                'project_status' => $packageInfo->project_status ?? null,
+
                 'approved_by'   => Auth::user()->name ?? 'System',
                 'approved_at'   => now()->format('Y-m-d H:i'),
                 'decision_date' => now()->format('Y-m-d H:i'),
@@ -861,6 +892,7 @@ class ApprovalController extends Controller
             ], 500);
         }
     }
+
 
 
 
@@ -1121,122 +1153,121 @@ class ApprovalController extends Controller
         }
     }
 
-       public function share(Request $request): JsonResponse
-{
-    $currentUser = Auth::user();
+    public function share(Request $request): JsonResponse
+    {
+        $currentUser = Auth::user();
 
-    // validasi data dari AJAX
-    $validated = $request->validate([
-        'revision_id' => ['required', 'integer', 'exists:doc_package_revisions,id'],
-        'note'        => ['required', 'string', 'max:500'],
-    ]);
-
-    $revisionId = (int) $validated['revision_id'];
-
-    // 1. Ambil data revision + package (untuk subject/email)
-    $revision = DB::table('doc_package_revisions as dpr')
-        ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
-        ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-        ->join('models as m', 'dp.model_id', '=', 'm.id')
-        ->join('products as p', 'dp.product_id', '=', 'p.id')
-        ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-        ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-        ->where('dpr.id', $revisionId)
-        ->first([
-            'dpr.id as revision_id',
-            'dpr.package_id',
-            'dpr.revision_no',
-            'dpr.revision_status',
-            'c.code as customer',
-            'm.name as model',
-            'p.part_no',
-            'dtg.name as doc_type',
-            'dsc.name as category',
+        // validasi data dari AJAX
+        $validated = $request->validate([
+            'revision_id' => ['required', 'integer', 'exists:doc_package_revisions,id'],
+            'note'        => ['required', 'string', 'max:500'],
         ]);
 
-    if (!$revision) {
-        return response()->json(['message' => 'Revision not found.'], 404);
-    }
+        $revisionId = (int) $validated['revision_id'];
 
-    // 2. Ambil id department Purchasing / PUD
-    $deptRows = DB::table('departments')
-        ->whereIn('code', ['PURCHASING', 'PUD'])
-        ->get(['id', 'code']);
+        // 1. Ambil data revision + package (untuk subject/email)
+        $revision = DB::table('doc_package_revisions as dpr')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->where('dpr.id', $revisionId)
+            ->first([
+                'dpr.id as revision_id',
+                'dpr.package_id',
+                'dpr.revision_no',
+                'dpr.revision_status',
+                'c.code as customer',
+                'm.name as model',
+                'p.part_no',
+                'dtg.name as doc_type',
+                'dsc.name as category',
+            ]);
 
-    if ($deptRows->isEmpty()) {
-        return response()->json([
-            'message' => 'Department Purchasing/PUD belum dikonfigurasi.',
-        ], 422);
-    }
-
-    $deptIds  = $deptRows->pluck('id')->all();             // contoh: [3,7]
-    $deptCode = $deptRows->pluck('code')->implode(',');    // "PURCHASING,PUD"
-
-    // format string id dept, misal: "|3|7|"
-    $shareToDeptStr = '|' . implode('|', $deptIds) . '|';
-
-    // 3. Update doc_package_revisions -> share_to_dept + share_dept_at
-    DB::table('doc_package_revisions')
-        ->where('id', $revisionId)
-        ->update([
-            'share_to_dept' => $shareToDeptStr,
-            'share_dept_at' => Carbon::now(),   // kolom baru internal share
-            // 'shared_at'  TIDAK disentuh (untuk flow lama / external)
-            'updated_at'    => Carbon::now(),
-        ]);
-
-    // 4. Ambil user yang dept-nya termasuk Purchasing/PUD
-    $recipients = User::query()
-        ->whereIn('id_dept', $deptIds)     // kolom yang Tuan pakai di join departments
-        ->whereNotNull('email')
-        ->get();
-
-    if ($recipients->isEmpty()) {
-        return response()->json([
-            'message' => 'Tidak ada user aktif di dept Purchasing/PUD.',
-        ], 422);
-    }
-
-    // 5. Siapkan data untuk email (dipakai di Markdown view)
-    $shareData = [
-        'customer'    => $revision->customer,
-        'model'       => $revision->model,
-        'part_no'     => $revision->part_no,
-        'doc_type'    => $revision->doc_type,
-        'category'    => $revision->category,
-        'revision_no' => $revision->revision_no,
-        'note'        => $validated['note'],
-        'shared_by'   => $currentUser->name ?? 'System',
-        'shared_at'   => now()->format('Y-m-d H:i'),
-        'dept_codes'  => $deptCode,              
-        'app_url'     => route('share.detail', [
-        // ⬇️ ini yang tadinya $revisionId langsung
-        'id' => encrypt($revisionId),      // atau Crypt::encryptString($revisionId)   
-    ]),              
-    ];
-
-    // 6. Kirim email ke masing-masing user pakai Mailable (Markdown)
-    foreach ($recipients as $target) {
-        try {
-            Mail::to($target->email)->send(
-                new DeptShareNotification($target, $shareData)
-            );
-        } catch (\Throwable $e) {
-            // kalau email gagal, kita tidak rollback share_to_dept;
-            // bisa ditambahkan logging kalau perlu:
-            // \Log::error('Failed sending dept share mail', [
-            //     'user_id' => $target->id,
-            //     'error'   => $e->getMessage(),
-            // ]);
+        if (!$revision) {
+            return response()->json(['message' => 'Revision not found.'], 404);
         }
+
+        // 2. Ambil id department Purchasing / PUD
+        $deptRows = DB::table('departments')
+            ->whereIn('code', ['PURCHASING', 'PUD'])
+            ->get(['id', 'code']);
+
+        if ($deptRows->isEmpty()) {
+            return response()->json([
+                'message' => 'Department Purchasing/PUD belum dikonfigurasi.',
+            ], 422);
+        }
+
+        $deptIds  = $deptRows->pluck('id')->all();             // contoh: [3,7]
+        $deptCode = $deptRows->pluck('code')->implode(',');    // "PURCHASING,PUD"
+
+        // format string id dept, misal: "|3|7|"
+        $shareToDeptStr = '|' . implode('|', $deptIds) . '|';
+
+        // 3. Update doc_package_revisions -> share_to_dept + share_dept_at
+        DB::table('doc_package_revisions')
+            ->where('id', $revisionId)
+            ->update([
+                'share_to_dept' => $shareToDeptStr,
+                'share_dept_at' => Carbon::now(),   // kolom baru internal share
+                // 'shared_at'  TIDAK disentuh (untuk flow lama / external)
+                'updated_at'    => Carbon::now(),
+            ]);
+
+        // 4. Ambil user yang dept-nya termasuk Purchasing/PUD
+        $recipients = User::query()
+            ->whereIn('id_dept', $deptIds)     // kolom yang Tuan pakai di join departments
+            ->whereNotNull('email')
+            ->get();
+
+        if ($recipients->isEmpty()) {
+            return response()->json([
+                'message' => 'Tidak ada user aktif di dept Purchasing/PUD.',
+            ], 422);
+        }
+
+        // 5. Siapkan data untuk email (dipakai di Markdown view)
+        $shareData = [
+            'customer'    => $revision->customer,
+            'model'       => $revision->model,
+            'part_no'     => $revision->part_no,
+            'doc_type'    => $revision->doc_type,
+            'category'    => $revision->category,
+            'revision_no' => $revision->revision_no,
+            'note'        => $validated['note'],
+            'shared_by'   => $currentUser->name ?? 'System',
+            'shared_at'   => now()->format('Y-m-d H:i'),
+            'dept_codes'  => $deptCode,
+            'app_url'     => route('share.detail', [
+                'id'          => encrypt($revisionId),
+            ]),
+        ];
+
+        // 6. Kirim email ke masing-masing user pakai Mailable (Markdown)
+        foreach ($recipients as $target) {
+            try {
+                Mail::to($target->email)->send(
+                    new DeptShareNotification($target, $shareData)
+                );
+            } catch (\Throwable $e) {
+                // kalau email gagal, kita tidak rollback share_to_dept;
+                // bisa ditambahkan logging kalau perlu:
+                // \Log::error('Failed sending dept share mail', [
+                //     'user_id' => $target->id,
+                //     'error'   => $e->getMessage(),
+                // ]);
+            }
+        }
+
+        return response()->json([
+            'message' => 'Revision berhasil di-share ke dept Purchasing/PUD.',
+        ]);
     }
 
-    return response()->json([
-        'message' => 'Revision berhasil di-share ke dept Purchasing/PUD.',
-    ]);
-}
-
-    public function exportSummary(Request $request)
+   public function exportSummary(Request $request)
 {
     $latestPa = DB::table('package_approvals as pa')
         ->select(
@@ -1264,7 +1295,7 @@ class ApprovalController extends Controller
         ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
         ->leftJoinSub($latestPa, 'pa', function ($join) {
             $join->on('pa.revision_id', '=', 'dpr.id')
-                 ->where('pa.rn', '=', 1);
+                ->where('pa.rn', '=', 1);
         })
         ->where('dpr.revision_status', '<>', 'draft');
         // ->whereColumn('dp.current_revision_id', 'dpr.id'); // kalau mau hanya current
@@ -1287,18 +1318,19 @@ class ApprovalController extends Controller
     $query->whereRaw("COALESCE(pa.decision, dpr.revision_status) = 'approved'");
 
     $rowsDb = $query->select(
-            'c.code as customer',
-            'm.name as model',
-            'p.part_no',
-            'p.part_name as part_name',
-            'dtg.name as doctype',
-            'dsc.name as category',
-            'pg.code_part_group as part_group',
-            'dpr.created_at as upload_date',
-            'dpr.receipt_date as receipt_date',
-            'dpr.ecn_no as ecn_no',
-            'dpr.is_finish as is_finish'   // <-- NEW
-        )
+        'c.code as customer',
+        'm.name as model',
+        'p.part_no',
+        'p.part_name as part_name',
+        'dtg.name as doctype',
+        'dsc.name as category',
+        'pg.code_part_group as part_group',
+        'dpr.created_at as upload_date',
+        'dpr.receipt_date as receipt_date',
+        'dpr.ecn_no as ecn_no',
+        'dpr.revision_no as revision_no',
+        'dpr.is_finish as is_finish'
+    )
         ->orderBy('c.code')
         ->orderBy('m.name')
         ->orderBy('p.part_no')
@@ -1316,10 +1348,17 @@ class ApprovalController extends Controller
             ? Carbon::parse($r->receipt_date)->format('Y-m-d')
             : '';
 
-        $ecnNo = $r->ecn_no ?? '';
+        $ecnNo      = $r->ecn_no ?? '';
+        $revisionNo = $r->revision_no ?? '';
 
-        // konversi is_finish (0/1) ke teks biar kebaca
-        $isFinish = ($r->is_finish ?? 0) ? 'Yes' : 'No';   // <-- NEW
+        // handle kolom BIT -> string '1' atau '0'
+        if (is_null($r->is_finish)) {
+            // kalau null mau dianggap 0 juga
+            $isFinish = '0';
+        } else {
+            // true / 1 / '1' -> '1', selain itu -> '0'
+            $isFinish = $r->is_finish ? '1' : '0';
+        }
 
         // urutan kolom (tanpa No, karena No ditambah di Export class)
         $rows[] = [
@@ -1330,10 +1369,11 @@ class ApprovalController extends Controller
             $r->doctype,
             $r->category,
             $ecnNo,
+            $revisionNo,
             $r->part_group,
             $receiveDate,
             $uploadDate,
-            $isFinish,    // <-- NEW (kolom terakhir)
+            $isFinish,
         ];
     }
 
@@ -1342,6 +1382,8 @@ class ApprovalController extends Controller
 
     return Excel::download($export, $filename);
 }
+
+
 
 
 

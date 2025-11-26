@@ -11,10 +11,35 @@ Open the PROMISE Application
 
 ---
 
-**Status : APPROVED**  
-Date   : Approve ({{ $approval['decision_date'] ?? $approval['approved_at'] ?? '-' }})  
+@php
+    $statusText = trim(($approval['project_status'] ?? '') . ' Approved');
+@endphp
 
-**Subject : [Data Sending] {{ $approval['customer'] ?? '-' }}-{{ $approval['model'] ?? '-' }}-{{ $approval['doc_type'] ?? '-' }}-{{ $approval['category'] ?? '-' }}**
+**Status :** 
+<span style="
+    display:inline-block;
+    padding:4px 10px;
+    border-radius:9999px;
+    background-color:#dbeafe;   /* biru muda, tidak terlalu terang */
+    border:1px solid #bfdbfe;   /* sedikit outline */
+    color:#1d4ed8;              /* biru teks */
+    font-size:12px;
+    font-weight:600;
+    line-height:1.4;
+">
+    {{ $statusText }}
+</span>    
+Date Approve    :  ({{ $approval['decision_date'] ?? $approval['approved_at'] ?? '-' }})  
+
+**Subject : [Data Sending] 
+{{ $approval['customer'] ?? '-' }} - 
+{{ $approval['model'] ?? '-' }} - 
+{{ $approval['part_no'] ?? '-' }} - 
+{{ $approval['doc_type'] ?? '-' }} - 
+{{ $approval['category'] ?? '-' }} - 
+{{ $approval['part_group'] ?? '-' }} - 
+{{ $approval['ecn_no'] ?? '-' }}**
+
 
 ---
 

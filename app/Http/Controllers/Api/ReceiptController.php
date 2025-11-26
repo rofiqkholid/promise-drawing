@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use App\Models\StampFormat;
 use App\Models\FileExtensions;
 use App\Models\DocPackageRevisionFile;
+use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
@@ -1095,7 +1096,7 @@ class ReceiptController extends Controller
             $stamp->newImage($canvasWidth, $canvasHeight, new \ImagickPixel('transparent'));
             $stamp->setImageFormat('png');
 
-            $opacity = 0.85;
+            $opacity = 0.4;
             if ($colorMode === 'red') {
                 $borderColor = new \ImagickPixel("rgba(220, 38, 38, $opacity)");
                 $textColor   = new \ImagickPixel("rgba(185, 28, 28, $opacity)");
@@ -1242,9 +1243,9 @@ class ReceiptController extends Controller
             }
 
             // --- POSISI STAMP ---
-            $posOriginal = $this->positionIntToKey($file->ori_position ?? 2, 'bottom-right');
+            $posOriginal = $this->positionIntToKey($file->ori_position ?? 0, 'bottom-left');
             $posCopy     = $this->positionIntToKey($file->copy_position ?? 1, 'bottom-center');
-            $posObsolete = $this->positionIntToKey($file->obslt_position ?? 0, 'bottom-left');
+            $posObsolete = $this->positionIntToKey($file->obslt_position ?? 2, 'bottom-right');
 
             // --- GENERATE MASTER GAMBAR ---
             // Original & Copy (Default Blue)

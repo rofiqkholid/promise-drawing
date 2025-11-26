@@ -134,6 +134,7 @@
             <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sub-Category</th>
             <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Part Group</th>
             <th class="py-3 px-4 text-left ...">Uploaded At</th>
+            <th class="py-3 px-4 text-left ...">Size</th>
             <th class="py-3 px-4 text-center ...">Action</th>
           </tr>
         </thead>
@@ -313,6 +314,20 @@ $(function () {
         {data: 'doctype_subcategory', name: 'doctype_subcategory', searchable: true, orderable: true},
         {data: 'part_group', name: 'part_group', searchable: true, orderable: true},
         {data: 'uploaded_at', name: 'uploaded_at', searchable: true},
+        {
+            data: 'total_size',
+            name: 'size',
+            searchable: false,
+            orderable: true,
+            render: function(data, type, row) {
+                if (data === null) return '0 KB';
+                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                let size = parseInt(data);
+                if (size === 0) return '0 Bytes';
+                const i = Math.floor(Math.log(size) / Math.log(1024));
+                return parseFloat((size / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+        },
         {
             data: null,
             name: 'Info',
@@ -636,10 +651,9 @@ $(function () {
 
           const activity = {
               UPLOAD: { icon: 'fa-upload', color: 'bg-blue-500', title: 'Draft Saved / Uploaded' },
+              DOWNLOAD: { icon: 'fa-download', color: 'bg-green-500', title: 'Downloaded' },
               SUBMIT_APPROVAL: { icon: 'fa-paper-plane', color: 'bg-yellow-500', title: 'Approval Submitted' },
               APPROVE: { icon: 'fa-check-double', color: 'bg-green-500', title: 'Package Approved' },
-              DEVICE_CONFIRM: { icon: 'fa-check', color: 'bg-teal-500', title: 'Device Confirmed' },
-              LDEVICE_CONFIRM: { icon: 'fa-check', color: 'bg-teal-500', title: 'Device Confirmed (L)' },
               REVISE_CONFIRM: { icon: 'fa-pen-to-square', color: 'bg-purple-500', title: 'Revision Confirmed' },
               REJECT: { icon: 'fa-times-circle', color: 'bg-red-500', title: 'Package Rejected' },
               ROLLBACK: { icon: 'fa-undo', color: 'bg-orange-500', title: 'Revision Rolled Back' },
@@ -680,7 +694,7 @@ $(function () {
                   docInfo ? `<div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700/50 space-y-1">${docInfo}</div>` : ''
               ].filter(Boolean).join('');
 
-          } else if (['SUBMIT_APPROVAL', 'DEVICE_CONFIRM', 'LDEVICE_CONFIRM', 'REVISE_CONFIRM'].includes(l.activity_code)) {
+          } else if (['SUBMIT_APPROVAL', 'REVISE_CONFIRM'].includes(l.activity_code)) {
               alwaysVisibleHtml = [
                   createPrimaryDetail("ECN", m.ecn_no),
                   createPrimaryDetail("Label", m.revision_label),
@@ -767,9 +781,7 @@ $(function () {
               const createdAt = formatDateTime(pkg.created_at ?? pkg.revision_created_at ?? pkg.createdAt);
               const updatedAt = formatDateTime(pkg.updated_at ?? pkg.updatedAt);
               const receiptDate = formatDateOnly(pkg.receipt_date);
-              const revisionStatus = pkg.revision_status ?? pkg.revisionStatus ?? pkg.status ?? '-';
               const revisionNote = pkg.revision_note ?? pkg.note ?? '';
-              const isObsolete = (pkg.is_obsolete === 1 || pkg.is_obsolete === '1');
               const ecnNo = pkg.ecn_no ?? '-';
               const revisionLabel = pkg.revision_label_name ?? '-';
 
@@ -816,21 +828,7 @@ $(function () {
                               <dt class="text-gray-500">ECN No.</dt>
                               <dd class="font-semibold text-gray-900 dark:text-gray-100">${ecnNo}</dd>
                           </div>
-                          <div class="sm:col-span-1">
-                              <dt class="text-gray-500">Status</dt>
-                              <dd class="font-semibold">
-                                  <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full
-                                      ${revisionStatus === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' :
-                                      (revisionStatus === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' :
-                                      (revisionStatus === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' :
-                                      'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300'))}
-                                  ">${revisionStatus}</span>
-                              </dd>
-                          </div>
-                          <div class="sm:col-span-1">
-                              <dt class="text-gray-500">Obsolete</dt>
-                              <dd class="font-semibold text-gray-900 dark:text-gray-100">${isObsolete ? '<span class="text-red-500 font-bold">Yes</span>' : 'No'}</dd>
-                          </div>
+                          
                       </dl>
                   </div>
 

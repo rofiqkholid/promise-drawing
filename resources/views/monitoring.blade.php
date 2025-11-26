@@ -522,7 +522,7 @@
                                 drawBorder: false
                             },
                             min: 0,
-                            max: 100
+                            max: 110
                         }
                     }
                 }
@@ -748,7 +748,6 @@
                                     let total = context.chart._metasets[context.datasetIndex].total;
                                     let percentage = Math.round((value / total) * 100) + '%';
 
-                                    // PERUBAHAN DI SINI: Format dibalik menjadi "Label: 25% (10)"
                                     return label + percentage + ' (' + value + ')';
                                 }
                             }
@@ -763,7 +762,6 @@
                                 let total = ctx.chart._metasets[ctx.datasetIndex].total;
                                 let percentage = (value / total) * 100;
 
-                                // PERUBAHAN DI SINI: Return persentase, bukan value
                                 return percentage > 5 ? Math.round(percentage) + '%' : '';
                             }
                         }

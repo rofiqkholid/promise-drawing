@@ -20,20 +20,36 @@ class RevisionApprovedNotification extends Mailable
     }
 
     public function build()
-{
-    // Build a clean, informative subject
-    $customer  = $this->approval['customer']  ?? '-';
-    $model     = $this->approval['model']     ?? '-';
-    $docType   = $this->approval['doc_type']  ?? '-';
-    $category  = $this->approval['category']  ?? '-';
-    $revNo     = $this->approval['revision_no'] ?? '-';
-    $partNo    = $this->approval['part_no']   ?? '';
+    {
+        // kalau controller sudah kirim 'package_data', pakai langsung
+        $packageData = $this->approval['package_data'] ?? null;
 
-    $subject = "[PROMISE] Revision Approved – {$customer}-{$model}-{$docType}-{$category} (Rev-{$revNo})"
-             . ($partNo ? " – {$partNo}" : "");
+        // fallback: susun sendiri dari field2 yang ada
+        if (!$packageData) {
+            $customer   = $this->approval['customer']    ?? '';
+            $model      = $this->approval['model']       ?? '';
+            $partNo     = $this->approval['part_no']     ?? '';
+            $docType    = $this->approval['doc_type']    ?? '';
+            $category   = $this->approval['category']    ?? '';
+            $partGroup  = $this->approval['part_group']  ?? '';
+            $ecnNo      = $this->approval['ecn_no']      ?? '';
 
-    return $this->subject($subject)
-                ->markdown('emails.approved_notif'); // ⬅️ ini yang penting
-}
+            $segments = array_filter([
+                $customer,
+                $model,
+                $partNo,
+                $docType,
+                $category,
+                $partGroup,
+                $ecnNo,
+            ], fn ($v) => $v !== null && $v !== '');
 
+            $packageData = implode(' - ', $segments);
+        }
+
+        $subject = "[PROMISE] Revision Approved – {$packageData}";
+
+        return $this->subject($subject)
+                    ->markdown('emails.approved_notif');
+    }
 }

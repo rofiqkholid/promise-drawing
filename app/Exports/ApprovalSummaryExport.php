@@ -35,7 +35,7 @@ class ApprovalSummaryExport implements FromArray, WithTitle, ShouldAutoSize, Wit
             // Row 1: judul
             ['Summary Upload per Item ' . $this->downloadedAt],
 
-            // Row 2: header tabel (12 kolom)
+            // Row 2: header tabel (13 kolom: A - M)
             [
                 'No',
                 'Customer',
@@ -45,10 +45,11 @@ class ApprovalSummaryExport implements FromArray, WithTitle, ShouldAutoSize, Wit
                 'Doc Type',
                 'Category',
                 'ECN No',
+                'Revision No',   // <-- NEW
                 'Part Group',
                 'Receive Date',
                 'Upload Date',
-                'Is Finish',   // <-- NEW
+                'F/Good',
             ],
 
             // Row 3+: data dengan nomor
@@ -66,14 +67,14 @@ class ApprovalSummaryExport implements FromArray, WithTitle, ShouldAutoSize, Wit
         return [
             AfterSheet::class => function (AfterSheet $event) {
 
-                // ==== Judul di tengah (cover 12 kolom: A1:L1) ====
-                $event->sheet->mergeCells('A1:L1');
+                // ==== Judul di tengah (cover 13 kolom: A1:M1) ====
+                $event->sheet->mergeCells('A1:M1');
                 $event->sheet->getStyle('A1')->getAlignment()
                     ->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $event->sheet->getStyle('A1')->getFont()->setBold(true);
 
-                // ==== HEADER (row 2) berwarna ====
-                $event->sheet->getStyle('A2:L2')->applyFromArray([
+                // ==== HEADER (row 2) berwarna, A2:M2 ====
+                $event->sheet->getStyle('A2:M2')->applyFromArray([
                     'font' => [
                         'bold' => true,
                     ],
@@ -89,7 +90,7 @@ class ApprovalSummaryExport implements FromArray, WithTitle, ShouldAutoSize, Wit
 
                 // ==== Border all untuk header + data ====
                 $lastRow   = 2 + count($this->rows); // header row 2, data mulai row 3
-                $cellRange = "A2:L{$lastRow}";
+                $cellRange = "A2:M{$lastRow}";
 
                 $event->sheet->getStyle($cellRange)->applyFromArray([
                     'borders' => [

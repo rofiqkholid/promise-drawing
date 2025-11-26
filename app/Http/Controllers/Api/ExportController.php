@@ -251,7 +251,8 @@ class ExportController extends Controller
             'doctype_group' => 'dtg.name',
             'doctype_subcategory' => 'dsc.name',
             'part_group' => 'pg.code_part_group',
-            'uploaded_at' => 'dpr.created_at'
+            'uploaded_at' => 'dpr.created_at',
+            'size' => 'total_size'
         ];
 
         $orderColumnName = $columnMap[$request->get('columns')[$orderColumnIndex]['name']] ?? 'dpr.created_at';
@@ -329,7 +330,8 @@ class ExportController extends Controller
             'dtg.name as doctype_group',
             'dsc.name as doctype_subcategory',
             'pg.code_part_group as part_group',
-            DB::raw("FORMAT(dpr.created_at, 'yyyy-MM-dd HH:mm:ss') as uploaded_at")
+            DB::raw("FORMAT(dpr.created_at, 'yyyy-MM-dd HH:mm:ss') as uploaded_at"),
+            DB::raw("(SELECT SUM(file_size) FROM doc_package_revision_files WHERE revision_id = dpr.id) as total_size")
         )
             ->orderBy($orderColumnName, $orderDir)
             ->skip($start)
@@ -1132,7 +1134,7 @@ class ExportController extends Controller
             $stamp->newImage($canvasWidth, $canvasHeight, new \ImagickPixel('transparent'));
             $stamp->setImageFormat('png');
 
-            $opacity = 0.85;
+            $opacity = 0.4;
             if ($colorMode === 'red') {
                 $borderColor = new \ImagickPixel("rgba(220, 38, 38, $opacity)");
                 $textColor   = new \ImagickPixel("rgba(185, 28, 28, $opacity)");
@@ -1264,9 +1266,9 @@ class ExportController extends Controller
             $bottomLineCopy = "Downloaded By {$userName}";
 
             // --- POSISI STAMP ---
-            $posOriginal = $this->positionIntToKey($file->ori_position ?? 2, 'bottom-right');
+            $posOriginal = $this->positionIntToKey($file->ori_position ?? 0, 'bottom-left');
             $posCopy     = $this->positionIntToKey($file->copy_position ?? 1, 'bottom-center');
-            $posObsolete = $this->positionIntToKey($file->obslt_position ?? 0, 'bottom-left');
+            $posObsolete = $this->positionIntToKey($file->obslt_position ?? 2, 'bottom-right');
 
             // --- GENERATE MASTER GAMBAR ---
             // Original & Copy (Default Blue)
