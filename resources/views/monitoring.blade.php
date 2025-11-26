@@ -164,34 +164,7 @@
 
         <div class="w-full lg:w-[25%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
 
-            {{-- CSS Kustom untuk Animasi Mengalir --}}
-            <style>
-                @keyframes flowRight {
-                    0% {
-                        opacity: 0;
-                        transform: translateX(-60px);
-                        /* Mulai dari posisi Icon Kiri */
-                    }
 
-                    30% {
-                        opacity: 1;
-                    }
-
-                    70% {
-                        opacity: 1;
-                    }
-
-                    100% {
-                        opacity: 0;
-                        transform: translateX(50px);
-                        /* Berakhir di dekat Icon Kanan */
-                    }
-                }
-
-                .animate-flow {
-                    animation: flowRight 2s infinite ease-in-out;
-                }
-            </style>
 
             <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3 flex items-center">
                 <i class="fa-solid fa-seedling mr-2 text-emerald-500"></i> Eco Impact
@@ -205,7 +178,7 @@
 
                     {{-- Panah (Absolute Overlay) --}}
                     {{-- UPDATED: Menggunakan 'absolute inset-0' agar memenuhi area baris, pb-6 untuk naik ke atas --}}
-                    <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pb-6">
+                    <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pb-8">
                         <div class="text-gray-300 dark:text-gray-600 text-lg animate-flow">
                             <i class="fa-solid fa-arrow-right-long"></i>
                         </div>
@@ -234,7 +207,7 @@
 
                     {{-- Panah (Absolute Overlay) --}}
                     {{-- UPDATED: Sama seperti di atas --}}
-                    <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pb-6">
+                    <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pb-8">
                         <div class="text-gray-300 dark:text-gray-600 text-lg animate-flow">
                             <i class="fa-solid fa-arrow-right-long"></i>
                         </div>
