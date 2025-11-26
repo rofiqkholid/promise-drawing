@@ -701,23 +701,39 @@ class ShareController extends Controller
 
         // validasi blok (boleh banyak blok)
         $validated = $request->validate([
-            'blocks' => 'nullable|array',
-            'blocks.*.id'       => 'nullable|string',
-            'blocks.*.x'        => 'required|numeric',
-            'blocks.*.y'        => 'required|numeric',
-            'blocks.*.width'    => 'required|numeric',
-            'blocks.*.height'   => 'required|numeric',
-            'blocks.*.rotation' => 'required|numeric',
-        ]);
+    'blocks' => 'nullable|array',
+    'blocks.*.id'       => 'nullable|string',
+
+    // format lama (px) – optional
+    'blocks.*.x'        => 'nullable|numeric',
+    'blocks.*.y'        => 'nullable|numeric',
+    'blocks.*.width'    => 'nullable|numeric',
+    'blocks.*.height'   => 'nullable|numeric',
+
+    // format baru (rasio 0–1)
+    'blocks.*.x_ratio'  => 'nullable|numeric',
+    'blocks.*.y_ratio'  => 'nullable|numeric',
+    'blocks.*.w_ratio'  => 'nullable|numeric',
+    'blocks.*.h_ratio'  => 'nullable|numeric',
+
+    'blocks.*.rotation' => 'nullable|numeric',
+]);
+
 
         $blocks = $validated['blocks'] ?? [];
 
         // kalau id kosong, isi otomatis blk-1, blk-2, ...
         foreach ($blocks as $i => &$block) {
-            if (empty($block['id'])) {
-                $block['id'] = 'blk-' . ($i + 1);
-            }
-        }
+    if (empty($block['id'])) {
+        $block['id'] = 'blk-' . ($i + 1);
+    }
+
+    if (!isset($block['rotation'])) {
+        $block['rotation'] = 0;
+    }
+}
+unset($block);
+
 
         // simpan ke kolom blocks_position (auto jadi JSON karena cast array)
         $file->blocks_position = $blocks;

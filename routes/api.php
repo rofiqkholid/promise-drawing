@@ -17,6 +17,7 @@ Route::get('/upload-monitoring-data', [DashboardController::class, 'getUploadMon
 
 
 Route::get('/upload-phase-status', [DashboardController::class, 'getPhaseStatus'])->name('api.upload-phase-status');
+Route::get('/get-save-env', [DashboardController::class, 'getSaveEnv'])->name('api.get-save-env');
 
 
 

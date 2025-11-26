@@ -212,28 +212,28 @@
 
             <div x-show="!isCad(selectedFile?.name)" class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
               <div class="flex items-center justify-between mb-3">
-  <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
-    <i class="fa-solid fa-stamp"></i> Stamp Configuration
-  </span>
+                <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                  <i class="fa-solid fa-stamp"></i> Stamp Configuration
+                </span>
 
-  <!-- Tombol Apply to All -->
-  <button
-    type="button"
-    @click="applyStampToAll()"
-    :disabled="applyToAllProcessing"
-    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-blue-500
-           text-[11px] font-medium text-blue-600 bg-blue-50
-           hover:bg-blue-100 disabled:opacity-60 disabled:cursor-not-allowed">
-    <span x-show="!applyToAllProcessing">
-      <i class="fa-solid fa-layer-group mr-1"></i>
-      Apply to All Files
-    </span>
-    <span x-show="applyToAllProcessing" class="inline-flex items-center gap-1">
-      <i class="fa-solid fa-circle-notch fa-spin"></i>
-      Applying...
-    </span>
-  </button>
-</div>
+                <!-- Tombol Apply to All -->
+                <button
+                  type="button"
+                  @click="applyStampToAll()"
+                  :disabled="applyToAllProcessing"
+                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-blue-500
+                        text-[11px] font-medium text-blue-600 bg-blue-50
+                        hover:bg-blue-100 disabled:opacity-60 disabled:cursor-not-allowed">
+                  <span x-show="!applyToAllProcessing">
+                    <i class="fa-solid fa-layer-group mr-1"></i>
+                    Apply to All Files
+                  </span>
+                  <span x-show="applyToAllProcessing" class="inline-flex items-center gap-1">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                    Applying...
+                  </span>
+                </button>
+              </div>
 
 
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -688,4 +688,24 @@ class DashboardController extends Controller
             ], 500);
         }
     }
+
+    public function getSaveEnv()
+    {
+        $data = DB::table('activity_logs as al')
+            ->leftJoin('doc_package_revision_files as dprf', 'al.revision_id', '=', 'dprf.revision_id')
+            ->where('al.activity_code', 'DOWNLOAD')
+            ->whereIn('dprf.category', ['2D', 'ECN'])
+            ->selectRaw('COUNT(al.activity_code) as paper, COUNT(al.activity_code) * 186 as harga')
+            ->first();
+
+        $saveTree = $data->paper / 80000;
+        $co2Reduced = $saveTree * 22; 
+
+        return response()->json([
+            'paper' => $data->paper,
+            'harga' => $data->harga,
+            'save_tree' => $saveTree,
+            'co2_reduced' => $co2Reduced
+        ]);
+    }
 }

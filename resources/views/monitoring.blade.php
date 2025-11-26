@@ -3,8 +3,10 @@
 @section('header-title', 'Dashboard')
 
 @section('content')
-<div class="flex flex-col gap-2 h-[calc(100vh-110px)] w-full overflow-hidden">
 
+<div id="dashboardWrapper" class="flex flex-col gap-2 h-[calc(100vh-90px)] w-full overflow-hidden">
+
+    {{-- BARIS 1: TOP CARDS --}}
     <div class="flex-none grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-2">
         <div class="relative bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
@@ -65,6 +67,7 @@
         </div>
     </div>
 
+    {{-- FILTER CARD --}}
     <div id="filterCard" style="display: none;" class="flex-none mt-2 bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
         <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
             <i class="fa-solid fa-filter mr-2 text-gray-500"></i> Filter Data
@@ -116,10 +119,11 @@
         </div>
     </div>
 
+    {{-- BARIS 2: MONITORING & PHASE --}}
     <div class="flex-1 min-h-0 flex flex-col lg:flex-row gap-2 items-stretch">
         <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
             <div class="flex-none flex justify-between items-center mb-2">
-                <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                     <i class="fa-solid fa-chart-simple mr-2 text-blue-500"></i> Upload Monitoring
                 </h3>
                 <button type="button" id="toggleFilterBtn" class="text-gray-500 text-xs p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700" title="Toggle Filter">
@@ -132,7 +136,7 @@
         </div>
 
         <div class="w-full lg:w-[30%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
-            <h3 class="flex-none text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
+            <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
                 <i class="fa-solid fa-chart-pie mr-2 text-orange-500"></i> Phase Status
             </h3>
             <div class="relative w-full flex-1 min-h-0 flex justify-center items-center">
@@ -141,9 +145,10 @@
         </div>
     </div>
 
-    <div class="flex-1 min-h-0 flex flex-col lg:flex-row gap-2 items-stretch mb-2">
+    {{-- BARIS 3: TREND, ENV, LOG --}}
+    <div class="h-[40%] flex-none flex flex-col lg:flex-row gap-2 items-stretch mb-2">
         <div class="w-full lg:w-[45%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
-            <h3 class="flex-none text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
+            <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
                 <i class="fa-solid fa-arrow-trend-up mr-2 text-purple-500"></i> Trend Upload & Download
             </h3>
             <div class="relative w-full flex-1 min-h-0">
@@ -151,39 +156,61 @@
             </div>
         </div>
 
-        <div class="w-full lg:w-[25%] bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-gray-800 dark:to-gray-900 p-4 rounded-lg border border-emerald-200 dark:border-emerald-900/30 flex flex-col overflow-hidden">
-            <h3 class="flex-none text-sm font-semibold text-emerald-800 dark:text-emerald-400 mb-2 flex items-center">
-                <i class="fa-solid fa-seedling mr-2"></i> Environmental Impact
+        {{-- ENVIRONMENTAL IMPACT CARD (FIXED ALIGNMENT - V2) --}}
+        <div class="w-full lg:w-[25%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+            <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3 flex items-center">
+                <i class="fa-solid fa-seedling mr-2 text-emerald-500"></i> Eco Impact
             </h3>
-            <div class="flex-1 flex flex-col gap-2 min-h-0 justify-center">
-                <div class="flex flex-row items-center bg-white dark:bg-gray-800/50 px-3 py-2 rounded-xl shadow-sm border border-emerald-100 dark:border-emerald-900/20 overflow-hidden">
-                    <div class="bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300 w-8 h-8 rounded-full flex items-center justify-center shrink-0 mr-3">
-                        <i class="fa-solid fa-tree"></i>
+
+            <div class="relative flex-1 grid grid-cols-2 gap-x-6 gap-y-4 min-h-0 p-1">
+                {{-- Layer Panah Animasi --}}
+                <div class="pointer-events-none absolute inset-0 z-10">
+
+                  
+                    <div class="absolute top-[4%] left-[35%] -translate-y-1/2 text-gray-300 dark:text-gray-600 text-xl anim-arrow-right">
+                        <i class="fa-solid fa-arrow-right-long"></i>
                     </div>
-                    <div class="flex flex-col min-w-0">
-                        <span class="text-xs text-gray-500 dark:text-gray-400">Trees Saved</span>
-                        <div class="flex items-baseline gap-1">
-                            <span class="text-lg font-bold text-gray-800 dark:text-gray-100" id="ecoTrees">0.00140</span>
-                        </div>
+
+                    {{-- Panah 2: Paper ke Trees (Bawah) --}}
+                    <div class="absolute top-[30%] left-[21.5%] -translate-x-1/2 text-gray-300 dark:text-gray-600 text-xl anim-arrow-down">
+                        <i class="fa-solid fa-arrow-down-long"></i>
+                    </div>
+
+                    {{-- Panah 3: Paper ke CO2 (Diagonal) --}}
+                    <div class="absolute top-[20%] left-[30%] -translate-x-1/3 -translate-y-1/2 text-gray-300 dark:text-gray-600 text-xl anim-arrow-diagonal">
+                        <i class="fa-solid fa-arrow-right-long"></i>
                     </div>
                 </div>
-                <div class="flex flex-row items-center bg-white dark:bg-gray-800/50 px-3 py-2 rounded-xl shadow-sm border border-teal-100 dark:border-teal-900/20 overflow-hidden">
-                    <div class="bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300 w-8 h-8 rounded-full flex items-center justify-center shrink-0 mr-3">
-                        <i class="fa-solid fa-wind"></i>
-                    </div>
-                    <div class="flex flex-col min-w-0">
-                        <span class="text-xs text-gray-500 dark:text-gray-400">CO2 Reduced</span>
-                        <div class="flex items-baseline gap-1">
-                            <span class="text-lg font-bold text-gray-800 dark:text-gray-100" id="ecoCO2">0,031</span>
-                            <span class="text-xs font-normal text-gray-500">kg</span>
-                        </div>
-                    </div>
+
+                {{-- Item 1: Paper --}}
+                <div class="relative z-20 flex flex-col justify-start pt-1 items-center text-center">
+                    <div class="text-emerald-600 dark:text-emerald-400 mb-1"><i class="fa-solid fa-scroll fa-2xl"></i></div>
+                    <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">Paper</span>
+                    <span class="text-lg font-bold text-gray-800 dark:text-gray-100 leading-tight" id="ecoPaper">0</span>
+                </div>
+                {{-- Item 2: Cost --}}
+                <div class="relative z-20 flex flex-col justify-start pt-1 items-center text-center">
+                    <div class="text-yellow-600 dark:text-yellow-400 mb-1"><i class="fa-solid fa-coins fa-2xl"></i></div>
+                    <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">Saved</span>
+                    <span class="text-sm font-bold text-gray-800 dark:text-gray-100 leading-tight" id="ecoCost">0</span>
+                </div>
+                {{-- Item 3: Tree --}}
+                <div class="relative z-20 flex flex-col justify-center items-center text-center">
+                    <div class="text-green-600 dark:text-green-400 mb-1"><i class="fa-solid fa-tree fa-2xl"></i></div>
+                    <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">Trees</span>
+                    <span class="text-sm font-bold text-gray-800 dark:text-gray-100 leading-tight" id="ecoTrees">0</span>
+                </div>
+                {{-- Item 4: CO2 --}}
+                <div class="relative z-20 flex flex-col justify-center items-center text-center">
+                    <div class="text-teal-600 dark:text-teal-400 mb-1"><i class="fa-solid fa-wind fa-2xl"></i></div>
+                    <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">CO2 (kg)</span>
+                    <span class="text-sm font-bold text-gray-800 dark:text-gray-100 leading-tight" id="ecoCO2">0</span>
                 </div>
             </div>
         </div>
 
-        <div class="w-full lg:w-[30%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
-            <h3 class="flex-none text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
+        <div class="w-full lg:w-[30%] h-full bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+            <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
                 <i class="fa-solid fa-newspaper mr-2 text-gray-500"></i> Activity Log
             </h3>
             <div id="activityLogContainer" class="flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0 divide-y divide-gray-200 dark:divide-gray-700"></div>
@@ -224,6 +251,7 @@
             this.loadMonitoringChart();
             this.loadTrendChart();
             this.loadPhaseStatusChart();
+            this.loadSaveEnv();
             this.attachButtonEvents();
         }
 
@@ -249,11 +277,6 @@
                     const data = await res.json();
                     let countVal = (data && data.status === 'success') ? data.count : 0;
                     el.textContent = countVal;
-                    if (elemId === 'downloadCount') {
-                        let numericCount = parseInt(String(countVal).replace(/,/g, '')) || 0;
-                        if (numericCount < 100) numericCount = 250000;
-                        this.updateEcoImpact(numericCount);
-                    }
                 } catch (e) {
                     el.textContent = 'Error';
                 }
@@ -280,27 +303,46 @@
             }
         }
 
-        updateEcoImpact(downloadCount) {
-            const treeFactor = 80000;
-            const co2Factor = 0.000275;
-            const treesSaved = downloadCount / treeFactor;
-            const co2Reduced = downloadCount * co2Factor;
-            const elTrees = document.getElementById('ecoTrees');
-            const elCO2 = document.getElementById('ecoCO2');
+        // Function to fetch and display Environment Data
+        async loadSaveEnv() {
+            try {
+                const response = await fetch("{{ route('api.get-save-env') }}");
+                const data = await response.json();
 
-            if (elTrees) {
-                elTrees.textContent = treesSaved < 1 ?
-                    treesSaved.toFixed(5) :
-                    treesSaved.toLocaleString('id-ID', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    });
-            }
-            if (elCO2) {
-                elCO2.textContent = co2Reduced.toLocaleString('id-ID', {
+                // 1. Paper (Lembar)
+                const elPaper = document.getElementById('ecoPaper');
+                if (elPaper) elPaper.textContent = parseInt(data.paper || 0).toLocaleString('id-ID');
+
+                // 2. Cost (Rupiah)
+                const elCost = document.getElementById('ecoCost');
+                if (elCost) {
+                    // Format singkat untuk harga (misal 4.2K atau full)
+                    let harga = parseInt(data.harga || 0);
+                    if (harga > 1000000) {
+                        elCost.textContent = (harga / 1000000).toFixed(1) + 'Jt';
+                    } else if (harga > 1000) {
+                        elCost.textContent = (harga / 1000).toFixed(1) + 'K';
+                    } else {
+                        elCost.textContent = harga.toLocaleString('id-ID');
+                    }
+                }
+
+                // 3. Trees (Decimal)
+                const elTrees = document.getElementById('ecoTrees');
+                if (elTrees) elTrees.textContent = parseFloat(data.save_tree || 0).toLocaleString('id-ID', {
+                    minimumFractionDigits: 5,
+                    maximumFractionDigits: 5
+                });
+
+                // 4. CO2 (Decimal)
+                const elCO2 = document.getElementById('ecoCO2');
+                if (elCO2) elCO2.textContent = parseFloat(data.co2_reduced || 0).toLocaleString('id-ID', {
                     minimumFractionDigits: 3,
                     maximumFractionDigits: 3
                 });
+
+            } catch (error) {
+                console.error("Failed to load environment stats", error);
             }
         }
 
@@ -363,10 +405,10 @@
                         backgroundColor: 'rgba(59, 130, 246, 1)',
                         borderColor: 'transparent',
                         borderWidth: 0,
-                        borderRadius: 20,
+                        borderRadius: 2,
                         borderSkipped: 'bottom',
                         categoryPercentage: 0.9,
-                        barPercentage: 0.73,
+                        barPercentage: 0.5,
                         order: 2,
                         yAxisID: 'y',
                         animation: {
@@ -379,10 +421,10 @@
                         backgroundColor: 'rgba(34, 197, 94, 1)',
                         borderColor: 'transparent',
                         borderWidth: 0,
-                        borderRadius: 20,
+                        borderRadius: 2,
                         borderSkipped: 'bottom',
                         categoryPercentage: 0.9,
-                        barPercentage: 0.73,
+                        barPercentage: 0.5,
                         order: 3,
                         yAxisID: 'y',
                         animation: {
@@ -430,7 +472,7 @@
                                 color: textColor,
                                 padding: 15,
                                 font: {
-                                    size: 11
+                                    size: 12
                                 }
                             }
                         },
@@ -444,13 +486,19 @@
                             borderWidth: 1,
                             padding: 12,
                             boxPadding: 6,
-                            usePointStyle: true
+                            usePointStyle: true,
+                            titleFont: {
+                                size: 13
+                            },
+                            bodyFont: {
+                                size: 12
+                            }
                         },
                         datalabels: {
                             color: textColor,
                             anchor: 'end',
                             align: 'top',
-                            offset: 4,
+                            offset: -1,
                             font: {
                                 weight: 'bold',
                                 size: 12
@@ -463,7 +511,7 @@
                             ticks: {
                                 color: textColor,
                                 font: {
-                                    size: 11
+                                    size: 12
                                 }
                             },
                             grid: {
@@ -477,6 +525,7 @@
                             position: 'left',
                             title: {
                                 display: true,
+                                text: 'Count',
                                 color: textColor,
                                 font: {
                                     size: 12,
@@ -488,7 +537,7 @@
                                 color: textColor,
                                 maxTicksLimit: 3,
                                 font: {
-                                    size: 11
+                                    size: 12
                                 },
                                 precision: 0
                             },
@@ -503,6 +552,7 @@
                             position: 'right',
                             title: {
                                 display: true,
+                                text: 'Percentage',
                                 color: textColor,
                                 font: {
                                     size: 12,
@@ -513,22 +563,21 @@
                                 color: textColor,
                                 maxTicksLimit: 3,
                                 font: {
-                                    size: 11
+                                    size: 12
                                 },
-                                callback: (v) => v + '%'
+                                callback: (v) => v
                             },
                             grid: {
                                 drawOnChartArea: false,
                                 drawBorder: false
                             },
                             min: 0,
-                            max: 120
+                            max: 130
                         }
                     }
                 }
             });
         }
-
         async loadTrendChart() {
             const ctx = document.getElementById('trendChart');
             if (!ctx) return;
@@ -626,7 +675,7 @@
                                 color: textColor,
                                 padding: 15,
                                 font: {
-                                    size: 11
+                                    size: 12
                                 }
                             }
                         },
@@ -638,7 +687,13 @@
                             bodyColor: textColor,
                             borderColor: borderColor,
                             borderWidth: 1,
-                            usePointStyle: true
+                            usePointStyle: true,
+                            titleFont: {
+                                size: 13
+                            },
+                            bodyFont: {
+                                size: 12
+                            }
                         },
                         datalabels: {
                             display: false
@@ -660,6 +715,7 @@
                         y: {
                             ticks: {
                                 color: textColor,
+                                maxTicksLimit: 3,
                                 precision: 0,
                                 font: {
                                     size: 11
@@ -676,7 +732,6 @@
                 }
             });
         }
-
         async loadPhaseStatusChart() {
             const ctx = document.getElementById('phaseStatusChart');
             if (!ctx) return;
@@ -735,11 +790,17 @@
                                 color: textColor,
                                 padding: 15,
                                 font: {
-                                    size: 11
+                                    size: 12
                                 }
                             }
                         },
                         tooltip: {
+                            titleFont: {
+                                size: 14
+                            },
+                            bodyFont: {
+                                size: 12
+                            },
                             callbacks: {
                                 label: function(context) {
                                     let label = context.label || '';
@@ -747,7 +808,6 @@
                                     let value = context.raw;
                                     let total = context.chart._metasets[context.datasetIndex].total;
                                     let percentage = Math.round((value / total) * 100) + '%';
-
                                     return label + percentage + ' (' + value + ')';
                                 }
                             }
@@ -756,12 +816,11 @@
                             color: '#fff',
                             font: {
                                 weight: 'bold',
-                                size: 10
+                                size: 12
                             },
                             formatter: (value, ctx) => {
                                 let total = ctx.chart._metasets[ctx.datasetIndex].total;
                                 let percentage = (value / total) * 100;
-
                                 return percentage > 5 ? Math.round(percentage) + '%' : '';
                             }
                         }
@@ -769,7 +828,6 @@
                 }
             });
         }
-
         async loadActivityLog() {
             const container = document.getElementById('activityLogContainer');
             if (!container) return;
@@ -1085,10 +1143,23 @@
                 toggleBtn.addEventListener('click', () => {
                     const $card = $('#filterCard');
                     const $icon = $(toggleBtn).find('i');
+                    const wrapper = document.getElementById('dashboardWrapper');
+                    const isOpening = $card.is(':hidden');
+
+                    if (isOpening) {
+                        wrapper.classList.remove('h-[calc(100vh-90px)]', 'overflow-hidden');
+                        wrapper.classList.add('min-h-[calc(100vh-90px)]', 'h-auto', 'pb-4');
+                    }
+
                     $card.stop(true, true).slideToggle(300, 'swing', function() {
                         $(this).css('overflow', 'visible');
+                        if (!isOpening) {
+                            wrapper.classList.remove('min-h-[calc(100vh-90px)]', 'h-auto', 'pb-4');
+                            wrapper.classList.add('h-[calc(100vh-90px)]', 'overflow-hidden');
+                        }
                     });
-                    if ($card.is(':visible')) {
+
+                    if (isOpening) {
                         $icon.css({
                             'transform': 'rotate(0deg)',
                             'transition': 'transform 0.3s ease'

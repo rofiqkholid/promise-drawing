@@ -776,7 +776,7 @@ class ApprovalController extends Controller
                 ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
                 ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
                 ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
-                ->leftJoin('project_status as ps', 'dp.project_status_id', '=', 'ps.id') // <--- baru
+                ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id') // <--- baru
                 ->where('dp.id', $packageId)
                 ->select(
                     'dp.id',
@@ -837,15 +837,8 @@ class ApprovalController extends Controller
             ];
 
             try {
-                $users = User::select('users.*')
-                    ->distinct()
-                    ->leftJoin('user_roles', 'user_roles.user_id', '=', 'users.id')
-                    ->whereNotNull('users.email')
-                    ->where(function ($q) {
-                        $q->whereNull('user_roles.role_id')
-                            ->orWhere('user_roles.role_id', '!=', 5);
-                    })
-                    ->get();
+                // pakai helper, otomatis filter Feasibility vs non-Feasibility
+                $users = $this->getNotificationUsersForPackage($packageId);
 
                 foreach ($users as $user) {
                     Mail::to($user->email)->send(
@@ -1406,5 +1399,70 @@ class ApprovalController extends Controller
         }
 
         return sprintf('%s.%d%s %s', $month, $day, $suffix, $year);
+    }
+
+    private function getFeasibilityStatusId(): ?int
+    {
+        return DB::table('project_status')
+            ->where('name', 'Feasibility Study')   // sesuaikan kalau nama status beda
+            ->value('id');
+    }
+
+    private function isFeasibilityPackage(int $packageId): bool
+    {
+        $feasId = $this->getFeasibilityStatusId();
+        if (!$feasId) {
+            return false;
+        }
+
+        $statusId = DB::table('doc_packages as dp')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->where('dp.id', $packageId)
+            ->value('m.status_id');
+
+        return (int) $statusId === (int) $feasId;
+    }
+
+    //  private function userHasAnyRole(User $user, array $roleNames): bool
+    // {
+    //     if (!$user) {
+    //         return false;
+    //     }
+
+    //     return DB::table('user_roles as ur')
+    //         ->join('roles as r', 'ur.role_id', '=', 'r.id')
+    //         ->where('ur.user_id', $user->id)
+    //         ->whereIn('r.role_name', $roleNames)   
+    //         ->exists();
+    // }
+
+    private function getNotificationUsersForPackage(int $packageId)
+    {
+        $isFeasibility = $this->isFeasibilityPackage($packageId);
+
+        // base query = logic lama (semua user punya email, exclude role_id 5)
+        $query = User::select('users.*')
+            ->distinct()
+            ->leftJoin('user_roles', 'user_roles.user_id', '=', 'users.id')
+            ->whereNotNull('users.email')
+            ->where(function ($q) {
+                $q->whereNull('user_roles.role_id')
+                  ->orWhere('user_roles.role_id', '!=', 5);
+            });
+
+        if ($isFeasibility) {
+            // FEASIBILITY: batasi ke role yang punya akses Feasibility (sama seperti ExportController)
+            $allowedRoles = ['ENG']; // sesuaikan dengan data nyata
+
+            $query->whereExists(function ($q2) use ($allowedRoles) {
+                $q2->select(DB::raw(1))
+                    ->from('user_roles as ur2')
+                    ->join('roles as r2', 'ur2.role_id', '=', 'r2.id')
+                    ->whereColumn('ur2.user_id', 'users.id')
+                    ->whereIn('r2.role_name', $allowedRoles);
+            });
+        }
+
+        return $query->get();
     }
 }

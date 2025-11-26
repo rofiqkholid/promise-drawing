@@ -93,6 +93,27 @@ class ExportController extends Controller
             $totalRevisionsQuery->where('m.status_id', $req->project_status);
         }
 
+        // === BATASIN FEASIBILITY UNTUK KPI ===
+$user   = Auth::user();
+$feasId = $this->getFeasibilityStatusId();
+
+if ($feasId) {
+    // kalau user belum login -> jangan hitung Feasibility
+    if (!$user) {
+        $q->where('m.status_id', '!=', $feasId);
+        $downloadQuery->where('m.status_id', '!=', $feasId);
+        $totalRevisionsQuery->where('m.status_id', '!=', $feasId);
+    } else {
+        // kalau user TIDAK punya role yang diizinkan -> juga jangan hitung Feasibility
+        if (!$this->userHasAnyRole($user, ['ENG'])) {
+            $q->where('m.status_id', '!=', $feasId);
+            $downloadQuery->where('m.status_id', '!=', $feasId);
+            $totalRevisionsQuery->where('m.status_id', '!=', $feasId);
+        }
+    }
+}
+// === END BATASAN KPI ===
+
         $totalApprovedPackages = $q->count();
         $totalDownloads = $downloadQuery->count();
         $totalApprovedRevisions = $totalRevisionsQuery->count();
@@ -180,6 +201,23 @@ class ExportController extends Controller
                     ->selectRaw('id, name AS text')
                     ->when($q, fn($x) => $x->where('name', 'like', "%{$q}%"))
                     ->orderBy('name');
+
+                    // === BATASIN FEASIBILITY DI DROPDOWN STATUS ===
+    $user   = Auth::user();
+    $feasId = $this->getFeasibilityStatusId();
+
+    if ($feasId) {
+        if (!$user) {
+            // tidak login -> jangan tampilkan Feasibility
+            $builder->where('id', '!=', $feasId);
+        } else {
+            // user tanpa role khusus -> tetap jangan tampilkan Feasibility
+            if (!$this->userHasAnyRole($user, ['ENG'])) {
+                $builder->where('id', '!=', $feasId);
+            }
+        }
+    }
+    // === END BATASAN ===
 
                 $total = (clone $builder)->count();
                 $items = $builder->forPage($page, $perPage)->get();
@@ -276,6 +314,23 @@ class ExportController extends Controller
             ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
             ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
             ->where('dpr.revision_status', '=', 'approved');
+
+            // === BATASIN FEASIBILITY HANYA UNTUK ROLE TERTENTU ===
+$user   = Auth::user();
+$feasId = $this->getFeasibilityStatusId();
+
+if ($feasId) {
+    if (!$user) {
+        // user tidak login -> jangan tampilkan Feasibility
+        $query->where('m.status_id', '!=', $feasId);
+    } else {
+        // kalau user TIDAK punya salah satu role berikut -> buang Feasibility
+        if (!$this->userHasAnyRole($user, ['ENG'])) {
+            $query->where('m.status_id', '!=', $feasId);
+        }
+    }
+}
+// === END BATASAN ===
 
         $recordsTotal = $query->count();
 
@@ -378,6 +433,9 @@ class ExportController extends Controller
         if (!$revision) {
             abort(404, 'Exportable file not found or not approved.');
         }
+
+        // CEK HAK AKSES BERDASARKAN PACKAGE
+$this->abortIfNoAccessToPackage((int)$revision->package_id);
 
         $revisionList = DB::table('doc_package_revisions as dpr')
             ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
@@ -568,6 +626,9 @@ class ExportController extends Controller
             return response()->json(['success' => false, 'message' => 'Exportable revision not found.'], 404);
         }
 
+        // CEK AKSES
+$this->abortIfNoAccessToPackage((int)$revision->package_id);
+
         $package = DB::table('doc_packages as dp')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
@@ -726,6 +787,9 @@ class ExportController extends Controller
             abort(403, 'Access denied. File is not part of an approved revision.');
         }
 
+        // CEK AKSES
+$this->abortIfNoAccessToPackage((int)$revision->package_id);
+
         $path = Storage::disk('datacenter')->path($file->storage_path);
 
         if (!file_exists($path)) {
@@ -781,6 +845,9 @@ class ExportController extends Controller
         if (!$revision) {
             return response()->json(['success' => false, 'message' => 'Package not found or not approved.'], 404);
         }
+
+        // CEK AKSES
+$this->abortIfNoAccessToPackage((int)$revision->package_id);
 
         $package = DB::table('doc_packages as dp')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
@@ -1419,4 +1486,56 @@ class ExportController extends Controller
             return $originalPath;
         }
     }
+
+    private function getFeasibilityStatusId(): ?int
+{
+    return DB::table('project_status')
+        ->where('name', 'Feasibility Study') // ganti kalau nama status di DB beda
+        ->value('id');
+}
+
+private function userHasAnyRole(User $user, array $roleNames): bool
+{
+    if (!$user) {
+        return false;
+    }
+
+    return DB::table('user_roles as ur')
+        ->join('roles as r', 'ur.role_id', '=', 'r.id')
+        ->where('ur.user_id', $user->id)
+        ->whereIn('r.role_name', $roleNames)   // kalau pakai kolom 'code', ganti ke r.code
+        ->exists();
+}
+
+private function abortIfNoAccessToPackage(int $packageId): void
+{
+    $user = Auth::user();
+    if (!$user) {
+        abort(403, 'Access denied.');
+    }
+
+    $feasId = $this->getFeasibilityStatusId();
+
+    $pkg = DB::table('doc_packages as dp')
+        ->join('models as m', 'dp.model_id', '=', 'm.id')
+        ->where('dp.id', $packageId)
+        ->select('m.status_id')
+        ->first();
+
+    if (!$pkg) {
+        abort(404, 'Package not found.');
+    }
+
+    // Kalau tidak ada Feasibility di master / status bukan Feasibility -> bebas diakses
+    if (!$feasId || $pkg->status_id != $feasId) {
+        return;
+    }
+
+    // Kalau Feasibility -> hanya role tertentu yang boleh akses
+    if (!$this->userHasAnyRole($user, ['ENG'])) {
+        abort(403, 'Access denied to feasibility package.');
+    }
+}
+
+
 }
