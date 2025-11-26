@@ -522,7 +522,7 @@
                                 drawBorder: false
                             },
                             min: 0,
-                            max: 110
+                            max: 120
                         }
                     }
                 }
@@ -994,7 +994,7 @@
             const createPill = (type, item, stateKey) => {
                 const span = document.createElement('span');
                 span.className = 'filter-pill';
-                span.innerHTML = `<span class="font-normal text-gray-500 mr-1">${type}:</span><span>${item.text}</span><button type="button" class="filter-pill-remove" data-id="${item.id}"><i class="fa-solid fa-times fa-xs"></i></button>`;
+                span.innerHTML = `<span class="font-normal text-gray-500 mr-5">${type}:</span><span>${item.text}</span><button type="button" class="filter-pill-remove" data-id="${item.id}"><i class="fa-solid fa-times fa-xs"></i></button>`;
                 span.querySelector('button').addEventListener('click', () => {
                     const arr = this[stateKey];
                     const idx = arr.findIndex(x => x.id === item.id);

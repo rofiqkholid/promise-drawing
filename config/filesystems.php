@@ -40,7 +40,7 @@ return [
 
         'datacenter' => [
             'driver' => 'local',
-            'root' => storage_path('app/datacenter'),
+            'root' => env('PROMISE_PATH_FILE'),
             'serve' => true,
             'throw' => true,
             'report' => false,

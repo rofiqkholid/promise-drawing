@@ -212,31 +212,34 @@ class DashboardController extends Controller
         $offset = ($page - 1) * $resultsPerPage;
 
         $query = DB::connection('sqlsrv')
-            ->table('models as m')
-            ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
-            ->select('m.id', 'm.name', 'm.customer_id', 'ps.name as status_name');
+            ->table('models')
+            ->select(
+                DB::raw('MIN(id) as id'),
+                'name',
+                DB::raw('MIN(customer_id) as customer_id')
+            )
+            ->groupBy('name');
 
         if ($request->filled('customer_ids')) {
-            $query->whereIn('m.customer_id', $request->customer_ids);
+            $query->whereIn('customer_id', $request->customer_ids);
         }
 
         if (!empty($searchTerm)) {
-            $query->where('m.name', 'LIKE', '%' . $searchTerm . '%');
+            $query->where('name', 'LIKE', '%' . $searchTerm . '%');
         }
 
         $totalCount = $query->count();
 
-        $models = $query->orderBy('m.name', 'asc')
+        $models = $query->orderBy('name', 'asc')
             ->offset($offset)
             ->limit($resultsPerPage)
             ->get();
 
         $formattedResults = $models->map(function ($model) {
             return [
-                'id' => $model->id,
-                'text' => "{$model->name} - {$model->status_name}",
+                'id'   => $model->id,
+                'text' => $model->name,
                 'customer_id' => $model->customer_id,
-                'status' => $model->status_name,
             ];
         });
 
@@ -247,6 +250,7 @@ class DashboardController extends Controller
             ]
         ]);
     }
+
 
 
     public function getPartGroup(Request $request): JsonResponse

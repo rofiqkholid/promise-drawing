@@ -595,29 +595,56 @@
                                         x-transition:leave-end="opacity-0 -translate-x-2"
                                         class="absolute top-12 left-3 bottom-3 z-20 w-64 flex flex-col bg-white/95 dark:bg-gray-800/95 backdrop-blur-md shadow-xl border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                                         
-                                        <div class="px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-700/50 flex justify-between items-center">
-                                            <span class="text-xs font-bold text-gray-700 dark:text-gray-200">Assembly Tree</span>
-                                            <button @click="isPartListOpen = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                                        <div class="px-3 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-700/50 flex justify-between items-center flex-shrink-0">
+                                            <span class="text-sm font-bold text-gray-800 dark:text-gray-100">Assembly Tree</span>
+                                            <button @click="isPartListOpen = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
                                                 <i class="fa-solid fa-chevron-left text-xs"></i>
                                             </button>
                                         </div>
 
-                                        <div class="flex-1 overflow-y-auto p-1 custom-scrollbar">
+                                        <div class="flex-1 overflow-y-auto p-1 custom-scrollbar min-h-0">
                                             <ul class="space-y-0.5">
                                                 <template x-for="part in cadPartsList" :key="part.uuid">
                                                     <li @click="highlightPart(part.uuid)"
-                                                        class="cursor-pointer px-2 py-1.5 rounded text-xs flex items-center gap-2 truncate select-none transition-colors border border-transparent"
+                                                        class="cursor-pointer px-3 py-2 rounded text-xs flex items-center gap-2 truncate select-none transition-colors border border-transparent"
                                                         :class="selectedPartUuid === part.uuid ? 
-                                                            'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' : 
+                                                            'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-medium' : 
                                                             'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50'">
                                                         <i class="fa-solid fa-cube text-[10px]" 
                                                         :class="selectedPartUuid === part.uuid ? 'text-blue-500' : 'text-gray-400'"></i>
-                                                        <span x-text="part.name" class="truncate font-medium"></span>
+                                                        <span x-text="part.name" class="truncate"></span>
                                                     </li>
                                                 </template>
                                             </ul>
                                         </div>
+
+                                        <div x-show="selectedPartUuid" 
+                                            x-transition:enter="transition ease-out duration-200"
+                                            x-transition:enter-start="opacity-0 translate-y-2"
+                                            x-transition:enter-end="opacity-100 translate-y-0"
+                                            class="p-3 border-t border-blue-100 dark:border-gray-700 bg-blue-50/80 dark:bg-gray-800 flex-shrink-0">
+                                            
+                                            <div class="flex items-center justify-between gap-3">
+                                                <span class="text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider min-w-[50px]">
+                                                    Opacity
+                                                </span>
+                                                
+                                                <input type="range" 
+                                                    min="0.1" max="1.0" step="0.1" 
+                                                    x-model.number="partOpacity" 
+                                                    @input="updatePartOpacity()"
+                                                    class="flex-1 h-2 bg-blue-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                                            </div>
+                                            
+                                            <div class="flex justify-between mt-1 px-1">
+                                                <span class="text-[9px] text-gray-400">10%</span>
+                                                <span class="text-[9px] font-mono text-blue-600" x-text="Math.round(partOpacity * 100) + '%'"></span>
+                                                <span class="text-[9px] text-gray-400">100%</span>
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    
 
                                     <div x-ref="igesWrap" class="w-full h-full bg-black/5 cursor-grab active:cursor-grabbing">
                                         </div>
@@ -667,6 +694,40 @@
                                             <span class="text-[10px] w-8 text-right font-mono text-gray-500 dark:text-gray-400" 
                                                 x-text="clipping.value"></span>
                                         </div>
+                                    </div>
+
+                                    <div class="inline-flex rounded-md shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700 mx-2">
+                                        <button @click="setStandardView('front')" title="Front View" 
+                                                class="px-2 py-1.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-r border-gray-200 dark:border-gray-700 text-[10px] font-bold">
+                                            F
+                                        </button>
+                                        <button @click="setStandardView('back')" title="Back View" 
+                                                class="px-2 py-1.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-r border-gray-200 dark:border-gray-700 text-[10px] font-bold text-gray-500">
+                                            B
+                                        </button>
+
+                                        <button @click="setStandardView('top')" title="Top View" 
+                                                class="px-2 py-1.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-r border-gray-200 dark:border-gray-700 text-[10px] font-bold">
+                                            T
+                                        </button>
+                                        <button @click="setStandardView('bottom')" title="Bottom View" 
+                                                class="px-2 py-1.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-r border-gray-200 dark:border-gray-700 text-[10px] font-bold text-gray-500">
+                                            Btm
+                                        </button>
+
+                                        <button @click="setStandardView('right')" title="Right View" 
+                                                class="px-2 py-1.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-r border-gray-200 dark:border-gray-700 text-[10px] font-bold">
+                                            R
+                                        </button>
+                                        <button @click="setStandardView('left')" title="Left View" 
+                                                class="px-2 py-1.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-r border-gray-200 dark:border-gray-700 text-[10px] font-bold text-gray-500">
+                                            L
+                                        </button>
+
+                                        <button @click="setStandardView('iso')" title="Isometric View" 
+                                                class="px-2 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-[10px] font-bold">
+                                            ISO
+                                        </button>
                                     </div>
 
                                     <div class="inline-flex items-center gap-2 ml-auto">
@@ -896,6 +957,8 @@
             userDeptCode: config.userDeptCode || null,
             userName: JSON.parse(`@json($userName ?? null)`),
             cameraMode: 'perspective',
+            partOpacity: 1.0,
+            currentStyle: 'shaded-edges',
             cadPartsList: [],
             selectedPartUuid: null,
             isPartListOpen: false,
@@ -1825,16 +1888,18 @@
                 });
             },
             setDisplayStyle(mode) {
-                const root = this.iges.rootModel;
-                if (!root) return;
+                const root = this.iges.rootModel; if (!root) return;
+                this.currentStyle = mode;
                 this._restoreMaterials(root);
-                if (mode === 'shaded') return;
+                if (mode === 'shaded') {
+                }
                 if (mode === 'shaded-edges') {
                     this._setPolygonOffset(root, true, 1, 1);
                     this._toggleEdges(root, true, 0x000000);
-                    return;
                 }
-                
+                if (this.clipping.enabled) {
+                    this._updateMaterialsWithClipping();
+                }
             },
 
             /* ===== Measure (2-click) ===== */
@@ -1926,6 +1991,7 @@
                 this._restoreMaterials(rootModel);
                 
                 this.selectedPartUuid = uuid;
+                this.partOpacity = 1.0;
 
                 // C. Cari part target
                 const targetMesh = rootModel.getObjectByProperty('uuid', uuid);
@@ -1958,21 +2024,18 @@
 
             toggleClipping() {
                 this.clipping.enabled = !this.clipping.enabled;
-                const { rootModel, THREE } = this.iges;
-                
-                // Reset posisi slider ke 0 saat dinyalakan
+                const { THREE } = this.iges; // Kita butuh THREE untuk bikin Plane
+
                 if (this.clipping.enabled) {
+                    // Reset slider ke 0
                     this.clipping.value = 0;
                     
-                    // Buat Plane Baru (Arah Sumbu X: Vector3(1, 0, 0))
-                    // Constant 0 artinya memotong pas di tengah
+                    // Buat Plane Baru
                     this.clipping.plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
                 } else {
                     this.clipping.plane = null;
                 }
-
-                // Terapkan (atau hapus) plane ke semua material di model
-                
+                this.setDisplayStyle(this.currentStyle);
             },
 
             updateClippingVal() {
@@ -2214,6 +2277,70 @@
                 updateLabel();
 
                 this.iges.measure.group.add(group);
+            },
+
+            setStandardView(view) {
+                const { camera, controls, rootModel, THREE } = this.iges;
+                if (!rootModel || !camera) return;
+
+                // 1. Hitung ulang ukuran benda agar jarak kamera pas
+                const box = new THREE.Box3().setFromObject(rootModel);
+                const center = new THREE.Vector3(); box.getCenter(center); // Harusnya (0,0,0) kalau sudah di-center
+                const size = new THREE.Vector3(); box.getSize(size);
+                const maxDim = Math.max(size.x, size.y, size.z);
+                
+                // Jarak kamera ideal (Fit Distance)
+                const fitDist = maxDim * 1.5; // Faktor pengali jarak
+
+                // 2. Tentukan posisi baru berdasarkan View
+                let newPos = new THREE.Vector3();
+                
+                switch(view) {
+                    case 'front': newPos.set(0, 0, fitDist); break;
+                    case 'back':  newPos.set(0, 0, -fitDist); break;
+                    case 'top':   newPos.set(0, fitDist, 0); break;
+                    case 'bottom':newPos.set(0, -fitDist, 0); break;
+                    case 'right': newPos.set(fitDist, 0, 0); break;
+                    case 'left':  newPos.set(-fitDist, 0, 0); break;
+                    case 'iso':   
+                    default:      
+                        // Isometric (Pojok)
+                        newPos.set(fitDist, fitDist, fitDist).normalize().multiplyScalar(fitDist);
+                        break;
+                }
+
+                // 3. Pindahkan Kamera (Bisa pakai animasi tweening kalau mau halus, tapi langsung set juga oke)
+                camera.position.copy(newPos);
+                camera.lookAt(center);
+                
+                // Reset rotasi kamera (PENTING untuk mode Orthographic/2D)
+                camera.up.set(0, 1, 0); 
+                if (view === 'top' || view === 'bottom') {
+                    // Khusus pandangan atas/bawah, sumbu UP harus diubah agar tidak pusing
+                    camera.up.set(0, 0, -1); 
+                }
+                
+                controls.target.copy(center);
+                controls.update();
+                
+                // Refresh clipping agar tidak glitch
+                if (this.clipping.enabled) this._updateMaterialsWithClipping();
+            },
+
+            updatePartOpacity() {
+                const { rootModel, THREE } = this.iges;
+                if (!this.selectedPartUuid) return;
+
+                const target = rootModel.getObjectByProperty('uuid', this.selectedPartUuid);
+                if (!target) return;
+
+                // Kita ubah material highlight yang sedang aktif
+                if (target.material) {
+                    target.material.transparent = true; // Wajib true
+                    target.material.opacity = this.partOpacity;
+                    target.material.depthWrite = this.partOpacity > 0.5; // Trik agar rendering urutannya benar
+                    target.material.needsUpdate = true;
+                }
             },
 
             formatRevisionForSelect2(revision) {
@@ -2710,6 +2837,11 @@
                     controls.target.set(0, 0, 0); // Target selalu di tengah
                     controls.update();
 
+                    // default style
+                    this.setDisplayStyle('shaded-edges');
+
+                    this._updateMaterialsWithClipping();
+
                     const animate = () => {
                         controls.update();
                         if (this.iges.camera) {
@@ -2731,9 +2863,6 @@
                         renderer.setSize(w, h);
                     };
                     window.addEventListener('resize', this._onIgesResize);
-
-                    // default style
-                    this.setDisplayStyle('shaded-edges');
 
                 } catch (e) {
                     console.error(e);
