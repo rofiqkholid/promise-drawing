@@ -10,6 +10,7 @@ use App\Models\DocPackageRevisionFile;
 use App\Models\Customers;
 use App\Models\FileExtensions;
 use App\Models\DoctypeGroups;
+use App\Models\ActivityLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
@@ -177,6 +178,7 @@ class ShareController extends Controller
         $orderDir         = $request->get('order')[0]['dir'] ?? 'desc';
         $orderColumnName  = $request->get('columns')[$orderColumnIndex]['name'] ?? 'dpr.created_at';
 
+        // Subquery approval
         $latestPa = DB::table('package_approvals as pa')
             ->select(
                 'pa.id',
@@ -209,6 +211,7 @@ class ShareController extends Controller
 
         $recordsTotal = (clone $query)->count();
 
+        // --- FILTERING ---
         if ($request->filled('customer') && $request->customer !== 'All') {
             $query->where('c.code', $request->customer);
         }
@@ -257,6 +260,7 @@ class ShareController extends Controller
 
         $recordsFiltered = (clone $query)->count();
 
+        // Select Data
         $query->select(
             'dpr.id',
             'c.code as customer',
@@ -268,13 +272,12 @@ class ShareController extends Controller
             DB::raw("
             CASE COALESCE(pa.decision, dpr.revision_status)
                 WHEN 'pending'  THEN 'Waiting'
-                WHEN 'waiting'  THEN 'Waiting'  
+                WHEN 'waiting'  THEN 'Waiting'
                 WHEN 'approved' THEN 'Approved'
                 WHEN 'rejected' THEN 'Rejected'
                 ELSE COALESCE(pa.decision, dpr.revision_status)
             END as status
         "),
-            'dpr.share_to as share_to',
             'pa.requested_at as request_date',
             'pa.decided_at   as decision_date'
         );
@@ -300,38 +303,33 @@ class ShareController extends Controller
             ->take($length)
             ->get();
 
-        $roleMap = DB::table('suppliers')->pluck('code', 'id')->all();
+        $revisionIds = $data->pluck('id')->toArray();
 
-        $data->transform(function ($item) use ($roleMap) {
-            if (empty($item->share_to)) {
+        $sharesGrouped = collect();
+        
+        if (!empty($revisionIds)) {
+            $sharesGrouped = DB::table('package_shares as ps')
+                ->join('suppliers as s', 'ps.supplier_id', '=', 's.id')
+                ->whereIn('ps.revision_id', $revisionIds)
+                ->whereNotNull('ps.supplier_id')
+                ->select('ps.revision_id', 's.code', 's.name')
+                ->get()
+                ->groupBy('revision_id');
+        }
+
+        $data->transform(function ($item) use ($sharesGrouped) {
+            $suppliers = $sharesGrouped->get($item->id);
+
+            if ($suppliers && $suppliers->count() > 0) {
+                $item->share_to = $suppliers->pluck('code')->implode(', ');
+            } else {
                 $item->share_to = 'Not yet distributed';
-                return $item;
             }
 
-            $roleIds = json_decode($item->share_to, true);
-
-            if (empty($roleIds) || !is_array($roleIds)) {
-                $item->share_to = 'Not yet distributed';
-                return $item;
-            }
-
-            $roleNames = [];
-            foreach ($roleIds as $id) {
-                $roleNames[] = $roleMap[$id] ?? "Unknown (ID: {$id})";
-            }
-
-            $item->share_to = implode(', ', $roleNames);
+            $item->hash = encrypt($item->id);
 
             return $item;
         });
-
-        // 🔹 TAMBAHAN: hash untuk link ke share.detail
-        $data = $data->map(function ($row) {
-            // dpr.id yang Tuan select tadi adalah revision_id
-            $row->hash = encrypt($row->id);
-            return $row;
-        });
-
 
         return response()->json([
             "draw"            => (int) $request->get('draw'),
@@ -345,116 +343,164 @@ class ShareController extends Controller
     public function saveShare(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'package_id' => 'required|integer|exists:doc_package_revisions,id',
-            'supplier_ids' => 'nullable|array'
+            'package_id'     => 'required|integer|exists:doc_package_revisions,id',
+            'supplier_ids'   => 'required|array',
+            'supplier_ids.*' => 'integer|exists:suppliers,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->first()], 422);
         }
 
-        $packageId = $request->input('package_id');
-        $roleIds   = $request->input('supplier_ids', []);
-        $roleIdJson = json_encode($roleIds);
+        $revisionId  = $request->input('package_id');
+        $supplierIds = $request->input('supplier_ids');
 
-        $packageDetails = DB::table('doc_package_revisions as dpr')
-            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
-            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-            ->join('models as m', 'dp.model_id', '=', 'm.id')
-            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-            ->leftJoin('products as p', 'dp.product_id', '=', 'p.id')
-            ->where('dpr.id', $packageId)
-            ->select(
-                'c.code as customer',
-                'm.name as model',
-                'dsc.name as category',
-                'dtg.name as doc_type',
-                'p.part_no',
-                'dpr.revision_no'
-            )
-            ->first();
+        $expiredAt = Carbon::now()->addDays(7);
+        
+        $user = auth()->user();
+        $userId = $user ? $user->id : null;
 
-        if (!$packageDetails) {
-            return response()->json(['message' => 'Package details not found.'], 404);
+        if (!$userId) {
+            return response()->json(['message' => 'Unauthorized user.'], 401);
         }
 
-        $updateSuccess = DB::table('doc_package_revisions')
-            ->where('id', $packageId)
-            ->update([
-                'share_to'  => $roleIdJson,
-                'shared_at' => now(),
+        DB::beginTransaction();
+        try {
+            foreach ($supplierIds as $supplierId) {
+                DB::table('package_shares')->updateOrInsert(
+                    [
+                        'revision_id' => $revisionId,
+                        'supplier_id' => $supplierId,
+                    ],
+                    [
+                        'department_id' => null,
+                        'shared_at'     => now(),
+                        'expired_at'    => $expiredAt,
+                        'created_by'    => $userId,
+                        'updated_at'    => now(),
+                    ]
+                );
+            }
+
+            $packageDetails = DB::table('doc_package_revisions as dpr')
+                ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+                ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+                ->join('models as m', 'dp.model_id', '=', 'm.id')
+                ->join('products as p', 'dp.product_id', '=', 'p.id')
+                ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+                ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+                ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+                ->where('dpr.id', $revisionId)
+                ->select(
+                    'dp.id as package_id',
+                    'c.code as customer',
+                    'm.name as model',
+                    'p.part_no',
+                    'pg.code_part_group',
+                    'dsc.name as category',
+                    'dtg.name as doc_type',
+                    'dpr.revision_no',
+                    'dpr.ecn_no'
+                )
+                ->first();
+
+            $supplierNames = DB::table('suppliers')
+                ->whereIn('id', $supplierIds)
+                ->pluck('name')
+                ->implode(', ');
+
+            //Create Activity Log
+            if ($packageDetails) {
+                $metaLogData = [
+                    'part_no'         => $packageDetails->part_no,
+                    'customer_code'   => $packageDetails->customer,
+                    'model_name'      => $packageDetails->model,
+                    'part_group_code' => $packageDetails->code_part_group ?? '-',
+                    'doc_type'        => $packageDetails->doc_type,
+                    'package_id'      => $packageDetails->package_id,
+                    'revision_no'     => $packageDetails->revision_no,
+                    'ecn_no'          => $packageDetails->ecn_no,
+                    
+                    // Info Tambahan Khusus Share
+                    'shared_with'     => $supplierNames, 
+                    'shared_count'    => count($supplierIds),
+                    'expired_at'      => $expiredAt->format('Y-m-d')
+                ];
+
+                ActivityLog::create([
+                    'user_id'       => $userId,
+                    'activity_code' => 'SHARE_PACKAGE',
+                    'scope_type'    => 'revision',
+                    'scope_id'      => $packageDetails->package_id,
+                    'revision_id'   => $revisionId,
+                    'meta'          => $metaLogData,
+                ]);
+            }
+
+            // 6. Persiapan Email (Subject)
+            $part1 = trim($packageDetails->model);
+            $part2 = $packageDetails->doc_type;
+            $part3 = $packageDetails->category;
+            $subjectParts = array_filter([$part1, $part2, $part3], fn($v) => !is_null($v) && $v !== '');
+            $emailSubject = implode(' - ', $subjectParts);
+
+            // Ambil daftar file
+            $files = DB::table('doc_package_revision_files')
+                ->where('revision_id', $revisionId)
+                ->pluck('filename')
+                ->toArray();
+
+            // 7. Cari User Supplier & Kirim Email
+            $userSuppliers = DB::table('users')
+                ->join('user_supplier', 'users.id', '=', 'user_supplier.user_id')
+                ->join('suppliers', 'user_supplier.supplier_id', '=', 'suppliers.id')
+                ->whereIn('user_supplier.supplier_id', $supplierIds)
+                ->whereNotNull('users.email')
+                ->select('users.id', 'users.email', 'users.name', 'suppliers.name as supplier_name')
+                ->get();
+
+            $usersToEmail = [];
+            foreach ($userSuppliers as $us) {
+                if (!isset($usersToEmail[$us->email])) {
+                    $usersToEmail[$us->email] = [
+                        'name' => $us->name,
+                        'email' => $us->email,
+                        'supplier_names' => []
+                    ];
+                }
+                if (!in_array($us->supplier_name, $usersToEmail[$us->email]['supplier_names'])) {
+                    $usersToEmail[$us->email]['supplier_names'][] = $us->supplier_name;
+                }
+            }
+
+            $encryptedId = Crypt::encrypt($revisionId);
+
+            foreach ($usersToEmail as $userData) {
+                $supplierNamesStr = implode(', ', $userData['supplier_names']);
+                
+                Mail::to($userData['email'])->send(new ShareNotification(
+                    $userData['name'],
+                    $encryptedId,
+                    $emailSubject,
+                    $supplierNamesStr,
+                    $files
+                ));
+            }
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Package shared successfully to ' . count($supplierIds) . ' suppliers.'
             ]);
 
-        if (!$updateSuccess) {
-            return response()->json(['message' => 'Package not found or no changes were made.'], 404);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Share Error: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to share package: ' . $e->getMessage()], 500);
         }
-
-        if (empty($roleIds)) {
-            return response()->json(['message' => 'Package sharing updated (no recipients).']);
-        }
-
-        $userSuppliers = DB::table('users')
-            ->join('user_supplier', 'users.id', '=', 'user_supplier.user_id')
-            ->join('suppliers', 'user_supplier.supplier_id', '=', 'suppliers.id')
-            ->whereIn('user_supplier.supplier_id', $roleIds)
-            ->select('users.id', 'users.email', 'users.name', 'suppliers.name as supplier_code')
-            ->get();
-
-        if ($userSuppliers->isEmpty()) {
-            return response()->json(['message' => 'Package shared, but no users found for the selected suppliers.']);
-        }
-
-        $usersToEmail = [];
-        foreach ($userSuppliers as $us) {
-            if (!isset($usersToEmail[$us->id])) {
-                $usersToEmail[$us->id] = [
-                    'name' => $us->name,
-                    'email' => $us->email,
-                    'supplier_codes' => []
-                ];
-            }
-            if (!in_array($us->supplier_code, $usersToEmail[$us->id]['supplier_codes'])) {
-                $usersToEmail[$us->id]['supplier_codes'][] = $us->supplier_code;
-            }
-        }
-
-        $encryptedId = Crypt::encryptString($packageId);
-
-        $part1 = trim($packageDetails->model);
-        $part2 = $packageDetails->doc_type;
-        $part3 = $packageDetails->category;
-
-        $subjectParts = array_filter([$part1, $part2, $part3], function ($value) {
-            return !is_null($value) && $value !== '';
-        });
-
-        $emailSubject = implode(' - ', $subjectParts);
-
-        $files = DB::table('doc_package_revision_files')
-            ->where('revision_id', $packageId)
-            ->pluck('filename');
-
-        foreach ($usersToEmail as $userData) {
-
-            $supplierNames = implode(', ', $userData['supplier_codes']);
-            $encryptedId = Crypt::encrypt($request->input('package_id'));
-
-            Mail::to($userData['email'])->send(new ShareNotification(
-                $userData['name'],
-                $encryptedId,
-                $emailSubject,
-                $supplierNames,
-                $files
-            ));
-        }
-
-        return response()->json(['message' => 'Package shared and emails sent successfully!']);
     }
 
    public function showDetail(string $id)
 {
-    // 1. Dekripsi hash -> revisionId (int)
     if (ctype_digit($id)) {
         $revisionId = (int) $id;
     } else {
@@ -465,7 +511,6 @@ class ShareController extends Controller
         }
     }
 
-    // 2. Ambil data revisi
     $revision = DB::table('doc_package_revisions as dpr')
         ->where('dpr.id', $revisionId)
         ->first();
@@ -474,7 +519,6 @@ class ShareController extends Controller
         abort(404, 'Shared package not found.');
     }
 
-    // --- Tambahan: data untuk stamp ---
     $receiptDate = $revision->receipt_date
         ? Carbon::parse($revision->receipt_date)
         : null;
@@ -507,13 +551,11 @@ class ShareController extends Controller
         'name' => $revision->obsolete_name
             ?? optional($lastApproval)->approver_name
             ?? '-',
-
         'dept' => $revision->obsolete_dept
             ?? optional($lastApproval)->dept_name
             ?? '-',
     ];
 
-    // 3. Ambil info package (customer, model, dst)
     $package = DB::table('doc_packages as dp')
         ->join('customers as c', 'dp.customer_id', '=', 'c.id')
         ->join('models as m', 'dp.model_id', '=', 'm.id')
@@ -620,40 +662,25 @@ class ShareController extends Controller
             });
         })
         ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
+    
+    $shares = DB::table('package_shares as ps')
+        ->join('suppliers as s', 'ps.supplier_id', '=', 's.id')
+        ->where('ps.revision_id', $revisionId)
+        ->whereNotNull('ps.supplier_id')
+        ->select(
+            's.code as supplier_code',
+            's.name as supplier_name',
+            'ps.shared_at',
+            'ps.expired_at'
+        )
+        ->orderBy('s.code')
+        ->get();
 
-    // 5. Daftar supplier yang pernah di-share
-    $shares = collect();
-
-    if (!empty($revision->share_to)) {
-        $ids = json_decode($revision->share_to, true);
-
-        if (is_array($ids) && count($ids) > 0) {
-            $supplierRows = DB::table('suppliers as s')
-                ->whereIn('s.id', $ids)
-                ->orderBy('s.code')
-                ->get([
-                    's.code as supplier_code',
-                    's.name as supplier_name',
-                ]);
-
-            $sharedAt = $revision->shared_at ?? null;
-
-            $shares = $supplierRows->map(function ($row) use ($sharedAt) {
-                return (object) [
-                    'supplier_code' => $row->supplier_code,
-                    'supplier_name' => $row->supplier_name,
-                    'shared_at'     => $sharedAt,
-                ];
-            });
-        }
-    }
-
-    // 6. Susun data untuk Blade
     $uploadedAt = optional($package->created_at);
 
     $detail = [
         'metadata' => [
-             'revision_id' => $revisionId,
+            'revision_id' => $revisionId,
             'customer'    => $package->customer,
             'model'       => $package->model,
             'part_group'  => $package->part_group,
@@ -666,9 +693,8 @@ class ShareController extends Controller
             'uploaded_at' => $uploadedAt ? $uploadedAt->format('Y-m-d H:i') : null,
         ],
         'files'        => $files,
-        'shares'       => $shares,
-        'activityLogs' => $logs,   // <<< kirim ke Blade
-
+        'shares'       => $shares, 
+        'activityLogs' => $logs,
         'stamp'        => [
             'receipt_date'  => $receiptDate?->toDateString(),
             'upload_date'   => $uploadDateRevision?->toDateString(),
@@ -678,7 +704,6 @@ class ShareController extends Controller
         ],
     ];
 
-    // hash baru untuk link (kalau mau dipakai lagi)
     $hash = encrypt($revisionId);
 
     $stampFormats = StampFormat::where('is_active', true)
@@ -692,7 +717,6 @@ class ShareController extends Controller
         'stampFormats'  => $stampFormats,
     ]);
 }
-
 
     public function updateBlocks(Request $request, $fileId): JsonResponse
     {

@@ -1,10 +1,38 @@
-<header class="fixed top-0 left-20 right-0 z-40 flex justify-between items-center p-4 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300">
+<header class="fixed top-0 left-20 right-0 z-40 flex justify-between items-center p-1 pl-4 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300">
     <div>
-        <h1 class="titlePromise text-[1.2rem] font-semibold text-gray-700 dark:text-gray-200">Promise</h1>
+        <h1 class="titlePromise text-[1.5rem] font-semibold text-gray-700 dark:text-gray-200">Promise</h1>
         <p class="text-[0.7rem] text-gray-400 dark:text-gray-200">Project Management Integrated System Engineering</p>
     </div>
 
-    <div x-data="{ themeDropdownOpen: false }" class="flex items-center space-x-2 sm:space-x-4">
+    <div class="flex items-center space-x-2 sm:space-x-4">
+
+        <div class="hidden md:flex items-center space-x-1 border-r border-gray-200 dark:border-gray-700 pr-3 mr-1">
+
+            @if (session()->has('allowed_menus') && in_array(3, session('allowed_menus')))
+            <a href="{{ route('file-manager.upload') }}"
+                class="p-2 w-10 h-10 flex items-center justify-center rounded-full text-gray-500 hover:bg-green-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-green-400 transition-colors duration-200"
+                title="Upload">
+                <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+            </a>
+            @endif
+
+            @if (session()->has('allowed_menus') && in_array(4, session('allowed_menus')))
+            <a href="{{ route('file-manager.export') }}"
+                class="p-2 w-10 h-10 flex items-center justify-center rounded-full text-gray-500 hover:bg-yellow-100 hover:text-yellow-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-yellow-400 transition-colors duration-200"
+                title="Download">
+                <i class="fa-solid fa-cloud-arrow-down text-lg"></i>
+            </a>
+            @endif
+
+            @if (session()->has('allowed_menus') && in_array(29, session('allowed_menus')))
+            <a href="{{ route('file-manager.share') }}"
+                class="p-2 w-10 h-10 flex items-center justify-center rounded-full text-gray-500 hover:bg-purple-100 hover:text-purple-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-purple-400 transition-colors duration-200"
+                title="Shared Files">
+                <i class="fa-solid fa-share-nodes text-lg"></i>
+            </a>
+            @endif
+
+        </div>
 
         <div x-data="searchComponent({{ json_encode($menuItems ?? []) }})" class="relative">
             <div class="relative">
@@ -73,7 +101,6 @@
                         </div>
                     </template>
 
-                    <!-- Search Results -->
                     <template x-if="searchQuery.trim() && filteredMenus.length > 0">
                         <div>
                             <div class="search-section-title">
@@ -97,7 +124,6 @@
                         </div>
                     </template>
 
-                    <!-- No Results -->
                     <template x-if="searchQuery.trim() && filteredMenus.length === 0">
                         <div class="p-6 text-center">
                             <i class="fa-solid fa-search text-gray-400 text-xl mb-3"></i>
@@ -109,44 +135,68 @@
             </div>
         </div>
 
-        <div class="relative">
-            <button @click="themeDropdownOpen = !themeDropdownOpen" type="button" class="p-2 w-10 h-10 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 focus:outline-none transition-colors duration-200" title="Pilih Tema">
-                <i x-show="!darkMode" class="fa-solid fa-sun text-xl"></i>
-                <i x-show="darkMode" style="display: none;" class="fa-solid fa-moon text-xl"></i>
+        <div x-data="{ userDropdownOpen: false }" class="relative ml-2">
+
+            <button @click="userDropdownOpen = !userDropdownOpen"
+                class="flex items-center mr-1.5 space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none">
+
+                <div class="hidden sm:flex flex-col text-right">
+                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ Auth::user()->name }}</span>
+                    <span class="text-[0.65rem] text-gray-500 dark:text-gray-400">{{ Auth::user()->department->code ?? '' }}</span>
+                </div>
+
+                <div class="relative w-8 h-8 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-300">
+                    <i class="fa-solid fa-circle-user text-2xl"></i>
+                </div>
+
+                <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-200"
+                    :class="{'rotate-180': userDropdownOpen}"></i>
             </button>
 
-            <div x-show="themeDropdownOpen"
-                @click.away="themeDropdownOpen = false"
+            <div x-show="userDropdownOpen"
+                @click.away="userDropdownOpen = false"
                 x-transition:enter="transition ease-out duration-100"
                 x-transition:enter-start="transform opacity-0 scale-95"
                 x-transition:enter-end="transform opacity-100 scale-100"
                 x-transition:leave="transition ease-in duration-75"
                 x-transition:leave-start="transform opacity-100 scale-100"
                 x-transition:leave-end="transform opacity-0 scale-95"
-                class="absolute right-0 mt-2 w-36 origin-top-right bg-white dark:bg-gray-900 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-10"
+                class="absolute right-0 mt-1.5 mr-1.5 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 py-1 z-50 origin-top-right"
                 style="display: none;">
-                <div class="py-1">
-                    <a href="#" @click.prevent="darkMode = false; themeDropdownOpen = false" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <i class="fa-solid fa-sun w-5 mr-2"></i>
-                        Light
+
+                <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                    <div class="hidden sm:flex flex-col text-left mb-2">
+                        <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ Auth::user()->name }}</span>
+                        <span class="text-[0.65rem] text-gray-500 dark:text-gray-400">{{ Auth::user()->email}}</span>
+                    </div>
+
+                    <a href="#" @click.prevent="darkMode = false"
+                        class="flex items-center px-2 py-1.5 text-sm rounded-md transition-colors"
+                        :class="!darkMode ? 'bg-blue-50 text-blue-600 dark:bg-gray-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'">
+                        <i class="fa-solid fa-sun w-5"></i>
+                        <span class="ml-2">Light Mode</span>
                     </a>
-                    <a href="#" @click.prevent="darkMode = true; themeDropdownOpen = false" class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                        <i class="fa-solid fa-moon w-5 mr-2"></i>
-                        Dark
+
+                    <a href="#" @click.prevent="darkMode = true"
+                        class="flex items-center px-2 py-1.5 text-sm rounded-md transition-colors mt-1"
+                        :class="darkMode ? 'bg-blue-50 text-blue-600 dark:bg-gray-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'">
+                        <i class="fa-solid fa-moon w-5"></i>
+                        <span class="ml-2">Dark Mode</span>
                     </a>
+                </div>
+
+                <div class="px-1 py-1">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 rounded-md transition-colors duration-200">
+                            <i class="fa-solid fa-right-from-bracket w-5"></i>
+                            <span class="ml-2">Logout</span>
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
 
-        <span class="text-sm text-gray-600 dark:text-gray-300 hidden sm:block">{{ Auth::user()->name }}</span>
-
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="flex items-center text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-500 focus:outline-none transition-colors duration-200" title="Logout">
-                <i class="fa-solid fa-right-from-bracket text-xl"></i>
-                <span class="ml-2 text-sm hidden md:block"></span>
-            </button>
-        </form>
     </div>
 </header>
 <script src="{{ asset('assets/js/search-engine.js') }}"></script>

@@ -388,6 +388,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/receipts/filters', [ReceiptController::class, 'receiptFilters'])->name('receipts.filters');
     Route::get('/receipts/kpi', [ReceiptController::class, 'choiseFilter'])->name('receipts.kpi');
     Route::get('/receipts/list', [ReceiptController::class, 'receiptList'])->name('receipts.list');
+    Route::get('/receipts/history-list', [ReceiptController::class, 'receiptHistoryList'])->name('receipts.history_list');
     Route::get('/receipts/{id}', [ReceiptController::class, 'showDetail'])->name('receipts.detail');
     Route::get('/api/receipts/revision-detail/{id}', [ReceiptController::class, 'getRevisionDetailJson'])->name('api.receipts.revision-detail')->middleware('auth');
     Route::get('/download/receipt/file/{file_id}', [ReceiptController::class, 'downloadFile'])->name('receipts.download-file');

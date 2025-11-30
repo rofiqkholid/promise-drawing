@@ -560,7 +560,6 @@
                 $shareModal.show();
             });
 
-           // 🔹 TAMBAHAN: klik baris untuk masuk ke share detail
 $('#approvalTable tbody').on('click', 'tr', function(e) {
     // kalau yang diklik adalah tombol Share, jangan redirect
     if ($(e.target).closest('.btn-share').length) return;
@@ -577,18 +576,18 @@ $('#approvalTable tbody').on('click', 'tr', function(e) {
             $btnSaveShare.on('click', function() {
                 const $this = $(this);
                 const packageId = $hiddenPackageId.val();
-
+                
+                // Ambil ID dari supplier yang dipilih
                 const selectSupplierIds = selectedSupplier.map(r => r.id);
 
-                $shareError.hide().text('');
-
+                // Gunakan Toast untuk validasi UI
                 if (!packageId) {
-                    $shareError.text('Package ID not found. Please reload the page.').show();
+                    toastError('Error', 'Package ID not found. Please reload.');
                     return;
                 }
 
                 if (selectSupplierIds.length === 0) {
-                    $shareError.text('Please select at least one supplier.').show();
+                    toastWarning('Warning', 'Please select at least one supplier.');
                     return;
                 }
 
@@ -598,22 +597,35 @@ $('#approvalTable tbody').on('click', 'tr', function(e) {
                     url: '{{ route("share.save") }}',
                     type: 'POST',
                     data: {
+                        // Token CSRF sudah di-handle oleh $.ajaxSetup di atas
                         package_id: packageId,
                         supplier_ids: selectSupplierIds
                     },
                     dataType: 'json',
                     success: function(response) {
                         $shareModal.hide();
-                        toastSuccess('Package shared successfully!', '');
+                        
+                        // Tampilkan pesan sukses dari server
+                        toastSuccess('Shared', response.message || 'Package shared successfully!');
+                        
+                        // Reload tabel tanpa reset paging
                         if (table) table.ajax.reload(null, false);
+                        
+                        // Reset pilihan supplier agar modal bersih saat dibuka lagi nanti
+                        selectedSupplier = []; 
+                        renderSelectSuppliers(); 
                     },
                     error: function(xhr) {
                         console.error('Failed to share:', xhr.responseText);
-                        let errorMsg = 'Failed to share package. Please try again later.';
+                        let errorMsg = 'Failed to share package.';
+                        
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMsg = xhr.responseJSON.message;
+                        } else if (xhr.status === 422) {
+                             errorMsg = 'Validation error. Check input.';
                         }
-                        $shareError.text(errorMsg).show();
+                        
+                        toastError('Error', errorMsg);
                     },
                     complete: function() {
                         $this.prop('disabled', false).text('Share');

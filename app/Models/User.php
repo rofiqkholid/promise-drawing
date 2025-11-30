@@ -17,7 +17,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'is_active' => 'integer',
-        'id_dept'   => 'integer', // <-- CAST KOLOM FK DEPT
+        'id_dept'   => 'integer', 
     ];
 
     protected $fillable = [
@@ -26,7 +26,7 @@ class User extends Authenticatable
         'nik',
         'password',
         'is_active',
-        'id_dept',   // <-- TAMBAH DI SINI
+        'id_dept',   
     ];
 
     protected $hidden = [

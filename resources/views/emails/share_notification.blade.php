@@ -17,7 +17,7 @@ Date : {{ \Carbon\Carbon::now()->format('Y/m/d H:i') }} WIB
 
 ### List of Files Sent
 
-@if($files && $files->count() > 0)
+@if($files && count($files) > 0)
 
 <ul style="font-size: 14px; line-height: 2.5;">
 @foreach($files as $file)

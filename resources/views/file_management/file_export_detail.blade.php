@@ -739,7 +739,7 @@
                                                 <button @click="setMaterialMode('ecoat'); isMatMenuOpen=false" 
                                                     class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                                                     :class="activeMaterial==='ecoat' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
-                                                    <i class="fa-solid fa-square text-gray-500 text-[10px]"></i> E-Coat (BIW)
+                                                    <i class="fa-solid fa-square text-gray-500 text-[10px]"></i> E-Coat
                                                 </button>
 
                                                 <button @click="setMaterialMode('steel'); isMatMenuOpen=false" 

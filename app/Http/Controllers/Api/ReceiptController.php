@@ -145,11 +145,12 @@ class ReceiptController extends Controller
     {
         $userId = Auth::user()->id ?? 1;
 
-        // Prefer supplier-based mapping (legacy/alternative) then fall back to role-based mapping
+        // 1. Ambil Role ID (Supplier ID) user yang login
         $userSupplier = DB::table('user_supplier')->where('user_id', $userId)->first();
         if ($userSupplier) {
             $userRoleId = (string) $userSupplier->supplier_id;
         } else {
+            // Fallback ke user_roles jika tidak ada di user_supplier
             $userRole = DB::table('user_roles')->where('user_id', $userId)->first();
 
             if (!$userRole) {
@@ -160,18 +161,19 @@ class ReceiptController extends Controller
                     "data"            => [],
                 ]);
             }
-
             $userRoleId = (string) $userRole->role_id;
         }
 
+        // 2. Setup Parameter DataTables
         $start       = (int) $request->get('start', 0);
         $length      = (int) $request->get('length', 10);
         $searchValue = $request->get('search')['value'] ?? '';
 
         $orderColumnIndex = (int) ($request->get('order')[0]['column'] ?? 0);
         $orderDir         = $request->get('order')[0]['dir'] ?? 'desc';
-        $orderColumnName  = $request->get('columns')[$orderColumnIndex]['name'] ?? 'dpr.shared_at';
+        $orderColumnName  = $request->get('columns')[$orderColumnIndex]['name'] ?? 'ps.shared_at';
 
+        // 3. Subquery Approval Terakhir (Window Function)
         $latestPa = DB::table('package_approvals as pa')
             ->select(
                 'pa.id',
@@ -187,7 +189,10 @@ class ReceiptController extends Controller
             ) as rn
         ");
 
+        // 4. Query Utama (DEFINISI VARIABEL $query ADA DI SINI)
         $query = DB::table('doc_package_revisions as dpr')
+            // JOIN UTAMA: Ke tabel pivot package_shares
+            ->join('package_shares as ps', 'dpr.id', '=', 'ps.revision_id')
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
@@ -199,18 +204,20 @@ class ReceiptController extends Controller
                     ->where('pa.rn', '=', 1);
             })
             ->where('dpr.revision_status', '<>', 'draft')
-            ->where('dpr.revision_status', 'approved')
-            ->whereNotNull('dpr.share_to');
+            ->where('dpr.revision_status', 'approved');
 
-        $query->where(function ($q) use ($userRoleId) {
-            $q->where(function ($sub) use ($userRoleId) {
-                $sub->whereRaw("ISJSON(dpr.share_to) > 0")
-                    ->whereJsonContains('dpr.share_to', $userRoleId);
-            });
-        });
+        // 5. Filter Spesifik Supplier & Expired Date
+        // Hanya tampilkan paket yang dishare ke supplier ini DAN belum expired
+        $query->where('ps.supplier_id', $userRoleId)
+              ->where(function($q) {
+                  $q->whereNull('ps.expired_at')
+                    ->orWhere('ps.expired_at', '>', now());
+              });
 
+        // 6. Hitung Total Record (Sebelum Filter Pencarian)
         $recordsTotal = (clone $query)->count();
 
+        // 7. Filter Pencarian (Customer, Model, dll)
         if ($request->filled('customer') && $request->customer !== 'All') {
             $query->where('c.code', $request->customer);
         }
@@ -223,13 +230,16 @@ class ReceiptController extends Controller
         if ($request->filled('category') && $request->category !== 'All') {
             $query->where('dsc.name', $request->category);
         }
+        
 
+        // 8. Global Search (Search Bar)
         if ($searchValue !== '') {
             $query->where(function ($q) use ($searchValue) {
                 $q->where('c.code', 'like', "%{$searchValue}%")
                     ->orWhere('m.name', 'like', "%{$searchValue}%")
                     ->orWhere('p.part_no', 'like', "%{$searchValue}%")
                     ->orWhere('dsc.name', 'like', "%{$searchValue}%")
+                    ->orWhere('dpr.ecn_no', 'like', "%{$searchValue}%")
                     ->orWhereRaw("
                 CONCAT(
                     c.code,' ',
@@ -243,8 +253,10 @@ class ReceiptController extends Controller
             });
         }
 
+        // 9. Hitung Total Setelah Filter
         $recordsFiltered = (clone $query)->count();
 
+        // 10. Select Kolom
         $query->select(
             'dpr.id',
             'c.code as customer',
@@ -252,33 +264,46 @@ class ReceiptController extends Controller
             'dtg.name as doc_type',
             'dsc.name as category',
             'p.part_no',
+            'dpr.ecn_no',
             'dpr.revision_no as revision',
-            'dpr.shared_at as request_date'
+            'ps.shared_at as received',
+            'ps.expired_at'
         );
 
+        // 11. Sorting
         $orderWhitelist = [
-            'dpr.shared_at',
+            'ps.shared_at', // update sorting pakai kolom tabel share
             'c.code',
             'm.name',
             'dtg.name',
             'dsc.name',
             'p.part_no',
+            'dpr.revision_no',
+            'dpr.ecn_no',
         ];
 
-        $orderBy = in_array($orderColumnName, $orderWhitelist, true) ? $orderColumnName : 'dpr.shared_at';
+        // Map request column name ke kolom DB yang benar jika masih pakai alias lama
+        if ($orderColumnName === 'dpr.shared_at') {
+            $orderColumnName = 'ps.shared_at';
+        }
+
+        $orderBy = in_array($orderColumnName, $orderWhitelist, true) ? $orderColumnName : 'ps.shared_at';
         $orderDirection = in_array(strtolower($orderDir), ['asc', 'desc'], true) ? $orderDir : 'desc';
 
+        // 12. Pagination & Execution
         $data = $query
             ->orderBy($orderBy, $orderDirection)
             ->skip($start)
             ->take($length)
             ->get();
 
+        // 13. Format Data (Encrypt ID)
         $data = $data->map(function ($row) {
             $row->hash = encrypt($row->id);
             return $row;
         });
 
+        // 14. Return JSON
         return response()->json([
             "draw"            => (int) $request->get('draw'),
             "recordsTotal"    => $recordsTotal,
@@ -289,13 +314,24 @@ class ReceiptController extends Controller
 
     public function showDetail(string $id)
     {
+        $revisionId = null;
+        
         if (ctype_digit($id)) {
             $revisionId = (int) $id;
         } else {
             try {
-                $revisionId = decrypt($id);
-            } catch (DecryptException $e) {
-                abort(404, 'Invalid approval ID.');
+                $revisionId = decrypt(hex2bin($id));
+            } catch (\Throwable $e) {
+                try {
+                    $revisionId = decrypt($id);
+                } catch (\Throwable $ex) {
+                    try {
+                        $decoded = base64_decode(str_replace(['-', '_'], ['+', '/'], $id));
+                        $revisionId = decrypt($decoded);
+                    } catch (\Throwable $ex2) {
+                        abort(404, 'Invalid approval ID.');
+                    }
+                }
             }
         }
 
@@ -385,6 +421,82 @@ class ReceiptController extends Controller
         ]);
     }
 
+    public function receiptHistoryList(Request $request): JsonResponse
+    {
+        $userId = Auth::user()->id ?? 1;
+
+        // ... (Logika User Role Sama seperti sebelumnya) ...
+        $userSupplier = DB::table('user_supplier')->where('user_id', $userId)->first();
+        if ($userSupplier) {
+            $userRoleId = (string) $userSupplier->supplier_id;
+        } else {
+            $userRole = DB::table('user_roles')->where('user_id', $userId)->first();
+            if (!$userRole) return response()->json(["data" => [], "recordsTotal" => 0, "recordsFiltered" => 0]);
+            $userRoleId = (string) $userRole->role_id;
+        }
+
+        $start  = (int) $request->get('start', 0);
+        $length = (int) $request->get('length', 10);
+        $searchValue = $request->get('search')['value'] ?? '';
+
+        $query = DB::table('doc_package_revisions as dpr')
+            ->join('package_shares as ps', 'dpr.id', '=', 'ps.revision_id')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', 'dsc.id')
+            ->where('dpr.revision_status', 'approved');
+
+        // Filter Expired & Milik Supplier Ini
+        $query->where('ps.supplier_id', $userRoleId)
+              ->whereNotNull('ps.expired_at')
+              ->where('ps.expired_at', '<', now());
+
+        if ($searchValue !== '') {
+            $query->where(function ($q) use ($searchValue) {
+                $q->where('c.code', 'like', "%{$searchValue}%")
+                    ->orWhere('m.name', 'like', "%{$searchValue}%")
+                    ->orWhere('p.part_no', 'like', "%{$searchValue}%");
+            });
+        }
+
+        $recordsFiltered = (clone $query)->count();
+
+        $query->select(
+            'dpr.id',
+            'c.code as customer',
+            'm.name as model',
+            'dtg.name as doc_type',
+            'dsc.name as category',
+            'p.part_no',
+            'dpr.revision_no as revision',
+            'ps.shared_at',
+            'ps.expired_at'
+        );
+
+        $data = $query
+            ->orderBy('ps.expired_at', 'desc')
+            ->skip($start)
+            ->take($length)
+            ->get();
+
+        // --- TAMBAHAN PENTING: Generate Hash ---
+        $data->transform(function ($row) {
+            // Gunakan bin2hex agar aman di URL
+            $row->hash = bin2hex(encrypt($row->id));
+            return $row;
+        });
+
+        return response()->json([
+            "draw"            => (int) $request->get('draw'),
+            "recordsTotal"    => $recordsFiltered,
+            "recordsFiltered" => $recordsFiltered,
+            "data"            => $data,
+        ]);
+    }
+
     private function buildApprovalLogs(int $packageId, ?int $revisionId)
     {
         $q = DB::table('activity_logs as al')
@@ -459,18 +571,15 @@ class ReceiptController extends Controller
      */
     public function getRevisionDetailJson(Request $request, $id)
     {
-        // Accept either a numeric id or an encrypted id (from blade view)
-        $decrypted_id = null;
-        if (ctype_digit((string)$id)) {
-            $decrypted_id = (int)$id;
-        } else {
-            try {
-                $decrypted_id = decrypt(str_replace('-', '=', $id));
-            } catch (\Exception $e) {
-                return response()->json(['success' => false, 'message' => 'Invalid revision ID.'], 404);
-            }
+        // 1. Dekripsi ID
+        $originalEncryptedId = $id;
+        try {
+            $decrypted_id = decrypt(str_replace('-', '=', $id));
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Invalid revision ID.'], 404);
         }
 
+        // 2. Cari Revisi
         $revision = DB::table('doc_package_revisions as dpr')
             ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
             ->leftJoin('users as ou', 'ou.id', '=', 'dpr.obsolete_by')
@@ -489,10 +598,8 @@ class ReceiptController extends Controller
             return response()->json(['success' => false, 'message' => 'Receipt revision not found.'], 404);
         }
 
-        // Check if user has access to this receipt
+        // 3. Tentukan User Role (Supplier)
         $userId = Auth::user()->id ?? 1;
-
-        // Support both supplier-based mapping (legacy) and role-based mapping
         $userSupplier = DB::table('user_supplier')->where('user_id', $userId)->first();
         if ($userSupplier) {
             $userRoleId = (string) $userSupplier->supplier_id;
@@ -504,14 +611,37 @@ class ReceiptController extends Controller
             $userRoleId = (string) $userRole->role_id;
         }
 
-        // Check if revision is shared to this user
-        if ($revision->share_to) {
-            $sharedTo = is_string($revision->share_to) ? json_decode($revision->share_to, true) : $revision->share_to;
-            if (!in_array($userRoleId, (array)$sharedTo)) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        // 4. Cek Akses via Tabel Pivot (package_shares)
+        $shareInfo = DB::table('package_shares')
+            ->where('revision_id', $decrypted_id)
+            ->where('supplier_id', $userRoleId)
+            ->first();
+
+        if (!$shareInfo) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized or Link Expired.'], 403);
+        }
+
+        // Cek Expired
+        if ($shareInfo->expired_at && Carbon::parse($shareInfo->expired_at)->isPast()) {
+             return response()->json(['success' => false, 'message' => 'Link Expired.'], 403);
+        }
+
+        // 5. Ambil Kode Dept Pengirim (Sharer)
+        $sharerDeptCode = 'PUD'; // Default
+        if ($shareInfo->created_by) {
+            $sharer = DB::table('users')->where('id', $shareInfo->created_by)->first();
+            if ($sharer && $sharer->id_dept) {
+                $dept = DB::table('departments')->where('id', $sharer->id_dept)->first();
+                if ($dept) {
+                    $sharerDeptCode = $dept->code;
+                }
             }
         }
 
+        // 6. Ambil Kode Supplier Penerima
+        $currentSupplierCode = DB::table('suppliers')->where('id', $userRoleId)->value('code') ?? '-';
+
+        // 7. Ambil Detail Paket
         $package = DB::table('doc_packages as dp')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
@@ -531,91 +661,59 @@ class ReceiptController extends Controller
             )
             ->first();
 
-        $receiptDate = $revision->receipt_date
-            ? Carbon::parse($revision->receipt_date)
-            : null;
-
-        $uploadDateRevision = $revision->created_at
-            ? Carbon::parse($revision->created_at)
-            : null;
+        // 8. Format Tanggal & Stamp
+        $receiptDate = $revision->receipt_date ? Carbon::parse($revision->receipt_date) : null;
+        $uploadDateRevision = $revision->created_at ? Carbon::parse($revision->created_at) : null;
+        
+        // PENTING: Tanggal Share diambil dari PIVOT ($shareInfo), bukan dari tabel revisi
+        $sharedAtDate = $shareInfo->shared_at ? Carbon::parse($shareInfo->shared_at) : null;
 
         $isObsolete = (bool)($revision->is_obsolete ?? 0);
-
-        $obsoleteDate = $revision->obsolete_at
-            ? Carbon::parse($revision->obsolete_at)
-            : null;
+        $obsoleteDate = $revision->obsolete_at ? Carbon::parse($revision->obsolete_at) : null;
 
         $lastApproval = DB::table('package_approvals as pa')
             ->leftJoin('users as u', 'u.id', '=', 'pa.decided_by')
             ->leftJoin('departments as d', 'd.id', '=', 'u.id_dept')
             ->where('pa.revision_id', $decrypted_id)
             ->orderByRaw('COALESCE(pa.decided_at, pa.requested_at) DESC')
-            ->first([
-                'u.name as approver_name',
-                'd.code as dept_name'
-            ]);
+            ->first(['u.name as approver_name', 'd.code as dept_name']);
 
         $obsoleteStampInfo = [
             'date_raw'  => $obsoleteDate?->toDateString(),
-            'date_text' => $obsoleteDate
-                ? $obsoleteDate->toSaiStampFormat()
-                : null,
-            'name' => $revision->obsolete_name
-                ?? optional($lastApproval)->approver_name
-                ?? '-',
-            'dept' => $revision->obsolete_dept
-                ?? optional($lastApproval)->dept_name
-                ?? '-',
+            'date_text' => $obsoleteDate ? $obsoleteDate->toSaiStampFormat() : null,
+            'name' => $revision->obsolete_name ?? optional($lastApproval)->approver_name ?? '-',
+            'dept' => $revision->obsolete_dept ?? optional($lastApproval)->dept_name ?? '-',
         ];
 
-        $sharedAtDate = $revision->shared_at
-            ? Carbon::parse($revision->shared_at)
-            : null;
-
+        // 9. Files
         $fileRows = DB::table('doc_package_revision_files')
             ->where('revision_id', $decrypted_id)
             ->select('id', 'filename as name', 'category', 'storage_path', 'file_size', 'ori_position', 'copy_position', 'obslt_position', 'blocks_position')
             ->get();
 
-        $extList = $fileRows
-            ->map(fn($r) => strtolower(pathinfo($r->name, PATHINFO_EXTENSION)))
-            ->filter()
-            ->unique()
-            ->values();
-
+        $extList = $fileRows->map(fn($r) => strtolower(pathinfo($r->name, PATHINFO_EXTENSION)))->unique()->values();
         $extUpper = $extList->map(fn($e) => strtoupper($e));
+        $extIcons = $extUpper->isEmpty() ? [] : FileExtensions::whereIn('code', $extUpper)->get()->mapWithKeys(fn($m) => [strtolower($m->code) => $m->icon_src])->all();
 
-        $extIcons = $extUpper->isEmpty()
-            ? []
-            : FileExtensions::whereIn('code', $extUpper)
-            ->get()
-            ->mapWithKeys(fn(FileExtensions $m) => [strtolower($m->code) => $m->icon_src])
-            ->all();
+        $files = $fileRows->groupBy('category')->map(function ($items) use ($extIcons) {
+            return $items->map(function ($item) use ($extIcons) {
+                $url = URL::signedRoute('preview.file', ['id' => $item->id]);
+                $ext = strtolower(pathinfo($item->name, PATHINFO_EXTENSION));
+                return [
+                    'name'     => $item->name,
+                    'url'      => $url,
+                    'file_id'  => $item->id,
+                    'icon_src' => $extIcons[$ext] ?? null,
+                    'ori_position' => $item->ori_position,
+                    'copy_position' => $item->copy_position,
+                    'obslt_position' => $item->obslt_position,
+                    'blocks_position' => $item->blocks_position ? json_decode($item->blocks_position, true) : [],
+                    'size'          => $item->file_size,
+                ];
+            });
+        })->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
-        $files = $fileRows
-            ->groupBy('category')
-            ->map(function ($items) use ($extIcons) {
-                return $items->map(function ($item) use ($extIcons) {
-                    $url = URL::signedRoute('preview.file', ['id' => $item->id]);
-
-                    $ext = strtolower(pathinfo($item->name, PATHINFO_EXTENSION));
-                    $iconSrc = $extIcons[$ext] ?? null;
-
-                    return [
-                        'name'     => $item->name,
-                        'url'      => $url,
-                        'file_id'  => $item->id,
-                        'icon_src' => $iconSrc,
-                        'ori_position' => $item->ori_position,
-                        'copy_position' => $item->copy_position,
-                        'obslt_position' => $item->obslt_position,
-                        'blocks_position' => $item->blocks_position ? json_decode($item->blocks_position, true) : [],
-                        'size'          => $item->file_size,
-                    ];
-                });
-            })
-            ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
-
+        // 10. Susun Response Detail
         $detail = [
             'metadata' => [
                 'customer' => $package->customer,
@@ -628,40 +726,87 @@ class ReceiptController extends Controller
                 'doc_type' => $package->doctype_group,
                 'category' => $package->doctype_subcategory,
                 'part_group' => $package->part_group,
+                'expired_at' => $shareInfo->expired_at,
             ],
-            'status'       => 'Approved',
+            'status' => 'Approved',
             'files' => $files,
-
-            'stamp'        => [
+            'stamp' => [
                 'receipt_date' => $receiptDate?->toDateString(),
                 'upload_date'  => $uploadDateRevision?->toDateString(),
-                'shared_at'    => $sharedAtDate?->toDateString(),
+                'shared_at'    => $sharedAtDate?->toDateString(), // Tanggal dari package_shares
                 'is_obsolete'  => $isObsolete,
                 'obsolete_info' => $obsoleteStampInfo,
             ],
         ];
 
         $stampFormat = StampFormat::where('is_active', true)->first();
-
-        $userDeptCode = null;
-        if (Auth::check() && Auth::user()->id_dept) {
-            $userDeptCode = DB::table('departments')->where('id', Auth::user()->id_dept)->value('code');
-        }
-
-        $userName = null;
-        if (Auth::check()) {
-            $userName = Auth::user()->name;
-        }
+        $userName = Auth::check() ? Auth::user()->name : null;
 
         return response()->json([
             'success' => true,
-            'exportId' => $decrypted_id,
+            'exportId' => $originalEncryptedId,
             'detail' => $detail,
             'revisionList' => [],
             'stampFormat' => $stampFormat,
-            'userDeptCode' => $userDeptCode,
             'userName' => $userName,
+            
+            // DATA BARU UNTUK FRONTEND
+            'sharerDeptCode' => $sharerDeptCode, 
+            'supplierCode'   => $currentSupplierCode,
         ]);
+    }
+
+    private function getStampContext(int $revisionId, int $userId): ?array
+    {
+        $userIdInt = (int) $userId;
+
+        // 1. Identifikasi Supplier ID user
+        $supplierId = null;
+        $userSupplier = DB::table('user_supplier')->where('user_id', $userIdInt)->first();
+        
+        if ($userSupplier) {
+            $supplierId = $userSupplier->supplier_id;
+        } else {
+            $userRole = DB::table('user_roles')->where('user_id', $userIdInt)->first();
+            $supplierId = $userRole ? $userRole->role_id : null;
+        }
+
+        if (!$supplierId) {
+            return null; 
+        }
+
+        // 2. Ambil Data Share (Pivot)
+        $shareInfo = DB::table('package_shares')
+            ->where('revision_id', $revisionId)
+            ->where('supplier_id', $supplierId)
+            ->first();
+
+        if (!$shareInfo) {
+            return null;
+        }
+        
+        if ($shareInfo->expired_at && Carbon::parse($shareInfo->expired_at)->isPast()) {
+            return null;
+        }
+
+        $sharerDeptCode = 'PUD';
+        if ($shareInfo->created_by) {
+            $sharer = DB::table('users')->where('id', $shareInfo->created_by)->first();
+            if ($sharer && $sharer->id_dept) {
+                $dept = DB::table('departments')->where('id', $sharer->id_dept)->first();
+                if ($dept) {
+                    $sharerDeptCode = $dept->code;
+                }
+            }
+        }
+
+        $supplierCode = DB::table('suppliers')->where('id', $supplierId)->value('code') ?? '-';
+
+        return [
+            'sharerDept'   => $sharerDeptCode,
+            'supplierCode' => $supplierCode,
+            'sharedAt'     => $shareInfo->shared_at
+        ];
     }
 
     /**
@@ -688,6 +833,15 @@ class ReceiptController extends Controller
             abort(403, 'Access denied. File is not part of an approved revision.');
         }
 
+        $user = Auth::user();
+        $userId = $user ? (int) $user->id : 0; 
+
+        $stampContext = $this->getStampContext($revision->id, $userId);
+
+        if (!$stampContext) {
+            abort(403, 'Access denied or link expired.');
+        }
+
         $path = Storage::disk('datacenter')->path($file->storage_path);
 
         if (!file_exists($path)) {
@@ -710,7 +864,8 @@ class ReceiptController extends Controller
 
             if ($package && $stampFormat) {
                 try {
-                    $tempPath = $this->_burnStamps($path, $file, $revision, $package, $stampFormat);
+                    // Kirim $stampContext sebagai parameter terakhir
+                    $tempPath = $this->_burnStamps($path, $file, $revision, $package, $stampFormat, $stampContext);
 
                     if ($tempPath !== $path) {
                         return response()->download($tempPath, $file->filename)->deleteFileAfterSend(true);
@@ -732,7 +887,7 @@ class ReceiptController extends Controller
         try {
             $decrypted_id = decrypt(str_replace('-', '=', $revision_id));
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Package not found or not approved.'], 404);
+            return response()->json(['success' => false, 'message' => 'Package not found.'], 404);
         }
 
         $revision = DB::table('doc_package_revisions')
@@ -741,7 +896,16 @@ class ReceiptController extends Controller
             ->first();
 
         if (!$revision) {
-            return response()->json(['success' => false, 'message' => 'Package not found or not approved.'], 404);
+            return response()->json(['success' => false, 'message' => 'Package not found.'], 404);
+        }
+
+        $user = Auth::user();
+        $userId = $user ? (int) $user->id : 0; 
+
+        $stampContext = $this->getStampContext($revision->id, $userId);
+
+        if (!$stampContext) {
+             return response()->json(['success' => false, 'message' => 'Unauthorized or Link Expired.'], 403);
         }
 
         $package = DB::table('doc_packages as dp')
@@ -753,7 +917,7 @@ class ReceiptController extends Controller
             ->first();
 
         if (!$package) {
-            return response()->json(['success' => false, 'message' => 'Associated package details not found.'], 404);
+            return response()->json(['success' => false, 'message' => 'Package details not found.'], 404);
         }
 
         $files = DocPackageRevisionFile::where('revision_id', $decrypted_id)->get();
@@ -775,30 +939,26 @@ class ReceiptController extends Controller
         $zipFileName = strtoupper("{$customer}-{$model}-{$partNo}-{$ecn}-{$timestamp}") . ".zip";
 
         $zipDirectory = storage_path('app/public');
-        $zipDirectory = str_replace('/', DIRECTORY_SEPARATOR, $zipDirectory); // Normalisasi path
+        $zipDirectory = str_replace('/', DIRECTORY_SEPARATOR, $zipDirectory); 
 
         if (!file_exists($zipDirectory)) {
             if (!mkdir($zipDirectory, 0775, true)) {
-                $errorMsg = 'Failed to create zip directory. Check permissions for storage/app.';
+                $errorMsg = 'Failed to create zip directory.';
                 Log::error($errorMsg, ['path' => $zipDirectory]);
                 return response()->json(['success' => false, 'message' => $errorMsg], 500);
             }
         }
 
         if (!is_writable($zipDirectory)) {
-            $errorMsg = 'Zip directory exists but is not writable. Check permissions for storage/app/public.';
+            $errorMsg = 'Zip directory exists but is not writable.';
             Log::error($errorMsg, ['path' => $zipDirectory]);
             return response()->json(['success' => false, 'message' => $errorMsg], 500);
         }
 
         $zipFilePath = $zipDirectory . DIRECTORY_SEPARATOR . $zipFileName;
-
         $zip = new ZipArchive();
 
-        Log::info('Attempting to open ZipArchive at normalized path', ['path' => $zipFilePath]);
-
         if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== TRUE) {
-            Log::error('ZipArchive::open() failed. Check permissions and path.', ['path' => $zipFilePath]);
             return response()->json(['success' => false, 'message' => 'Could not create zip file on server.'], 500);
         }
 
@@ -814,75 +974,50 @@ class ReceiptController extends Controller
 
             if ($canStamp && in_array($ext, $stampableTypes) && file_exists($filePath)) {
                 try {
-                    $tempPath = $this->_burnStamps($filePath, $file, $revision, $package, $stampFormat);
+                    // Kirim $stampContext ke _burnStamps
+                    $tempPath = $this->_burnStamps($filePath, $file, $revision, $package, $stampFormat, $stampContext);
                     if ($tempPath !== $filePath) {
                         $fileToAdd = $tempPath;
                         $deleteAfterAdd = true;
                     }
                 } catch (\Exception $e) {
-                    Log::error('Imagick stamp burn failed for zip', [
-                        'file_id' => $file->id,
-                        'error' => $e->getMessage()
-                    ]);
+                    Log::error('Imagick stamp burn failed for zip', ['error' => $e->getMessage()]);
                 }
             }
 
             if (file_exists($fileToAdd)) {
                 $category = strtolower(trim($file->category));
                 $folderInZip = 'ecn';
-                if ($category === '2d') {
-                    $folderInZip = '2d';
-                } elseif ($category === '3d') {
-                    $folderInZip = '3d';
-                }
+                if ($category === '2d') $folderInZip = '2d';
+                elseif ($category === '3d') $folderInZip = '3d';
 
                 $pathInZip = str_replace('/', DIRECTORY_SEPARATOR, $folderInZip . '/' . $file->filename);
-
                 $zip->addFile($fileToAdd, $pathInZip);
 
-                $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
-                if (in_array($ext, ['jpg', 'jpeg', 'png', 'hpgl', 'tif', 'pdf', 'zip', 'rar', 'step', 'stp', 'igs', 'iges', 'catpart', 'catproduct'])) {
-                    $zip->setCompressionName($pathInZip, ZipArchive::CM_STORE);
-                }
-
+                $zip->setCompressionName($pathInZip, ZipArchive::CM_STORE);
                 $filesAddedCount++;
 
                 if ($deleteAfterAdd) {
                     $tempFilesToDelete[] = $fileToAdd;
                 }
-
             } else {
-                Log::warning('File not found and skipped for zipping: ' . $filePath . ' (or temp file: ' . $fileToAdd . ')');
+                Log::warning('File skipped: ' . $filePath);
             }
         }
 
-        $closeSuccess = false;
-        try {
-            $closeSuccess = $zip->close();
-            if (!$closeSuccess) {
-                 Log::error('zip->close() returned false.', ['path' => $zipFilePath, 'status' => $zip->status, 'statusString' => $zip->getStatusString()]);
-            }
-        } catch (\Exception $e) {
-            Log::error('Exception at zip->close(). This is likely a source file issue.', ['path' => $zipFilePath, 'error' => $e->getMessage()]);
-            $closeSuccess = false;
-        }
+        $zip->close();
 
         foreach ($tempFilesToDelete as $tempFile) {
             @unlink($tempFile);
         }
-        if (!$closeSuccess) {
-            return response()->json(['success' => false, 'message' => 'Failed to finalize zip file. Check logs for details.'], 500);
-        }
 
         if ($filesAddedCount === 0) {
-            if (file_exists($zipFilePath)) {
-                @unlink($zipFilePath);
-            }
-            return response()->json(['success' => false, 'message' => 'No physical files were found to add to the zip package.'], 404);
+            @unlink($zipFilePath);
+            return response()->json(['success' => false, 'message' => 'No physical files were found.'], 404);
         }
 
         $downloadUrl = URL::temporarySignedRoute(
-            'export.get-zip',
+            'receipts.download-zip', 
             now()->addMinutes(5),
             [
                 'file_name' => $zipFileName,
@@ -1174,14 +1309,15 @@ class ReceiptController extends Controller
         }
     }
 
-    private function _burnStamps(string $originalPath, DocPackageRevisionFile $file, object $revision, object $package, ?StampFormat $stampFormat): string
+    // Perhatikan parameter terakhir $extraData = []
+    private function _burnStamps(string $originalPath, DocPackageRevisionFile $file, object $revision, object $package, ?StampFormat $stampFormat, array $extraData = []): string
     {
         if (!class_exists('Imagick') || !file_exists($originalPath)) {
             return $originalPath;
         }
 
         try {
-            // Helper Format Tanggal (Lokal)
+            // Helper Format Tanggal
             $formatSaiDate = function ($dateInput) {
                 if (!$dateInput) return '-';
                 try {
@@ -1204,42 +1340,41 @@ class ReceiptController extends Controller
             // --- A. STAMP ORIGINAL ---
             $receiptDateStr = $formatSaiDate($revision->receipt_date);
             $uploadDateStr  = $formatSaiDate($revision->created_at);
+            $topLine    = 'Date Received : ' . $receiptDateStr;
+            $bottomLine = 'Date Uploaded : ' . $uploadDateStr;
 
-            $topLine    = "Date Received : " . $receiptDateStr;
-            $bottomLine = "Date Uploaded : " . $uploadDateStr;
-
-            // --- B. STAMP CONTROL COPY ---
+            // --- B. STAMP CONTROL COPY / UNCONTROLLED ---
             $modelStatusId = $package->status_id ?? 0;
 
-            if ($modelStatusId == 4) {
-                // === LOGIKA UNCONTROLLED COPY ===
-                $centerTextCopy = 'SAI-DRAWING UNCONTROLLED COPY';
-                $topLineCopy    = 'SAI / PUD / For Quotation';
+            // Ambil data dari Helper ($extraData)
+            $sharerDept   = $extraData['sharerDept'] ?? 'PUD';
+            $supplierCode = $extraData['supplierCode'] ?? '-';
+            $sharedAtRaw  = $extraData['sharedAt'] ?? $revision->shared_at;
 
-                // Format Shared At
-                $sharedAtStr = $formatSaiDate($revision->shared_at);
+            if ($modelStatusId == 4) {
+                // === UNCONTROLLED COPY ===
+                $centerTextCopy = 'SAI-DRAWING UNCONTROLLED COPY';
+                
+                // Top Line: SAI / {DEPT_PENGIRIM} / For Quotation
+                $topLineCopy = "SAI / {$sharerDept} / For Quotation";
+
+                // Bottom Line: Date Share : {TANGGAL_DARI_PIVOT}
+                $sharedAtStr = $formatSaiDate($sharedAtRaw);
                 $bottomLineCopy = "Date Share : " . $sharedAtStr;
 
             } else {
-                // === LOGIKA CONTROLLED COPY (EXISTING) ===
+                // === CONTROLLED COPY ===
                 $centerTextCopy = 'SAI-DRAWING CONTROLLED COPY';
 
                 $now = now();
                 $datePart = $formatSaiDate($now);
                 $timePart = $now->format('H:i:s');
 
-                $deptCode = '--';
-                if (Auth::check() && Auth::user()->id_dept) {
-                    $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
-                    if ($dept && isset($dept->code)) $deptCode = $dept->code;
-                }
-                $topLineCopy = "SAI / {$deptCode} / {$datePart} {$timePart}";
+                // Top Line: SAI / {DEPT_PENGIRIM} / {DATE} {TIME}
+                $topLineCopy = "SAI / {$sharerDept} / {$datePart} {$timePart}";
 
-                $userName = '--';
-                if (Auth::check()) {
-                    $userName = Auth::user()->name ?? '--';
-                }
-                $bottomLineCopy = "Downloaded By {$userName}";
+                // Bottom Line: External - Distributed To Supplier {SUPPLIER_CODE}
+                $bottomLineCopy = "External - Distributed To Supplier {$supplierCode}";
             }
 
             // --- POSISI STAMP ---
@@ -1248,9 +1383,8 @@ class ReceiptController extends Controller
             $posObsolete = $this->positionIntToKey($file->obslt_position ?? 2, 'bottom-right');
 
             // --- GENERATE MASTER GAMBAR ---
-            // Original & Copy (Default Blue)
             $stampOriginal = $this->_createStampImage('SAI-DRAWING ORIGINAL', $topLine, $bottomLine, 'blue');
-            $stampCopy     = $this->_createStampImage('SAI-DRAWING CONTROLLED COPY', $topLineCopy, $bottomLineCopy, 'blue');
+            $stampCopy     = $this->_createStampImage($centerTextCopy, $topLineCopy, $bottomLineCopy, 'blue');
             $stampObsolete = null;
 
             $isObsolete = (bool)($revision->is_obsolete ?? 0);
@@ -1278,16 +1412,14 @@ class ReceiptController extends Controller
                 }
 
                 $bottomLineObsolete = ["Nama : {$obsName}", "Dept. : {$obsDept}"];
-
                 $stampObsolete = $this->_createStampImage('SAI-DRAWING OBSOLETE', $topLineObsolete, $bottomLineObsolete, 'red');
             }
 
             if (!$stampOriginal || !$stampCopy) {
-                Log::warning('Could not create master stamp images, returning original file.');
                 return $originalPath;
             }
 
-            // 3. Proses Imagick
+            // --- IMAGICK PROCESSING ---
             $masterStampWidth = $stampOriginal->getImageWidth();
             $masterStampHeight = $stampOriginal->getImageHeight();
             $stampAspectRatio = $masterStampWidth / $masterStampHeight;
@@ -1295,6 +1427,8 @@ class ReceiptController extends Controller
             $imagick = new \Imagick();
             $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
             $isPdf = ($ext === 'pdf');
+            $isTiff = ($ext === 'tif' || $ext === 'tiff');
+            $isMultiPage = ($isPdf || $isTiff);
 
             if ($isPdf) {
                 $imagick->setResolution(150, 150);
@@ -1305,13 +1439,39 @@ class ReceiptController extends Controller
             $stampWidthPercent = 0.15;
             $minStampWidth = 224;
 
-            // --- DEFINISI CLOSURE ---
             $processPage = function($iteratorIndex) use (
-                $imagick, $stampOriginal, $stampCopy, $stampObsolete, $isObsolete, $file,
+                $imagick, $stampOriginal, $stampCopy, $stampObsolete, $isObsolete,
                 $stampAspectRatio, $marginPercent, $stampWidthPercent, $minStampWidth,
-                $posOriginal, $posCopy, $posObsolete,
+                $posOriginal, $posCopy, $posObsolete, $isTiff
             ) {
                 $imagick->setIteratorIndex($iteratorIndex);
+
+                // Fix for TIFF: Force format to ensure we can manipulate it correctly
+                if ($isTiff) {
+                    $imagick->setImageFormat('tiff');
+                }
+
+                // 1. Ensure sRGB Colorspace
+                if ($imagick->getImageColorspace() !== \Imagick::COLORSPACE_SRGB) {
+                    $imagick->transformImageColorspace(\Imagick::COLORSPACE_SRGB);
+                }
+    
+                // 2. Force TrueColor (supports colors like Blue/Red)
+                try {
+                    $imagick->setImageType(\Imagick::IMGTYPE_TRUECOLORMATTE);
+                } catch (\Exception $e) {
+                    $imagick->setImageType(\Imagick::IMGTYPE_TRUECOLOR);
+                }
+
+                // 3. CRITICAL: Force 8-bit depth. 
+                // Many TIFFs are 1-bit (Bilevel). Without this, they revert to black/white, 
+                // turning the blue stamp black and making anti-aliased edges look like thick pixelated borders.
+                $imagick->setImageDepth(8);
+
+                // 4. Set Compression (LZW is good for TIFF)
+                if ($isTiff) {
+                    $imagick->setCompression(\Imagick::COMPRESSION_LZW);
+                }
                 $imgWidth = $imagick->getImageWidth();
                 $imgHeight = $imagick->getImageHeight();
                 $margin = max(8, (int) (min($imgWidth, $imgHeight) * $marginPercent));
@@ -1319,26 +1479,30 @@ class ReceiptController extends Controller
                 $newStampWidth = max($minStampWidth, (int) ($imgWidth * $stampWidthPercent));
                 $newStampHeight = (int) ($newStampWidth / $stampAspectRatio);
 
-                // Resize Stamps
+                // Original
                 $stampOrigResized = $stampOriginal->clone();
                 $stampOrigResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
 
+                // Copy
                 $stampCopyResized = $stampCopy->clone();
                 $stampCopyResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
 
+                // Obsolete
                 $stampObsResized = null;
                 if ($isObsolete && $stampObsolete) {
                     $stampObsResized = $stampObsolete->clone();
                     $stampObsResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
                 }
 
-                // Composite Stamps
+                // Composite Original
                 list($x, $y) = $this->calculateStampCoordinates($posOriginal, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
                 $imagick->compositeImage($stampOrigResized, \Imagick::COMPOSITE_OVER, (int)$x, (int)$y);
 
+                // Composite Copy
                 list($xCopy, $yCopy) = $this->calculateStampCoordinates($posCopy, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
                 $imagick->compositeImage($stampCopyResized, \Imagick::COMPOSITE_OVER, (int)$xCopy, (int)$yCopy);
 
+                // Composite Obsolete
                 if ($stampObsResized) {
                     list($xObs, $yObs) = $this->calculateStampCoordinates($posObsolete, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
                     $imagick->compositeImage($stampObsResized, \Imagick::COMPOSITE_OVER, (int)$xObs, (int)$yObs);
@@ -1349,8 +1513,7 @@ class ReceiptController extends Controller
                 $stampCopyResized->destroy();
             };
 
-            // Jalankan Proses
-            if ($isPdf) {
+            if ($isMultiPage) {
                 $totalPages = $imagick->getNumberImages();
                 for ($i = 0; $i < $totalPages; $i++) {
                     $processPage($i);
@@ -1370,20 +1533,18 @@ class ReceiptController extends Controller
                 $processPage($mainImageIndex);
             }
 
-            // Simpan File
             $tempDir = storage_path('app/temp');
             if (!file_exists($tempDir)) mkdir($tempDir, 0775, true);
 
             $outputExt = $isPdf ? 'pdf' : strtolower($imagick->getImageFormat());
             $tempPath = $tempDir . '/' . Str::uuid()->toString() . '.' . $outputExt;
 
-            if ($isPdf) {
+            if ($isMultiPage) {
                 $imagick->writeImages($tempPath, true);
             } else {
                 $imagick->writeImage($tempPath);
             }
 
-            // Cleanup
             $imagick->clear(); $imagick->destroy();
             $stampOriginal->clear(); $stampOriginal->destroy();
             $stampCopy->clear(); $stampCopy->destroy();

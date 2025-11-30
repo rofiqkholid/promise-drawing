@@ -97,19 +97,74 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-5">
-      @foreach(['Customer', 'Model', 'Document Type', 'Category', 'Status'] as $label)
-      <div>
-        <label for="{{ Str::slug($label) }}" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $label }}</label>
-        <div class="relative mt-1">
-          <select id="{{ Str::slug($label) }}"
-            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-            <option value="All" selected>All</option>
-          </select>
-        </div>
-      </div>
-      @endforeach
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-6">
+  {{-- Customer --}}
+  <div>
+    <label for="customer" class="text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
+    <div class="relative mt-1">
+      <select id="customer"
+        class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        <option value="All" selected>All</option>
+      </select>
     </div>
+  </div>
+
+  {{-- Model --}}
+  <div>
+    <label for="model" class="text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
+    <div class="relative mt-1">
+      <select id="model"
+        class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        <option value="All" selected>All</option>
+      </select>
+    </div>
+  </div>
+
+  {{-- Document Type --}}
+  <div>
+    <label for="document-type" class="text-sm font-medium text-gray-700 dark:text-gray-300">Document Type</label>
+    <div class="relative mt-1">
+      <select id="document-type"
+        class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        <option value="All" selected>All</option>
+      </select>
+    </div>
+  </div>
+
+  {{-- Category --}}
+  <div>
+    <label for="category" class="text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+    <div class="relative mt-1">
+      <select id="category"
+        class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        <option value="All" selected>All</option>
+      </select>
+    </div>
+  </div>
+
+  {{-- Revision Status (Waiting/Approved/Rejected) --}}
+  <div>
+    <label for="status" class="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+    <div class="relative mt-1">
+      <select id="status"
+        class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        <option value="All" selected>All</option>
+      </select>
+    </div>
+  </div>
+
+  {{-- Project Status (BARU, sama konsep dengan dashboard #project_status) --}}
+  <div>
+    <label for="project-status" class="text-sm font-medium text-gray-700 dark:text-gray-300">Project Status</label>
+    <div class="relative mt-1">
+      <select id="project-status"
+        class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+        <option value="All" selected>All</option>
+      </select>
+    </div>
+  </div>
+</div>
+
   </div>
 
   {{-- Tabel section --}}
@@ -322,7 +377,7 @@
     let shareRevisionId = null;
     let shareRowData = null;
 
-    // --- helper: reset Select2 ke "All" (pasti sukses untuk AJAX mode) ---
+    // --- helper: reset Select2 ke "All"
     function resetSelect2ToAll($el) {
       $el.empty();
       const opt = new Option('All', 'All', true, true);
@@ -391,6 +446,8 @@
       doc_type: $('#document-type').val() || ''
     }));
     makeSelect2($('#status'), 'status');
+    makeSelect2($('#project-status'), 'project_status');
+
 
     // Dependent behavior -> set anak ke "All"
     $('#customer').on('change', function() {
@@ -401,15 +458,23 @@
     });
 
     function getCurrentFilters() {
-      const valOrAll = v => (v && v.length ? v : 'All');
-      return {
-        customer: valOrAll($('#customer').val()),
-        model: valOrAll($('#model').val()),
-        doc_type: valOrAll($('#document-type').val()),
-        category: valOrAll($('#category').val()),
-        status: valOrAll($('#status').val()),
-      };
-    }
+  const valOrAll = v => (v && v.length ? v : 'All');
+
+  // ambil data select2 untuk Project Status, sama gaya dengan Dashboard
+  const psData = $('#project-status').select2('data');
+  const psText = (psData && psData.length > 0) ? (psData[0].text || '').trim() : '';
+  const projectStatus = psText && psText !== 'ALL' ? psText : 'ALL';  // 'ALL' artinya no filter
+
+  return {
+    customer:       valOrAll($('#customer').val()),
+    model:          valOrAll($('#model').val()),
+    doc_type:       valOrAll($('#document-type').val()),
+    category:       valOrAll($('#category').val()),
+    status:         valOrAll($('#status').val()),
+    project_status: valOrAll($('#project-status').val()),
+  };
+}
+
 
     function loadKPI() {
       const params = getCurrentFilters();
@@ -522,6 +587,7 @@
             d.doc_type = f.doc_type;
             d.category = f.category;
             d.status = f.status;
+            d.project_status = f.project_status;
           }
         },
 
@@ -667,7 +733,7 @@
 
     function bindHandlers() {
       // perubahan filter -> reload & refresh KPI
-      $('#customer, #model, #document-type, #category, #status').on('change', function() {
+      $('#customer, #model, #document-type, #category, #status, #project-status').on('change', function() {
         if (table) table.ajax.reload(null, true);
         loadKPI();
       });
@@ -679,6 +745,7 @@
         resetSelect2ToAll($('#document-type'));
         resetSelect2ToAll($('#category'));
         resetSelect2ToAll($('#status'));
+        resetSelect2ToAll($('#project-status'));
 
         if (table) table.ajax.reload(null, true);
         loadKPI();
