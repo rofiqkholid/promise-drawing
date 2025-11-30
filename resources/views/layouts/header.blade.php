@@ -138,7 +138,7 @@
         <div x-data="{ userDropdownOpen: false }" class="relative ml-2">
 
             <button @click="userDropdownOpen = !userDropdownOpen"
-                class="flex items-center mr-1.5 space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none">
+                class="flex items-center mr-1.5 space-x-2 p-1.5 m-0.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none">
 
                 <div class="hidden sm:flex flex-col text-right">
                     <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ Auth::user()->name }}</span>
