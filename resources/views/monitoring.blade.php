@@ -496,7 +496,7 @@
                                 color: textColor,
                                 padding: 15,
                                 font: {
-                                    size: 12
+                                    size: 14
                                 }
                             }
                         },
@@ -512,10 +512,10 @@
                             boxPadding: 6,
                             usePointStyle: true,
                             titleFont: {
-                                size: 13
+                                size: 14
                             },
                             bodyFont: {
-                                size: 12
+                                size: 14
                             }
                         },
                         datalabels: {
@@ -525,7 +525,7 @@
                             offset: -1,
                             font: {
                                 weight: 'bold',
-                                size: 12
+                                size: 14
                             },
                             formatter: Math.round
                         }
@@ -535,7 +535,7 @@
                             ticks: {
                                 color: textColor,
                                 font: {
-                                    size: 12
+                                    size: 14
                                 }
                             },
                             grid: {
@@ -552,7 +552,7 @@
                                 text: 'Count',
                                 color: textColor,
                                 font: {
-                                    size: 12,
+                                    size: 14,
                                     weight: 'bold'
                                 }
                             },
@@ -561,7 +561,7 @@
                                 color: textColor,
                                 maxTicksLimit: 3,
                                 font: {
-                                    size: 12
+                                    size: 14
                                 },
                                 precision: 0
                             },
@@ -579,7 +579,7 @@
                                 text: 'Percentage',
                                 color: textColor,
                                 font: {
-                                    size: 12,
+                                    size: 14,
                                     weight: 'bold'
                                 }
                             },
@@ -587,7 +587,7 @@
                                 color: textColor,
                                 maxTicksLimit: 3,
                                 font: {
-                                    size: 12
+                                    size: 14
                                 },
                                 callback: (v) => v
                             },
@@ -699,7 +699,7 @@
                                 color: textColor,
                                 padding: 15,
                                 font: {
-                                    size: 12
+                                    size: 14
                                 }
                             }
                         },
@@ -713,10 +713,10 @@
                             borderWidth: 1,
                             usePointStyle: true,
                             titleFont: {
-                                size: 13
+                                size: 14
                             },
                             bodyFont: {
-                                size: 12
+                                size: 14
                             }
                         },
                         datalabels: {
@@ -728,7 +728,7 @@
                             ticks: {
                                 color: textColor,
                                 font: {
-                                    size: 11
+                                    size: 14
                                 }
                             },
                             grid: {
@@ -742,7 +742,7 @@
                                 maxTicksLimit: 3,
                                 precision: 0,
                                 font: {
-                                    size: 11
+                                    size: 14
                                 }
                             },
                             grid: {
@@ -823,7 +823,7 @@
                                 size: 14
                             },
                             bodyFont: {
-                                size: 12
+                                size: 14
                             },
                             callbacks: {
                                 label: function(context) {

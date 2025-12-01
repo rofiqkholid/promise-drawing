@@ -403,39 +403,49 @@ class DashboardController extends Controller
                 'project_status'
             );
 
-        if ($request->filled('date_start') && $request->filled('date_end')) {
-            $query->whereBetween('created_at', [
-                $request->date_start,
-                $request->date_end
-            ]);
+        // --- FILTER TANGGAL (AKUMULASI) ---
+        // Logika: Ambil data dari masa lalu SAMPAI tanggal yang dipilih (date_end).
+        // Kita abaikan date_start agar data lama tetap muncul.
+        if ($request->filled('date_end')) {
+            $query->whereDate('created_at', '<=', $request->date_end);
         }
 
+        // --- FILTER STATUS ---
         if ($request->filled('project_status') && $request->project_status !== 'ALL') {
             $query->where('project_status', $request->project_status);
         }
 
+        // --- FILTER CUSTOMER ---
         if ($request->filled('customer')) {
             $query->whereIn('customer_name', $request->customer);
         }
 
+        // --- FILTER MODEL ---
         if ($request->filled('model')) {
             $query->whereIn('model_name', $request->model);
         }
 
+        // --- FILTER PART GROUP ---
         if ($request->filled('part_group')) {
             $query->whereIn('part_group', $request->part_group);
         }
 
+        // --- SORTING ---
         $sortBy = $request->input('sort_by', 'plan');
         $orderColumn = $sortBy === 'actual' ? 'actual_count' : 'plan_count';
         $query->orderBy($orderColumn, 'desc');
 
+        // Eksekusi Query
         $results = $query->get();
 
+        // --- MAPPING DATA (Persentase) ---
         $results = $results->map(function ($item) {
             $plan = floatval($item->plan_count);
             $actual = floatval($item->actual_count);
+
+            // Hitung persentase (hindari division by zero)
             $percentage = $plan > 0 ? ($actual / $plan) * 100 : 0;
+
             $item->percentage = number_format($percentage, 1);
             return $item;
         });
@@ -699,7 +709,7 @@ class DashboardController extends Controller
             ->first();
 
         $saveTree = $data->paper / 80000;
-        $co2Reduced = $saveTree * 22; 
+        $co2Reduced = $saveTree * 22;
 
         return response()->json([
             'paper' => $data->paper,

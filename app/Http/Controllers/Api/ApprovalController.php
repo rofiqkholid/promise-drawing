@@ -41,6 +41,7 @@ class ApprovalController extends Controller
             ->join('products as p', 'dp.product_id', '=', 'p.id')
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
             ->where('dpr.revision_status', '<>', 'draft');
 
         if ($req->filled('customer') && $req->customer !== 'All') {
@@ -67,6 +68,14 @@ class ApprovalController extends Controller
                 $q->whereIn('dpr.revision_status', $vals);
             }
         }
+        // filter Project Status (Feasibility, SOP, dsb)
+        if ($req->filled('project_status')) {
+            $ps = $req->project_status;
+            if (strcasecmp($ps, 'All') !== 0) {   // beda dengan "All" -> baru filter
+                $q->where('ps.name', $ps);
+            }
+        }
+
 
         $row = $q->selectRaw("
             COUNT(*) AS total,
@@ -123,13 +132,18 @@ class ApprovalController extends Controller
                 case 'model':
                     $builder = DB::table('models as m')
                         ->join('customers as c', 'm.customer_id', '=', 'c.id')
+                        ->when($customerCode && $customerCode !== 'All', function ($x) use ($customerCode) {
+                            $x->where('c.code', $customerCode);
+                        })
+                        ->when($q, function ($x) use ($q) {
+                            $x->where('m.name', 'like', "%{$q}%");
+                        });
+                    $namesQuery = $builder
                         ->selectRaw('m.name AS id, m.name AS text')
-                        ->when($customerCode && $customerCode !== 'All', fn($x) => $x->where('c.code', $customerCode))
-                        ->when($q, fn($x) => $x->where('m.name', 'like', "%{$q}%"))
+                        ->distinct()
                         ->orderBy('m.name');
-
-                    $total = (clone $builder)->count();
-                    $items = $builder->forPage($page, $perPage)->get();
+                    $total = (clone $namesQuery)->count();
+                    $items = $namesQuery->forPage($page, $perPage)->get();
                     break;
 
                 case 'doc_type':
@@ -165,6 +179,16 @@ class ApprovalController extends Controller
                         : $all;
                     $total = $filtered->count();
                     $items = $filtered->slice(($page - 1) * $perPage, $perPage)->values();
+                    break;
+
+                case 'project_status':   // <--- BARU
+                    $builder = DB::table('project_status as ps')
+                        ->selectRaw('ps.name AS id, ps.name AS text')
+                        ->when($q, fn($x) => $x->where('ps.name', 'like', "%{$q}%"))
+                        ->orderBy('ps.name');
+
+                    $total = (clone $builder)->count();
+                    $items = $builder->forPage($page, $perPage)->get();
                     break;
 
                 default:
@@ -255,6 +279,7 @@ class ApprovalController extends Controller
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
             ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
             ->leftJoinSub($latestPa, 'pa', function ($join) {
                 $join->on('pa.revision_id', '=', 'dpr.id')
                     ->where('pa.rn', '=', 1);
@@ -289,6 +314,13 @@ class ApprovalController extends Controller
                     "COALESCE(pa.decision, dpr.revision_status) IN ($placeholders)",
                     $vals
                 );
+            }
+        }
+
+        if ($request->filled('project_status')) {
+            $ps = $request->project_status;
+            if (strcasecmp($ps, 'All') !== 0) {
+                $query->where('ps.name', $ps);
             }
         }
 
@@ -1260,121 +1292,129 @@ class ApprovalController extends Controller
         ]);
     }
 
-   public function exportSummary(Request $request)
-{
-    $latestPa = DB::table('package_approvals as pa')
-        ->select(
-            'pa.id',
-            'pa.revision_id',
-            'pa.requested_at',
-            'pa.decided_at',
-            'pa.decision',
-            'pa.decided_by'
-        )
-        ->selectRaw("
+    public function exportSummary(Request $request)
+    {
+        $latestPa = DB::table('package_approvals as pa')
+            ->select(
+                'pa.id',
+                'pa.revision_id',
+                'pa.requested_at',
+                'pa.decided_at',
+                'pa.decision',
+                'pa.decided_by'
+            )
+            ->selectRaw("
             ROW_NUMBER() OVER (
               PARTITION BY pa.revision_id
               ORDER BY COALESCE(pa.decided_at, pa.requested_at) DESC, pa.id DESC
             ) as rn
         ");
 
-    $query = DB::table('doc_package_revisions as dpr')
-        ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
-        ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-        ->join('models as m', 'dp.model_id', '=', 'm.id')
-        ->join('products as p', 'dp.product_id', '=', 'p.id')
-        ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-        ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-        ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
-        ->leftJoinSub($latestPa, 'pa', function ($join) {
-            $join->on('pa.revision_id', '=', 'dpr.id')
-                ->where('pa.rn', '=', 1);
-        })
-        ->where('dpr.revision_status', '<>', 'draft');
+        $query = DB::table('doc_package_revisions as dpr')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
+            ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+            ->leftJoinSub($latestPa, 'pa', function ($join) {
+                $join->on('pa.revision_id', '=', 'dpr.id')
+                    ->where('pa.rn', '=', 1);
+            })
+            ->where('dpr.revision_status', '<>', 'draft');
         // ->whereColumn('dp.current_revision_id', 'dpr.id'); // kalau mau hanya current
 
-    // filter sama seperti sebelumnya
-    if ($request->filled('customer') && $request->customer !== 'All') {
-        $query->where('c.code', $request->customer);
-    }
-    if ($request->filled('model') && $request->model !== 'All') {
-        $query->where('m.name', $request->model);
-    }
-    if ($request->filled('doc_type') && $request->doc_type !== 'All') {
-        $query->where('dtg.name', $request->doc_type);
-    }
-    if ($request->filled('category') && $request->category !== 'All') {
-        $query->where('dsc.name', $request->category);
-    }
-
-    // hanya Approved
-    $query->whereRaw("COALESCE(pa.decision, dpr.revision_status) = 'approved'");
-
-    $rowsDb = $query->select(
-        'c.code as customer',
-        'm.name as model',
-        'p.part_no',
-        'p.part_name as part_name',
-        'dtg.name as doctype',
-        'dsc.name as category',
-        'pg.code_part_group as part_group',
-        'dpr.created_at as upload_date',
-        'dpr.receipt_date as receipt_date',
-        'dpr.ecn_no as ecn_no',
-        'dpr.revision_no as revision_no',
-        'dpr.is_finish as is_finish'
-    )
-        ->orderBy('c.code')
-        ->orderBy('m.name')
-        ->orderBy('p.part_no')
-        ->get();
-
-    $generatedAt = Carbon::now();
-
-    $rows = [];
-    foreach ($rowsDb as $r) {
-        $uploadDate = $r->upload_date
-            ? Carbon::parse($r->upload_date)->format('Y-m-d')
-            : '';
-
-        $receiveDate = $r->receipt_date
-            ? Carbon::parse($r->receipt_date)->format('Y-m-d')
-            : '';
-
-        $ecnNo      = $r->ecn_no ?? '';
-        $revisionNo = $r->revision_no ?? '';
-
-        // handle kolom BIT -> string '1' atau '0'
-        if (is_null($r->is_finish)) {
-            // kalau null mau dianggap 0 juga
-            $isFinish = '0';
-        } else {
-            // true / 1 / '1' -> '1', selain itu -> '0'
-            $isFinish = $r->is_finish ? '1' : '0';
+        // filter sama seperti sebelumnya
+        if ($request->filled('customer') && $request->customer !== 'All') {
+            $query->where('c.code', $request->customer);
+        }
+        if ($request->filled('model') && $request->model !== 'All') {
+            $query->where('m.name', $request->model);
+        }
+        if ($request->filled('doc_type') && $request->doc_type !== 'All') {
+            $query->where('dtg.name', $request->doc_type);
+        }
+        if ($request->filled('category') && $request->category !== 'All') {
+            $query->where('dsc.name', $request->category);
+        }
+        if ($request->filled('project_status')) {
+            $ps = $request->project_status;
+            if (strcasecmp($ps, 'All') !== 0) {
+                $query->where('ps.name', $ps);
+            }
         }
 
-        // urutan kolom (tanpa No, karena No ditambah di Export class)
-        $rows[] = [
-            $r->customer,
-            $r->model,
-            $r->part_no,
-            $r->part_name,
-            $r->doctype,
-            $r->category,
-            $ecnNo,
-            $revisionNo,
-            $r->part_group,
-            $receiveDate,
-            $uploadDate,
-            $isFinish,
-        ];
+
+        // hanya Approved
+        $query->whereRaw("COALESCE(pa.decision, dpr.revision_status) = 'approved'");
+
+        $rowsDb = $query->select(
+            'c.code as customer',
+            'm.name as model',
+            'p.part_no',
+            'p.part_name as part_name',
+            'dtg.name as doctype',
+            'dsc.name as category',
+            'pg.code_part_group as part_group',
+            'dpr.created_at as upload_date',
+            'dpr.receipt_date as receipt_date',
+            'dpr.ecn_no as ecn_no',
+            'dpr.revision_no as revision_no',
+            'dpr.is_finish as is_finish'
+        )
+            ->orderBy('c.code')
+            ->orderBy('m.name')
+            ->orderBy('p.part_no')
+            ->get();
+
+        $generatedAt = Carbon::now();
+
+        $rows = [];
+        foreach ($rowsDb as $r) {
+            $uploadDate = $r->upload_date
+                ? Carbon::parse($r->upload_date)->format('Y-m-d')
+                : '';
+
+            $receiveDate = $r->receipt_date
+                ? Carbon::parse($r->receipt_date)->format('Y-m-d')
+                : '';
+
+            $ecnNo      = $r->ecn_no ?? '';
+            $revisionNo = $r->revision_no ?? '';
+
+            // handle kolom BIT -> string '1' atau '0'
+            if (is_null($r->is_finish)) {
+                // kalau null mau dianggap 0 juga
+                $isFinish = '0';
+            } else {
+                // true / 1 / '1' -> '1', selain itu -> '0'
+                $isFinish = $r->is_finish ? '1' : '0';
+            }
+
+            // urutan kolom (tanpa No, karena No ditambah di Export class)
+            $rows[] = [
+                $r->customer,
+                $r->model,
+                $r->part_no,
+                $r->part_name,
+                $r->doctype,
+                $r->category,
+                $ecnNo,
+                $revisionNo,
+                $r->part_group,
+                $receiveDate,
+                $uploadDate,
+                $isFinish,
+            ];
+        }
+
+        $export   = new ApprovalSummaryExport($rows, $generatedAt->format('Y-m-d H:i'));
+        $filename = 'approval-summary-' . $generatedAt->format('Ymd_His') . '.xlsx';
+
+        return Excel::download($export, $filename);
     }
-
-    $export   = new ApprovalSummaryExport($rows, $generatedAt->format('Y-m-d H:i'));
-    $filename = 'approval-summary-' . $generatedAt->format('Ymd_His') . '.xlsx';
-
-    return Excel::download($export, $filename);
-}
 
 
 
@@ -1447,7 +1487,7 @@ class ApprovalController extends Controller
             ->whereNotNull('users.email')
             ->where(function ($q) {
                 $q->whereNull('user_roles.role_id')
-                  ->orWhere('user_roles.role_id', '!=', 5);
+                    ->orWhere('user_roles.role_id', '!=', 5);
             });
 
         if ($isFeasibility) {
