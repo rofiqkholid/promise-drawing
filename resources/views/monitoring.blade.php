@@ -5,7 +5,7 @@
 @section('content')
 {{-- CSS untuk Animasi Panah "Travel & Disappear" --}}
 
-<div id="dashboardWrapper" class="flex flex-col gap-2 h-[calc(100vh-90px)] w-full overflow-hidden">
+<div id="dashboardWrapper" class="flex flex-col gap-2 h-[calc(100vh-70px)] w-full overflow-hidden">
 
     {{-- BARIS 1: TOP CARDS --}}
     <div class="flex-none grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-2">
@@ -69,7 +69,7 @@
     </div>
 
     {{-- FILTER CARD --}}
-    <div id="filterCard" style="display: none;" class="flex-none mt-2 bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+    <div id="filterCard" style="display: none;" class="flex-none bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
         <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
             <i class="fa-solid fa-filter mr-2 text-gray-500"></i> Filter Data
         </h3>
@@ -247,6 +247,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         Chart.register(ChartDataLabels);
         const dashboard = new DashboardManager();
+        Chart.defaults.font.family = "'Outfit', sans-serif";
         dashboard.init();
     });
 
@@ -552,7 +553,7 @@
                                 text: 'Count',
                                 color: textColor,
                                 font: {
-                                    size: 14,
+                                    size: 12,
                                     weight: 'bold'
                                 }
                             },
@@ -561,7 +562,7 @@
                                 color: textColor,
                                 maxTicksLimit: 3,
                                 font: {
-                                    size: 14
+                                    size: 12
                                 },
                                 precision: 0
                             },
@@ -579,7 +580,7 @@
                                 text: 'Percentage',
                                 color: textColor,
                                 font: {
-                                    size: 14,
+                                    size: 12,
                                     weight: 'bold'
                                 }
                             },
@@ -587,7 +588,7 @@
                                 color: textColor,
                                 maxTicksLimit: 3,
                                 font: {
-                                    size: 14
+                                    size: 12
                                 },
                                 callback: (v) => v
                             },
@@ -1171,15 +1172,15 @@
                     const isOpening = $card.is(':hidden');
 
                     if (isOpening) {
-                        wrapper.classList.remove('h-[calc(100vh-90px)]', 'overflow-hidden');
-                        wrapper.classList.add('min-h-[calc(100vh-90px)]', 'h-auto', 'pb-4');
+                        wrapper.classList.remove('h-[calc(100vh-70px)]', 'overflow-hidden');
+                        wrapper.classList.add('min-h-[calc(100vh-70px)]', 'h-auto', 'pb-4');
                     }
 
                     $card.stop(true, true).slideToggle(300, 'swing', function() {
                         $(this).css('overflow', 'visible');
                         if (!isOpening) {
-                            wrapper.classList.remove('min-h-[calc(100vh-90px)]', 'h-auto', 'pb-4');
-                            wrapper.classList.add('h-[calc(100vh-90px)]', 'overflow-hidden');
+                            wrapper.classList.remove('min-h-[calc(100vh-70px)]', 'h-auto', 'pb-4');
+                            wrapper.classList.add('h-[calc(100vh-70px)]', 'overflow-hidden');
                         }
                     });
 
