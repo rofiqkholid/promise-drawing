@@ -1565,13 +1565,13 @@
           };
         },
 
-        // getObsoleteFormat() {
-        //     const list = this.stampFormat || [];
-        //     if (Array.isArray(list) && list.length > 1) {
-        //         return list[1];
-        //     }
-        //     return { prefix: 'DATE UPLOAD', suffix: 'Dept' };
-        // },
+        getObsoleteFormat() {
+            const list = this.stampFormats || [];
+            if (Array.isArray(list) && list.length > 1) {
+                return list[1];
+            }
+            return { prefix: 'DATE UPLOAD', suffix: 'Dept' };
+        },
 
         getObsoleteInfo() {
           return this.pkg?.stamp?.obsolete_info || {};
@@ -2036,12 +2036,14 @@ if (img) {
         nextTifPage() {
           if (this.tifPageNum >= this.tifNumPages) return;
           this.tifPageNum++;
+          this.loadMasksForCurrentPage();  
           this.renderTiffPage();
         },
 
         prevTifPage() {
           if (this.tifPageNum <= 1) return;
           this.tifPageNum--;
+          this.loadMasksForCurrentPage();  
           this.renderTiffPage();
         },
 
@@ -2109,12 +2111,14 @@ if (img) {
           if (!pdfDoc) return;
           if (this.pdfPageNum >= this.pdfNumPages) return;
           this.pdfPageNum++;
+          this.loadMasksForCurrentPage();  
           this.renderPdfPage();
         },
         prevPdfPage() {
           if (!pdfDoc) return;
           if (this.pdfPageNum <= 1) return;
           this.pdfPageNum--;
+          this.loadMasksForCurrentPage();  
           this.renderPdfPage();
         },
 
@@ -2586,21 +2590,27 @@ if (img) {
           this.panX = 0;
           this.panY = 0;
 
-          this.selectedFile = {
-            ...file
-          };
+         this.selectedFile = { ...file };
 
-          // load konfigurasi posisi stamp untuk file yang dipilih
-          this.loadStampConfigFor(this.selectedFile);
+// reset page number untuk file baru
+if (this.isPdf(file?.name)) {
+  this.pdfPageNum = 1;
+}
+if (this.isTiff(file?.name)) {
+  this.tifPageNum = 1;
+}
 
-          // ==== RESET & LOAD BLOCKS DARI DB UNTUK FILE INI ====
-          this.masks = [];
-          this.nextMaskId = 1;
+// load konfigurasi posisi stamp untuk file yang dipilih
+this.loadStampConfigFor(this.selectedFile);
 
-          // kalau backend sudah kirim blocks_position (array), pakai itu
-          const blocks = file.blocks_position || [];
+// ==== RESET & LOAD BLOCKS DARI DB UNTUK FILE INI ====
+this.masks = [];
+this.nextMaskId = 1;
 
-          this.loadMasksForCurrentPage();
+// const blocks = file.blocks_position || []; // ini sudah nggak kepakai, boleh dihapus
+
+this.loadMasksForCurrentPage();
+
 
 
           // kalau nggak ada blok dari DB, boleh otomatis buat 1 blok awal (opsional)
@@ -3021,29 +3031,41 @@ async saveBlocks(blocks, page) {
         'Accept': 'application/json',
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
       },
-      body: JSON.stringify({
-        page,
-        blocks,
-      }),
+      body: JSON.stringify({ page, blocks }),
     });
 
     const json = await res.json();
-
     if (!res.ok) {
       throw new Error(json.message || 'Failed to save blocks position');
     }
 
-    // update copy lokal supaya kalau pindah page lalu balik, blok masih ada
+    // 🔹 update copy lokal di selectedFile
     const all = this.normalizeBlocksData(this.selectedFile.blocks_position || {});
     all[String(page)] = blocks;
     this.selectedFile.blocks_position = all;
+
+    // 🔹 sync juga ke pkg.files agar kalau pilih file ini lagi, data sudah update
+    const groups = this.pkg.files || {};
+    const currentKey = this.getFileKey(this.selectedFile);
+
+    for (const groupKey of Object.keys(groups)) {
+      const list = groups[groupKey] || [];
+      const idx = list.findIndex(f => this.getFileKey(f) === currentKey);
+      if (idx !== -1) {
+        const fileAll = this.normalizeBlocksData(list[idx].blocks_position || {});
+        fileAll[String(page)] = blocks;
+        list[idx].blocks_position = fileAll;
+        break;
+      }
+    }
 
     toastSuccess('Saved', json.message || 'Blocks position saved.');
   } catch (e) {
     console.error(e);
     toastError('Error', e.message || 'Failed to save blocks position');
   }
-},
+}
+
 
           saveCurrentMask() {
   if (!this.selectedFile?.id) {
@@ -3071,8 +3093,7 @@ async saveBlocks(blocks, page) {
 }
 
 
-    }
-    }
+}
     // ========== SHARE DARI HALAMAN DETAIL ==========
     document.addEventListener('DOMContentLoaded',
       function() {

@@ -10,6 +10,7 @@ use App\Models\DocPackageRevisionFile;
 use App\Models\Customers;
 use App\Models\FileExtensions;
 use App\Models\DoctypeGroups;
+use App\Models\ActivityLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
@@ -342,117 +343,185 @@ class ShareController extends Controller
 
     public function saveShare(Request $request)
     {
+        // Validasi Input
         $validator = Validator::make($request->all(), [
-            'package_id'   => 'required|integer|exists:doc_package_revisions,id',
-            'supplier_ids' => 'nullable|array',
+            'package_id'     => 'required|integer|exists:doc_package_revisions,id',
+            'supplier_ids'   => 'required|array',
+            'supplier_ids.*' => 'integer|exists:suppliers,id',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->first()], 422);
         }
 
-        $packageId   = $request->input('package_id');
-        $roleIds     = $request->input('supplier_ids', []);
-        $roleIdJson  = json_encode($roleIds);
+        $revisionId  = $request->input('package_id');
+        $supplierIds = $request->input('supplier_ids');
 
-        // kalau butuh user untuk log, tinggal pakai $user ini
+        // Set Expiry (14 hari dari sekarang)
+        $expiredAt = Carbon::now()->addDays(14);
+        
         $user = auth()->user();
+        $userId = $user ? $user->id : null;
 
-        // ambil detail package untuk subject email
-        $packageDetails = DB::table('doc_package_revisions as dpr')
-            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
-            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-            ->join('models as m', 'dp.model_id', '=', 'm.id')
-            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-            ->leftJoin('products as p', 'dp.product_id', '=', 'p.id')
-            ->where('dpr.id', $packageId)
-            ->select(
-                'c.code as customer',
-                'm.name as model',
-                'dsc.name as category',
-                'dtg.name as doc_type',
-                'p.part_no',
-                'dpr.revision_no'
-            )
-            ->first();
-
-        if (!$packageDetails) {
-            return response()->json(['message' => 'Package details not found.'], 404);
+        if (!$userId) {
+            return response()->json(['message' => 'Unauthorized user.'], 401);
         }
 
-        // update share_to di revisi
-        $updateSuccess = DB::table('doc_package_revisions')
-            ->where('id', $packageId)
-            ->update([
-                'share_to'  => $roleIdJson,
-                'shared_at' => now(),
+        DB::beginTransaction();
+        try {
+            // Update atau Insert ke tabel package_shares
+            foreach ($supplierIds as $supplierId) {
+                DB::table('package_shares')->updateOrInsert(
+                    [
+                        'revision_id' => $revisionId,
+                        'supplier_id' => $supplierId,
+                    ],
+                    [
+                        'department_id' => null,
+                        'shared_at'     => now(),
+                        'expired_at'    => $expiredAt,
+                        'created_by'    => $userId,
+                        'updated_at'    => now(),
+                    ]
+                );
+            }
+
+            // Ambil Detail Package untuk kebutuhan Log & Email
+            $packageDetails = DB::table('doc_package_revisions as dpr')
+                ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+                ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+                ->join('models as m', 'dp.model_id', '=', 'm.id')
+                ->join('products as p', 'dp.product_id', '=', 'p.id')
+                ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+                ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+                ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+                ->where('dpr.id', $revisionId)
+                ->select(
+                    'dp.id as package_id',
+                    'c.code as customer',
+                    'm.name as model',
+                    'p.part_no',
+                    'pg.code_part_group',
+                    'dsc.name as category',
+                    'dtg.name as doc_type',
+                    'dpr.revision_no',
+                    'dpr.ecn_no'
+                )
+                ->first();
+
+            // Ambil Supplier CODE (bukan Name) untuk Log summary
+            $supplierCodes = DB::table('suppliers')
+                ->whereIn('id', $supplierIds)
+                ->pluck('code')
+                ->implode(', ');
+
+            // Ambil User Supplier penerima SEBELUM buat Log
+            $userSuppliers = DB::table('users')
+                ->join('user_supplier', 'users.id', '=', 'user_supplier.user_id')
+                ->join('suppliers', 'user_supplier.supplier_id', '=', 'suppliers.id')
+                ->whereIn('user_supplier.supplier_id', $supplierIds)
+                ->whereNotNull('users.email')
+                ->select(
+                    'users.id', 
+                    'users.email', 
+                    'users.name', 
+                    'suppliers.name as supplier_name', 
+                    'suppliers.code as supplier_code'
+                )
+                ->get();
+
+            $sharedToString = $userSuppliers->map(function($u) {
+                return "[{$u->supplier_code}] {$u->name} ({$u->email})";
+            })->unique()->implode(', ');
+
+            // Format daftar penerima untuk disimpan di Log (Snapshot)
+            $recipientSnapshot = $userSuppliers->map(function($u) {
+                return "{$u->name} ({$u->email})";
+            })->unique()->implode(', ');
+
+            // Buat Activity Log
+            if ($packageDetails) {
+                $metaLogData = [
+                    'part_no'         => $packageDetails->part_no,
+                    'customer_code'   => $packageDetails->customer,
+                    'model_name'      => $packageDetails->model,
+                    'part_group_code' => $packageDetails->code_part_group ?? '-',
+                    'doc_type'        => $packageDetails->doc_type,
+                    'package_id'      => $packageDetails->package_id,
+                    'revision_no'     => $packageDetails->revision_no,
+                    'ecn_no'          => $packageDetails->ecn_no,
+                    
+                    // --- Custom Data Share ---
+                    'shared_to'       => $sharedToString,
+                    'recipients'      => $recipientSnapshot,
+                    'shared_count'    => count($supplierIds),
+                    'expired_at'      => $expiredAt->format('Y-m-d')
+                ];
+
+                ActivityLog::create([
+                    'user_id'       => $userId,
+                    'activity_code' => 'SHARE_PACKAGE',
+                    'scope_type'    => 'revision',
+                    'scope_id'      => $packageDetails->package_id,
+                    'revision_id'   => $revisionId,
+                    'meta'          => $metaLogData,
+                ]);
+            }
+
+            // Persiapan Subject Email
+            $part1 = trim($packageDetails->model);
+            $part2 = $packageDetails->doc_type;
+            $part3 = $packageDetails->category;
+            $subjectParts = array_filter([$part1, $part2, $part3], fn($v) => !is_null($v) && $v !== '');
+            $emailSubject = implode(' - ', $subjectParts);
+
+            // Ambil daftar file
+            $files = DB::table('doc_package_revision_files')
+                ->where('revision_id', $revisionId)
+                ->pluck('filename')
+                ->toArray();
+
+            // Grouping User untuk Pengiriman Email
+            $usersToEmail = [];
+            foreach ($userSuppliers as $us) {
+                if (!isset($usersToEmail[$us->email])) {
+                    $usersToEmail[$us->email] = [
+                        'name' => $us->name,
+                        'email' => $us->email,
+                        'supplier_names' => []
+                    ];
+                }
+                // Cegah duplikasi nama supplier di body email jika 1 user pegang banyak supplier
+                if (!in_array($us->supplier_name, $usersToEmail[$us->email]['supplier_names'])) {
+                    $usersToEmail[$us->email]['supplier_names'][] = $us->supplier_name;
+                }
+            }
+
+            $encryptedId = Crypt::encrypt($revisionId);
+
+            // Kirim Email
+            foreach ($usersToEmail as $userData) {
+                $supplierNamesStr = implode(', ', $userData['supplier_names']);
+                
+                Mail::to($userData['email'])->send(new ShareNotification(
+                    $userData['name'],
+                    $encryptedId,
+                    $emailSubject,
+                    $supplierNamesStr,
+                    $files
+                ));
+            }
+
+            DB::commit();
+            return response()->json([
+                'message' => 'Package shared successfully to ' . count($supplierIds) . ' suppliers.'
             ]);
 
-        if (!$updateSuccess) {
-            return response()->json(['message' => 'Package not found or no changes were made.'], 404);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Share Error: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to share package: ' . $e->getMessage()], 500);
         }
-
-        // kalau nggak ada penerima, cukup sampai sini
-        if (empty($roleIds)) {
-            return response()->json(['message' => 'Package sharing updated (no recipients).']);
-        }
-
-        // cari user-user di supplier yang dipilih
-        $userSuppliers = DB::table('users')
-            ->join('user_supplier', 'users.id', '=', 'user_supplier.user_id')
-            ->join('suppliers', 'user_supplier.supplier_id', '=', 'suppliers.id')
-            ->whereIn('user_supplier.supplier_id', $roleIds)
-            ->select('users.id', 'users.email', 'users.name', 'suppliers.name as supplier_code')
-            ->get();
-
-        if ($userSuppliers->isEmpty()) {
-            return response()->json(['message' => 'Package shared, but no users found for the selected suppliers.']);
-        }
-
-        // group by user supaya kalau 1 user punya banyak supplier, digabung
-        $usersToEmail = [];
-        foreach ($userSuppliers as $us) {
-            if (!isset($usersToEmail[$us->id])) {
-                $usersToEmail[$us->id] = [
-                    'name'           => $us->name,
-                    'email'          => $us->email,
-                    'supplier_codes' => [],
-                ];
-            }
-            if (!in_array($us->supplier_code, $usersToEmail[$us->id]['supplier_codes'])) {
-                $usersToEmail[$us->id]['supplier_codes'][] = $us->supplier_code;
-            }
-        }
-
-        // subject email
-        $part1 = trim($packageDetails->model);
-        $part2 = $packageDetails->doc_type;
-        $part3 = $packageDetails->category;
-
-        $subjectParts = array_filter([$part1, $part2, $part3], fn($v) => !is_null($v) && $v !== '');
-        $emailSubject = implode(' - ', $subjectParts);
-
-        // daftar file
-        $files = DB::table('doc_package_revision_files')
-            ->where('revision_id', $packageId)
-            ->pluck('filename');
-
-        // encrypt ID revisi untuk link di email
-        foreach ($usersToEmail as $userData) {
-            $supplierNames = implode(', ', $userData['supplier_codes']);
-            $encryptedId   = Crypt::encrypt($packageId);
-
-            Mail::to($userData['email'])->send(new ShareNotification(
-                $userData['name'],
-                $encryptedId,
-                $emailSubject,
-                $supplierNames,
-                $files
-            ));
-        }
-
-        return response()->json(['message' => 'Package shared and emails sent successfully!']);
     }
 
 
@@ -705,7 +774,7 @@ class ShareController extends Controller
     }
 
 
-   public function updateBlocks(Request $request, $fileId): JsonResponse
+  public function updateBlocks(Request $request, $fileId): JsonResponse
 {
     $file = DocPackageRevisionFile::findOrFail($fileId);
 
@@ -739,7 +808,13 @@ class ShareController extends Controller
     // ==== MERGE DENGAN VALUE LAMA (BACKWARD COMPATIBLE) ====
     $existing = $file->blocks_position ?: [];
 
-    // Kalau data lama masih dalam bentuk array flat → anggap halaman 1
+    // 🔴 TAMBAHAN PENTING: kalau masih string JSON → decode dulu
+    if (is_string($existing)) {
+        $decoded = json_decode($existing, true);
+        $existing = $decoded ?? [];
+    }
+
+    // Kalau data lama masih berupa array flat (tanpa key page) → anggap halaman 1
     if (is_array($existing) && array_is_list($existing)) {
         $existing = [
             '1' => $existing,
@@ -750,9 +825,11 @@ class ShareController extends Controller
         $existing = [];
     }
 
+    // Update hanya page yang sekarang
     $existing[(string) $page] = $blocks;
 
-    $file->blocks_position = $existing; // cast array → JSON
+    // Laravel akan simpan sebagai JSON
+    $file->blocks_position = $existing;
     $file->save();
 
     return response()->json([
@@ -761,6 +838,7 @@ class ShareController extends Controller
         'blocks'  => $blocks,
     ]);
 }
+
 
 
 

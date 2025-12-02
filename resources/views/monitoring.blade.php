@@ -148,11 +148,65 @@
 
 
     <div class="h-[35vh] flex-none flex flex-col lg:flex-row gap-2 items-stretch mb-2">
-        <div class="w-full lg:w-[45%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
-            <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
-                <i class="fa-solid fa-arrow-trend-up mr-2 text-purple-500"></i> Trend Upload & Download
-            </h3>
-            <div class="relative w-full flex-1 min-h-0">
+        <div class="w-full lg:w-[45%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-visible">
+            <div class="flex-none flex justify-between items-center mb-2">
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                    <i class="fa-solid fa-arrow-trend-up mr-2 text-purple-500"></i> Trend Upload & Download
+                </h3>
+
+                <div x-data="{
+                            open: false,
+                            selected: '{{ date('Y') }}',
+                            select(val) {
+                                this.selected = val;
+                                this.open = false;
+                                const input = document.getElementById('trendYearInput');
+                                input.value = val;
+                                input.dispatchEvent(new Event('change'));
+                            }
+                        }"
+                    class="relative w-28 z-20">
+
+                    <input type="hidden" id="trendYearInput" value="{{ date('Y') }}">
+
+                    <button @click="open = !open" @click.outside="open = false" type="button"
+                        class="flex items-center justify-between w-full px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none">
+                        <span x-text="selected"></span>
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                    </button>
+
+                    <div x-show="open"
+                        x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                        style="display: none;"
+                        class="absolute right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-100 dark:border-gray-600 py-1 z-50 max-h-48 overflow-y-auto custom-scrollbar">
+
+                        @php
+                        $currentYear = date('Y');
+                        $startYear = $currentYear - 5;
+                        @endphp
+
+                        @for ($i = $currentYear; $i >= $startYear; $i--)
+                        <button @click="select('{{ $i }}')" type="button"
+                            class="group flex items-center justify-between w-full px-4 py-2 text-sm text-left hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-150">
+
+                            <span class="text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 font-medium"
+                                :class="selected == '{{ $i }}' ? 'text-blue-600 dark:text-blue-400 font-bold' : ''">
+                                {{ $i }}
+                            </span>
+
+                            <i x-show="selected == '{{ $i }}'" class="fa-solid fa-check text-blue-600 dark:text-blue-400 text-xs"></i>
+                        </button>
+                        @endfor
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative w-full flex-1 min-h-0 z-0">
                 <canvas id="trendChart"></canvas>
             </div>
         </div>
@@ -240,6 +294,10 @@
             this.dateRangeInstance = null;
             this.dateStart = '';
             this.dateEnd = '';
+
+            // Tambahan variable tahun
+            this.trendYear = document.getElementById('trendYearInput') ? document.getElementById('trendYearInput').value : new Date().getFullYear();
+
             this.selectedCustomers = [];
             this.selectedModels = [];
             this.selectedPartGroup = [];
@@ -594,7 +652,7 @@
             const ctx = document.getElementById('trendChart');
             if (!ctx) return;
             try {
-                const response = await fetch("{{ route('api.trend-upload-download') }}");
+                const response = await fetch(`{{ route('api.trend-upload-download') }}?year=${this.trendYear}`);
                 const result = await response.json();
                 if (result.status === 'success') {
                     this.currentTrendData = result.data;
@@ -1152,6 +1210,15 @@
             const btnLoader = document.getElementById('btnApplyLoader');
             const toggleBtn = document.getElementById('toggleFilterBtn');
 
+            const yearInput = document.getElementById('trendYearInput');
+            if (yearInput) {
+                yearInput.addEventListener('change', (e) => {
+                    if (e.target.value.length === 4) {
+                        this.trendYear = e.target.value;
+                        this.loadTrendChart();
+                    }
+                });
+            }
             if (toggleBtn) {
                 toggleBtn.addEventListener('click', () => {
                     const $card = $('#filterCard');
