@@ -195,6 +195,22 @@
             });
         }
 
+        function toastError(title = 'Error', text = 'Something went wrong.') {
+            renderToast({
+                icon: 'error',
+                title,
+                text
+            });
+        }
+
+        function toastWarning(title = 'Warning', text = 'Please check your input.') {
+            renderToast({
+                icon: 'warning',
+                title,
+                text
+            });
+        }
+
 
         let table;
         const ENDPOINT = '{{ route("share.filters") }}';
@@ -628,16 +644,21 @@
                     },
                     error: function(xhr) {
                         console.error('Failed to share:', xhr.responseText);
-                        let errorMsg = 'Failed to share package.';
+                        let msg = 'Failed to share package.';
 
                         if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMsg = xhr.responseJSON.message;
-                        } else if (xhr.status === 422) {
-                            errorMsg = 'Validation error. Check input.';
+                            msg = xhr.responseJSON.message;
                         }
 
-                        toastError('Error', errorMsg);
+                        if (xhr.status === 422) {
+                            // 💡 untuk kasus Feasibility tanpa block → WARNING
+                            toastWarning('Warning', msg);
+                        } else {
+                            // selain itu benar-benar error (500, 401, dll)
+                            toastError('Error', msg);
+                        }
                     },
+
                     complete: function() {
                         $this.prop('disabled', false).text('Share');
                     }

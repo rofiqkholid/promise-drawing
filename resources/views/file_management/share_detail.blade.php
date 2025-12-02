@@ -3292,13 +3292,22 @@ async saveBlocks(blocks, page) {
               }, 1500);
             },
             error: function(xhr) {
-              console.error('Failed to share:', xhr.responseText);
-              let errorMsg = 'Failed to share package.';
-              if (xhr.responseJSON && xhr.responseJSON.message) {
-                errorMsg = xhr.responseJSON.message;
-              }
-              toastError('Error', errorMsg);
-            },
+    console.error('Failed to share:', xhr.responseText);
+    let msg = 'Failed to share package.';
+
+    if (xhr.responseJSON && xhr.responseJSON.message) {
+        msg = xhr.responseJSON.message;
+    }
+
+    if (xhr.status === 422) {
+        // 💡 untuk kasus Feasibility tanpa block → WARNING
+        toastWarning('Warning', msg);
+    } else {
+        // selain itu benar-benar error (500, 401, dll)
+        toastError('Error', msg);
+    }
+},
+
             complete: function() {
               $this.prop('disabled', false).text('Share');
             }

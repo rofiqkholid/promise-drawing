@@ -426,11 +426,11 @@ class ShareController extends Controller
         }
     }
 
-    if (!$hasBlocks) {
-        return response()->json([
-            'message' => 'Package dengan status "Feasibility Study" harus memiliki minimal satu block pada halaman file sebelum bisa di-share. Silakan buka preview dan tambahkan block terlebih dahulu.'
-        ], 422);
-    }
+   if (!$hasBlocks) {
+    return response()->json([
+        'message' => 'This package has project status "Feasibility Study" and must have at least one block defined on a file page before it can be shared. Please open the preview and add a block first.',
+    ], 422); 
+}
 }
 
 

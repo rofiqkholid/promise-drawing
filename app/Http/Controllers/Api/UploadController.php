@@ -134,7 +134,7 @@ class UploadController extends Controller
                 'r.ecn_no as ecn_no',
                 'r.revision_label_id as revision_label_id',
                 'crl.label as revision_label_name',
-                'r.is_obsolete as is_obsolete', 'r.created_by as revision_created_by', 'r.created_at as created_at', 'r.updated_at as updated_at',
+                'r.is_obsolete as is_obsolete', 'r.is_finish', 'r.created_by as revision_created_by', 'r.created_at as created_at', 'r.updated_at as updated_at',
                 'p.project_status_id', 'p.created_by as package_created_by',
                 'c.id as customer_id','c.name as customer_name','c.code as customer_code',
                 'm.id as model_id','m.name as model_name',
