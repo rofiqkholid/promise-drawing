@@ -102,6 +102,7 @@
                     url: '{{ route("api.files.list") }}',
                     type: 'GET',
                 },
+                order: [[ 7, "desc" ]],
                 columns: [
                     { data: null, name: 'No', orderable: false, searchable: false },
                     {

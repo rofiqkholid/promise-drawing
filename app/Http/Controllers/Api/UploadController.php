@@ -123,6 +123,7 @@ class UploadController extends Controller
             ->leftJoin('doc_packages as p', 'r.package_id', '=', 'p.id')
             ->leftJoin('customers as c', 'p.customer_id', '=', 'c.id')
             ->leftJoin('models as m', 'p.model_id', '=', 'm.id')
+            ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
             ->leftJoin('products as pr', 'p.product_id', '=', 'pr.id')
             ->leftJoin('doctype_groups as dg', 'p.doctype_group_id', '=', 'dg.id')
             ->leftJoin('doctype_subcategories as sc', 'p.doctype_subcategory_id', '=', 'sc.id')
@@ -137,7 +138,7 @@ class UploadController extends Controller
                 'r.is_obsolete as is_obsolete', 'r.is_finish', 'r.created_by as revision_created_by', 'r.created_at as created_at', 'r.updated_at as updated_at',
                 'p.project_status_id', 'p.created_by as package_created_by',
                 'c.id as customer_id','c.name as customer_name','c.code as customer_code',
-                'm.id as model_id','m.name as model_name',
+                'm.id as model_id', DB::raw("CONCAT(m.name, ' - ', ISNULL(ps.name, '')) as model_name"),
                 'pr.id as product_id','pr.part_no as part_no',
                 'dg.id as docgroup_id','dg.name as docgroup_name',
                 'sc.id as subcategory_id','sc.name as subcategory_name',
