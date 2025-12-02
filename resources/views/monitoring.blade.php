@@ -907,19 +907,28 @@
         async loadActivityLog() {
             const container = document.getElementById('activityLogContainer');
             if (!container) return;
-            container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400">Loading activities...</div>`;
+
+            // Tampilkan loading state
+            container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading activities...</div>`;
+
+            // Ambil filter yang sedang aktif
+            const params = this.getFilterParams();
+
             try {
-                const response = await fetch("{{ route('api.getDataActivityLog') }}");
+                // Tambahkan params ke URL
+                const response = await fetch(`{{ route('api.getDataActivityLog') }}?${params.toString()}`);
                 const result = await response.json();
+
                 if (result.status === 'success') {
                     container.innerHTML = '';
                     if (result.data && result.data.length > 0) {
                         result.data.forEach(log => container.insertAdjacentHTML('beforeend', this.formatLogEntry(log)));
                     } else {
-                        container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400">No recent activity found.</div>`;
+                        container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400">No activity found for this filter.</div>`;
                     }
                 }
             } catch (error) {
+                console.error(error);
                 container.innerHTML = `<div class="p-4 text-center text-gray-500">Error loading activities.</div>`;
             }
         }
@@ -1264,6 +1273,7 @@
 
                 await Promise.all([
                     this.loadMonitoringChart(),
+                    this.loadActivityLog(),
                     this.loadPhaseStatusChart()
                 ]);
 
@@ -1288,6 +1298,7 @@
                 this.renderFilterPills();
                 this.loadMonitoringChart();
                 this.loadPhaseStatusChart();
+                this.loadActivityLog();
             });
         }
     }

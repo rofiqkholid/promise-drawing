@@ -791,15 +791,6 @@ class ApprovalController extends Controller
                     'updated_at' => Carbon::now(),
                 ]);
 
-            ActivityLog::create([
-                'scope_type'    => 'package',
-                'scope_id'      => $packageId,
-                'revision_id'   => $revisionId,
-                'activity_code' => ActivityLog::APPROVE,
-                'user_id'       => $userId,
-                'meta'          => ['note' => 'Revision approved'],
-            ]);
-
             // --- ambil info package (tambahkan part_group) ---
             $packageInfo = DB::table('doc_packages as dp')
                 ->join('customers as c', 'dp.customer_id', '=', 'c.id')
@@ -808,7 +799,7 @@ class ApprovalController extends Controller
                 ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
                 ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
                 ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
-                ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id') // <--- baru
+                ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
                 ->where('dp.id', $packageId)
                 ->select(
                     'dp.id',
@@ -818,10 +809,28 @@ class ApprovalController extends Controller
                     'dtg.name as doc_type',
                     'dsc.name as category',
                     'pg.code_part_group as part_group',
-                    'ps.name as project_status' // <- sesuaikan nama kolom di tabel master (name / status / dll)
+                    'ps.name as project_status'
                 )
                 ->first();
 
+            ActivityLog::create([
+                'scope_type'    => 'package',
+                'scope_id'      => $packageId,
+                'revision_id'   => $revisionId,
+                'activity_code' => ActivityLog::APPROVE,
+                'user_id'       => $userId,
+                'meta'          => [
+                    'note'            => 'Revision approved',
+                    'customer_code'   => $packageInfo->customer,
+                    'model_name'      => $packageInfo->model,
+                    'part_no'         => $packageInfo->part_no,
+                    'part_group_code' => $packageInfo->part_group ?? '-',
+                    'doc_type'        => $packageInfo->doc_type,
+                    'revision_no'     => $revision->revision_no,
+                    'ecn_no'          => $revision->ecn_no,
+                    'action_status'   => 'Approved',
+                ],
+            ]);
 
             $filenames = DB::table('doc_package_revision_files')
                 ->where('revision_id', $revisionId)
@@ -918,10 +927,6 @@ class ApprovalController extends Controller
         }
     }
 
-
-
-
-
     public function reject(Request $request, string $id)
     {
 
@@ -964,13 +969,40 @@ class ApprovalController extends Controller
                     'reason'     => $request->note,
                 ]);
 
+            $packageInfo = DB::table('doc_packages as dp')
+                ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+                ->join('models as m', 'dp.model_id', '=', 'm.id')
+                ->join('products as p', 'dp.product_id', '=', 'p.id')
+                ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+                ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+                ->where('dp.id', $revision->package_id)
+                ->select(
+                    'c.code as customer',
+                    'm.name as model',
+                    'p.part_no',
+                    'pg.code_part_group',
+                    'dtg.name as doc_type'
+                )
+                ->first();
+
             ActivityLog::create([
                 'scope_type'    => 'package',
                 'scope_id'      => $revision->package_id,
                 'revision_id'   => $revisionId,
                 'activity_code' => ActivityLog::REJECT,
                 'user_id'       => $userId,
-                'meta'          => ['note' => $request->note],
+                'meta'          => [
+                    'note'            => $request->note,
+                    // Data Snapshot
+                    'customer_code'   => $packageInfo->customer,
+                    'model_name'      => $packageInfo->model,
+                    'part_no'         => $packageInfo->part_no,
+                    'part_group_code' => $packageInfo->code_part_group ?? '-',
+                    'doc_type'        => $packageInfo->doc_type,
+                    'revision_no'     => $revision->revision_no,
+                    'ecn_no'          => $revision->ecn_no,
+                    'action_status'   => 'Rejected',
+                ],
             ]);
 
             DB::commit();
@@ -1000,7 +1032,6 @@ class ApprovalController extends Controller
                         $x->where('al.scope_type', 'revision')
                             ->where('al.scope_id', $revisionId);
                     });
-
                     $w->orWhere(function ($x) use ($revisionId) {
                         $x->where('al.scope_type', 'package')
                             ->where('al.scope_id', $revisionId);
@@ -1026,32 +1057,52 @@ class ApprovalController extends Controller
             'al.created_at',
             'u.name as user_name'
         ])
-            ->map(function ($row) {
-                $code = strtoupper($row->activity_code ?? '');
-                $action = str_starts_with($code, 'UPLOAD')   ? 'uploaded'
-                    : (str_starts_with($code, 'APPROVE')    ? 'approved'
-                        : (str_starts_with($code, 'REJECT')     ? 'rejected'
-                            : (str_starts_with($code, 'ROLLBACK')   ? 'rollbacked'
-                                : strtolower($code ?: 'info'))));
+        ->map(function ($row) {
+            $code = strtoupper($row->activity_code ?? '');
+            
+            // Mapping Action Text
+            $action = match(true) {
+                str_starts_with($code, 'UPLOAD') => 'uploaded',
+                str_starts_with($code, 'APPROVE') => 'approved',
+                str_starts_with($code, 'REJECT') => 'rejected',
+                str_starts_with($code, 'ROLLBACK') => 'rollbacked',
+                str_starts_with($code, 'SHARE') => 'shared',
+                str_starts_with($code, 'DOWNLOAD') => 'downloaded',
+                default => strtolower($code ?: 'info')
+            };
 
-                $meta = $row->meta;
-                if (is_string($meta)) {
-                    try {
-                        $meta = json_decode($meta, true, 512, JSON_THROW_ON_ERROR);
-                    } catch (\Throwable) {
-                        $meta = null;
-                    }
+            // --- LOGIKA PARSING META (HYBRID SUPPORT) ---
+            $rawMeta = $row->meta;
+            $metaArr = [];
+
+            if (is_array($rawMeta)) {
+                $metaArr = $rawMeta;
+            } elseif (is_string($rawMeta)) {
+                $decoded = json_decode($rawMeta, true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $metaArr = $decoded;
+                } else {
+                    $metaArr = ['note' => $rawMeta];
                 }
+            }
 
-                return [
-                    'id'      => (int) $row->id,
-                    'action'  => $action,
-                    'user'    => $row->user_name ?? 'System',
-                    'note'    => is_array($meta) ? ($meta['note'] ?? '') : ($meta ?: ''),
-                    'time'    => optional($row->created_at)->format('Y-m-d H:i'),
-                    'time_ts' => optional($row->created_at)?->timestamp ?? 0,
-                ];
-            });
+            return [
+                'id'      => (int) $row->id,
+                'action'  => $action,
+                'user'    => $row->user_name ?? 'System',
+                'note'    => $metaArr['note'] ?? '',
+                'time'    => optional($row->created_at)->format('Y-m-d H:i'),
+                
+                // Kirim Snapshot Data ke Frontend
+                'snapshot' => [
+                    'part_no'     => $metaArr['part_no'] ?? null,
+                    'revision_no' => $metaArr['revision_no'] ?? null,
+                    'ecn_no'      => $metaArr['ecn_no'] ?? null,
+                    'customer'    => $metaArr['customer_code'] ?? null,
+                    'model'       => $metaArr['model_name'] ?? null,
+                ]
+            ];
+        });
     }
 
     public function rollback(Request $request, string $id): JsonResponse
@@ -1070,7 +1121,7 @@ class ApprovalController extends Controller
             $revision = DB::table('doc_package_revisions')
                 ->where('id', $revisionId)
                 ->lockForUpdate()
-                ->first(['id', 'package_id', 'revision_no', 'revision_status', 'is_obsolete']);
+                ->first(['id', 'package_id', 'revision_no', 'revision_status', 'is_obsolete', 'ecn_no']);
 
             if (!$revision) {
                 DB::rollBack();
@@ -1084,13 +1135,16 @@ class ApprovalController extends Controller
 
             $packageId = (int) $revision->package_id;
 
+            // Simpan status lama untuk log
+            $previousStatus = ucfirst($revision->revision_status); 
+
             // flag: ini revisi approved & aktif (bukan obsolete)?
             $wasActiveApproved = (
                 $revision->revision_status === 'approved'
                 && (int) $revision->is_obsolete === 0
             );
 
-            // 1. selalu ubah revisi ini jadi pending + obsolete
+            // Selalu ubah revisi ini jadi pending + obsolete
             DB::table('doc_package_revisions')
                 ->where('id', $revisionId)
                 ->update([
@@ -1101,9 +1155,7 @@ class ApprovalController extends Controller
                     'updated_at'      => Carbon::now(),
                 ]);
 
-
-            // 2. HANYA kalau sebelumnya dia approved & aktif,
-            //    baru kita aktifkan approved sebelumnya
+            // Re-aktivasi approved revision sebelumnya (jika ada)
             if ($wasActiveApproved) {
                 $prev = DB::table('doc_package_revisions as r')
                     ->join('package_approvals as pa', 'pa.revision_id', '=', 'r.id')
@@ -1141,8 +1193,6 @@ class ApprovalController extends Controller
                         ]);
                 }
             }
-            // kalau bukan active approved (misal obsolete / rejected),
-            // doc_packages tidak diubah sama sekali
 
             DB::table('package_approvals')
                 ->where('revision_id', $revisionId)
@@ -1154,6 +1204,23 @@ class ApprovalController extends Controller
                     'updated_at' => Carbon::now(),
                 ]);
 
+            // Ambil Info Package untuk Snapshot Log
+            $packageInfo = DB::table('doc_packages as dp')
+                ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+                ->join('models as m', 'dp.model_id', '=', 'm.id')
+                ->join('products as p', 'dp.product_id', '=', 'p.id')
+                ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+                ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+                ->where('dp.id', $revision->package_id)
+                ->first([
+                    'c.code as customer',
+                    'm.name as model',
+                    'p.part_no',
+                    'pg.code_part_group',
+                    'dtg.name as doc_type'
+                ]);
+
+            // Simpan Log dengan Snapshot Lengkap
             ActivityLog::create([
                 'scope_type'    => 'package',
                 'scope_id'      => $packageId,
@@ -1161,7 +1228,19 @@ class ApprovalController extends Controller
                 'activity_code' => 'ROLLBACK',
                 'user_id'       => $userId,
                 'meta'          => [
-                    'note' => 'Set current revision to Waiting; re-activated previous Approved revision if any',
+                    'note'            => 'Rollback performed (Reset to Waiting)',
+                    'previous_status' => $previousStatus, // Approved / Rejected
+                    'current_status'  => 'Waiting',
+                    
+                    // Snapshot Data 
+                    'customer_code'   => $packageInfo->customer,
+                    'model_name'      => $packageInfo->model,
+                    'part_no'         => $packageInfo->part_no,
+                    'part_group_code' => $packageInfo->code_part_group ?? '-',
+                    'doc_type'        => $packageInfo->doc_type,
+                    'revision_no'     => $revision->revision_no,
+                    'ecn_no'          => $revision->ecn_no,
+                    'action_status'   => 'Rollback'
                 ],
             ]);
 

@@ -144,39 +144,104 @@
             x-text="`${pkg.activityLogs?.length || 0} events`"></span>
         </div>
 
-        <div
-          class="p-2 space-y-2"
-          :class="(pkg.activityLogs?.length || 0) > 3 ? 'max-h-64 overflow-y-auto pr-1' : ''"
-          role="log"
-          aria-label="Activity Log">
-          <template x-for="(item, idx) in (pkg.activityLogs || [])" :key="idx">
-            <div class="flex items-start gap-3 p-3 rounded-md bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700">
-              <div class="mt-0.5">
-                <template x-if="item.action === 'uploaded'"><i class="fa-solid fa-upload text-blue-500"></i></template>
-                <template x-if="item.action === 'approved'"><i class="fa-solid fa-circle-check text-green-500"></i></template>
-                <template x-if="item.action === 'rejected'"><i class="fa-solid fa-circle-xmark text-red-500"></i></template>
-                <template x-if="item.action === 'rollbacked'"><i class="fa-solid fa-rotate-left text-amber-500"></i></template>
-                <template x-if="!['uploaded','approved','rejected','rollbacked'].includes(item.action)"><i class="fa-solid fa-circle-info text-gray-500"></i></template>
-              </div>
-              <div class="min-w-0">
-                <p class="text-sm text-gray-900 dark:text-gray-100">
-                  <span class="font-medium capitalize" x-text="item.action"></span>
-                  <span class="mx-1">by</span>
-                  <span class="font-medium" x-text="item.user"></span>
-                  <template x-if="item.note">
-                    <span class="text-gray-600 dark:text-gray-400">— <span x-text="item.note"></span></span>
-                  </template>
-                </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400" x-text="item.time"></p>
-              </div>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div class="p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
+            <div class="flex items-center">
+              <i class="fa-solid fa-clock-rotate-left mr-2 text-gray-500 dark:text-gray-400"></i>
+              <span class="text-sm font-medium text-gray-900 dark:text-gray-100">Activity Log</span>
             </div>
-          </template>
+            <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full"
+              x-text="`${pkg.activityLogs?.length || 0} events`"></span>
+          </div>
 
-          <template x-if="(pkg.activityLogs || []).length === 0">
-            <p class="p-3 text-center text-xs text-gray-500 dark:text-gray-400">
-              No activity yet for this package.
-            </p>
-          </template>
+          <div
+            class="p-2 space-y-2"
+            :class="(pkg.activityLogs?.length || 0) > 3 ? 'max-h-96 overflow-y-auto pr-1' : ''"
+            role="log"
+            aria-label="Activity Log">
+            
+            <template x-for="(item, idx) in (pkg.activityLogs || [])" :key="idx">
+              <div class="flex items-start gap-3 p-3 rounded-md bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                
+                <div class="mt-1 flex-shrink-0">
+                  <template x-if="item.action === 'uploaded'"><div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center"><i class="fa-solid fa-cloud-arrow-up text-blue-600 text-xs"></i></div></template>
+                  <template x-if="item.action === 'approved'"><div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center"><i class="fa-solid fa-check text-green-600 text-xs"></i></div></template>
+                  <template x-if="item.action === 'rejected'"><div class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center"><i class="fa-solid fa-xmark text-red-600 text-xs"></i></div></template>
+                  <template x-if="item.action === 'rollbacked'"><div class="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center"><i class="fa-solid fa-rotate-left text-amber-600 text-xs"></i></div></template>
+                  <template x-if="item.action === 'downloaded'"><div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-download text-gray-600 text-xs"></i></div></template>
+                  <template x-if="item.action === 'shared'"><div class="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center"><i class="fa-solid fa-share-nodes text-indigo-600 text-xs"></i></div></template>
+                  
+                  <template x-if="!['uploaded','approved','rejected','rollbacked','downloaded','shared'].includes(item.action)">
+                    <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-circle-info text-gray-500 text-xs"></i></div>
+                  </template>
+                </div>
+
+                <div class="min-w-0 flex-1">
+                  <div class="flex justify-between items-start">
+                    <p class="text-sm text-gray-900 dark:text-gray-100">
+                      <span class="font-bold capitalize" x-text="item.action"></span>
+                      <span class="text-xs text-gray-500 font-normal">by</span>
+                      <span class="font-semibold text-blue-600 dark:text-blue-400" x-text="item.user"></span>
+                    </p>
+                    <span class="text-[10px] text-gray-400 whitespace-nowrap ml-2" x-text="item.time"></span>
+                  </div>
+
+                  <template x-if="item.snapshot && (item.snapshot.part_no || item.snapshot.ecn_no)">
+                    <div class="mt-2 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-xs shadow-sm">
+                        
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="font-bold text-gray-800 dark:text-gray-200" x-text="item.snapshot.part_no || '-'"></span>
+                            <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded font-mono text-[10px] border border-gray-200 dark:border-gray-600">
+                                Rev <span x-text="item.snapshot.revision_no ?? '-'"></span>
+                            </span>
+                            <template x-if="item.snapshot.ecn_no">
+                                <span class="text-blue-600 dark:text-blue-400 font-mono text-[10px] bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800" 
+                                      x-text="item.snapshot.ecn_no"></span>
+                            </template>
+                        </div>
+
+                        <div class="text-gray-500 dark:text-gray-400 text-[10px] flex items-center gap-1">
+                            <i class="fa-solid fa-tag text-[9px]"></i>
+                            <span x-text="item.snapshot.customer || '-'"></span>
+                            <span class="mx-0.5">•</span>
+                            <span x-text="item.snapshot.model || '-'"></span>
+                            <template x-if="item.snapshot.doc_type">
+                                <span>
+                                    <span class="mx-0.5">•</span>
+                                    <span x-text="item.snapshot.doc_type"></span>
+                                </span>
+                            </template>
+                        </div>
+
+                        <template x-if="item.action === 'rollbacked' && item.snapshot.previous_status">
+                            <div class="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700 flex items-center text-amber-600 dark:text-amber-500 font-medium">
+                                <i class="fa-solid fa-code-branch mr-1.5 text-[10px]"></i>
+                                <span x-text="item.snapshot.previous_status" class="capitalize"></span>
+                                <i class="fa-solid fa-arrow-right-long mx-1.5 text-[10px]"></i>
+                                <span>Waiting</span>
+                            </div>
+                        </template>
+                    </div>
+                  </template>
+
+                  <template x-if="item.note">
+                    <div class="mt-1.5 flex items-start gap-1.5">
+                        <i class="fa-solid fa-quote-left text-gray-300 dark:text-gray-600 text-[10px] mt-0.5"></i>
+                        <p class="text-xs text-gray-600 dark:text-gray-300 italic" x-text="item.note"></p>
+                    </div>
+                  </template>
+
+                </div>
+              </div>
+            </template>
+
+            <template x-if="(pkg.activityLogs || []).length === 0">
+              <div class="flex flex-col items-center justify-center py-8 text-gray-400 dark:text-gray-500">
+                <i class="fa-regular fa-calendar-xmark text-2xl mb-2"></i>
+                <p class="text-xs">No activity recorded yet.</p>
+              </div>
+            </template>
+          </div>
         </div>
       </div>
 

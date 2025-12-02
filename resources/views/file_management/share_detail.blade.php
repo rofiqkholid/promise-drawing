@@ -1287,7 +1287,7 @@
         // ===== WHITE BLOCKS (MULTI MASK) =====
         masks: [],
         nextMaskId: 1,
-
+blocksByPage: {},
 
 
         selectedFile: null,
@@ -1646,8 +1646,13 @@ currentPageForSelectedFile() {
   const name = this.selectedFile.name || '';
   if (this.isPdf(name))  return this.pdfPageNum;
   if (this.isTiff(name)) return this.tifPageNum;
-  // image / hpgl / dll dianggap 1 halaman
+  // image / hpgl / lainnya dianggap 1 halaman
   return 1;
+},
+
+initBlocksForFile(file) {
+  const raw = file?.blocks_position || {};
+  this.blocksByPage = this.normalizeBlocksData(raw);
 },
 
 buildMasksFromBlocks(blocks) {
@@ -1703,12 +1708,24 @@ loadMasksForCurrentPage() {
     this.nextMaskId = 1;
     return;
   }
-
-  const all = this.normalizeBlocksData(this.selectedFile.blocks_position || {});
   const page = this.currentPageForSelectedFile();
-  const blocks = all[String(page)] || [];
-
+  const blocks = this.blocksByPage[String(page)] || [];
   this.masks = this.buildMasksFromBlocks(blocks);
+},
+persistMasksToCurrentPage() {
+  if (!this.selectedFile) return;
+
+  const page = this.currentPageForSelectedFile();
+  const blocks = this.masks.map((m, idx) => ({
+    id: m.id ? `blk-${m.id}` : `blk-${idx + 1}`,
+    u: m.u,
+    v: m.v,
+    w: m.w,
+    h: m.h,
+    rotation: m.rotation,
+  }));
+
+  this.blocksByPage[String(page)] = blocks;
 },
 
 
@@ -2034,18 +2051,24 @@ if (img) {
         },
 
         nextTifPage() {
-          if (this.tifPageNum >= this.tifNumPages) return;
-          this.tifPageNum++;
-          this.loadMasksForCurrentPage();  
-          this.renderTiffPage();
-        },
+  if (this.tifPageNum >= this.tifNumPages) return;
+
+  this.persistMasksToCurrentPage();
+
+  this.tifPageNum++;
+  this.loadMasksForCurrentPage();
+  this.renderTiffPage();
+},
 
         prevTifPage() {
-          if (this.tifPageNum <= 1) return;
-          this.tifPageNum--;
-          this.loadMasksForCurrentPage();  
-          this.renderTiffPage();
-        },
+  if (this.tifPageNum <= 1) return;
+
+  this.persistMasksToCurrentPage();
+
+  this.tifPageNum--;
+  this.loadMasksForCurrentPage();
+  this.renderTiffPage();
+},
 
 
 
@@ -2108,19 +2131,26 @@ if (img) {
 
 
         nextPdfPage() {
-          if (!pdfDoc) return;
-          if (this.pdfPageNum >= this.pdfNumPages) return;
-          this.pdfPageNum++;
-          this.loadMasksForCurrentPage();  
-          this.renderPdfPage();
-        },
-        prevPdfPage() {
-          if (!pdfDoc) return;
-          if (this.pdfPageNum <= 1) return;
-          this.pdfPageNum--;
-          this.loadMasksForCurrentPage();  
-          this.renderPdfPage();
-        },
+  if (!pdfDoc) return;
+  if (this.pdfPageNum >= this.pdfNumPages) return;
+
+  // simpan blok halaman sekarang ke cache
+  this.persistMasksToCurrentPage();
+
+  this.pdfPageNum++;
+  this.loadMasksForCurrentPage();
+  this.renderPdfPage();
+},
+       prevPdfPage() {
+  if (!pdfDoc) return;
+  if (this.pdfPageNum <= 1) return;
+
+  this.persistMasksToCurrentPage();
+
+  this.pdfPageNum--;
+  this.loadMasksForCurrentPage();
+  this.renderPdfPage();
+},
 
         /* ===== HPGL renderer ===== */
         async renderHpgl(url) {
@@ -2546,90 +2576,81 @@ if (img) {
           else this.openSections.push(c);
         },
 
-        selectFile(file) {
-          // simpan posisi stamp file sebelumnya
-          if (this.selectedFile) {
-            this.saveStampConfigForCurrent();
-          }
+       selectFile(file) {
+  // simpan posisi stamp file sebelumnya
+  if (this.selectedFile) {
+    this.saveStampConfigForCurrent();
+  }
 
-          // cleanup viewer sebelumnya
-          if (this.isCad(this.selectedFile?.name)) this.disposeCad();
+  // cleanup viewer sebelumnya (CAD, TIFF, HPGL, PDF) — BIARKAN seperti punya Tuan
+  if (this.isCad(this.selectedFile?.name)) this.disposeCad();
+  if (this.isTiff(this.selectedFile?.name)) {
+    this.tifError = '';
+    this.tifLoading = false;
+    this.tifIfds = [];
+    this.tifDecoder = null;
+    this.tifPageNum = 1;
+    this.tifNumPages = 1;
+    if (this.$refs.tifImg) this.$refs.tifImg.src = '';
+  }
+  if (this.isHpgl(this.selectedFile?.name)) {
+    this.hpglError = '';
+    this.hpglLoading = false;
+    if (this.$refs.hpglCanvas) {
+      const c = this.$refs.hpglCanvas;
+      const ctx = c.getContext('2d');
+      ctx && ctx.clearRect(0, 0, c.width, c.height);
+    }
+  }
+  if (this.isPdf(this.selectedFile?.name)) {
+    this.pdfError = '';
+    this.pdfLoading = false;
+    pdfDoc = null;
+    if (this.$refs.pdfCanvas) {
+      const c = this.$refs.pdfCanvas;
+      const ctx = c.getContext('2d');
+      ctx && ctx.clearRect(0, 0, c.width, c.height);
+    }
+  }
 
-          if (this.isTiff(this.selectedFile?.name)) {
-            this.tifError = '';
-            this.tifLoading = false;
-            this.tifIfds = [];
-            this.tifDecoder = null;
-            this.tifPageNum = 1;
-            this.tifNumPages = 1;
-            if (this.$refs.tifImg) this.$refs.tifImg.src = '';
-          }
+  this.imageZoom = 1;
+  this.panX = 0;
+  this.panY = 0;
 
+  // set selected file
+  this.selectedFile = { ...file };
 
-          if (this.isHpgl(this.selectedFile?.name)) {
-            this.hpglError = '';
-            this.hpglLoading = false;
-            if (this.$refs.hpglCanvas) {
-              const c = this.$refs.hpglCanvas;
-              const ctx = c.getContext('2d');
-              ctx && ctx.clearRect(0, 0, c.width, c.height);
-            }
-          }
-          if (this.isPdf(this.selectedFile?.name)) {
-            this.pdfError = '';
-            this.pdfLoading = false;
-            pdfDoc = null;
-            if (this.$refs.pdfCanvas) {
-              const c = this.$refs.pdfCanvas;
-              const ctx = c.getContext('2d');
-              ctx && ctx.clearRect(0, 0, c.width, c.height);
-            }
-          }
+  // reset page untuk file baru
+  if (this.isPdf(file?.name))  this.pdfPageNum = 1;
+  if (this.isTiff(file?.name)) this.tifPageNum = 1;
 
-          this.imageZoom = 1;
-          this.panX = 0;
-          this.panY = 0;
+  // load config stamp per file
+  this.loadStampConfigFor(this.selectedFile);
 
-         this.selectedFile = { ...file };
+  // ==== INISIALISASI BLOCKS PER FILE ====
+  this.blocksByPage = {};
+  this.initBlocksForFile(this.selectedFile);
 
-// reset page number untuk file baru
-if (this.isPdf(file?.name)) {
-  this.pdfPageNum = 1;
-}
-if (this.isTiff(file?.name)) {
-  this.tifPageNum = 1;
-}
+  this.masks = [];
+  this.nextMaskId = 1;
 
-// load konfigurasi posisi stamp untuk file yang dipilih
-this.loadStampConfigFor(this.selectedFile);
+  // load blok untuk halaman pertama file ini
+  this.loadMasksForCurrentPage();
 
-// ==== RESET & LOAD BLOCKS DARI DB UNTUK FILE INI ====
-this.masks = [];
-this.nextMaskId = 1;
+  this.$nextTick(() => {
+    this.viewportVersion++;
+    if (this.isTiff(file?.name)) {
+      this.renderTiff(file.url);
+    } else if (this.isCad(file?.name)) {
+      this.renderCadOcct(file);
+    } else if (this.isHpgl(file?.name)) {
+      this.renderHpgl(file.url);
+    } else if (this.isPdf(file?.name)) {
+      this.renderPdf(file.url);
+    }
+  });
+},
 
-// const blocks = file.blocks_position || []; // ini sudah nggak kepakai, boleh dihapus
-
-this.loadMasksForCurrentPage();
-
-
-
-          // kalau nggak ada blok dari DB, boleh otomatis buat 1 blok awal (opsional)
-          // if (this.masks.length === 0) this.addMask();
-
-
-          this.$nextTick(() => {
-            this.viewportVersion++;
-            if (this.isTiff(file?.name)) {
-              this.renderTiff(file.url);
-            } else if (this.isCad(file?.name)) {
-              this.renderCadOcct(file);
-            } else if (this.isHpgl(file?.name)) {
-              this.renderHpgl(file.url);
-            } else if (this.isPdf(file?.name)) {
-              this.renderPdf(file.url);
-            }
-          });
-        },
 
         addPkgActivity(action, user, note = '') {
           this.pkg.activityLogs.unshift({
@@ -2843,6 +2864,7 @@ this.loadMasksForCurrentPage();
 
           this.masks.forEach(mm => (mm.active = false));
           this.masks.push(m);
+          this.persistMasksToCurrentPage();
         },
 
 
@@ -3003,17 +3025,22 @@ this.loadMasksForCurrentPage();
 },
 
       handleMaskMouseUp() {
-          const mask = this.masks.find(m => m._mode);
-          if (mask) mask._mode = null;
+  const mask = this.masks.find(m => m._mode);
+  if (mask) mask._mode = null;
 
-          window.removeEventListener('mousemove', this._onMaskMouseMove);
-          window.removeEventListener('mouseup', this._onMaskMouseUp);
-        },
+  window.removeEventListener('mousemove', this._onMaskMouseMove);
+  window.removeEventListener('mouseup', this._onMaskMouseUp);
+
+  // setelah drag / resize / rotate selesai → simpan ke cache per halaman
+  this.persistMasksToCurrentPage();
+},
 
         removeActiveMask() {
           const active = this.getActiveMask();
           if (!active) return;
           this.masks = this.masks.filter(m => m.id !== active.id);
+
+          this.persistMasksToCurrentPage();
         },
 
        updateBlocksUrlTemplate: `{{ route('share.files.updateBlocks', ['fileId' => '__FILE_ID__']) }}`,
@@ -3039,12 +3066,15 @@ async saveBlocks(blocks, page) {
       throw new Error(json.message || 'Failed to save blocks position');
     }
 
-    // 🔹 update copy lokal di selectedFile
+    // update local selectedFile
     const all = this.normalizeBlocksData(this.selectedFile.blocks_position || {});
     all[String(page)] = blocks;
     this.selectedFile.blocks_position = all;
 
-    // 🔹 sync juga ke pkg.files agar kalau pilih file ini lagi, data sudah update
+    // sync juga ke cache per-halaman
+    this.blocksByPage[String(page)] = blocks;
+
+    // sync juga ke pkg.files (seperti kode Tuan)
     const groups = this.pkg.files || {};
     const currentKey = this.getFileKey(this.selectedFile);
 
@@ -3064,9 +3094,7 @@ async saveBlocks(blocks, page) {
     console.error(e);
     toastError('Error', e.message || 'Failed to save blocks position');
   }
-}
-
-
+},
           saveCurrentMask() {
   if (!this.selectedFile?.id) {
     toastWarning('No file selected', 'Pilih file dulu sebelum menyimpan block.');
@@ -3088,12 +3116,12 @@ async saveBlocks(blocks, page) {
   }));
 
   const page = this.currentPageForSelectedFile();
+  this.persistMasksToCurrentPage();
 
   this.saveBlocks(blocks, page);
-}
-
-
-}
+ }
+  };   // <— TUTUP objek yang di-return
+}  
     // ========== SHARE DARI HALAMAN DETAIL ==========
     document.addEventListener('DOMContentLoaded',
       function() {
@@ -3273,6 +3301,7 @@ async saveBlocks(blocks, page) {
           });
         });
       });
+    
   </script>
 
   @endpush

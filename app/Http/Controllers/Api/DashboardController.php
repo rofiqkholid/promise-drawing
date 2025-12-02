@@ -356,7 +356,7 @@ class DashboardController extends Controller
     public function getDataActivityLog(Request $request): JsonResponse
     {
         try {
-            $data = DB::connection('sqlsrv')
+            $query = DB::connection('sqlsrv')
                 ->table('activity_logs')
                 ->join('users', 'activity_logs.user_id', '=', 'users.id')
                 ->where('activity_logs.activity_code', 'UPLOAD')
@@ -367,9 +367,53 @@ class DashboardController extends Controller
                     'activity_logs.activity_code',
                     'activity_logs.meta',
                     'activity_logs.created_at'
-                )
-                ->orderBy('activity_logs.created_at', 'desc')
-                ->limit(4)
+                );
+
+            // 1. Filter Date Range
+            if ($request->filled('date_start') && $request->filled('date_end')) {
+                $query->whereBetween('activity_logs.created_at', [
+                    $request->date_start . ' 00:00:00',
+                    $request->date_end . ' 23:59:59'
+                ]);
+            }
+
+            // 2. Filter Customer (Mencari di dalam JSON meta -> customer_code)
+            if ($request->filled('customer')) {
+                $customers = $request->customer; // Array
+                $query->where(function ($q) use ($customers) {
+                    foreach ($customers as $cust) {
+                        // Gunakan JSON_VALUE untuk SQL Server
+                        $q->orWhereRaw("JSON_VALUE(activity_logs.meta, '$.customer_code') = ?", [$cust]);
+                    }
+                });
+            }
+
+            // 3. Filter Model (Mencari di dalam JSON meta -> model_name)
+            if ($request->filled('model')) {
+                $models = $request->model;
+                $query->where(function ($q) use ($models) {
+                    foreach ($models as $mod) {
+                        $q->orWhereRaw("JSON_VALUE(activity_logs.meta, '$.model_name') = ?", [$mod]);
+                    }
+                });
+            }
+
+            // 4. Filter Part Group (Mencari di dalam JSON meta -> part_group_code)
+            if ($request->filled('part_group')) {
+                $partGroups = $request->part_group;
+                $query->where(function ($q) use ($partGroups) {
+                    foreach ($partGroups as $pg) {
+                        $q->orWhereRaw("JSON_VALUE(activity_logs.meta, '$.part_group_code') = ?", [$pg]);
+                    }
+                });
+            }
+
+            // 5. Filter Project Status (Opsional, jika ada di meta)
+            // Jika status ada di meta, gunakan logika yang sama. 
+            // Jika status UPLOAD tidak memiliki status project, bagian ini bisa di-skip atau disesuaikan.
+
+            $data = $query->orderBy('activity_logs.created_at', 'desc')
+                ->limit(10) // Disarankan limit lebih besar sedikit jika difilter
                 ->get()
                 ->map(function ($item) {
                     $item->meta = json_decode($item->meta, true);
