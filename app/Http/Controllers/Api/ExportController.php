@@ -94,25 +94,25 @@ class ExportController extends Controller
         }
 
         // === BATASIN FEASIBILITY UNTUK KPI ===
-$user   = Auth::user();
-$feasId = $this->getFeasibilityStatusId();
+        $user   = Auth::user();
+        $feasId = $this->getFeasibilityStatusId();
 
-if ($feasId) {
-    // kalau user belum login -> jangan hitung Feasibility
-    if (!$user) {
-        $q->where('m.status_id', '!=', $feasId);
-        $downloadQuery->where('m.status_id', '!=', $feasId);
-        $totalRevisionsQuery->where('m.status_id', '!=', $feasId);
-    } else {
-        // kalau user TIDAK punya role yang diizinkan -> juga jangan hitung Feasibility
-        if (!$this->userHasAnyRole($user, ['ENG'])) {
-            $q->where('m.status_id', '!=', $feasId);
-            $downloadQuery->where('m.status_id', '!=', $feasId);
-            $totalRevisionsQuery->where('m.status_id', '!=', $feasId);
+        if ($feasId) {
+            // kalau user belum login -> jangan hitung Feasibility
+            if (!$user) {
+                $q->where('m.status_id', '!=', $feasId);
+                $downloadQuery->where('m.status_id', '!=', $feasId);
+                $totalRevisionsQuery->where('m.status_id', '!=', $feasId);
+            } else {
+                // kalau user TIDAK punya role yang diizinkan -> juga jangan hitung Feasibility
+                if (!$this->userHasAnyRole($user, ['ENG'])) {
+                    $q->where('m.status_id', '!=', $feasId);
+                    $downloadQuery->where('m.status_id', '!=', $feasId);
+                    $totalRevisionsQuery->where('m.status_id', '!=', $feasId);
+                }
+            }
         }
-    }
-}
-// === END BATASAN KPI ===
+        // === END BATASAN KPI ===
 
         $totalApprovedPackages = $q->count();
         $totalDownloads = $downloadQuery->count();
@@ -197,31 +197,31 @@ if ($feasId) {
                     break;
 
                 case 'project_status':
-                $builder = DB::table('project_status')
-                    ->selectRaw('id, name AS text')
-                    ->when($q, fn($x) => $x->where('name', 'like', "%{$q}%"))
-                    ->orderBy('name');
+                    $builder = DB::table('project_status')
+                        ->selectRaw('id, name AS text')
+                        ->when($q, fn($x) => $x->where('name', 'like', "%{$q}%"))
+                        ->orderBy('name');
 
                     // === BATASIN FEASIBILITY DI DROPDOWN STATUS ===
-    $user   = Auth::user();
-    $feasId = $this->getFeasibilityStatusId();
+                    $user   = Auth::user();
+                    $feasId = $this->getFeasibilityStatusId();
 
-    if ($feasId) {
-        if (!$user) {
-            // tidak login -> jangan tampilkan Feasibility
-            $builder->where('id', '!=', $feasId);
-        } else {
-            // user tanpa role khusus -> tetap jangan tampilkan Feasibility
-            if (!$this->userHasAnyRole($user, ['ENG'])) {
-                $builder->where('id', '!=', $feasId);
-            }
-        }
-    }
-    // === END BATASAN ===
+                    if ($feasId) {
+                        if (!$user) {
+                            // tidak login -> jangan tampilkan Feasibility
+                            $builder->where('id', '!=', $feasId);
+                        } else {
+                            // user tanpa role khusus -> tetap jangan tampilkan Feasibility
+                            if (!$this->userHasAnyRole($user, ['ENG'])) {
+                                $builder->where('id', '!=', $feasId);
+                            }
+                        }
+                    }
+                    // === END BATASAN ===
 
-                $total = (clone $builder)->count();
-                $items = $builder->forPage($page, $perPage)->get();
-                break;
+                    $total = (clone $builder)->count();
+                    $items = $builder->forPage($page, $perPage)->get();
+                    break;
 
                 default:
                     return response()->json(['results' => [], 'pagination' => ['more' => false]]);
@@ -303,7 +303,7 @@ if ($feasId) {
         $query = DB::table('doc_package_revisions as dpr')
             ->joinSub($latestRevisionsSubquery, 'latest_revs', function ($join) {
                 $join->on('dpr.package_id', '=', 'latest_revs.package_id')
-                     ->on('dpr.revision_no', '=', 'latest_revs.max_revision_no');
+                    ->on('dpr.revision_no', '=', 'latest_revs.max_revision_no');
             })
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
@@ -315,22 +315,22 @@ if ($feasId) {
             ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
             ->where('dpr.revision_status', '=', 'approved');
 
-            // === BATASIN FEASIBILITY HANYA UNTUK ROLE TERTENTU ===
-$user   = Auth::user();
-$feasId = $this->getFeasibilityStatusId();
+        // === BATASIN FEASIBILITY HANYA UNTUK ROLE TERTENTU ===
+        $user   = Auth::user();
+        $feasId = $this->getFeasibilityStatusId();
 
-if ($feasId) {
-    if (!$user) {
-        // user tidak login -> jangan tampilkan Feasibility
-        $query->where('m.status_id', '!=', $feasId);
-    } else {
-        // kalau user TIDAK punya salah satu role berikut -> buang Feasibility
-        if (!$this->userHasAnyRole($user, ['ENG'])) {
-            $query->where('m.status_id', '!=', $feasId);
+        if ($feasId) {
+            if (!$user) {
+                // user tidak login -> jangan tampilkan Feasibility
+                $query->where('m.status_id', '!=', $feasId);
+            } else {
+                // kalau user TIDAK punya salah satu role berikut -> buang Feasibility
+                if (!$this->userHasAnyRole($user, ['ENG'])) {
+                    $query->where('m.status_id', '!=', $feasId);
+                }
+            }
         }
-    }
-}
-// === END BATASAN ===
+        // === END BATASAN ===
 
         $recordsTotal = $query->count();
 
@@ -366,7 +366,7 @@ if ($feasId) {
                             ->whereColumn('history_rev.package_id', 'dpr.package_id')
                             ->where(function ($deepGroup) use ($searchValue) {
                                 $deepGroup->where('history_rev.ecn_no', 'like', "%{$searchValue}%")
-                                        ->orWhere('history_rev.revision_no', 'like', "%{$searchValue}%");
+                                    ->orWhere('history_rev.revision_no', 'like', "%{$searchValue}%");
                             });
                     });
             });
@@ -392,7 +392,7 @@ if ($feasId) {
             ->skip($start)
             ->take($length)
             ->get()
-            ->map(function($row) {
+            ->map(function ($row) {
                 $row->id = str_replace('=', '-', encrypt($row->id));
                 return $row;
             });
@@ -435,7 +435,7 @@ if ($feasId) {
         }
 
         // CEK HAK AKSES BERDASARKAN PACKAGE
-$this->abortIfNoAccessToPackage((int)$revision->package_id);
+        $this->abortIfNoAccessToPackage((int)$revision->package_id);
 
         $revisionList = DB::table('doc_package_revisions as dpr')
             ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
@@ -589,12 +589,15 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
             $userName = Auth::user()->name ?? null;
         }
 
+        $isEngineering = ($userDeptCode === 'ENG');
+
         return view('file_management.file_export_detail', [
             'exportId' => $originalEncryptedId,
             'detail'   => $detail,
             'revisionList' => $revisionList,
             'stampFormat' => $stampFormat,
             'userDeptCode' => $userDeptCode,
+            'isEngineering' => $isEngineering,
             'userName' => $userName,
         ]);
     }
@@ -627,7 +630,7 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
         }
 
         // CEK AKSES
-$this->abortIfNoAccessToPackage((int)$revision->package_id);
+        $this->abortIfNoAccessToPackage((int)$revision->package_id);
 
         $package = DB::table('doc_packages as dp')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
@@ -757,12 +760,20 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
             $userName = Auth::user()->name ?? null;
         }
 
+        $userDeptCode = null;
+        if (Auth::check() && Auth::user()->id_dept) {
+            $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
+            $userDeptCode = $dept->code ?? null;
+        }
+        $isEngineering = ($userDeptCode === 'ENG');
+
         return response()->json([
             'success'  => true,
             'pkg'      => $detail,
             'exportId' => $originalEncryptedId,
             'stampFormat' => $stampFormat,
             'userName' => $userName,
+            'isEngineering' => $isEngineering,
         ]);
     }
 
@@ -788,7 +799,7 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
         }
 
         // CEK AKSES
-$this->abortIfNoAccessToPackage((int)$revision->package_id);
+        $this->abortIfNoAccessToPackage((int)$revision->package_id);
 
         $path = Storage::disk('datacenter')->path($file->storage_path);
 
@@ -847,7 +858,7 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
         }
 
         // CEK AKSES
-$this->abortIfNoAccessToPackage((int)$revision->package_id);
+        $this->abortIfNoAccessToPackage((int)$revision->package_id);
 
         $package = DB::table('doc_packages as dp')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
@@ -955,7 +966,6 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
                 if ($deleteAfterAdd) {
                     $tempFilesToDelete[] = $fileToAdd;
                 }
-
             } else {
                 Log::warning('File not found and skipped for zipping: ' . $filePath . ' (or temp file: ' . $fileToAdd . ')');
             }
@@ -965,7 +975,7 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
         try {
             $closeSuccess = $zip->close();
             if (!$closeSuccess) {
-                 Log::error('zip->close() returned false.', ['path' => $zipFilePath, 'status' => $zip->status, 'statusString' => $zip->getStatusString()]);
+                Log::error('zip->close() returned false.', ['path' => $zipFilePath, 'status' => $zip->status, 'statusString' => $zip->getStatusString()]);
             }
         } catch (\Exception $e) {
             Log::error('Exception at zip->close(). This is likely a source file issue.', ['path' => $zipFilePath, 'error' => $e->getMessage()]);
@@ -1074,7 +1084,6 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
                         'meta' => $metaLogData,
                     ]);
                 }
-
             } catch (\Exception $e) {
                 Log::error('Failed to create download activity log in getPreparedZip', [
                     'error' => $e->getMessage(),
@@ -1089,13 +1098,20 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
     private function positionIntToKey(?int $pos, string $default = 'bottom-right'): string
     {
         switch ($pos) {
-            case 0: return 'bottom-left';
-            case 1: return 'bottom-center';
-            case 2: return 'bottom-right';
-            case 3: return 'top-left';
-            case 4: return 'top-center';
-            case 5: return 'top-right';
-            default: return $default;
+            case 0:
+                return 'bottom-left';
+            case 1:
+                return 'bottom-center';
+            case 2:
+                return 'bottom-right';
+            case 3:
+                return 'top-left';
+            case 4:
+                return 'top-center';
+            case 5:
+                return 'top-right';
+            default:
+                return $default;
         }
     }
 
@@ -1150,14 +1166,16 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
                     $draw->setFont($fontName);
                     $font = $fontName;
                     break;
-                } catch (\Exception $e) { continue; }
+                } catch (\Exception $e) {
+                    continue;
+                }
             }
 
             $dummy = new \Imagick();
             $dummy->newImage(1, 1, new \ImagickPixel('transparent'));
 
             // --- 1. UKUR LEBAR TEKS ---
-            
+
             // A. Top Line
             $draw->setFontSize(16);
             $draw->setFontWeight(600);
@@ -1167,13 +1185,13 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
             // B. Bottom Line (Bisa String atau Array)
             $draw->setFontSize(16);
             $draw->setFontWeight(400); // Berat font bawah
-            
+
             if (is_array($bottomLine)) {
                 // Jika Array (Mode Obsolete 2 Kolom)
                 // Ukur teks kiri dan kanan
                 $metricsLeft = $dummy->queryFontMetrics($draw, $bottomLine[0]);
                 $metricsRight = $dummy->queryFontMetrics($draw, $bottomLine[1]);
-                
+
                 $maxSide = max($metricsLeft['textWidth'], $metricsRight['textWidth']);
                 $widthBot = ($maxSide * 2) + 20; // +20 toleransi garis tengah
             } else {
@@ -1189,12 +1207,12 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
             $widthCen = $metricsCenter['textWidth'];
 
             // D. Tentukan Lebar Kanvas
-            $paddingHorizontal = 24; 
-            $minWidth = 220;         
-            
+            $paddingHorizontal = 24;
+            $minWidth = 220;
+
             $calculatedWidth = max($widthTop, $widthBot, $widthCen) + $paddingHorizontal;
             $canvasWidth = (int) max($minWidth, $calculatedWidth);
-            $canvasHeight = 120; 
+            $canvasHeight = 120;
 
             // --- 2. SETUP KANVAS ---
             $stamp = new \Imagick();
@@ -1203,10 +1221,14 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
 
             $opacity = 0.4;
             if ($colorMode === 'red') {
-                $borderColor = new \ImagickPixel("rgba(220, 38, 38, $opacity)");
+                $borderColor = new \ImagickPixel("rgba(220, 38, 38, $opacity)"); // Merah
                 $textColor   = new \ImagickPixel("rgba(185, 28, 28, $opacity)");
+            } elseif ($colorMode === 'gray') {
+                // Warna Abu-abu (Gray-500 / Gray-600 style)
+                $borderColor = new \ImagickPixel("rgba(107, 114, 128, $opacity)");
+                $textColor   = new \ImagickPixel("rgba(75, 85, 99, $opacity)");
             } else {
-                $borderColor = new \ImagickPixel("rgba(37, 99, 235, $opacity)");
+                $borderColor = new \ImagickPixel("rgba(37, 99, 235, $opacity)"); // Biru Default
                 $textColor   = new \ImagickPixel("rgba(29, 78, 216, $opacity)");
             }
 
@@ -1232,8 +1254,8 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
             // --- 3. RENDER TEKS ---
             $draw->setFillColor($textColor);
             $draw->setStrokeWidth(0);
-            
-            $x_center_canvas = $canvasWidth / 2; 
+
+            $x_center_canvas = $canvasWidth / 2;
 
             // Teks Atas (Center)
             $draw->setTextAlignment(\Imagick::ALIGN_CENTER);
@@ -1244,7 +1266,7 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
             // Teks Tengah (Center)
             $draw->setFontSize(21);
             $draw->setFontWeight(900);
-            $draw->setStrokeColor($textColor); 
+            $draw->setStrokeColor($textColor);
             $draw->setStrokeWidth(0.75);
             $stamp->annotateImage($draw, $x_center_canvas, 68, 0, $centerText);
 
@@ -1255,24 +1277,24 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
 
             if (is_array($bottomLine)) {
                 // --- MODE 2 KOLOM (Kiri & Kanan) ---
-                
+
                 $x_left = $canvasWidth * 0.25;
                 $stamp->annotateImage($draw, $x_left, 105, 0, $bottomLine[0]);
 
                 $x_right = $canvasWidth * 0.75;
                 $stamp->annotateImage($draw, $x_right, 105, 0, $bottomLine[1]);
-
             } else {
                 // --- MODE 1 KOLOM (Standar) ---
                 $stamp->annotateImage($draw, $x_center_canvas, 105, 0, $bottomLine);
             }
 
             // Cleanup
-            $draw->clear(); $draw->destroy();
-            $dummy->clear(); $dummy->destroy();
+            $draw->clear();
+            $draw->destroy();
+            $dummy->clear();
+            $dummy->destroy();
 
             return $stamp;
-
         } catch (\Exception $e) {
             Log::error('Failed to create stamp image: ' . $e->getMessage());
             return null;
@@ -1285,6 +1307,16 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
             return $originalPath;
         }
 
+        $userDeptCode = null;
+        if (Auth::check() && Auth::user()->id_dept) {
+            $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
+            $userDeptCode = $dept->code ?? null;
+        }
+
+        // Tentukan Warna: Jika ENG -> Blue, Selain itu -> Gray
+        $isEng = ($userDeptCode === 'ENG');
+        $originalStampColor = $isEng ? 'blue' : 'gray';
+
         try {
             // Helper Format Tanggal (Lokal)
             $formatSaiDate = function ($dateInput) {
@@ -1296,7 +1328,12 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
                         $suffixRaw = 'th';
                     } else {
                         $last = $day % 10;
-                        $suffixRaw = match ($last) { 1 => 'st', 2 => 'nd', 3 => 'rd', default => 'th' };
+                        $suffixRaw = match ($last) {
+                            1 => 'st',
+                            2 => 'nd',
+                            3 => 'rd',
+                            default => 'th'
+                        };
                     }
                     $superscripts = ['st' => 'ˢᵗ', 'nd' => 'ⁿᵈ', 'rd' => 'ʳᵈ', 'th' => 'ᵗʰ'];
                     $suffix = $superscripts[$suffixRaw] ?? $suffixRaw;
@@ -1339,7 +1376,7 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
 
             // --- GENERATE MASTER GAMBAR ---
             // Original & Copy (Default Blue)
-            $stampOriginal = $this->_createStampImage('SAI-DRAWING ORIGINAL', $topLine, $bottomLine, 'blue');
+            $stampOriginal = $this->_createStampImage('SAI-DRAWING ORIGINAL', $topLine, $bottomLine, $originalStampColor);
             $stampCopy     = $this->_createStampImage('SAI-DRAWING CONTROLLED COPY', $topLineCopy, $bottomLineCopy, 'blue');
             $stampObsolete = null;
 
@@ -1348,7 +1385,8 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
                 $obsDateStr = $formatSaiDate($revision->obsolete_at);
                 $topLineObsolete = "Date : {$obsDateStr}";
 
-                $obsName = '-'; $obsDept = '-';
+                $obsName = '-';
+                $obsDept = '-';
                 if (!empty($revision->obsolete_by)) {
                     $u = DB::table('users')->where('id', $revision->obsolete_by)->first(['name', 'id_dept']);
                     if ($u) {
@@ -1360,11 +1398,15 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
                     }
                 }
                 if ($obsName === '-') {
-                     $lastReject = DB::table('package_approvals')->where('revision_id', $revision->id)->where('decision', 'rejected')->orderByDesc('id')->first();
-                     if ($lastReject && $lastReject->decided_by) {
-                         $u = DB::table('users')->where('id', $lastReject->decided_by)->first();
-                         if ($u) { $obsName = $u->name; $d = DB::table('departments')->where('id', $u->id_dept)->value('code'); $obsDept = $d ?? '-'; }
-                     }
+                    $lastReject = DB::table('package_approvals')->where('revision_id', $revision->id)->where('decision', 'rejected')->orderByDesc('id')->first();
+                    if ($lastReject && $lastReject->decided_by) {
+                        $u = DB::table('users')->where('id', $lastReject->decided_by)->first();
+                        if ($u) {
+                            $obsName = $u->name;
+                            $d = DB::table('departments')->where('id', $u->id_dept)->value('code');
+                            $obsDept = $d ?? '-';
+                        }
+                    }
                 }
 
                 $bottomLineObsolete = ["Nama : {$obsName}", "Dept. : {$obsDept}"];
@@ -1396,10 +1438,20 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
             $minStampWidth = 224;
 
             // --- DEFINISI CLOSURE ---
-            $processPage = function($iteratorIndex) use (
-                $imagick, $stampOriginal, $stampCopy, $stampObsolete, $isObsolete, $file,
-                $stampAspectRatio, $marginPercent, $stampWidthPercent, $minStampWidth,
-                $posOriginal, $posCopy, $posObsolete,
+            $processPage = function ($iteratorIndex) use (
+                $imagick,
+                $stampOriginal,
+                $stampCopy,
+                $stampObsolete,
+                $isObsolete,
+                $file,
+                $stampAspectRatio,
+                $marginPercent,
+                $stampWidthPercent,
+                $minStampWidth,
+                $posOriginal,
+                $posCopy,
+                $posObsolete,
             ) {
                 $imagick->setIteratorIndex($iteratorIndex);
                 $imgWidth = $imagick->getImageWidth();
@@ -1474,13 +1526,18 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
             }
 
             // Cleanup
-            $imagick->clear(); $imagick->destroy();
-            $stampOriginal->clear(); $stampOriginal->destroy();
-            $stampCopy->clear(); $stampCopy->destroy();
-            if ($stampObsolete) { $stampObsolete->clear(); $stampObsolete->destroy(); }
+            $imagick->clear();
+            $imagick->destroy();
+            $stampOriginal->clear();
+            $stampOriginal->destroy();
+            $stampCopy->clear();
+            $stampCopy->destroy();
+            if ($stampObsolete) {
+                $stampObsolete->clear();
+                $stampObsolete->destroy();
+            }
 
             return $tempPath;
-
         } catch (\Exception $e) {
             Log::error('Imagick stamp burn-in failed: ' . $e->getMessage(), ['file_id' => $file->id, 'path' => $originalPath]);
             return $originalPath;
@@ -1488,54 +1545,52 @@ $this->abortIfNoAccessToPackage((int)$revision->package_id);
     }
 
     private function getFeasibilityStatusId(): ?int
-{
-    return DB::table('project_status')
-        ->where('name', 'Feasibility Study') // ganti kalau nama status di DB beda
-        ->value('id');
-}
-
-private function userHasAnyRole(User $user, array $roleNames): bool
-{
-    if (!$user) {
-        return false;
+    {
+        return DB::table('project_status')
+            ->where('name', 'Feasibility Study') // ganti kalau nama status di DB beda
+            ->value('id');
     }
 
-    return DB::table('user_roles as ur')
-        ->join('roles as r', 'ur.role_id', '=', 'r.id')
-        ->where('ur.user_id', $user->id)
-        ->whereIn('r.role_name', $roleNames)   // kalau pakai kolom 'code', ganti ke r.code
-        ->exists();
-}
+    private function userHasAnyRole(User $user, array $roleNames): bool
+    {
+        if (!$user) {
+            return false;
+        }
 
-private function abortIfNoAccessToPackage(int $packageId): void
-{
-    $user = Auth::user();
-    if (!$user) {
-        abort(403, 'Access denied.');
+        return DB::table('user_roles as ur')
+            ->join('roles as r', 'ur.role_id', '=', 'r.id')
+            ->where('ur.user_id', $user->id)
+            ->whereIn('r.role_name', $roleNames)   // kalau pakai kolom 'code', ganti ke r.code
+            ->exists();
     }
 
-    $feasId = $this->getFeasibilityStatusId();
+    private function abortIfNoAccessToPackage(int $packageId): void
+    {
+        $user = Auth::user();
+        if (!$user) {
+            abort(403, 'Access denied.');
+        }
 
-    $pkg = DB::table('doc_packages as dp')
-        ->join('models as m', 'dp.model_id', '=', 'm.id')
-        ->where('dp.id', $packageId)
-        ->select('m.status_id')
-        ->first();
+        $feasId = $this->getFeasibilityStatusId();
 
-    if (!$pkg) {
-        abort(404, 'Package not found.');
+        $pkg = DB::table('doc_packages as dp')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->where('dp.id', $packageId)
+            ->select('m.status_id')
+            ->first();
+
+        if (!$pkg) {
+            abort(404, 'Package not found.');
+        }
+
+        // Kalau tidak ada Feasibility di master / status bukan Feasibility -> bebas diakses
+        if (!$feasId || $pkg->status_id != $feasId) {
+            return;
+        }
+
+        // Kalau Feasibility -> hanya role tertentu yang boleh akses
+        if (!$this->userHasAnyRole($user, ['ENG'])) {
+            abort(403, 'Access denied to feasibility package.');
+        }
     }
-
-    // Kalau tidak ada Feasibility di master / status bukan Feasibility -> bebas diakses
-    if (!$feasId || $pkg->status_id != $feasId) {
-        return;
-    }
-
-    // Kalau Feasibility -> hanya role tertentu yang boleh akses
-    if (!$this->userHasAnyRole($user, ['ENG'])) {
-        abort(403, 'Access denied to feasibility package.');
-    }
-}
-
-
 }

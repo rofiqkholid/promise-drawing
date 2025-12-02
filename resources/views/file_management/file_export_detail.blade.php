@@ -4,10 +4,15 @@
 
 @section('content')
 
-<div class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen" x-data="exportDetail({
-        userDeptCode: @js($userDeptCode ?? null)
-    })" x-init="init()"
-    @mousemove.window="onPan($event)" @mouseup.window="endPan()" @mouseleave.window="endPan()">
+<div class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen" 
+    x-data="exportDetail({
+        userDeptCode: @js($userDeptCode ?? null),
+        isEngineering: @js($isEngineering ?? false)
+    })" 
+    x-init="init()"
+    @mousemove.window="onPan($event)" 
+    @mouseup.window="endPan()" 
+    @mouseleave.window="endPan()">
 
     <div x-show="isLoadingRevision" x-transition
         class="absolute inset-0 bg-gray-100/75 dark:bg-gray-900/75 z-10 flex items-center justify-center rounded-lg">
@@ -225,22 +230,30 @@
                                             loading="lazy">
 
                                         <!-- STAMP ORIGINAL -->
-                                        <div x-show="pkg.stamp" class="absolute"
-                                            :class="stampPositionClass('original')">
-                                            <div :class="stampOriginClass('original')"
-                                                class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                        <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
+                                            <div 
+                                                class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                                
+                                                :class="[
+                                                    stampOriginClass('original'), 
+                                                    isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
+                                                ]"
+                                                
                                                 style="transform: scale(0.45);">
-                                                <div
-                                                    class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
+
+                                                <div class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
+                                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
                                                     <span x-text="stampTopLine('original')"></span>
                                                 </div>
+
                                                 <div class="flex-1 flex items-center justify-center">
-                                                    <span
-                                                        class="text-xs font-extrabold uppercase text-blue-700 px-2"
+                                                    <span class="text-xs font-extrabold uppercase px-2"
+                                                        :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
                                                         x-text="stampCenterOriginal()"></span>
                                                 </div>
-                                                <div
-                                                    class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
+
+                                                <div class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
+                                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
                                                     <span x-text="stampBottomLine('original')"></span>
                                                 </div>
                                             </div>
@@ -315,22 +328,30 @@
                                         </canvas>
 
                                         <!-- STAMP ORIGINAL -->
-                                        <div x-show="pkg.stamp" class="absolute"
-                                            :class="stampPositionClass('original')">
-                                            <div :class="stampOriginClass('original')"
-                                                class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                        <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
+                                            <div 
+                                                class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                                
+                                                :class="[
+                                                    stampOriginClass('original'), 
+                                                    isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
+                                                ]"
+                                                
                                                 style="transform: scale(0.45);">
-                                                <div
-                                                    class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
+
+                                                <div class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
+                                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
                                                     <span x-text="stampTopLine('original')"></span>
                                                 </div>
+
                                                 <div class="flex-1 flex items-center justify-center">
-                                                    <span
-                                                        class="text-xs font-extrabold uppercase text-blue-700 px-2"
+                                                    <span class="text-xs font-extrabold uppercase px-2"
+                                                        :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
                                                         x-text="stampCenterOriginal()"></span>
                                                 </div>
-                                                <div
-                                                    class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
+
+                                                <div class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
+                                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
                                                     <span x-text="stampBottomLine('original')"></span>
                                                 </div>
                                             </div>
@@ -407,22 +428,30 @@
                                             class="block pointer-events-none select-none max-w-full max-h-[70vh]" />
 
                                         <!-- STAMP ORIGINAL -->
-                                        <div x-show="pkg.stamp" class="absolute"
-                                            :class="stampPositionClass('original')">
-                                            <div :class="stampOriginClass('original')"
-                                                class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                        <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
+                                            <div 
+                                                class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                                
+                                                :class="[
+                                                    stampOriginClass('original'), 
+                                                    isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
+                                                ]"
+                                                
                                                 style="transform: scale(0.45);">
-                                                <div
-                                                    class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
+
+                                                <div class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
+                                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
                                                     <span x-text="stampTopLine('original')"></span>
                                                 </div>
+
                                                 <div class="flex-1 flex items-center justify-center">
-                                                    <span
-                                                        class="text-xs font-extrabold uppercase text-blue-700 px-2"
+                                                    <span class="text-xs font-extrabold uppercase px-2"
+                                                        :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
                                                         x-text="stampCenterOriginal()"></span>
                                                 </div>
-                                                <div
-                                                    class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
+
+                                                <div class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
+                                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
                                                     <span x-text="stampBottomLine('original')"></span>
                                                 </div>
                                             </div>
@@ -499,20 +528,29 @@
                                     <canvas x-ref="hpglCanvas" class="pointer-events-none select-none"></canvas>
 
                                     <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
-                                        <div :class="stampOriginClass('original')"
-                                            class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                        <div 
+                                            class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                            
+                                            :class="[
+                                                stampOriginClass('original'), 
+                                                isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
+                                            ]"
+                                            
                                             style="transform: scale(0.45);">
-                                            <div
-                                                class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
+
+                                            <div class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
+                                                :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
                                                 <span x-text="stampTopLine('original')"></span>
                                             </div>
+
                                             <div class="flex-1 flex items-center justify-center">
-                                                <span
-                                                    class="text-xs font-extrabold uppercase text-blue-700 px-2"
+                                                <span class="text-xs font-extrabold uppercase px-2"
+                                                    :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
                                                     x-text="stampCenterOriginal()"></span>
                                             </div>
-                                            <div
-                                                class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
+
+                                            <div class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
+                                                :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
                                                 <span x-text="stampBottomLine('original')"></span>
                                             </div>
                                         </div>
@@ -1089,6 +1127,7 @@
             stampFormat: JSON.parse(`@json($stampFormat ?? null)`),
             userDeptCode: config.userDeptCode || null,
             userName: JSON.parse(`@json($userName ?? null)`),
+            isEngineering: config.isEngineering || false,
             imgLoading: false,
             activeLoadId: 0,
             cameraMode: 'perspective',
@@ -3134,6 +3173,9 @@
                             let displayText = data.pkg.metadata.revision;
                             if (data.pkg.metadata.revision_label) {
                                 displayText += ` (${data.pkg.metadata.revision_label})`;
+                            }
+                            if (typeof data.isEngineering !== 'undefined') {
+                                this.isEngineering = data.isEngineering;
                             }
                             toastSuccess('Revision Loaded', `Displaying ${displayText}.`);
                         } else {

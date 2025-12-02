@@ -346,10 +346,13 @@
                     class="relative inline-block"
                     :style="imageTransformStyle()">
                     <img
+                      x-ref="imgPreview"
                       :src="selectedFile?.url"
                       alt="File Preview"
                       class="block pointer-events-none select-none max-w-full max-h-[70vh]"
-                      loading="lazy">
+                      loading="lazy"
+                      @load="viewportVersion++"
+                      >
 
                     <!-- WHITE BLOCKS (MULTI) -->
                     <template x-for="mask in masks" :key="mask.id">
@@ -663,7 +666,9 @@
                     <img
                       x-ref="tifImg"
                       alt="TIFF Preview"
-                      class="block pointer-events-none select-none max-w-full max-h-[70vh]" />
+                      class="block pointer-events-none select-none max-w-full max-h-[70vh]" 
+                      @load="viewportVersion++"
+                      />
 
 
                     <!-- WHITE BLOCKS (MULTI) -->
@@ -1550,7 +1555,7 @@
         },
 
         getNormalFormat() {
-          const list = this.stampFormat || [];
+          const list = this.stampFormats || [];
           if (Array.isArray(list) && list.length > 0) {
             return list[0];
           }
@@ -1583,6 +1588,131 @@
           const info = s.obsolete_info || {};
           return info.dept || '';
         },
+
+        viewportVersion: 0, // pemicu re-render saat resize/zoom
+
+        getPreviewSize() {
+          // Biar Alpine tau ini reaktif terhadap viewportVersion
+          const _ = this.viewportVersion;
+
+          if (this.isImage(this.selectedFile?.name) && this.$refs.imgPreview) {
+            return {
+              width: this.$refs.imgPreview.offsetWidth || 1,
+              height: this.$refs.imgPreview.offsetHeight || 1,
+            };
+          }
+
+          if (this.isPdf(this.selectedFile?.name) && this.$refs.pdfCanvas) {
+            return {
+              width: this.$refs.pdfCanvas.offsetWidth || 1,
+              height: this.$refs.pdfCanvas.offsetHeight || 1,
+            };
+          }
+
+          if (this.isTiff(this.selectedFile?.name) && this.$refs.tifImg) {
+            return {
+              width: this.$refs.tifImg.offsetWidth || 1,
+              height: this.$refs.tifImg.offsetHeight || 1,
+            };
+          }
+
+          if (this.isHpgl(this.selectedFile?.name) && this.$refs.hpglCanvas) {
+            return {
+              width: this.$refs.hpglCanvas.offsetWidth || 1,
+              height: this.$refs.hpglCanvas.offsetHeight || 1,
+            };
+          }
+
+          return {
+            width: 1,
+            height: 1
+          };
+        },
+
+        normalizeBlocksData(raw) {
+  if (!raw) return {};
+  if (Array.isArray(raw)) {
+    // data lama: array flat → jadikan page 1
+    return { '1': raw };
+  }
+  if (typeof raw === 'object') {
+    return raw;
+  }
+  return {};
+},
+
+currentPageForSelectedFile() {
+  if (!this.selectedFile) return 1;
+  const name = this.selectedFile.name || '';
+  if (this.isPdf(name))  return this.pdfPageNum;
+  if (this.isTiff(name)) return this.tifPageNum;
+  // image / hpgl / dll dianggap 1 halaman
+  return 1;
+},
+
+buildMasksFromBlocks(blocks) {
+  const arr = Array.isArray(blocks) ? blocks : [];
+  const masks = [];
+  arr.forEach((b, idx) => {
+    const idNum = (() => {
+      if (!b.id) return idx + 1;
+      const match = b.id.toString().match(/\d+$/);
+      return match ? parseInt(match[0], 10) : idx + 1;
+    })();
+
+    const u = (typeof b.u === 'number') ? b.u : 0.3;
+    const v = (typeof b.v === 'number') ? b.v : 0.3;
+    const w = (typeof b.w === 'number') ? b.w : 0.4;
+    const h = (typeof b.h === 'number') ? b.h : 0.1;
+
+    masks.push({
+      id: idNum,
+      visible: true,
+      editable: true,
+      active: idx === 0,
+
+      u,
+      v,
+      w,
+      h,
+      rotation: b.rotation ?? 0,
+
+      _mode: null,
+      _edge: null,
+      _startX: 0,
+      _startY: 0,
+      _baseW: 1,
+      _baseH: 1,
+      _startU: u,
+      _startV: v,
+      _startWRel: w,
+      _startHRel: h,
+      _centerX: 0,
+      _centerY: 0,
+      _startRot: 0,
+    });
+  });
+
+  this.nextMaskId = masks.reduce((mx, m) => Math.max(mx, (m.id || 0) + 1), 1);
+  return masks;
+},
+
+loadMasksForCurrentPage() {
+  if (!this.selectedFile) {
+    this.masks = [];
+    this.nextMaskId = 1;
+    return;
+  }
+
+  const all = this.normalizeBlocksData(this.selectedFile.blocks_position || {});
+  const page = this.currentPageForSelectedFile();
+  const blocks = all[String(page)] || [];
+
+  this.masks = this.buildMasksFromBlocks(blocks);
+},
+
+
+
 
         isUncontrolledCopy() {
           const statusId = this.pkg?.metadata?.model_status_id;
@@ -1893,7 +2023,10 @@
 
             await this.$nextTick();
             const img = this.$refs.tifImg;
-            if (img) img.src = dataUrl;
+if (img) {
+  img.src = dataUrl;
+  this.viewportVersion++;
+}
           } catch (e) {
             console.error(e);
             this.tifError = e?.message || 'Failed to render TIFF page';
@@ -1964,6 +2097,7 @@
               viewport
             };
             await page.render(renderContext).promise;
+            this.viewportVersion++;
           } catch (e) {
             console.error(e);
             this.pdfError = e?.message || 'Failed to render PDF page';
@@ -2110,6 +2244,7 @@
               ctx.lineTo(ex, ey);
             }
             ctx.stroke();
+            this.viewportVersion++;
           } catch (e) {
             console.error(e);
             this.hpglError = e?.message || 'Failed to render HPGL';
@@ -2393,6 +2528,9 @@
         init() {
           // kalau nanti ada modal lain buat share, Escape handler bisa ditaruh di sini
           window.addEventListener('beforeunload', () => this.disposeCad());
+          window.addEventListener('resize', () => {
+            this.viewportVersion++;
+          });
           this._onMaskMouseMove = (ev) => this.handleMaskMouseMove(ev);
           this._onMaskMouseUp = () => this.handleMaskMouseUp();
         },
@@ -2462,46 +2600,15 @@
           // kalau backend sudah kirim blocks_position (array), pakai itu
           const blocks = file.blocks_position || [];
 
-          blocks.forEach((b, idx) => {
-            const idNum = (() => {
-              if (!b.id) return idx + 1;
-              const match = b.id.toString().match(/\d+$/);
-              return match ? parseInt(match[0], 10) : idx + 1;
-            })();
+          this.loadMasksForCurrentPage();
 
-            this.masks.push({
-              id: idNum,
-              visible: true,
-              editable: true,
-              active: idx === 0, // blok pertama jadi aktif
-
-              x: b.x ?? 150,
-              y: b.y ?? 150,
-              width: b.width ?? 250,
-              height: b.height ?? 60,
-              rotation: b.rotation ?? 0,
-
-              _mode: null,
-              _edge: null,
-              _startX: 0,
-              _startY: 0,
-              _startLeft: 0,
-              _startTop: 0,
-              _startW: 0,
-              _startH: 0,
-              _centerX: 0,
-              _centerY: 0,
-              _startRot: 0,
-            });
-
-            this.nextMaskId = Math.max(this.nextMaskId, idNum + 1);
-          });
 
           // kalau nggak ada blok dari DB, boleh otomatis buat 1 blok awal (opsional)
           // if (this.masks.length === 0) this.addMask();
 
 
           this.$nextTick(() => {
+            this.viewportVersion++;
             if (this.isTiff(file?.name)) {
               this.renderTiff(file.url);
             } else if (this.isCad(file?.name)) {
@@ -2678,35 +2785,56 @@
 
         // ===== White block helper (MULTI) =====
         addMask() {
+          const {
+            width: baseW,
+            height: baseH
+          } = this.getPreviewSize();
+
+          // fallback kalau belum ada gambar (misal belum ke-render)
+          const vw = baseW > 0 ? baseW : 1000;
+          const vh = baseH > 0 ? baseH : 1000;
+
+          // default ukuran blok dalam px (seperti sebelumnya)
+          const defaultWpx = 250;
+          const defaultHpx = 60;
+
+          // konversi ke rasio
+          const wRel = defaultWpx / vw;
+          const hRel = defaultHpx / vh;
+
           const m = {
             id: this.nextMaskId++,
             visible: true,
             editable: true,
             active: true,
 
-            x: 150,
-            y: 150,
-            width: 250,
-            height: 60,
+            // rasio posisi & ukuran (0..1)
+            u: 0.5 - wRel / 2, // posisi X relatif (0 = kiri, 1 = kanan)
+            v: 0.5 - hRel / 2, // posisi Y relatif (0 = atas, 1 = bawah)
+            w: wRel, // lebar relatif
+            h: hRel, // tinggi relatif
+
             rotation: 0,
 
             _mode: null,
             _edge: null,
             _startX: 0,
             _startY: 0,
-            _startLeft: 0,
-            _startTop: 0,
-            _startW: 0,
-            _startH: 0,
+            _baseW: vw,
+            _baseH: vh,
+            _startU: 0,
+            _startV: 0,
+            _startWRel: 0,
+            _startHRel: 0,
             _centerX: 0,
             _centerY: 0,
             _startRot: 0,
           };
 
-          // matikan blok lain lalu aktifkan blok baru
           this.masks.forEach(mm => (mm.active = false));
           this.masks.push(m);
         },
+
 
         getActiveMask() {
           return this.masks.find(m => m.active) || null;
@@ -2724,46 +2852,75 @@
         },
 
         maskStyle(mask) {
+          const {
+            width: baseW,
+            height: baseH
+          } = this.getPreviewSize();
+
+          const left = (mask.u || 0) * baseW;
+          const top = (mask.v || 0) * baseH;
+          const w = (mask.w || 0) * baseW;
+          const h = (mask.h || 0) * baseH;
+
           return `
-          left:${mask.x}px;
-          top:${mask.y}px;
-          width:${mask.width}px;
-          height:${mask.height}px;
+          left:${left}px;
+          top:${top}px;
+          width:${w}px;
+          height:${h}px;
           transform: rotate(${mask.rotation}deg);
           transform-origin:center center;
         `;
         },
 
+
         onMaskMouseDown(e, mask) {
           this.activateMask(mask);
           if (!mask.editable) return;
 
+          const {
+            width: baseW,
+            height: baseH
+          } = this.getPreviewSize();
+
           mask._mode = 'move';
+          mask._baseW = baseW || 1;
+          mask._baseH = baseH || 1;
           mask._startX = e.clientX;
           mask._startY = e.clientY;
-          mask._startLeft = mask.x;
-          mask._startTop = mask.y;
+
+          mask._startU = mask.u;
+          mask._startV = mask.v;
 
           window.addEventListener('mousemove', this._onMaskMouseMove);
           window.addEventListener('mouseup', this._onMaskMouseUp);
         },
+
 
         startMaskResize(e, edge, mask) {
           this.activateMask(mask);
           if (!mask.editable) return;
 
+          const {
+            width: baseW,
+            height: baseH
+          } = this.getPreviewSize();
+
           mask._mode = 'resize';
           mask._edge = edge;
+          mask._baseW = baseW || 1;
+          mask._baseH = baseH || 1;
           mask._startX = e.clientX;
           mask._startY = e.clientY;
-          mask._startLeft = mask.x;
-          mask._startTop = mask.y;
-          mask._startW = mask.width;
-          mask._startH = mask.height;
+
+          mask._startU = mask.u;
+          mask._startV = mask.v;
+          mask._startWRel = mask.w;
+          mask._startHRel = mask.h;
 
           window.addEventListener('mousemove', this._onMaskMouseMove);
           window.addEventListener('mouseup', this._onMaskMouseUp);
         },
+
 
         startMaskRotate(e, mask) {
           this.activateMask(mask);
@@ -2783,42 +2940,59 @@
         },
 
         handleMaskMouseMove(ev) {
-          const mask = this.masks.find(m => m._mode);
-          if (!mask) return;
+  const mask = this.masks.find(m => m._mode);
+  if (!mask) return;
 
-          const dx = ev.clientX - mask._startX;
-          const dy = ev.clientY - mask._startY;
+  const dx = ev.clientX - mask._startX;
+  const dy = ev.clientY - mask._startY;
 
-          if (mask._mode === 'move') {
-            mask.x = mask._startLeft + dx;
-            mask.y = mask._startTop + dy;
+  const baseW = mask._baseW || 1;
+  const baseH = mask._baseH || 1;
 
-          } else if (mask._mode === 'resize') {
-            const minW = 20,
-              minH = 20;
+  if (mask._mode === 'move') {
+    mask.u = mask._startU + dx / baseW;
+    mask.v = mask._startV + dy / baseH;
 
-            if (mask._edge.includes('e')) {
-              mask.width = Math.max(minW, mask._startW + dx);
-            }
-            if (mask._edge.includes('s')) {
-              mask.height = Math.max(minH, mask._startH + dy);
-            }
-            if (mask._edge.includes('w')) {
-              mask.x = mask._startLeft + dx;
-              mask.width = Math.max(minW, mask._startW - dx);
-            }
-            if (mask._edge.includes('n')) {
-              mask.y = mask._startTop + dy;
-              mask.height = Math.max(minH, mask._startH - dy);
-            }
+  } else if (mask._mode === 'resize') {
+    const minW = 20 / baseW;
+    const minH = 20 / baseH;
 
-          } else if (mask._mode === 'rotate') {
-            const angle = Math.atan2(ev.clientY - mask._centerY, ev.clientX - mask._centerX);
-            mask.rotation = (angle * 180 / Math.PI) + 90;
-          }
-        },
+    let u = mask._startU;
+    let v = mask._startV;
+    let w = mask._startWRel;
+    let h = mask._startHRel;
 
-        handleMaskMouseUp() {
+    if (mask._edge.includes('e')) {
+      w = Math.max(minW, mask._startWRel + dx / baseW);
+    }
+    if (mask._edge.includes('s')) {
+      h = Math.max(minH, mask._startHRel + dy / baseH);
+    }
+    if (mask._edge.includes('w')) {
+      u = mask._startU + dx / baseW;
+      w = Math.max(minW, mask._startWRel - dx / baseW);
+    }
+    if (mask._edge.includes('n')) {
+      v = mask._startV + dy / baseH;
+      h = Math.max(minH, mask._startHRel - dy / baseH);
+    }
+
+    mask.u = u;
+    mask.v = v;
+    mask.w = w;
+    mask.h = h;
+
+  } else if (mask._mode === 'rotate') {
+    const ang = Math.atan2(
+      ev.clientY - mask._centerY,
+      ev.clientX - mask._centerX
+    );
+    const deg = (ang * 180) / Math.PI;
+    mask.rotation = deg;
+  }
+},
+
+      handleMaskMouseUp() {
           const mask = this.masks.find(m => m._mode);
           if (mask) mask._mode = null;
 
@@ -2832,74 +3006,75 @@
           this.masks = this.masks.filter(m => m.id !== active.id);
         },
 
-        updateBlocksUrlTemplate: `{{ route('share.files.updateBlocks', ['fileId' => '__FILE_ID__']) }}`,
+       updateBlocksUrlTemplate: `{{ route('share.files.updateBlocks', ['fileId' => '__FILE_ID__']) }}`,
 
-        async saveBlocks(blocks) {
-          if (!this.selectedFile?.id) return;
+async saveBlocks(blocks, page) {
+  if (!this.selectedFile?.id) return;
 
-          const url = this.updateBlocksUrlTemplate.replace('__FILE_ID__', this.selectedFile.id);
+  const url = this.updateBlocksUrlTemplate.replace('__FILE_ID__', this.selectedFile.id);
 
-          try {
-            const res = await fetch(url, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-              },
-              body: JSON.stringify({
-                blocks
-              }),
-            });
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+      },
+      body: JSON.stringify({
+        page,
+        blocks,
+      }),
+    });
 
-            const json = await res.json();
+    const json = await res.json();
 
-            if (!res.ok) {
-              throw new Error(json.message || 'Failed to save blocks position');
-            }
+    if (!res.ok) {
+      throw new Error(json.message || 'Failed to save blocks position');
+    }
 
-            toastSuccess('Saved', json.message || 'Blocks position saved.');
-          } catch (e) {
-            console.error(e);
-            toastError('Error', e.message || 'Failed to save blocks position');
-          }
-        },
-        saveCurrentMask() {
-          if (!this.selectedFile?.id) {
-            toastWarning('No file selected', 'Pilih file dulu sebelum menyimpan block.');
-            return;
-          }
+    // update copy lokal supaya kalau pindah page lalu balik, blok masih ada
+    const all = this.normalizeBlocksData(this.selectedFile.blocks_position || {});
+    all[String(page)] = blocks;
+    this.selectedFile.blocks_position = all;
 
-          if (this.masks.length === 0) {
-            toastWarning('No block', 'Tambah block dulu sebelum menyimpan.');
-            return;
-          }
+    toastSuccess('Saved', json.message || 'Blocks position saved.');
+  } catch (e) {
+    console.error(e);
+    toastError('Error', e.message || 'Failed to save blocks position');
+  }
+},
 
-          // kalau mau pakai hanya blok aktif:
-          // const active = this.getActiveMask();
-          // if (!active) { ... }
+          saveCurrentMask() {
+  if (!this.selectedFile?.id) {
+    toastWarning('No file selected', 'Pilih file dulu sebelum menyimpan block.');
+    return;
+  }
 
-          const blocks = this.masks.map((m, idx) => ({
-            id: m.id ? `blk-${m.id}` : `blk-${idx + 1}`,
-            x: m.x,
-            y: m.y,
-            width: m.width,
-            height: m.height,
-            rotation: m.rotation,
-          }));
+  if (this.masks.length === 0) {
+    toastWarning('No block', 'Tambah block dulu sebelum menyimpan.');
+    return;
+  }
 
-          this.saveBlocks(blocks);
-        }
+  const blocks = this.masks.map((m, idx) => ({
+    id: m.id ? `blk-${m.id}` : `blk-${idx + 1}`,
+    u: m.u,
+    v: m.v,
+    w: m.w,
+    h: m.h,
+    rotation: m.rotation,
+  }));
+
+  const page = this.currentPageForSelectedFile();
+
+  this.saveBlocks(blocks, page);
+}
 
 
-
-
-
-
-      }
+    }
     }
     // ========== SHARE DARI HALAMAN DETAIL ==========
-    document.addEventListener('DOMContentLoaded'),
+    document.addEventListener('DOMContentLoaded',
       function() {
         const $ = window.jQuery;
         if (!$) return; // jaga-jaga kalau jQuery belum ada
@@ -3076,7 +3251,7 @@
 
           });
         });
-      }
+      });
   </script>
 
   @endpush

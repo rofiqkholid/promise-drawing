@@ -146,12 +146,7 @@
         </div>
     </div>
 
-    {{-- BARIS 3: TREND, ENV, LOG --}}
-    {{--
-        UPDATE: Menggunakan h-[40vh] sebagai pengganti h-[40%] yang lebih aman.
-        Ini membuat tingginya proporsional dengan layar (besar di layar besar),
-        tapi tidak 'bug' (mengecil) saat filter dibuka.
-    --}}
+
     <div class="h-[35vh] flex-none flex flex-col lg:flex-row gap-2 items-stretch mb-2">
         <div class="w-full lg:w-[45%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
             <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
@@ -170,31 +165,24 @@
                 <i class="fa-solid fa-seedling mr-2 text-emerald-500"></i> Eco Impact
             </h3>
 
-            {{-- Container Utama --}}
             <div class="flex-1 flex flex-col justify-center gap-6 min-h-0 p-1">
 
-                {{-- BARIS 1: Paper -> Arrow -> Saved --}}
                 <div class="flex flex-row items-center justify-between w-full relative">
 
-                    {{-- Panah (Absolute Overlay) --}}
-                    {{-- UPDATED: Menggunakan 'absolute inset-0' agar memenuhi area baris, pb-6 untuk naik ke atas --}}
                     <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pb-8">
                         <div class="text-gray-300 dark:text-gray-600 text-lg animate-flow">
                             <i class="fa-solid fa-arrow-right-long"></i>
                         </div>
                     </div>
 
-                    {{-- Item Kiri: Paper --}}
                     <div class="flex-1 flex flex-col items-center text-center z-20">
                         <div class="text-emerald-600 dark:text-emerald-400 mb-1"><i class="fa-solid fa-scroll fa-2xl"></i></div>
                         <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">Paper</span>
                         <span class="text-lg font-bold text-gray-800 dark:text-gray-100 leading-tight" id="ecoPaper">0</span>
                     </div>
 
-                    {{-- Spacer Kosong (Agar layout kiri-kanan tetap terjaga proporsinya) --}}
                     <div class="w-24 shrink-0"></div>
 
-                    {{-- Item Kanan: Saved --}}
                     <div class="flex-1 flex flex-col items-center text-center z-20">
                         <div class="text-yellow-600 dark:text-yellow-400 mb-1"><i class="fa-solid fa-coins fa-2xl"></i></div>
                         <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">Saved</span>
@@ -202,28 +190,22 @@
                     </div>
                 </div>
 
-                {{-- BARIS 2: Trees -> Arrow -> CO2 --}}
                 <div class="flex flex-row items-center justify-between w-full relative">
 
-                    {{-- Panah (Absolute Overlay) --}}
-                    {{-- UPDATED: Sama seperti di atas --}}
                     <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none pb-8">
                         <div class="text-gray-300 dark:text-gray-600 text-lg animate-flow">
                             <i class="fa-solid fa-arrow-right-long"></i>
                         </div>
                     </div>
 
-                    {{-- Item Kiri: Trees --}}
                     <div class="flex-1 flex flex-col items-center text-center z-20">
                         <div class="text-green-600 dark:text-green-400 mb-1"><i class="fa-solid fa-tree fa-2xl"></i></div>
                         <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">Trees</span>
                         <span class="text-sm font-bold text-gray-800 dark:text-gray-100 leading-tight" id="ecoTrees">0</span>
                     </div>
 
-                    {{-- Spacer Kosong --}}
                     <div class="w-24 shrink-0"></div>
 
-                    {{-- Item Kanan: CO2 --}}
                     <div class="flex-1 flex flex-col items-center text-center z-20">
                         <div class="text-teal-600 dark:text-teal-400 mb-1"><i class="fa-solid fa-wind fa-2xl"></i></div>
                         <span class="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">CO2 (kg)</span>
@@ -281,6 +263,23 @@
             this.attachButtonEvents();
         }
 
+        getFilterParams() {
+            const statusData = $('#project_status').select2('data');
+            const statusVal = (statusData && statusData.length > 0) ? statusData[0].text.trim() : '';
+
+            const params = new URLSearchParams();
+
+            if (this.dateStart) params.append('date_start', this.dateStart);
+            if (this.dateEnd) params.append('date_end', this.dateEnd);
+            if (statusVal && statusVal !== 'ALL') params.append('project_status', statusVal);
+
+            this.selectedCustomers.forEach(item => params.append('customer[]', item.text.trim()));
+            this.selectedModels.forEach(item => params.append('model[]', item.text.trim()));
+            this.selectedPartGroup.forEach(item => params.append('part_group[]', item.text.trim()));
+
+            return params;
+        }
+
         formatDateJS(date) {
             if (!date) return '';
             const d = new Date(date);
@@ -329,17 +328,14 @@
             }
         }
 
-        // Function to fetch and display Environment Data
         async loadSaveEnv() {
             try {
                 const response = await fetch("{{ route('api.get-save-env') }}");
                 const data = await response.json();
 
-                // 1. Paper (Lembar)
                 const elPaper = document.getElementById('ecoPaper');
                 if (elPaper) elPaper.textContent = parseInt(data.paper || 0).toLocaleString('id-ID');
 
-                // 2. Cost (Rupiah)
                 const elCost = document.getElementById('ecoCost');
                 if (elCost) {
                     let harga = parseInt(data.harga || 0);
@@ -352,14 +348,12 @@
                     }
                 }
 
-                // 3. Trees (Decimal)
                 const elTrees = document.getElementById('ecoTrees');
                 if (elTrees) elTrees.textContent = parseFloat(data.save_tree || 0).toLocaleString('id-ID', {
                     minimumFractionDigits: 5,
                     maximumFractionDigits: 5
                 });
 
-                // 4. CO2 (Decimal)
                 const elCO2 = document.getElementById('ecoCO2');
                 if (elCO2) elCO2.textContent = parseFloat(data.co2_reduced || 0).toLocaleString('id-ID', {
                     minimumFractionDigits: 3,
@@ -374,19 +368,8 @@
         async loadMonitoringChart() {
             const ctx = document.getElementById('monitoringChart');
             if (!ctx) return;
-            if (this.monitoringChart) {
-                this.monitoringChart.destroy();
-                this.monitoringChart = null;
-            }
-            const statusData = $('#project_status').select2('data');
-            const statusVal = (statusData && statusData.length > 0) ? statusData[0].text.trim() : '';
-            const params = new URLSearchParams();
-            if (this.dateStart) params.append('date_start', this.dateStart);
-            if (this.dateEnd) params.append('date_end', this.dateEnd);
-            if (statusVal && statusVal !== 'ALL') params.append('project_status', statusVal);
-            this.selectedCustomers.forEach(item => params.append('customer[]', item.text.trim()));
-            this.selectedModels.forEach(item => params.append('model[]', item.text.trim()));
-            this.selectedPartGroup.forEach(item => params.append('part_group[]', item.text.trim()));
+
+            const params = this.getFilterParams();
 
             try {
                 const url = `{{ route('api.upload-monitoring-data') }}?${params.toString()}`;
@@ -575,6 +558,8 @@
                             type: 'linear',
                             display: true,
                             position: 'right',
+                            min: 0,
+                            max: 120,
                             title: {
                                 display: true,
                                 text: 'Percentage',
@@ -584,25 +569,27 @@
                                     weight: 'bold'
                                 }
                             },
-                            ticks: {
-                                color: textColor,
-                                maxTicksLimit: 3,
-                                font: {
-                                    size: 12
-                                },
-                                callback: (v) => v
-                            },
                             grid: {
                                 drawOnChartArea: false,
                                 drawBorder: false
                             },
-                            min: 0,
-                            max: 130
+                            ticks: {
+                                color: textColor,
+                                font: {
+                                    size: 12
+                                },
+                                stepSize: 50,
+                                callback: function(value) {
+                                    if (value > 100) return null;
+                                    return value;
+                                }
+                            }
                         }
                     }
                 }
             });
         }
+
         async loadTrendChart() {
             const ctx = document.getElementById('trendChart');
             if (!ctx) return;
@@ -757,11 +744,16 @@
                 }
             });
         }
+
         async loadPhaseStatusChart() {
             const ctx = document.getElementById('phaseStatusChart');
             if (!ctx) return;
+
+            const params = this.getFilterParams();
+
             try {
-                const response = await fetch("{{ route('api.upload-phase-status') }}");
+                const url = `{{ route('api.upload-phase-status') }}?${params.toString()}`;
+                const response = await fetch(url);
                 const result = await response.json();
                 if (result.status === 'success') {
                     this.renderPhaseChart(result.data);
@@ -815,7 +807,7 @@
                                 color: textColor,
                                 padding: 15,
                                 font: {
-                                    size: 12
+                                    size: 14
                                 }
                             }
                         },
@@ -841,7 +833,7 @@
                             color: '#fff',
                             font: {
                                 weight: 'bold',
-                                size: 12
+                                size: 14
                             },
                             formatter: (value, ctx) => {
                                 let total = ctx.chart._metasets[ctx.datasetIndex].total;
@@ -853,6 +845,7 @@
                 }
             });
         }
+
         async loadActivityLog() {
             const container = document.getElementById('activityLogContainer');
             if (!container) return;
@@ -886,42 +879,37 @@
                 }
             };
             const logInfo = iconMap[log.activity_code] || iconMap['DEFAULT'];
+
             let message = log.activity_code === 'UPLOAD' ?
-                `<strong>${log.user_name || 'System'}</strong> uploaded a new document.` :
+                `<strong>${log.user_name || 'System'}</strong> upload new document.` :
                 `<strong>${log.user_name || 'System'}</strong> performed action: <strong>${log.activity_code}</strong>.`;
+
             const date = log.created_at ? new Date(log.created_at.replace(' ', 'T')) : new Date();
+
+            const dateOptions = {
+                day: 'numeric',
+                month: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+
             let metaDetails = '';
             if (log.meta && log.activity_code === 'UPLOAD') {
                 const details = [log.meta.customer_code, log.meta.model_name, log.meta.part_no, log.meta.doctype_group, log.meta.part_group_code].filter(Boolean);
-                if (details.length) metaDetails = `<p class="mt-2 text-sm text-gray-600 dark:text-gray-400 font-mono">${details.join(' - ')}</p>`;
+                if (details.length) metaDetails = `<p class="mt-1 text-[12px] text-gray-600 dark:text-gray-400 font-mono">${details.join(' - ')}</p>`;
             }
-            const timeAgo = (d) => {
-                const diff = Math.floor((new Date() - d) / 1000);
-                if (diff < 5) return "just now";
-                const units = {
-                    31536000: 'years',
-                    2592000: 'months',
-                    86400: 'days',
-                    3600: 'hours',
-                    60: 'minutes'
-                };
-                for (const [sec, name] of Object.entries(units).reverse()) {
-                    const val = Math.floor(diff / sec);
-                    if (val >= 1) return `${val} ${name} ago`;
-                }
-                return `${diff} seconds ago`;
-            };
-            return `<div class="py-3 px-2 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
-                <div class="flex-shrink-0 pt-1"><i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i></div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex justify-between items-start">
-                        <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 ml-3 whitespace-nowrap">${date.toLocaleString('id-ID')}</p>
-                    </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${timeAgo(date)}</p>
-                    ${metaDetails}
-                </div>
-            </div>`;
+
+            return `<div class="py-2 px-1 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+        <div class="flex-shrink-0 pt-1"><i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i></div>
+        <div class="flex-1 min-w-0">
+            <div class="flex justify-between items-start">
+                <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${date.toLocaleString('id-ID', dateOptions)}</p>
+            ${metaDetails}
+        </div>
+    </div>`;
         }
 
         initSelect2() {
@@ -1206,7 +1194,12 @@
                 btnApply.disabled = true;
                 btnText.style.display = 'none';
                 btnLoader.style.display = 'inline-block';
-                await this.loadMonitoringChart();
+
+                await Promise.all([
+                    this.loadMonitoringChart(),
+                    this.loadPhaseStatusChart()
+                ]);
+
                 this.isLoading = false;
                 btnApply.disabled = false;
                 btnText.style.display = 'inline-block';
@@ -1227,6 +1220,7 @@
                 if (this.dateRangeInstance) this.dateRangeInstance.setDateRange(this.dateStart, this.dateEnd);
                 this.renderFilterPills();
                 this.loadMonitoringChart();
+                this.loadPhaseStatusChart();
             });
         }
     }

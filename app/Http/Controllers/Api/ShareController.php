@@ -10,7 +10,6 @@ use App\Models\DocPackageRevisionFile;
 use App\Models\Customers;
 use App\Models\FileExtensions;
 use App\Models\DoctypeGroups;
-use App\Models\ActivityLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
@@ -71,13 +70,18 @@ class ShareController extends Controller
                 case 'model':
                     $builder = DB::table('models as m')
                         ->join('customers as c', 'm.customer_id', '=', 'c.id')
+                        ->when($customerCode && $customerCode !== 'All', function ($x) use ($customerCode) {
+                            $x->where('c.code', $customerCode);
+                        })
+                        ->when($q, function ($x) use ($q) {
+                            $x->where('m.name', 'like', "%{$q}%");
+                        });
+                    $namesQuery = $builder
                         ->selectRaw('m.name AS id, m.name AS text')
-                        ->when($customerCode && $customerCode !== 'All', fn($x) => $x->where('c.code', $customerCode))
-                        ->when($q, fn($x) => $x->where('m.name', 'like', "%{$q}%"))
+                        ->distinct()
                         ->orderBy('m.name');
-
-                    $total = (clone $builder)->count();
-                    $items = $builder->forPage($page, $perPage)->get();
+                    $total = (clone $namesQuery)->count();
+                    $items = $namesQuery->forPage($page, $perPage)->get();
                     break;
 
                 case 'doc_type':
@@ -103,16 +107,18 @@ class ShareController extends Controller
                     break;
 
                 case 'status':
-                    $all = collect([
-                        ['id' => 'Waiting',  'text' => 'Waiting'],
-                        ['id' => 'Approved', 'text' => 'Approved'],
-                        ['id' => 'Rejected', 'text' => 'Rejected'],
-                    ]);
-                    $filtered = $q
-                        ? $all->filter(fn($r) => str_contains(strtolower($r['text']), strtolower($q)))
-                        : $all;
-                    $total = $filtered->count();
-                    $items = $filtered->slice(($page - 1) * $perPage, $perPage)->values();
+                    // sekarang: status = Project Status (Feasibility, SOP, dst.)
+                    $builder = DB::table('project_status as ps')
+                        ->selectRaw('ps.name AS id, ps.name AS text')
+                        ->when(
+                            $q,
+                            fn($x) =>
+                            $x->where('ps.name', 'like', "%{$q}%")
+                        )
+                        ->orderBy('ps.name');
+
+                    $total = (clone $builder)->count();
+                    $items = $builder->forPage($page, $perPage)->get();
                     break;
 
                 default:
@@ -178,7 +184,6 @@ class ShareController extends Controller
         $orderDir         = $request->get('order')[0]['dir'] ?? 'desc';
         $orderColumnName  = $request->get('columns')[$orderColumnIndex]['name'] ?? 'dpr.created_at';
 
-        // Subquery approval
         $latestPa = DB::table('package_approvals as pa')
             ->select(
                 'pa.id',
@@ -202,6 +207,7 @@ class ShareController extends Controller
             ->join('products as p', 'dp.product_id', '=', 'p.id')
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id') // <--- TAMBAH INI
             ->leftJoinSub($latestPa, 'pa', function ($join) {
                 $join->on('pa.revision_id', '=', 'dpr.id')
                     ->where('pa.rn', '=', 1);
@@ -209,9 +215,9 @@ class ShareController extends Controller
             ->where('dpr.revision_status', '<>', 'draft')
             ->where('dpr.revision_status', 'approved');
 
+
         $recordsTotal = (clone $query)->count();
 
-        // --- FILTERING ---
         if ($request->filled('customer') && $request->customer !== 'All') {
             $query->where('c.code', $request->customer);
         }
@@ -225,20 +231,9 @@ class ShareController extends Controller
             $query->where('dsc.name', $request->category);
         }
         if ($request->filled('status') && $request->status !== 'All') {
-            $statusMap = [
-                'Waiting'  => ['pending', 'waiting'],
-                'Approved' => ['approved'],
-                'Rejected' => ['rejected'],
-            ];
-            $vals = $statusMap[$request->status] ?? [];
-            if ($vals) {
-                $placeholders = implode(',', array_fill(0, count($vals), '?'));
-                $query->whereRaw(
-                    "COALESCE(pa.decision, dpr.revision_status) IN ($placeholders)",
-                    $vals
-                );
-            }
+            $query->where('ps.name', $request->status);
         }
+
         if ($searchValue !== '') {
             $query->where(function ($q) use ($searchValue) {
                 $q->where('c.code', 'like', "%{$searchValue}%")
@@ -260,7 +255,6 @@ class ShareController extends Controller
 
         $recordsFiltered = (clone $query)->count();
 
-        // Select Data
         $query->select(
             'dpr.id',
             'c.code as customer',
@@ -272,12 +266,13 @@ class ShareController extends Controller
             DB::raw("
             CASE COALESCE(pa.decision, dpr.revision_status)
                 WHEN 'pending'  THEN 'Waiting'
-                WHEN 'waiting'  THEN 'Waiting'
+                WHEN 'waiting'  THEN 'Waiting'  
                 WHEN 'approved' THEN 'Approved'
                 WHEN 'rejected' THEN 'Rejected'
                 ELSE COALESCE(pa.decision, dpr.revision_status)
             END as status
         "),
+            'dpr.share_to as share_to',
             'pa.requested_at as request_date',
             'pa.decided_at   as decision_date'
         );
@@ -303,33 +298,38 @@ class ShareController extends Controller
             ->take($length)
             ->get();
 
-        $revisionIds = $data->pluck('id')->toArray();
+        $roleMap = DB::table('suppliers')->pluck('code', 'id')->all();
 
-        $sharesGrouped = collect();
-        
-        if (!empty($revisionIds)) {
-            $sharesGrouped = DB::table('package_shares as ps')
-                ->join('suppliers as s', 'ps.supplier_id', '=', 's.id')
-                ->whereIn('ps.revision_id', $revisionIds)
-                ->whereNotNull('ps.supplier_id')
-                ->select('ps.revision_id', 's.code', 's.name')
-                ->get()
-                ->groupBy('revision_id');
-        }
-
-        $data->transform(function ($item) use ($sharesGrouped) {
-            $suppliers = $sharesGrouped->get($item->id);
-
-            if ($suppliers && $suppliers->count() > 0) {
-                $item->share_to = $suppliers->pluck('code')->implode(', ');
-            } else {
+        $data->transform(function ($item) use ($roleMap) {
+            if (empty($item->share_to)) {
                 $item->share_to = 'Not yet distributed';
+                return $item;
             }
 
-            $item->hash = encrypt($item->id);
+            $roleIds = json_decode($item->share_to, true);
+
+            if (empty($roleIds) || !is_array($roleIds)) {
+                $item->share_to = 'Not yet distributed';
+                return $item;
+            }
+
+            $roleNames = [];
+            foreach ($roleIds as $id) {
+                $roleNames[] = $roleMap[$id] ?? "Unknown (ID: {$id})";
+            }
+
+            $item->share_to = implode(', ', $roleNames);
 
             return $item;
         });
+
+        // 🔹 TAMBAHAN: hash untuk link ke share.detail
+        $data = $data->map(function ($row) {
+            // dpr.id yang Tuan select tadi adalah revision_id
+            $row->hash = encrypt($row->id);
+            return $row;
+        });
+
 
         return response()->json([
             "draw"            => (int) $request->get('draw'),
@@ -343,486 +343,494 @@ class ShareController extends Controller
     public function saveShare(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'package_id'     => 'required|integer|exists:doc_package_revisions,id',
-            'supplier_ids'   => 'required|array',
-            'supplier_ids.*' => 'integer|exists:suppliers,id',
+            'package_id'   => 'required|integer|exists:doc_package_revisions,id',
+            'supplier_ids' => 'nullable|array',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->first()], 422);
         }
 
-        $revisionId  = $request->input('package_id');
-        $supplierIds = $request->input('supplier_ids');
+        $packageId   = $request->input('package_id');
+        $roleIds     = $request->input('supplier_ids', []);
+        $roleIdJson  = json_encode($roleIds);
 
-        $expiredAt = Carbon::now()->addDays(7);
-        
+        // kalau butuh user untuk log, tinggal pakai $user ini
         $user = auth()->user();
-        $userId = $user ? $user->id : null;
 
-        if (!$userId) {
-            return response()->json(['message' => 'Unauthorized user.'], 401);
+        // ambil detail package untuk subject email
+        $packageDetails = DB::table('doc_package_revisions as dpr')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('products as p', 'dp.product_id', '=', 'p.id')
+            ->where('dpr.id', $packageId)
+            ->select(
+                'c.code as customer',
+                'm.name as model',
+                'dsc.name as category',
+                'dtg.name as doc_type',
+                'p.part_no',
+                'dpr.revision_no'
+            )
+            ->first();
+
+        if (!$packageDetails) {
+            return response()->json(['message' => 'Package details not found.'], 404);
         }
 
-        DB::beginTransaction();
-        try {
-            foreach ($supplierIds as $supplierId) {
-                DB::table('package_shares')->updateOrInsert(
-                    [
-                        'revision_id' => $revisionId,
-                        'supplier_id' => $supplierId,
-                    ],
-                    [
-                        'department_id' => null,
-                        'shared_at'     => now(),
-                        'expired_at'    => $expiredAt,
-                        'created_by'    => $userId,
-                        'updated_at'    => now(),
-                    ]
-                );
-            }
-
-            $packageDetails = DB::table('doc_package_revisions as dpr')
-                ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
-                ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-                ->join('models as m', 'dp.model_id', '=', 'm.id')
-                ->join('products as p', 'dp.product_id', '=', 'p.id')
-                ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-                ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-                ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
-                ->where('dpr.id', $revisionId)
-                ->select(
-                    'dp.id as package_id',
-                    'c.code as customer',
-                    'm.name as model',
-                    'p.part_no',
-                    'pg.code_part_group',
-                    'dsc.name as category',
-                    'dtg.name as doc_type',
-                    'dpr.revision_no',
-                    'dpr.ecn_no'
-                )
-                ->first();
-
-            $supplierNames = DB::table('suppliers')
-                ->whereIn('id', $supplierIds)
-                ->pluck('name')
-                ->implode(', ');
-
-            //Create Activity Log
-            if ($packageDetails) {
-                $metaLogData = [
-                    'part_no'         => $packageDetails->part_no,
-                    'customer_code'   => $packageDetails->customer,
-                    'model_name'      => $packageDetails->model,
-                    'part_group_code' => $packageDetails->code_part_group ?? '-',
-                    'doc_type'        => $packageDetails->doc_type,
-                    'package_id'      => $packageDetails->package_id,
-                    'revision_no'     => $packageDetails->revision_no,
-                    'ecn_no'          => $packageDetails->ecn_no,
-                    
-                    // Info Tambahan Khusus Share
-                    'shared_with'     => $supplierNames, 
-                    'shared_count'    => count($supplierIds),
-                    'expired_at'      => $expiredAt->format('Y-m-d')
-                ];
-
-                ActivityLog::create([
-                    'user_id'       => $userId,
-                    'activity_code' => 'SHARE_PACKAGE',
-                    'scope_type'    => 'revision',
-                    'scope_id'      => $packageDetails->package_id,
-                    'revision_id'   => $revisionId,
-                    'meta'          => $metaLogData,
-                ]);
-            }
-
-            // 6. Persiapan Email (Subject)
-            $part1 = trim($packageDetails->model);
-            $part2 = $packageDetails->doc_type;
-            $part3 = $packageDetails->category;
-            $subjectParts = array_filter([$part1, $part2, $part3], fn($v) => !is_null($v) && $v !== '');
-            $emailSubject = implode(' - ', $subjectParts);
-
-            // Ambil daftar file
-            $files = DB::table('doc_package_revision_files')
-                ->where('revision_id', $revisionId)
-                ->pluck('filename')
-                ->toArray();
-
-            // 7. Cari User Supplier & Kirim Email
-            $userSuppliers = DB::table('users')
-                ->join('user_supplier', 'users.id', '=', 'user_supplier.user_id')
-                ->join('suppliers', 'user_supplier.supplier_id', '=', 'suppliers.id')
-                ->whereIn('user_supplier.supplier_id', $supplierIds)
-                ->whereNotNull('users.email')
-                ->select('users.id', 'users.email', 'users.name', 'suppliers.name as supplier_name')
-                ->get();
-
-            $usersToEmail = [];
-            foreach ($userSuppliers as $us) {
-                if (!isset($usersToEmail[$us->email])) {
-                    $usersToEmail[$us->email] = [
-                        'name' => $us->name,
-                        'email' => $us->email,
-                        'supplier_names' => []
-                    ];
-                }
-                if (!in_array($us->supplier_name, $usersToEmail[$us->email]['supplier_names'])) {
-                    $usersToEmail[$us->email]['supplier_names'][] = $us->supplier_name;
-                }
-            }
-
-            $encryptedId = Crypt::encrypt($revisionId);
-
-            foreach ($usersToEmail as $userData) {
-                $supplierNamesStr = implode(', ', $userData['supplier_names']);
-                
-                Mail::to($userData['email'])->send(new ShareNotification(
-                    $userData['name'],
-                    $encryptedId,
-                    $emailSubject,
-                    $supplierNamesStr,
-                    $files
-                ));
-            }
-
-            DB::commit();
-            return response()->json([
-                'message' => 'Package shared successfully to ' . count($supplierIds) . ' suppliers.'
+        // update share_to di revisi
+        $updateSuccess = DB::table('doc_package_revisions')
+            ->where('id', $packageId)
+            ->update([
+                'share_to'  => $roleIdJson,
+                'shared_at' => now(),
             ]);
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Share Error: ' . $e->getMessage());
-            return response()->json(['message' => 'Failed to share package: ' . $e->getMessage()], 500);
+        if (!$updateSuccess) {
+            return response()->json(['message' => 'Package not found or no changes were made.'], 404);
         }
-    }
 
-   public function showDetail(string $id)
-{
-    if (ctype_digit($id)) {
-        $revisionId = (int) $id;
-    } else {
-        try {
-            $revisionId = decrypt($id);
-        } catch (DecryptException $e) {
-            abort(404, 'Invalid share ID.');
+        // kalau nggak ada penerima, cukup sampai sini
+        if (empty($roleIds)) {
+            return response()->json(['message' => 'Package sharing updated (no recipients).']);
         }
+
+        // cari user-user di supplier yang dipilih
+        $userSuppliers = DB::table('users')
+            ->join('user_supplier', 'users.id', '=', 'user_supplier.user_id')
+            ->join('suppliers', 'user_supplier.supplier_id', '=', 'suppliers.id')
+            ->whereIn('user_supplier.supplier_id', $roleIds)
+            ->select('users.id', 'users.email', 'users.name', 'suppliers.name as supplier_code')
+            ->get();
+
+        if ($userSuppliers->isEmpty()) {
+            return response()->json(['message' => 'Package shared, but no users found for the selected suppliers.']);
+        }
+
+        // group by user supaya kalau 1 user punya banyak supplier, digabung
+        $usersToEmail = [];
+        foreach ($userSuppliers as $us) {
+            if (!isset($usersToEmail[$us->id])) {
+                $usersToEmail[$us->id] = [
+                    'name'           => $us->name,
+                    'email'          => $us->email,
+                    'supplier_codes' => [],
+                ];
+            }
+            if (!in_array($us->supplier_code, $usersToEmail[$us->id]['supplier_codes'])) {
+                $usersToEmail[$us->id]['supplier_codes'][] = $us->supplier_code;
+            }
+        }
+
+        // subject email
+        $part1 = trim($packageDetails->model);
+        $part2 = $packageDetails->doc_type;
+        $part3 = $packageDetails->category;
+
+        $subjectParts = array_filter([$part1, $part2, $part3], fn($v) => !is_null($v) && $v !== '');
+        $emailSubject = implode(' - ', $subjectParts);
+
+        // daftar file
+        $files = DB::table('doc_package_revision_files')
+            ->where('revision_id', $packageId)
+            ->pluck('filename');
+
+        // encrypt ID revisi untuk link di email
+        foreach ($usersToEmail as $userData) {
+            $supplierNames = implode(', ', $userData['supplier_codes']);
+            $encryptedId   = Crypt::encrypt($packageId);
+
+            Mail::to($userData['email'])->send(new ShareNotification(
+                $userData['name'],
+                $encryptedId,
+                $emailSubject,
+                $supplierNames,
+                $files
+            ));
+        }
+
+        return response()->json(['message' => 'Package shared and emails sent successfully!']);
     }
 
-    $revision = DB::table('doc_package_revisions as dpr')
-        ->where('dpr.id', $revisionId)
-        ->first();
 
-    if (!$revision) {
-        abort(404, 'Shared package not found.');
-    }
+    public function showDetail(string $id)
+    {
+        // 1. Dekripsi hash -> revisionId (int)
+        if (ctype_digit($id)) {
+            $revisionId = (int) $id;
+        } else {
+            try {
+                $revisionId = decrypt($id);
+            } catch (DecryptException $e) {
+                abort(404, 'Invalid share ID.');
+            }
+        }
 
-    $receiptDate = $revision->receipt_date
-        ? Carbon::parse($revision->receipt_date)
-        : null;
+        // 2. Ambil data revisi
+        $revision = DB::table('doc_package_revisions as dpr')
+            ->where('dpr.id', $revisionId)
+            ->first();
 
-    $uploadDateRevision = $revision->created_at
-        ? Carbon::parse($revision->created_at)
-        : null;
+        if (!$revision) {
+            abort(404, 'Shared package not found.');
+        }
 
-    $isObsolete = (bool)($revision->is_obsolete ?? 0);
+        // --- Tambahan: data untuk stamp ---
+        $receiptDate = $revision->receipt_date
+            ? Carbon::parse($revision->receipt_date)
+            : null;
 
-    $obsoleteDate = $revision->obsolete_at
-        ? Carbon::parse($revision->obsolete_at)
-        : null;
+        $uploadDateRevision = $revision->created_at
+            ? Carbon::parse($revision->created_at)
+            : null;
 
-    $lastApproval = DB::table('package_approvals as pa')
-        ->leftJoin('users as u', 'u.id', '=', 'pa.decided_by')
-        ->leftJoin('departments as d', 'd.id', '=', 'u.id_dept')
-        ->where('pa.revision_id', $revisionId)
-        ->orderByRaw('COALESCE(pa.decided_at, pa.requested_at) DESC')
-        ->first([
-            'u.name as approver_name',
-            'd.code as dept_name'
-        ]);
+        $isObsolete = (bool)($revision->is_obsolete ?? 0);
 
-    $obsoleteStampInfo = [
-        'date_raw'  => $obsoleteDate?->toDateString(),
-        'date_text' => $obsoleteDate
-            ? $this->formatObsoleteDate($obsoleteDate)
-            : null,
-        'name' => $revision->obsolete_name
-            ?? optional($lastApproval)->approver_name
-            ?? '-',
-        'dept' => $revision->obsolete_dept
-            ?? optional($lastApproval)->dept_name
-            ?? '-',
-    ];
+        $obsoleteDate = $revision->obsolete_at
+            ? Carbon::parse($revision->obsolete_at)
+            : null;
 
-    $package = DB::table('doc_packages as dp')
-        ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-        ->join('models as m', 'dp.model_id', '=', 'm.id')
-        ->join('products as p', 'dp.product_id', '=', 'p.id')
-        ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-        ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-        ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
-        ->leftJoin('users as u', 'u.id', '=', 'dp.created_by')
-        ->where('dp.id', $revision->package_id)
-        ->select(
-            'c.code as customer',
-            'm.name as model',
-            'p.part_no',
-            'dtg.name as doc_type',
-            'dsc.name as category',
-            'pg.code_part_group as part_group',
-            'dp.created_at',
-            'u.name as uploader_name'
-        )
-        ->first();
+        $sharedAt = $revision->shared_at
+            ? Carbon::parse($revision->shared_at)
+            : null;
 
-    if (!$package) {
-        abort(404, 'Package not found.');
-    }
+        $lastApproval = DB::table('package_approvals as pa')
+            ->leftJoin('users as u', 'u.id', '=', 'pa.decided_by')
+            ->leftJoin('departments as d', 'd.id', '=', 'u.id_dept')
+            ->where('pa.revision_id', $revisionId)
+            ->orderByRaw('COALESCE(pa.decided_at, pa.requested_at) DESC')
+            ->first([
+                'u.name as approver_name',
+                'd.code as dept_name'
+            ]);
 
-    // ==== ACTIVITY LOG (UPLOAD + APPROVE DLL) ====
-    $logs = $this->buildApprovalLogs($revision->package_id, $revisionId);
+        $obsoleteStampInfo = [
+            'date_raw'  => $obsoleteDate?->toDateString(),
+            'date_text' => $obsoleteDate
+                ? $this->formatObsoleteDate($obsoleteDate)
+                : null,
+            'name' => $revision->obsolete_name
+                ?? optional($lastApproval)->approver_name
+                ?? '-',
 
-    // fallback "Uploaded" kalau belum ada
-    $uploadedAt     = optional($package->created_at);
-    $uploaderName   = $package->uploader_name ?? 'System';
-    $hasUploadedLog = $logs->contains(fn($log) => ($log['action'] ?? '') === 'uploaded');
+            'dept' => $revision->obsolete_dept
+                ?? optional($lastApproval)->dept_name
+                ?? '-',
+        ];
 
-    if ($uploadedAt && !$hasUploadedLog) {
-        $logs->push([
-            'id'      => 0,
-            'action'  => 'uploaded',
-            'user'    => $uploaderName,
-            'note'    => 'Package uploaded',
-            'time'    => $uploadedAt->format('Y-m-d H:i'),
-            'time_ts' => $uploadedAt->timestamp,
-        ]);
+        // 3. Ambil info package (customer, model, dst)
+        $package = DB::table('doc_packages as dp')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+            ->leftJoin('users as u', 'u.id', '=', 'dp.created_by')
+            ->where('dp.id', $revision->package_id)
+            ->select(
+                'c.code as customer',
+                'm.name as model',
+                'p.part_no',
+                'dtg.name as doc_type',
+                'dsc.name as category',
+                'pg.code_part_group as part_group',
+                'dp.created_at',
+                'u.name as uploader_name'
+            )
+            ->first();
 
-        // urutkan supaya newest di atas
-        $logs = $logs->sortByDesc('time_ts')->values();
-    }
-    // ==== END ACTIVITY LOG ====
+        if (!$package) {
+            abort(404, 'Package not found.');
+        }
 
-    // 4. Ambil file-file di revisi ini, dikelompokkan per kategori
-    $fileRows = DB::table('doc_package_revision_files')
-        ->where('revision_id', $revisionId)
-        ->select(
-            'id',
-            'filename as name',
-            'category',
-            'storage_path',
-            'file_size',
-            'ori_position',
-            'copy_position',
-            'obslt_position',
-            'blocks_position'
-        )
-        ->get();
+        // ==== ACTIVITY LOG (UPLOAD + APPROVE DLL) ====
+        $logs = $this->buildApprovalLogs($revision->package_id, $revisionId);
 
-    // daftar extension yang dipakai
-    $extList = $fileRows
-        ->map(fn($r) => strtolower(pathinfo($r->name, PATHINFO_EXTENSION)))
-        ->filter()
-        ->unique()
-        ->values();
+        // fallback "Uploaded" kalau belum ada
+        $uploadedAt     = optional($package->created_at);
+        $uploaderName   = $package->uploader_name ?? 'System';
+        $hasUploadedLog = $logs->contains(fn($log) => ($log['action'] ?? '') === 'uploaded');
 
-    $extUpper = $extList->map(fn($e) => strtoupper($e));
+        if ($uploadedAt && !$hasUploadedLog) {
+            $logs->push([
+                'id'      => 0,
+                'action'  => 'uploaded',
+                'user'    => $uploaderName,
+                'note'    => 'Package uploaded',
+                'time'    => $uploadedAt->format('Y-m-d H:i'),
+                'time_ts' => $uploadedAt->timestamp,
+            ]);
 
-    // ambil icon dari master file_extensions
-    $extIcons = $extUpper->isEmpty()
-        ? []
-        : FileExtensions::whereIn('code', $extUpper)
+            // urutkan supaya newest di atas
+            $logs = $logs->sortByDesc('time_ts')->values();
+        }
+        // ==== END ACTIVITY LOG ====
+
+        // 4. Ambil file-file di revisi ini, dikelompokkan per kategori
+        $fileRows = DB::table('doc_package_revision_files')
+            ->where('revision_id', $revisionId)
+            ->select(
+                'id',
+                'filename as name',
+                'category',
+                'storage_path',
+                'file_size',
+                'ori_position',
+                'copy_position',
+                'obslt_position',
+                'blocks_position'
+            )
+            ->get();
+
+        // daftar extension yang dipakai
+        $extList = $fileRows
+            ->map(fn($r) => strtolower(pathinfo($r->name, PATHINFO_EXTENSION)))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $extUpper = $extList->map(fn($e) => strtoupper($e));
+
+        // ambil icon dari master file_extensions
+        $extIcons = $extUpper->isEmpty()
+            ? []
+            : FileExtensions::whereIn('code', $extUpper)
             ->get()
             ->mapWithKeys(fn(FileExtensions $m) => [strtolower($m->code) => $m->icon_src])
             ->all();
 
-    $files = $fileRows
-        ->groupBy('category')
-        ->map(function ($items) use ($extIcons) {
-            return $items->map(function ($item) use ($extIcons) {
-                $url = URL::signedRoute('preview.file', ['id' => $item->id]);
+        $files = $fileRows
+            ->groupBy('category')
+            ->map(function ($items) use ($extIcons) {
+                return $items->map(function ($item) use ($extIcons) {
+                    $url = URL::signedRoute('preview.file', ['id' => $item->id]);
 
-                $ext = strtolower(pathinfo($item->name, PATHINFO_EXTENSION));
-                $iconSrc = $extIcons[$ext] ?? null;
+                    $ext = strtolower(pathinfo($item->name, PATHINFO_EXTENSION));
+                    $iconSrc = $extIcons[$ext] ?? null;
 
-                return [
-                    'id'             => $item->id,
-                    'name'           => $item->name,
-                    'url'            => $url,
-                    'icon_src'       => $iconSrc,
-                    'ori_position'   => $item->ori_position,
-                    'copy_position'  => $item->copy_position,
-                    'obslt_position' => $item->obslt_position,
-                    'size'           => $item->file_size,
-                    'blocks_position' => $item->blocks_position
-                        ? json_decode($item->blocks_position, true)
-                        : [],
-                ];
-            });
-        })
-        ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
-    
-    $shares = DB::table('package_shares as ps')
-        ->join('suppliers as s', 'ps.supplier_id', '=', 's.id')
-        ->where('ps.revision_id', $revisionId)
-        ->whereNotNull('ps.supplier_id')
-        ->select(
-            's.code as supplier_code',
-            's.name as supplier_name',
-            'ps.shared_at',
-            'ps.expired_at'
-        )
-        ->orderBy('s.code')
-        ->get();
+                    return [
+                        'id'             => $item->id,
+                        'name'           => $item->name,
+                        'url'            => $url,
+                        'icon_src'       => $iconSrc,
+                        'ori_position'   => $item->ori_position,
+                        'copy_position'  => $item->copy_position,
+                        'obslt_position' => $item->obslt_position,
+                        'size'           => $item->file_size,
+                        'blocks_position' => $item->blocks_position
+                            ? (is_string($item->blocks_position)
+                                ? (json_decode($item->blocks_position, true) ?? [])
+                                : $item->blocks_position)
+                            : [],
+                    ];
+                });
+            })
+            ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
-    $uploadedAt = optional($package->created_at);
+        // 5. Daftar supplier yang pernah di-share
+        $shares = collect();
 
-    $detail = [
-        'metadata' => [
-            'revision_id' => $revisionId,
-            'customer'    => $package->customer,
-            'model'       => $package->model,
-            'part_group'  => $package->part_group,
-            'doc_type'    => $package->doc_type,
-            'category'    => $package->category,
-            'part_no'     => $package->part_no,
-            'revision'    => 'Rev-' . $revision->revision_no,
-            'ecn_no'      => $revision->ecn_no ?? null,
-            'uploader'    => $package->uploader_name ?? 'System',
-            'uploaded_at' => $uploadedAt ? $uploadedAt->format('Y-m-d H:i') : null,
-        ],
-        'files'        => $files,
-        'shares'       => $shares, 
-        'activityLogs' => $logs,
-        'stamp'        => [
-            'receipt_date'  => $receiptDate?->toDateString(),
-            'upload_date'   => $uploadDateRevision?->toDateString(),
-            'obsolete_date' => $obsoleteDate?->toDateString(),
-            'is_obsolete'   => $isObsolete,
-            'obsolete_info' => $obsoleteStampInfo,
-        ],
-    ];
+        if (!empty($revision->share_to)) {
+            $ids = json_decode($revision->share_to, true);
 
-    $hash = encrypt($revisionId);
+            if (is_array($ids) && count($ids) > 0) {
+                $supplierRows = DB::table('suppliers as s')
+                    ->whereIn('s.id', $ids)
+                    ->orderBy('s.code')
+                    ->get([
+                        's.code as supplier_code',
+                        's.name as supplier_name',
+                    ]);
 
-    $stampFormats = StampFormat::where('is_active', true)
-        ->orderBy('id')
-        ->get();
+                $sharedAt = $revision->shared_at ?? null;
 
-    return view('file_management.share_detail', [
-        'shareId'       => $hash,
-        'revisionId'    => $revisionId,
-        'detail'        => $detail,
-        'stampFormats'  => $stampFormats,
-    ]);
-}
-
-    public function updateBlocks(Request $request, $fileId): JsonResponse
-    {
-        // cari file
-        $file = DocPackageRevisionFile::findOrFail($fileId);
-
-        // validasi blok (boleh banyak blok)
-        $validated = $request->validate([
-            'blocks' => 'nullable|array',
-            'blocks.*.id'       => 'nullable|string',
-            'blocks.*.x'        => 'required|numeric',
-            'blocks.*.y'        => 'required|numeric',
-            'blocks.*.width'    => 'required|numeric',
-            'blocks.*.height'   => 'required|numeric',
-            'blocks.*.rotation' => 'required|numeric',
-        ]);
-
-        $blocks = $validated['blocks'] ?? [];
-
-        // kalau id kosong, isi otomatis blk-1, blk-2, ...
-        foreach ($blocks as $i => &$block) {
-            if (empty($block['id'])) {
-                $block['id'] = 'blk-' . ($i + 1);
+                $shares = $supplierRows->map(function ($row) use ($sharedAt) {
+                    return (object) [
+                        'supplier_code' => $row->supplier_code,
+                        'supplier_name' => $row->supplier_name,
+                        'shared_at'     => $sharedAt,
+                    ];
+                });
             }
         }
 
-        // simpan ke kolom blocks_position (auto jadi JSON karena cast array)
-        $file->blocks_position = $blocks;
-        $file->save();
+        // 6. Susun data untuk Blade
+        $uploadedAt = optional($package->created_at);
 
-        return response()->json([
-            'message' => 'Blocks position saved.',
-            'blocks'  => $file->blocks_position,
+        $detail = [
+            'metadata' => [
+                'revision_id' => $revisionId,
+                'customer'    => $package->customer,
+                'model'       => $package->model,
+                'part_group'  => $package->part_group,
+                'doc_type'    => $package->doc_type,
+                'category'    => $package->category,
+                'part_no'     => $package->part_no,
+                'revision'    => 'Rev-' . $revision->revision_no,
+                'ecn_no'      => $revision->ecn_no ?? null,
+                'uploader'    => $package->uploader_name ?? 'System',
+                'uploaded_at' => $uploadedAt ? $uploadedAt->format('Y-m-d H:i') : null,
+            ],
+            'files'        => $files,
+            'shares'       => $shares,
+            'activityLogs' => $logs,   // <<< kirim ke Blade
+
+            'stamp'        => [
+                'receipt_date'  => $receiptDate?->toDateString(),
+                'upload_date'   => $uploadDateRevision?->toDateString(),
+                'obsolete_date' => $obsoleteDate?->toDateString(),
+                'is_obsolete'   => $isObsolete,
+                'obsolete_info' => $obsoleteStampInfo,
+                'shared_at'     => $sharedAt?->toDateString(),
+            ],
+        ];
+
+        // hash baru untuk link (kalau mau dipakai lagi)
+        $hash = encrypt($revisionId);
+
+        $stampFormats = StampFormat::where('is_active', true)
+            ->orderBy('id')
+            ->get();
+
+        return view('file_management.share_detail', [
+            'shareId'       => $hash,
+            'revisionId'    => $revisionId,
+            'detail'        => $detail,
+            'stampFormats'  => $stampFormats,
         ]);
     }
 
 
-    private function buildApprovalLogs(int $packageId, ?int $revisionId)
+   public function updateBlocks(Request $request, $fileId): JsonResponse
 {
-    $q = DB::table('activity_logs as al')
-        ->leftJoin('users as u', 'u.id', '=', 'al.user_id')
-        ->where(function ($w) use ($packageId, $revisionId) {
-            $w->where(function ($x) use ($packageId) {
-                $x->where('al.scope_type', 'package')
-                  ->where('al.scope_id', $packageId);
-            });
+    $file = DocPackageRevisionFile::findOrFail($fileId);
 
-            if (!empty($revisionId)) {
-                $w->orWhere(function ($x) use ($revisionId) {
-                    $x->where('al.scope_type', 'revision')
-                      ->where('al.scope_id', $revisionId);
-                });
+    $validated = $request->validate([
+        'page'               => 'nullable|integer|min:1',
+        'blocks'             => 'nullable|array',
+        'blocks.*.id'        => 'nullable|string',
+        'blocks.*.u'         => 'required|numeric',
+        'blocks.*.v'         => 'required|numeric',
+        'blocks.*.w'         => 'required|numeric',
+        'blocks.*.h'         => 'required|numeric',
+        'blocks.*.rotation'  => 'nullable|numeric',
+    ]);
 
-                $w->orWhere(function ($x) use ($revisionId) {
+    $page      = (int)($validated['page'] ?? 1);
+    $rawBlocks = $validated['blocks'] ?? [];
+
+    // normalisasi & clamp 0..1 biar aman
+    $blocks = [];
+    foreach ($rawBlocks as $i => $block) {
+        $blocks[] = [
+            'id'       => $block['id'] ?? ('blk-' . ($i + 1)),
+            'u'        => max(0, min(1, (float) $block['u'])),
+            'v'        => max(0, min(1, (float) $block['v'])),
+            'w'        => max(0, min(1, (float) $block['w'])),
+            'h'        => max(0, min(1, (float) $block['h'])),
+            'rotation' => isset($block['rotation']) ? (float) $block['rotation'] : 0.0,
+        ];
+    }
+
+    // ==== MERGE DENGAN VALUE LAMA (BACKWARD COMPATIBLE) ====
+    $existing = $file->blocks_position ?: [];
+
+    // Kalau data lama masih dalam bentuk array flat → anggap halaman 1
+    if (is_array($existing) && array_is_list($existing)) {
+        $existing = [
+            '1' => $existing,
+        ];
+    }
+
+    if (!is_array($existing)) {
+        $existing = [];
+    }
+
+    $existing[(string) $page] = $blocks;
+
+    $file->blocks_position = $existing; // cast array → JSON
+    $file->save();
+
+    return response()->json([
+        'message' => 'Blocks position saved.',
+        'page'    => $page,
+        'blocks'  => $blocks,
+    ]);
+}
+
+
+
+
+    private function buildApprovalLogs(int $packageId, ?int $revisionId)
+    {
+        $q = DB::table('activity_logs as al')
+            ->leftJoin('users as u', 'u.id', '=', 'al.user_id')
+            ->where(function ($w) use ($packageId, $revisionId) {
+                $w->where(function ($x) use ($packageId) {
                     $x->where('al.scope_type', 'package')
-                      ->where('al.scope_id', $revisionId);
+                        ->where('al.scope_id', $packageId);
                 });
-            }
-        })
-        ->where(function ($w) use ($revisionId) {
-            if (!empty($revisionId)) {
-                $w->whereNull('al.revision_id')
-                  ->orWhere('al.revision_id', $revisionId);
-            } else {
-                $w->whereNull('al.revision_id');
-            }
-        })
-        ->orderByDesc('al.created_at')
-        ->orderByDesc('al.id')
-        ->limit(200);
 
-    return $q->get([
+                if (!empty($revisionId)) {
+                    $w->orWhere(function ($x) use ($revisionId) {
+                        $x->where('al.scope_type', 'revision')
+                            ->where('al.scope_id', $revisionId);
+                    });
+
+                    $w->orWhere(function ($x) use ($revisionId) {
+                        $x->where('al.scope_type', 'package')
+                            ->where('al.scope_id', $revisionId);
+                    });
+                }
+            })
+            ->where(function ($w) use ($revisionId) {
+                if (!empty($revisionId)) {
+                    $w->whereNull('al.revision_id')
+                        ->orWhere('al.revision_id', $revisionId);
+                } else {
+                    $w->whereNull('al.revision_id');
+                }
+            })
+            ->orderByDesc('al.created_at')
+            ->orderByDesc('al.id')
+            ->limit(200);
+
+        return $q->get([
             'al.id',
             'al.activity_code',
             'al.meta',
             'al.created_at',
             'u.name as user_name'
         ])
-        ->map(function ($row) {
-            $code = strtoupper($row->activity_code ?? '');
-            $action =
-                (str_starts_with($code, 'UPLOAD')   ? 'uploaded'   :
-                (str_starts_with($code, 'APPROVE')  ? 'approved'   :
-                (str_starts_with($code, 'REJECT')   ? 'rejected'   :
-                (str_starts_with($code, 'ROLLBACK') ? 'rollbacked' :
-                 strtolower($code ?: 'info')))));
+            ->map(function ($row) {
+                $code = strtoupper($row->activity_code ?? '');
+                $action =
+                    (str_starts_with($code, 'UPLOAD')   ? 'uploaded'   : (str_starts_with($code, 'APPROVE')  ? 'approved'   : (str_starts_with($code, 'REJECT')   ? 'rejected'   : (str_starts_with($code, 'ROLLBACK') ? 'rollbacked' :
+                                    strtolower($code ?: 'info')))));
 
-            $meta = $row->meta;
-            if (is_string($meta)) {
-                try {
-                    $meta = json_decode($meta, true, 512, JSON_THROW_ON_ERROR);
-                } catch (\Throwable) {
-                    $meta = null;
+                $meta = $row->meta;
+                if (is_string($meta)) {
+                    try {
+                        $meta = json_decode($meta, true, 512, JSON_THROW_ON_ERROR);
+                    } catch (\Throwable) {
+                        $meta = null;
+                    }
                 }
-            }
 
-            return [
-                'id'      => (int) $row->id,
-                'action'  => $action,
-                'user'    => $row->user_name ?? 'System',
-                'note'    => is_array($meta) ? ($meta['note'] ?? '') : ($meta ?: ''),
-                'time'    => optional($row->created_at)->format('Y-m-d H:i'),
-                'time_ts' => optional($row->created_at)?->timestamp ?? 0,
-            ];
-        });
-}
+                return [
+                    'id'      => (int) $row->id,
+                    'action'  => $action,
+                    'user'    => $row->user_name ?? 'System',
+                    'note'    => is_array($meta) ? ($meta['note'] ?? '') : ($meta ?: ''),
+                    'time'    => optional($row->created_at)->format('Y-m-d H:i'),
+                    'time_ts' => optional($row->created_at)?->timestamp ?? 0,
+                ];
+            });
+    }
 
 
     private function formatObsoleteDate(Carbon $date): string
