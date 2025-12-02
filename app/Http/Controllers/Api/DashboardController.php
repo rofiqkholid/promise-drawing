@@ -369,7 +369,6 @@ class DashboardController extends Controller
                     'activity_logs.created_at'
                 );
 
-            // 1. Filter Date Range
             if ($request->filled('date_start') && $request->filled('date_end')) {
                 $query->whereBetween('activity_logs.created_at', [
                     $request->date_start . ' 00:00:00',
@@ -377,18 +376,15 @@ class DashboardController extends Controller
                 ]);
             }
 
-            // 2. Filter Customer (Mencari di dalam JSON meta -> customer_code)
             if ($request->filled('customer')) {
-                $customers = $request->customer; // Array
+                $customers = $request->customer;
                 $query->where(function ($q) use ($customers) {
                     foreach ($customers as $cust) {
-                        // Gunakan JSON_VALUE untuk SQL Server
                         $q->orWhereRaw("JSON_VALUE(activity_logs.meta, '$.customer_code') = ?", [$cust]);
                     }
                 });
             }
 
-            // 3. Filter Model (Mencari di dalam JSON meta -> model_name)
             if ($request->filled('model')) {
                 $models = $request->model;
                 $query->where(function ($q) use ($models) {
@@ -398,7 +394,6 @@ class DashboardController extends Controller
                 });
             }
 
-            // 4. Filter Part Group (Mencari di dalam JSON meta -> part_group_code)
             if ($request->filled('part_group')) {
                 $partGroups = $request->part_group;
                 $query->where(function ($q) use ($partGroups) {
@@ -408,12 +403,9 @@ class DashboardController extends Controller
                 });
             }
 
-            // 5. Filter Project Status (Opsional, jika ada di meta)
-            // Jika status ada di meta, gunakan logika yang sama. 
-            // Jika status UPLOAD tidak memiliki status project, bagian ini bisa di-skip atau disesuaikan.
 
             $data = $query->orderBy('activity_logs.created_at', 'desc')
-                ->limit(10) // Disarankan limit lebih besar sedikit jika difilter
+                ->limit(4) 
                 ->get()
                 ->map(function ($item) {
                     $item->meta = json_decode($item->meta, true);
