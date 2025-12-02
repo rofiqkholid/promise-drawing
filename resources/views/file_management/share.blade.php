@@ -368,23 +368,34 @@
                         data: 'decision_date',
                         name: 'dpr.decided_at',
                         render: function(v, t, row) {
-                            if (!v || row.status === 'Waiting')
+                            if (!v) {
                                 return '<span class="text-gray-400">—</span>';
+                            }
                             const text = fmtDate(v);
-                            return `<span title="${row.status} at ${v}">${text}</span>`;
+                            return `<span title="${v}">${text}</span>`;
                         }
                     },
                     {
-                        data: 'status',
-                        name: 'dpr.revision_status',
-                        render: function(data) {
-                            let cls = '';
-                            if (data === 'Rejected') cls = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
-                            if (data === 'Waiting') cls = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
-                            if (data === 'Approved') cls = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
-                            return `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${cls}">${data ?? ''}</span>`;
+                        data: 'project_status',
+                        name: 'project_status',
+                        render: function(data, type, row) {
+
+                            const value = row.project_status ?? row.project_status_name ?? data ?? '';
+
+                            if (!value) {
+                                return '<span class="text-xs text-gray-400 dark:text-gray-500">–</span>';
+                            }
+
+
+                            return `
+            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                   bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300">
+                ${value}
+            </span>
+        `;
                         }
                     },
+
                     {
                         data: 'id',
                         orderable: false,
@@ -560,23 +571,23 @@
                 $shareModal.show();
             });
 
-$('#approvalTable tbody').on('click', 'tr', function(e) {
-    // kalau yang diklik adalah tombol Share, jangan redirect
-    if ($(e.target).closest('.btn-share').length) return;
+            $('#approvalTable tbody').on('click', 'tr', function(e) {
+                // kalau yang diklik adalah tombol Share, jangan redirect
+                if ($(e.target).closest('.btn-share').length) return;
 
-    const rowData = table.row(this).data();
-    if (!rowData || !rowData.hash) return;
+                const rowData = table.row(this).data();
+                if (!rowData || !rowData.hash) return;
 
-    // pakai placeholder __ID__ lalu di-replace di JS
-    const url = '{{ route("share.detail", ["id" => "__ID__"]) }}'.replace('__ID__', rowData.hash);
-    window.location.href = url;
-});
+                // pakai placeholder __ID__ lalu di-replace di JS
+                const url = '{{ route("share.detail", ["id" => "__ID__"]) }}'.replace('__ID__', rowData.hash);
+                window.location.href = url;
+            });
 
 
             $btnSaveShare.on('click', function() {
                 const $this = $(this);
                 const packageId = $hiddenPackageId.val();
-                
+
                 // Ambil ID dari supplier yang dipilih
                 const selectSupplierIds = selectedSupplier.map(r => r.id);
 
@@ -604,27 +615,27 @@ $('#approvalTable tbody').on('click', 'tr', function(e) {
                     dataType: 'json',
                     success: function(response) {
                         $shareModal.hide();
-                        
+
                         // Tampilkan pesan sukses dari server
                         toastSuccess('Shared', response.message || 'Package shared successfully!');
-                        
+
                         // Reload tabel tanpa reset paging
                         if (table) table.ajax.reload(null, false);
-                        
+
                         // Reset pilihan supplier agar modal bersih saat dibuka lagi nanti
-                        selectedSupplier = []; 
-                        renderSelectSuppliers(); 
+                        selectedSupplier = [];
+                        renderSelectSuppliers();
                     },
                     error: function(xhr) {
                         console.error('Failed to share:', xhr.responseText);
                         let errorMsg = 'Failed to share package.';
-                        
+
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMsg = xhr.responseJSON.message;
                         } else if (xhr.status === 422) {
-                             errorMsg = 'Validation error. Check input.';
+                            errorMsg = 'Validation error. Check input.';
                         }
-                        
+
                         toastError('Error', errorMsg);
                     },
                     complete: function() {

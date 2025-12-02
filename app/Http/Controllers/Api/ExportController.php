@@ -1043,49 +1043,72 @@ class ExportController extends Controller
             try {
                 $revision = DB::table('doc_package_revisions')->where('id', $decrypted_id)->first();
                 $package = null;
+                
                 if ($revision) {
                     $package = DB::table('doc_packages as dp')
                         ->join('customers as c', 'dp.customer_id', '=', 'c.id')
                         ->join('models as m', 'dp.model_id', '=', 'm.id')
                         ->join('products as p', 'dp.product_id', '=', 'p.id')
+                        ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
                         ->where('dp.id', $revision->package_id)
-                        ->select('c.code as customer', 'm.name as model', 'p.part_no', 'dp.part_group_id')
+                        ->select(
+                            'c.code as customer', 
+                            'm.name as model', 
+                            'p.part_no', 
+                            'dp.part_group_id',
+                            'dtg.name as doc_type'
+                        )
                         ->first();
                 }
 
                 if ($revision && $package) {
                     $labelName = null;
                     if (!empty($revision->revision_label_id)) {
-                        $labelName = DB::table('customer_revision_labels')->where('id', $revision->revision_label_id)->value('label');
+                        $labelName = DB::table('customer_revision_labels')
+                            ->where('id', $revision->revision_label_id)
+                            ->value('label');
                     }
                     $partGroupCode = null;
                     if (!empty($package->part_group_id)) {
-                        $partGroupCode = DB::table('part_groups')->where('id', $package->part_group_id)->value('code_part_group');
+                        $partGroupCode = DB::table('part_groups')
+                            ->where('id', $package->part_group_id)
+                            ->value('code_part_group');
                     }
 
+                    // Hitung Ukuran File
+                    $fileBytes = file_exists($zipFilePath) ? filesize($zipFilePath) : 0;
+                    // Format ke Human Readable (KB/MB)
+                    $sizeFormatted = $fileBytes >= 1048576 
+                        ? number_format($fileBytes / 1048576, 2) . ' MB' 
+                        : number_format($fileBytes / 1024, 2) . ' KB';
+
                     $metaLogData = [
-                        'part_no' => $package->part_no,
-                        'customer_code' => $package->customer,
-                        'model_name' => $package->model,
+                        'part_no'         => $package->part_no,
+                        'customer_code'   => $package->customer,
+                        'model_name'      => $package->model,
+                        'doc_type'        => $package->doc_type,
                         'part_group_code' => $partGroupCode,
-                        'package_id' => $revision->package_id,
-                        'revision_no' => $revision->revision_no,
-                        'ecn_no' => $revision->ecn_no,
-                        'revision_label' => $labelName,
-                        'downloaded_file' => $safe_filename
+                        'package_id'      => $revision->package_id,
+                        'revision_no'     => $revision->revision_no,
+                        'ecn_no'          => $revision->ecn_no,
+                        'revision_label'  => $labelName,
+                        'downloaded_file' => $safe_filename,
+                        'file_size'       => $sizeFormatted,
+                        'file_bytes'      => $fileBytes
                     ];
 
                     ActivityLog::create([
-                        'user_id' => Auth::user()->id,
+                        'user_id'       => Auth::user()->id,
                         'activity_code' => 'DOWNLOAD',
-                        'scope_type' => 'revision',
-                        'scope_id' => $revision->package_id,
-                        'revision_id' => $revision->id,
-                        'meta' => $metaLogData,
+                        'scope_type'    => 'revision',
+                        'scope_id'      => $revision->package_id,
+                        'revision_id'   => $revision->id,
+                        'meta'          => $metaLogData,
                     ]);
                 }
+
             } catch (\Exception $e) {
-                Log::error('Failed to create download activity log in getPreparedZip', [
+                Log::error('Failed to create download activity log', [
                     'error' => $e->getMessage(),
                     'revision_id' => $decrypted_id,
                 ]);

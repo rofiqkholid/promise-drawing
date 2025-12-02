@@ -404,13 +404,20 @@ class DrawingUploadController extends Controller
 
             //  Activity Logging ---
             $package = DB::table('doc_packages')->where('id', $packageId)->first(['package_no']);
+            
+            // Ambil Nama Subcategory & Part Group
             $subCatName = null;
             if (!empty($packageIds['doctype_subcategory_id'])) {
                 $subCatName = DB::table('doctype_subcategories')
                     ->where('id', $packageIds['doctype_subcategory_id'])
                     ->value('name');
             }
+            
+            $partGroupCode = DB::table('part_groups')
+                ->where('id', $packageIds['part_group_id'])
+                ->value('code_part_group');
 
+            // Ambil Nama Label Revisi
             $labelName = null;
             if (!empty($validated['revision_label_id'])) {
                 $labelName = DB::table('customer_revision_labels')
@@ -418,32 +425,41 @@ class DrawingUploadController extends Controller
                     ->value('label');
             }
 
-            $partGroupCode = DB::table('part_groups')->where('id', $packageIds['part_group_id'])->value('code_part_group');
+            // Hitung Statistik File yang Diupload
+            $fileCount = count($savedFilePaths);
+            $fileTypes = collect($savedFilePaths)->map(function($path) {
+                return strtoupper(pathinfo($path, PATHINFO_EXTENSION));
+            })->unique()->values()->implode(', '); // Contoh: "PDF, STEP"
 
+            // Susun Meta Data Lengkap
             $metaLogData = [
-                'part_no' => $packageLabels['part_no'] ?? null,
-                'doctype_group' => $packageLabels['doctype_group_name'] ?? null,
-                'customer_code' => $packageLabels['customer_code'] ?? null,
-                'model_name' => $packageLabels['model_name'] ?? null,
+                // Snapshot Data Utama
+                'part_no'         => $packageLabels['part_no'] ?? null,
+                'customer_code'   => $packageLabels['customer_code'] ?? null,
+                'model_name'      => $packageLabels['model_name'] ?? null,
+                'doctype_group'   => $packageLabels['doctype_group_name'] ?? null,
                 'part_group_code' => $partGroupCode,
+                
+                // Detail Revisi
+                'package_no'      => $package ? $package->package_no : null,
+                'revision_no'     => $currentRevisionNo,
+                'ecn_no'          => $validated['ecn_no'],
+                'receipt_date'    => $validated['receipt_date'] ?? null,
+                'revision_label'  => $labelName,
                 'doctype_subcategory' => $subCatName,
-                'note' => $r->input('note'),
-                'package_no' => $package ? $package->package_no : null,
-                'revision_no' => $currentRevisionNo,
-                'ecn_no' => $validated['ecn_no'],
-                'receipt_date' => $validated['receipt_date'] ?? null,
-                'revision_label' => $labelName
+                
+                'file_count'      => $fileCount,
+                'file_types'      => $fileTypes,
+                'note'            => $r->input('note'),
             ];
 
-            $activityCode = 'UPLOAD';
-
             ActivityLog::create([
-                'user_id' => $this->getAuthUserInt(),
-                'activity_code' => $activityCode,
-                'scope_type' => 'revision',
-                'scope_id' => $packageId,
-                'revision_id' => $revisionId,
-                'meta' => $metaLogData,
+                'user_id'       => $this->getAuthUserInt(),
+                'activity_code' => 'UPLOAD',
+                'scope_type'    => 'revision',
+                'scope_id'      => $packageId,
+                'revision_id'   => $revisionId,
+                'meta'          => $metaLogData,
             ]);
 
             DB::commit();
@@ -913,6 +929,23 @@ class DrawingUploadController extends Controller
             }
 
             // Activity Logging ---
+            $packageInfo = DB::table('doc_packages as dp')
+                ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+                ->join('models as m', 'dp.model_id', '=', 'm.id')
+                ->join('products as p', 'dp.product_id', '=', 'p.id')
+                ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+                ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+                ->where('dp.id', $packageId)
+                ->select(
+                    'c.code as customer',
+                    'm.name as model',
+                    'p.part_no',
+                    'dtg.name as doc_type',
+                    'pg.code_part_group'
+                )
+                ->first();
+
+            // 2. Ambil Nama Label Revisi
             $labelName = null;
             if (!empty($revision->revision_label_id)) {
                 $labelName = DB::table('customer_revision_labels')
@@ -920,29 +953,29 @@ class DrawingUploadController extends Controller
                     ->value('label');
             }
 
-            $package = DB::table('doc_packages')->where('id', $packageId)->first(['part_group_id']);
-            $partGroupCode = null;
-            if ($package) {
-                $partGroupCode = DB::table('part_groups')->where('id', $package->part_group_id)->value('code_part_group');
-            }
-
+            // 3. Susun Meta Data
             $metaLogData = [
-                'package_id' => $packageId,
-                'revision_no' => $revision->revision_no,
-                'ecn_no' => $revision->ecn_no,
-                'revision_label' => $labelName,
-                'part_group_code' => $partGroupCode
+                // Snapshot Data Utama
+                'part_no'         => $packageInfo->part_no,
+                'customer_code'   => $packageInfo->customer,
+                'model_name'      => $packageInfo->model,
+                'doc_type'        => $packageInfo->doc_type,
+                'part_group_code' => $packageInfo->code_part_group ?? '-',
+                
+                // Detail Revisi
+                'package_id'      => $packageId,
+                'revision_no'     => $revision->revision_no,
+                'ecn_no'          => $revision->ecn_no,
+                'revision_label'  => $labelName,
             ];
 
-            $activityCode = 'SUBMIT_APPROVAL';
-
             ActivityLog::create([
-                'user_id' => $this->getAuthUserInt(),
-                'activity_code' => $activityCode,
-                'scope_type' => 'revision',
-                'scope_id' => $packageId,
-                'revision_id' => $revision->id,
-                'meta' => $metaLogData,
+                'user_id'       => $this->getAuthUserInt(),
+                'activity_code' => 'SUBMIT_APPROVAL',
+                'scope_type'    => 'revision',
+                'scope_id'      => $packageId,
+                'revision_id'   => $revision->id,
+                'meta'          => $metaLogData,
             ]);
 
             DB::commit();
@@ -1124,30 +1157,55 @@ class DrawingUploadController extends Controller
             ->where('id', $dbPackage->revision_label_id)
             ->first(['label']);
 
-        $labelName = $dbCustomerRevisionLabel ? $dbCustomerRevisionLabel->label : null;
+        $packageInfo = DB::table('doc_packages as dp')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+            ->where('dp.id', $dbPackage->package_id)
+            ->select(
+                'c.code as customer',
+                'm.name as model',
+                'p.part_no',
+                'dtg.name as doc_type',
+                'pg.code_part_group'
+            )
+            ->first();
 
-        $package = DB::table('doc_packages')->where('id', $dbPackage->package_id)->first(['part_group_id']);
-        $partGroupCode = null;
-        if ($package) {
-            $partGroupCode = DB::table('part_groups')->where('id', $package->part_group_id)->value('code_part_group');
+        // 2. Ambil Label Name
+        $labelName = null;
+        if ($dbPackage->revision_label_id) {
+            $labelName = DB::table('customer_revision_labels')
+                ->where('id', $dbPackage->revision_label_id)
+                ->value('label');
         }
 
+        // 3. Susun Meta Data
         $metaLogData = [
-            'package_id' => $dbPackage->package_id,
-            'revision_no' => $dbPackage->revision_no,
-            'ecn_no' => $dbPackage->ecn_no,
-            'revision_label' => $labelName,
-            'previous_status' => 'approved',
-            'part_group_code' => $partGroupCode
+            // Snapshot Data Utama
+            'part_no'         => $packageInfo->part_no,
+            'customer_code'   => $packageInfo->customer,
+            'model_name'      => $packageInfo->model,
+            'doc_type'        => $packageInfo->doc_type,
+            'part_group_code' => $packageInfo->code_part_group ?? '-',
+            
+            // Detail Revisi & Status
+            'package_id'      => $dbPackage->package_id,
+            'revision_no'     => $dbPackage->revision_no,
+            'ecn_no'          => $dbPackage->ecn_no,
+            'revision_label'  => $labelName,
+            'previous_status' => 'approved', // Hardcoded karena revise confirm biasanya dari approved -> draft
+            'current_status'  => 'draft'
         ];
 
         ActivityLog::create([
-            'user_id' => Auth::user()->id,
+            'user_id'       => Auth::user()->id,
             'activity_code' => 'REVISE_CONFIRM',
-            'scope_type' => 'revision',
-            'scope_id' => $dbPackage->package_id,
-            'revision_id' => $revisionId,
-            'meta' => $metaLogData,
+            'scope_type'    => 'revision',
+            'scope_id'      => $dbPackage->package_id,
+            'revision_id'   => $revisionId,
+            'meta'          => $metaLogData,
         ]);
 
         DB::commit();

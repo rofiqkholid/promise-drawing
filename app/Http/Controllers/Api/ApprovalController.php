@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\RevisionApprovedNotification;
 use App\Mail\DeptShareNotification;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
 
 
 
@@ -1261,7 +1262,6 @@ class ApprovalController extends Controller
     {
         $currentUser = Auth::user();
 
-        // validasi data dari AJAX
         $validated = $request->validate([
             'revision_id' => ['required', 'integer', 'exists:doc_package_revisions,id'],
             'note'        => ['required', 'string', 'max:500'],
@@ -1269,106 +1269,150 @@ class ApprovalController extends Controller
 
         $revisionId = (int) $validated['revision_id'];
 
-        // 1. Ambil data revision + package (untuk subject/email)
-        $revision = DB::table('doc_package_revisions as dpr')
-            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
-            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-            ->join('models as m', 'dp.model_id', '=', 'm.id')
-            ->join('products as p', 'dp.product_id', '=', 'p.id')
-            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-            ->where('dpr.id', $revisionId)
-            ->first([
-                'dpr.id as revision_id',
-                'dpr.package_id',
-                'dpr.revision_no',
-                'dpr.revision_status',
-                'c.code as customer',
-                'm.name as model',
-                'p.part_no',
-                'dtg.name as doc_type',
-                'dsc.name as category',
-            ]);
+        DB::beginTransaction();
+        try {
+            // Fetch Revision + Package + Part Group Data
+            $revision = DB::table('doc_package_revisions as dpr')
+                ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+                ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+                ->join('models as m', 'dp.model_id', '=', 'm.id')
+                ->join('products as p', 'dp.product_id', '=', 'p.id')
+                ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+                ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+                ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+                ->where('dpr.id', $revisionId)
+                ->first([
+                    'dpr.id as revision_id',
+                    'dpr.package_id',
+                    'dpr.revision_no',
+                    'dpr.revision_status',
+                    'dpr.ecn_no',
+                    'c.code as customer',
+                    'm.name as model',
+                    'p.part_no',
+                    'dtg.name as doc_type',
+                    'dsc.name as category',
+                    'pg.code_part_group'
+                ]);
 
-        if (!$revision) {
-            return response()->json(['message' => 'Revision not found.'], 404);
-        }
-
-        // 2. Ambil id department Purchasing / PUD
-        $deptRows = DB::table('departments')
-            ->whereIn('code', ['PURCHASING', 'PUD'])
-            ->get(['id', 'code']);
-
-        if ($deptRows->isEmpty()) {
-            return response()->json([
-                'message' => 'Department Purchasing/PUD belum dikonfigurasi.',
-            ], 422);
-        }
-
-        $deptIds  = $deptRows->pluck('id')->all();             // contoh: [3,7]
-        $deptCode = $deptRows->pluck('code')->implode(',');    // "PURCHASING,PUD"
-
-        // format string id dept, misal: "|3|7|"
-        $shareToDeptStr = '|' . implode('|', $deptIds) . '|';
-
-        // 3. Update doc_package_revisions -> share_to_dept + share_dept_at
-        DB::table('doc_package_revisions')
-            ->where('id', $revisionId)
-            ->update([
-                'share_to_dept' => $shareToDeptStr,
-                'share_dept_at' => Carbon::now(),   // kolom baru internal share
-                // 'shared_at'  TIDAK disentuh (untuk flow lama / external)
-                'updated_at'    => Carbon::now(),
-            ]);
-
-        // 4. Ambil user yang dept-nya termasuk Purchasing/PUD
-        $recipients = User::query()
-            ->whereIn('id_dept', $deptIds)     // kolom yang Tuan pakai di join departments
-            ->whereNotNull('email')
-            ->get();
-
-        if ($recipients->isEmpty()) {
-            return response()->json([
-                'message' => 'Tidak ada user aktif di dept Purchasing/PUD.',
-            ], 422);
-        }
-
-        // 5. Siapkan data untuk email (dipakai di Markdown view)
-        $shareData = [
-            'customer'    => $revision->customer,
-            'model'       => $revision->model,
-            'part_no'     => $revision->part_no,
-            'doc_type'    => $revision->doc_type,
-            'category'    => $revision->category,
-            'revision_no' => $revision->revision_no,
-            'note'        => $validated['note'],
-            'shared_by'   => $currentUser->name ?? 'System',
-            'shared_at'   => now()->format('Y-m-d H:i'),
-            'dept_codes'  => $deptCode,
-            'app_url'     => route('share.detail', [
-                'id'          => encrypt($revisionId),
-            ]),
-        ];
-
-        // 6. Kirim email ke masing-masing user pakai Mailable (Markdown)
-        foreach ($recipients as $target) {
-            try {
-                Mail::to($target->email)->send(
-                    new DeptShareNotification($target, $shareData)
-                );
-            } catch (\Throwable $e) {
-                // kalau email gagal, kita tidak rollback share_to_dept;
-                // bisa ditambahkan logging kalau perlu:
-                // \Log::error('Failed sending dept share mail', [
-                //     'user_id' => $target->id,
-                //     'error'   => $e->getMessage(),
-                // ]);
+            if (!$revision) {
+                return response()->json(['message' => 'Revision not found.'], 404);
             }
-        }
 
-        return response()->json([
-            'message' => 'Revision berhasil di-share ke dept Purchasing/PUD.',
-        ]);
+            // Get Department IDs for Purchasing / PUD
+            $deptRows = DB::table('departments')
+                ->whereIn('code', ['PURCHASING', 'PUD'])
+                ->get(['id', 'code']);
+
+            if ($deptRows->isEmpty()) {
+                return response()->json([
+                    'message' => 'Departments (Purchasing/PUD) are not configured.',
+                ], 422);
+            }
+
+            $deptIds  = $deptRows->pluck('id')->all();             
+            $deptCode = $deptRows->pluck('code')->implode(', ');   
+            $shareToDeptStr = '|' . implode('|', $deptIds) . '|';
+
+            // Update doc_package_revisions (Inside Transaction)
+            DB::table('doc_package_revisions')
+                ->where('id', $revisionId)
+                ->update([
+                    'share_to_dept' => $shareToDeptStr,
+                    'share_dept_at' => Carbon::now(),
+                    'updated_at'    => Carbon::now(),
+                ]);
+
+            // Fetch Target Users
+            $recipients = User::query()
+                ->whereIn('id_dept', $deptIds)
+                ->whereNotNull('email')
+                ->get();
+
+            // CRITICAL VALIDATION
+            if ($recipients->isEmpty()) {
+                DB::rollBack(); 
+                return response()->json([
+                    'message' => 'Share failed: No active users found in the target departments.',
+                ], 422);
+            }
+
+            // Create Recipient List String (Snapshot)
+            $recipientNames = $recipients->map(function($u) {
+                return "{$u->name} ({$u->email})";
+            })->implode(', ');
+
+            // Send Emails (Side effect)
+            $shareData = [
+                'customer'    => $revision->customer,
+                'model'       => $revision->model,
+                'part_no'     => $revision->part_no,
+                'doc_type'    => $revision->doc_type,
+                'category'    => $revision->category,
+                'revision_no' => $revision->revision_no,
+                'note'        => $validated['note'],
+                'shared_by'   => $currentUser->name ?? 'System',
+                'shared_at'   => now()->format('Y-m-d H:i'),
+                'dept_codes'  => $deptCode,
+                'app_url'     => route('share.detail', [
+                    'id'          => encrypt($revisionId),
+                ]),
+            ];
+
+            foreach ($recipients as $target) {
+                try {
+                    Mail::to($target->email)->send(
+                        new DeptShareNotification($target, $shareData)
+                    );
+                } catch (\Throwable $e) {
+                    Log::error("Mail failed to {$target->email}: " . $e->getMessage());
+                }
+            }
+
+            // Create Activity Log (Only if successful)
+            ActivityLog::create([
+                'scope_type'    => 'package',
+                'scope_id'      => $revision->package_id,
+                'revision_id'   => $revisionId,
+                'activity_code' => 'SHARE_INTERNAL',
+                'user_id'       => $currentUser->id,
+                'meta'          => [
+                    // Sender Info
+                    'shared_by'       => $currentUser->name,
+                    'sender_email'    => $currentUser->email,
+                    
+                    // Share Info
+                    'note'            => $validated['note'],
+                    'shared_to_dept'  => $deptCode, 
+                    'recipients'      => $recipientNames,
+                    'recipient_count' => $recipients->count(),
+                    
+                    // Item Snapshot
+                    'part_no'         => $revision->part_no,
+                    'customer_code'   => $revision->customer,
+                    'model_name'      => $revision->model,
+                    'doc_type'        => $revision->doc_type,
+                    'part_group_code' => $revision->code_part_group ?? '-',
+                    'revision_no'     => $revision->revision_no,
+                    'ecn_no'          => $revision->ecn_no,
+                ],
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Revision successfully shared to Purchasing/PUD departments.',
+            ]);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Share Internal Error: ' . $e->getMessage());
+            
+            return response()->json([
+                'message' => 'System error occurred while sharing.',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function exportSummary(Request $request)

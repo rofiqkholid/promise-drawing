@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\PackageFormatController;
 use App\Http\Controllers\Api\FilePreviewController;
 use App\Http\Controllers\Api\ReceiptController;
 use App\Http\Controllers\Api\ShareController;
+use App\Http\Controllers\Api\ActivityLogController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/infophp', function () {
@@ -395,5 +396,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/receipts/prepare-zip/{revision_id}', [ReceiptController::class, 'preparePackageZip'])->name('receipts.prepare-zip');
     Route::get('/api/receipts/get-zip/{file_name}', [ReceiptController::class, 'getPreparedZip'])->name('receipts.download-zip');
     #end region
+
+    #region Activity Logs
+    Route::get('/activity-logs', [ActivityLogController::class, 'index'])->middleware(['auth'])->name('activity-logs.index');
+    Route::get('/activity-logs/list', [ActivityLogController::class, 'list'])->middleware(['auth'])->name('activity-logs.list');
+    Route::get('/activity-logs/filters', [ActivityLogController::class, 'filters'])->middleware(['auth'])->name('activity-logs.filters');
+    Route::get('/activity-logs/export', [ActivityLogController::class, 'export'])->name('activity-logs.export');
+    #endregion
 
 });

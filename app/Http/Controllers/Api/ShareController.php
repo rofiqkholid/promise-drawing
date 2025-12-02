@@ -273,6 +273,7 @@ class ShareController extends Controller
                 ELSE COALESCE(pa.decision, dpr.revision_status)
             END as status
         "),
+            'ps.name as project_status', 
             'dpr.share_to as share_to',
             'pa.requested_at as request_date',
             'pa.decided_at   as decision_date'
@@ -366,6 +367,73 @@ class ShareController extends Controller
         if (!$userId) {
             return response()->json(['message' => 'Unauthorized user.'], 401);
         }
+
+                /**
+         * ===========================================
+         *  VALIDASI: FEASIBILITY HARUS PUNYA BLOCK
+         * ===========================================
+         */
+
+        // Ambil status project dari model
+        $projectStatusName = DB::table('doc_package_revisions as dpr')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
+            ->where('dpr.id', $revisionId)
+            ->value('ps.name');
+
+        // Anggap nama status bisa "Feasibility" atau "Feasibility Study"
+        $isFeasibility = $projectStatusName &&
+            in_array(strtolower($projectStatusName), ['feasibility', 'feasibility study']);
+
+       if ($isFeasibility) {
+    // Ambil semua blocks_position yang tidak null
+    $rawBlocksList = DB::table('doc_package_revision_files')
+        ->where('revision_id', $revisionId)
+        ->whereNotNull('blocks_position')
+        ->pluck('blocks_position');
+
+    $hasBlocks = false;
+
+    foreach ($rawBlocksList as $raw) {
+        if (empty($raw)) {
+            continue;
+        }
+
+        $decoded = json_decode($raw, true);
+
+        if (!is_array($decoded)) {
+            continue;
+        }
+
+        // 2 kemungkinan bentuk data:
+        // 1) Lama: [ {block...}, {block...} ]
+        // 2) Baru: { "1": [ {block...} ], "2": [ ... ] }
+        if (array_is_list($decoded)) {
+            // flat array langsung
+            if (count($decoded) > 0) {
+                $hasBlocks = true;
+                break;
+            }
+        } else {
+            // bentuk per halaman
+            foreach ($decoded as $pageBlocks) {
+                if (is_array($pageBlocks) && count($pageBlocks) > 0) {
+                    $hasBlocks = true;
+                    break 2; // keluar dari 2 loop
+                }
+            }
+        }
+    }
+
+    if (!$hasBlocks) {
+        return response()->json([
+            'message' => 'Package dengan status "Feasibility Study" harus memiliki minimal satu block pada halaman file sebelum bisa di-share. Silakan buka preview dan tambahkan block terlebih dahulu.'
+        ], 422);
+    }
+}
+
+
 
         DB::beginTransaction();
         try {

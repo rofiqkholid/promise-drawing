@@ -3,11 +3,9 @@
 @section('header-title', 'Dashboard')
 
 @section('content')
-{{-- CSS untuk Animasi Panah "Travel & Disappear" --}}
 
 <div id="dashboardWrapper" class="flex flex-col gap-2 h-[calc(100vh-70px)] w-full overflow-hidden">
 
-    {{-- BARIS 1: TOP CARDS --}}
     <div class="flex-none grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-2">
         <div class="relative bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
@@ -68,7 +66,6 @@
         </div>
     </div>
 
-    {{-- FILTER CARD --}}
     <div id="filterCard" style="display: none;" class="flex-none bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
         <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
             <i class="fa-solid fa-filter mr-2 text-gray-500"></i> Filter Data
@@ -1134,10 +1131,14 @@
         renderFilterPills() {
             const container = document.getElementById('filterPillContainer');
             container.innerHTML = '';
+
             const createPill = (type, item, stateKey) => {
                 const span = document.createElement('span');
-                span.className = 'filter-pill';
-                span.innerHTML = `<span class="font-normal text-gray-500 mr-5">${type}:</span><span>${item.text}</span><button type="button" class="filter-pill-remove" data-id="${item.id}"><i class="fa-solid fa-times fa-xs"></i></button>`;
+
+                span.className = 'filter-pill mr-2 inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium';
+
+                span.innerHTML = `<span class="font-normal mr-1">${type}:</span><span>${item.text}</span><button type="button" class="filter-pill-remove ml-2 hover:text-blue-600 focus:outline-none" data-id="${item.id}"><i class="fa-solid fa-times fa-xs"></i></button>`;
+
                 span.querySelector('button').addEventListener('click', () => {
                     const arr = this[stateKey];
                     const idx = arr.findIndex(x => x.id === item.id);
@@ -1160,6 +1161,7 @@
                 });
                 return span;
             };
+
             this.selectedCustomers.forEach(i => container.appendChild(createPill('Cust', i, 'selectedCustomers')));
             this.selectedModels.forEach(i => container.appendChild(createPill('Model', i, 'selectedModels')));
             this.selectedPartGroup.forEach(i => container.appendChild(createPill('Group', i, 'selectedPartGroup')));
