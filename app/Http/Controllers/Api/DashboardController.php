@@ -405,7 +405,7 @@ class DashboardController extends Controller
 
 
             $data = $query->orderBy('activity_logs.created_at', 'desc')
-                ->limit(4) 
+                ->limit(4)
                 ->get()
                 ->map(function ($item) {
                     $item->meta = json_decode($item->meta, true);
@@ -720,22 +720,69 @@ class DashboardController extends Controller
         }
     }
 
-    public function getSaveEnv()
+    public function getSaveEnv(Request $request)
     {
-        $data = DB::table('activity_logs as al')
+        // 1. Base Query
+        $query = DB::connection('sqlsrv')
+            ->table('activity_logs as al')
             ->leftJoin('doc_package_revision_files as dprf', 'al.revision_id', '=', 'dprf.revision_id')
             ->where('al.activity_code', 'DOWNLOAD')
-            ->whereIn('dprf.category', ['2D', 'ECN'])
-            ->selectRaw('COUNT(al.activity_code) as paper, COUNT(al.activity_code) * 186 as harga')
+            ->whereIn('dprf.category', ['2D', 'ECN']);
+
+        // 2. Filter Tanggal Akumulatif (Seperti getPhaseStatus)
+        // Logika: Ambil semua data sampai dengan tanggal akhir (<= date_end)
+        // Abaikan date_start
+        if ($request->filled('date_end')) {
+            // Kita tambahkan jam 23:59:59 agar mencakup seluruh hari tersebut
+            $query->where('al.created_at', '<=', $request->date_end . ' 23:59:59');
+        }
+
+        // 3. Filter Customer (Logika WhereIn untuk JSON)
+        if ($request->filled('customer')) {
+            $customers = $request->customer;
+            $query->where(function ($q) use ($customers) {
+                foreach ($customers as $cust) {
+                    $q->orWhereRaw("JSON_VALUE(al.meta, '$.customer_code') = ?", [$cust]);
+                }
+            });
+        }
+
+        // 4. Filter Model (Logika WhereIn untuk JSON)
+        if ($request->filled('model')) {
+            $models = $request->model;
+            $query->where(function ($q) use ($models) {
+                foreach ($models as $mod) {
+                    $q->orWhereRaw("JSON_VALUE(al.meta, '$.model_name') = ?", [$mod]);
+                }
+            });
+        }
+
+        // 5. Filter Part Group (Logika WhereIn untuk JSON)
+        if ($request->filled('part_group')) {
+            $partGroups = $request->part_group;
+            $query->where(function ($q) use ($partGroups) {
+                foreach ($partGroups as $pg) {
+                    $q->orWhereRaw("JSON_VALUE(al.meta, '$.part_group_code') = ?", [$pg]);
+                }
+            });
+        }
+
+        // 6. Eksekusi Calculation
+        $data = $query->selectRaw('COUNT(al.activity_code) as paper, COUNT(al.activity_code) * 186 as harga')
             ->first();
 
-        $saveTree = $data->paper / 80000;
+        // Handle null values
+        $paperCount = $data->paper ?? 0;
+        $hargaTotal = $data->harga ?? 0;
+
+        // Rumus Environment
+        $saveTree = $paperCount / 80000;
         $co2Reduced = $saveTree * 22;
 
         return response()->json([
-            'paper' => $data->paper,
-            'harga' => $data->harga,
-            'save_tree' => $saveTree,
+            'paper'       => $paperCount,
+            'harga'       => $hargaTotal,
+            'save_tree'   => $saveTree,
             'co2_reduced' => $co2Reduced
         ]);
     }

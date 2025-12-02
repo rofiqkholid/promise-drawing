@@ -2560,6 +2560,9 @@ if (img) {
 
         /* ===== Lifecycle ===== */
         init() {
+
+          window.__sharePkg = this.pkg;
+
           // kalau nanti ada modal lain buat share, Escape handler bisa ditaruh di sini
           window.addEventListener('beforeunload', () => this.disposeCad());
           window.addEventListener('resize', () => {
@@ -3122,6 +3125,8 @@ async saveBlocks(blocks, page) {
  }
   };   // <— TUTUP objek yang di-return
 }  
+
+
     // ========== SHARE DARI HALAMAN DETAIL ==========
     document.addEventListener('DOMContentLoaded',
       function() {

@@ -388,9 +388,14 @@
 
         async loadSaveEnv() {
             try {
-                const response = await fetch("{{ route('api.get-save-env') }}");
+                // 1. Ambil parameter filter saat ini (termasuk tanggal)
+                const params = this.getFilterParams();
+
+                // 2. Kirim request dengan parameter query string
+                const response = await fetch(`{{ route('api.get-save-env') }}?${params.toString()}`);
                 const data = await response.json();
 
+                // Update DOM elements (kode lama tetap sama)
                 const elPaper = document.getElementById('ecoPaper');
                 if (elPaper) elPaper.textContent = parseInt(data.paper || 0).toLocaleString('id-ID');
 
@@ -1274,6 +1279,7 @@
                 await Promise.all([
                     this.loadMonitoringChart(),
                     this.loadActivityLog(),
+                    this.loadSaveEnv(),
                     this.loadPhaseStatusChart()
                 ]);
 
@@ -1298,6 +1304,7 @@
                 this.renderFilterPills();
                 this.loadMonitoringChart();
                 this.loadPhaseStatusChart();
+                this.loadSaveEnv();
                 this.loadActivityLog();
             });
         }
