@@ -474,7 +474,7 @@ class DashboardController extends Controller
                 $item->project_status = 'FS';
             } elseif ($item->project_status === 'Project') {
                 $item->project_status = 'PR';
-            } elseif ($item->project_status === 'Reguler') {
+            } elseif ($item->project_status === 'Regular') {
                 $item->project_status = 'RE';
             }
 
