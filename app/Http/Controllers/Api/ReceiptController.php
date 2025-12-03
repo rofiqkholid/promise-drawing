@@ -209,10 +209,10 @@ class ReceiptController extends Controller
         // 5. Filter Spesifik Supplier & Expired Date
         // Hanya tampilkan paket yang dishare ke supplier ini DAN belum expired
         $query->where('ps.supplier_id', $userRoleId)
-              ->where(function($q) {
-                  $q->whereNull('ps.expired_at')
+            ->where(function ($q) {
+                $q->whereNull('ps.expired_at')
                     ->orWhere('ps.expired_at', '>', now());
-              });
+            });
 
         // 6. Hitung Total Record (Sebelum Filter Pencarian)
         $recordsTotal = (clone $query)->count();
@@ -230,7 +230,7 @@ class ReceiptController extends Controller
         if ($request->filled('category') && $request->category !== 'All') {
             $query->where('dsc.name', $request->category);
         }
-        
+
 
         // 8. Global Search (Search Bar)
         if ($searchValue !== '') {
@@ -315,7 +315,7 @@ class ReceiptController extends Controller
     public function showDetail(string $id)
     {
         $revisionId = null;
-        
+
         if (ctype_digit($id)) {
             $revisionId = (int) $id;
         } else {
@@ -451,8 +451,8 @@ class ReceiptController extends Controller
 
         // Filter Expired & Milik Supplier Ini
         $query->where('ps.supplier_id', $userRoleId)
-              ->whereNotNull('ps.expired_at')
-              ->where('ps.expired_at', '<', now());
+            ->whereNotNull('ps.expired_at')
+            ->where('ps.expired_at', '<', now());
 
         if ($searchValue !== '') {
             $query->where(function ($q) use ($searchValue) {
@@ -623,7 +623,7 @@ class ReceiptController extends Controller
 
         // Cek Expired
         if ($shareInfo->expired_at && Carbon::parse($shareInfo->expired_at)->isPast()) {
-             return response()->json(['success' => false, 'message' => 'Link Expired.'], 403);
+            return response()->json(['success' => false, 'message' => 'Link Expired.'], 403);
         }
 
         // 5. Ambil Kode Dept Pengirim (Sharer)
@@ -664,7 +664,7 @@ class ReceiptController extends Controller
         // 8. Format Tanggal & Stamp
         $receiptDate = $revision->receipt_date ? Carbon::parse($revision->receipt_date) : null;
         $uploadDateRevision = $revision->created_at ? Carbon::parse($revision->created_at) : null;
-        
+
         // PENTING: Tanggal Share diambil dari PIVOT ($shareInfo), bukan dari tabel revisi
         $sharedAtDate = $shareInfo->shared_at ? Carbon::parse($shareInfo->shared_at) : null;
 
@@ -749,9 +749,9 @@ class ReceiptController extends Controller
             'revisionList' => [],
             'stampFormat' => $stampFormat,
             'userName' => $userName,
-            
+
             // DATA BARU UNTUK FRONTEND
-            'sharerDeptCode' => $sharerDeptCode, 
+            'sharerDeptCode' => $sharerDeptCode,
             'supplierCode'   => $currentSupplierCode,
         ]);
     }
@@ -763,7 +763,7 @@ class ReceiptController extends Controller
         // 1. Identifikasi Supplier ID user
         $supplierId = null;
         $userSupplier = DB::table('user_supplier')->where('user_id', $userIdInt)->first();
-        
+
         if ($userSupplier) {
             $supplierId = $userSupplier->supplier_id;
         } else {
@@ -772,7 +772,7 @@ class ReceiptController extends Controller
         }
 
         if (!$supplierId) {
-            return null; 
+            return null;
         }
 
         // 2. Ambil Data Share (Pivot)
@@ -784,7 +784,7 @@ class ReceiptController extends Controller
         if (!$shareInfo) {
             return null;
         }
-        
+
         if ($shareInfo->expired_at && Carbon::parse($shareInfo->expired_at)->isPast()) {
             return null;
         }
@@ -834,7 +834,7 @@ class ReceiptController extends Controller
         }
 
         $user = Auth::user();
-        $userId = $user ? (int) $user->id : 0; 
+        $userId = $user ? (int) $user->id : 0;
 
         $stampContext = $this->getStampContext($revision->id, $userId);
 
@@ -900,12 +900,12 @@ class ReceiptController extends Controller
         }
 
         $user = Auth::user();
-        $userId = $user ? (int) $user->id : 0; 
+        $userId = $user ? (int) $user->id : 0;
 
         $stampContext = $this->getStampContext($revision->id, $userId);
 
         if (!$stampContext) {
-             return response()->json(['success' => false, 'message' => 'Unauthorized or Link Expired.'], 403);
+            return response()->json(['success' => false, 'message' => 'Unauthorized or Link Expired.'], 403);
         }
 
         $package = DB::table('doc_packages as dp')
@@ -939,7 +939,7 @@ class ReceiptController extends Controller
         $zipFileName = strtoupper("{$customer}-{$model}-{$partNo}-{$ecn}-{$timestamp}") . ".zip";
 
         $zipDirectory = storage_path('app/public');
-        $zipDirectory = str_replace('/', DIRECTORY_SEPARATOR, $zipDirectory); 
+        $zipDirectory = str_replace('/', DIRECTORY_SEPARATOR, $zipDirectory);
 
         if (!file_exists($zipDirectory)) {
             if (!mkdir($zipDirectory, 0775, true)) {
@@ -1017,7 +1017,7 @@ class ReceiptController extends Controller
         }
 
         $downloadUrl = URL::temporarySignedRoute(
-            'receipts.download-zip', 
+            'receipts.download-zip',
             now()->addMinutes(5),
             [
                 'file_name' => $zipFileName,
@@ -1104,7 +1104,6 @@ class ReceiptController extends Controller
                         'meta' => $metaLogData,
                     ]);
                 }
-
             } catch (\Exception $e) {
                 Log::error('Failed to create download activity log in getPreparedZip', [
                     'error' => $e->getMessage(),
@@ -1119,13 +1118,20 @@ class ReceiptController extends Controller
     private function positionIntToKey(?int $pos, string $default = 'bottom-right'): string
     {
         switch ($pos) {
-            case 0: return 'bottom-left';
-            case 1: return 'bottom-center';
-            case 2: return 'bottom-right';
-            case 3: return 'top-left';
-            case 4: return 'top-center';
-            case 5: return 'top-right';
-            default: return $default;
+            case 0:
+                return 'bottom-left';
+            case 1:
+                return 'bottom-center';
+            case 2:
+                return 'bottom-right';
+            case 3:
+                return 'top-left';
+            case 4:
+                return 'top-center';
+            case 5:
+                return 'top-right';
+            default:
+                return $default;
         }
     }
 
@@ -1180,7 +1186,9 @@ class ReceiptController extends Controller
                     $draw->setFont($fontName);
                     $font = $fontName;
                     break;
-                } catch (\Exception $e) { continue; }
+                } catch (\Exception $e) {
+                    continue;
+                }
             }
 
             $dummy = new \Imagick();
@@ -1291,18 +1299,18 @@ class ReceiptController extends Controller
 
                 $x_right = $canvasWidth * 0.75;
                 $stamp->annotateImage($draw, $x_right, 105, 0, $bottomLine[1]);
-
             } else {
                 // --- MODE 1 KOLOM (Standar) ---
                 $stamp->annotateImage($draw, $x_center_canvas, 105, 0, $bottomLine);
             }
 
             // Cleanup
-            $draw->clear(); $draw->destroy();
-            $dummy->clear(); $dummy->destroy();
+            $draw->clear();
+            $draw->destroy();
+            $dummy->clear();
+            $dummy->destroy();
 
             return $stamp;
-
         } catch (\Exception $e) {
             Log::error('Failed to create stamp image: ' . $e->getMessage());
             return null;
@@ -1327,7 +1335,12 @@ class ReceiptController extends Controller
                         $suffixRaw = 'th';
                     } else {
                         $last = $day % 10;
-                        $suffixRaw = match ($last) { 1 => 'st', 2 => 'nd', 3 => 'rd', default => 'th' };
+                        $suffixRaw = match ($last) {
+                            1 => 'st',
+                            2 => 'nd',
+                            3 => 'rd',
+                            default => 'th'
+                        };
                     }
                     $superscripts = ['st' => 'ˢᵗ', 'nd' => 'ⁿᵈ', 'rd' => 'ʳᵈ', 'th' => 'ᵗʰ'];
                     $suffix = $superscripts[$suffixRaw] ?? $suffixRaw;
@@ -1354,14 +1367,13 @@ class ReceiptController extends Controller
             if ($modelStatusId == 4) {
                 // === UNCONTROLLED COPY ===
                 $centerTextCopy = 'SAI-DRAWING UNCONTROLLED COPY';
-                
+
                 // Top Line: SAI / {DEPT_PENGIRIM} / For Quotation
                 $topLineCopy = "SAI / {$sharerDept} / For Quotation";
 
                 // Bottom Line: Date Share : {TANGGAL_DARI_PIVOT}
                 $sharedAtStr = $formatSaiDate($sharedAtRaw);
                 $bottomLineCopy = "Date Share : " . $sharedAtStr;
-
             } else {
                 // === CONTROLLED COPY ===
                 $centerTextCopy = 'SAI-DRAWING CONTROLLED COPY';
@@ -1392,7 +1404,8 @@ class ReceiptController extends Controller
                 $obsDateStr = $formatSaiDate($revision->obsolete_at);
                 $topLineObsolete = "Date : {$obsDateStr}";
 
-                $obsName = '-'; $obsDept = '-';
+                $obsName = '-';
+                $obsDept = '-';
                 if (!empty($revision->obsolete_by)) {
                     $u = DB::table('users')->where('id', $revision->obsolete_by)->first(['name', 'id_dept']);
                     if ($u) {
@@ -1404,11 +1417,15 @@ class ReceiptController extends Controller
                     }
                 }
                 if ($obsName === '-') {
-                     $lastReject = DB::table('package_approvals')->where('revision_id', $revision->id)->where('decision', 'rejected')->orderByDesc('id')->first();
-                     if ($lastReject && $lastReject->decided_by) {
-                         $u = DB::table('users')->where('id', $lastReject->decided_by)->first();
-                         if ($u) { $obsName = $u->name; $d = DB::table('departments')->where('id', $u->id_dept)->value('code'); $obsDept = $d ?? '-'; }
-                     }
+                    $lastReject = DB::table('package_approvals')->where('revision_id', $revision->id)->where('decision', 'rejected')->orderByDesc('id')->first();
+                    if ($lastReject && $lastReject->decided_by) {
+                        $u = DB::table('users')->where('id', $lastReject->decided_by)->first();
+                        if ($u) {
+                            $obsName = $u->name;
+                            $d = DB::table('departments')->where('id', $u->id_dept)->value('code');
+                            $obsDept = $d ?? '-';
+                        }
+                    }
                 }
 
                 $bottomLineObsolete = ["Nama : {$obsName}", "Dept. : {$obsDept}"];
@@ -1430,6 +1447,24 @@ class ReceiptController extends Controller
             $isTiff = ($ext === 'tif' || $ext === 'tiff');
             $isMultiPage = ($isPdf || $isTiff);
 
+            // --- PREPARE BLOCKS DATA ---
+            $rawBlocks = $file->blocks_position;
+            if (is_string($rawBlocks)) {
+                $rawBlocks = json_decode($rawBlocks, true);
+            }
+
+            $blocksData = [];
+            if (is_array($rawBlocks)) {
+                // Cek apakah array indexed (format lama: flat array untuk page 1)
+                // atau associative (format baru: per page)
+                $isIndexed = array_keys($rawBlocks) === range(0, count($rawBlocks) - 1);
+                if ($isIndexed && !empty($rawBlocks)) {
+                    $blocksData['1'] = $rawBlocks;
+                } else {
+                    $blocksData = $rawBlocks;
+                }
+            }
+
             if ($isPdf) {
                 $imagick->setResolution(150, 150);
             }
@@ -1439,24 +1474,34 @@ class ReceiptController extends Controller
             $stampWidthPercent = 0.15;
             $minStampWidth = 224;
 
-            $processPage = function($iteratorIndex) use (
-                $imagick, $stampOriginal, $stampCopy, $stampObsolete, $isObsolete,
-                $stampAspectRatio, $marginPercent, $stampWidthPercent, $minStampWidth,
-                $posOriginal, $posCopy, $posObsolete, $isTiff
+            $processPage = function ($iteratorIndex) use (
+                $imagick,
+                $stampOriginal,
+                $stampCopy,
+                $stampObsolete,
+                $isObsolete,
+                $stampAspectRatio,
+                $marginPercent,
+                $stampWidthPercent,
+                $minStampWidth,
+                $posOriginal,
+                $posCopy,
+                $posObsolete,
+                $isTiff,
+                $blocksData
             ) {
                 $imagick->setIteratorIndex($iteratorIndex);
 
-                // Fix for TIFF: Force format to ensure we can manipulate it correctly
                 if ($isTiff) {
                     $imagick->setImageFormat('tiff');
                 }
 
-                // 1. Ensure sRGB Colorspace
+                // Ensure sRGB Colorspace
                 if ($imagick->getImageColorspace() !== \Imagick::COLORSPACE_SRGB) {
                     $imagick->transformImageColorspace(\Imagick::COLORSPACE_SRGB);
                 }
-    
-                // 2. Force TrueColor (supports colors like Blue/Red)
+
+                // Force TrueColor (supports colors like Blue/Red)
                 try {
                     $imagick->setImageType(\Imagick::IMGTYPE_TRUECOLORMATTE);
                 } catch (\Exception $e) {
@@ -1475,6 +1520,60 @@ class ReceiptController extends Controller
                 $imgWidth = $imagick->getImageWidth();
                 $imgHeight = $imagick->getImageHeight();
                 $margin = max(8, (int) (min($imgWidth, $imgHeight) * $marginPercent));
+
+                // --- BURN BLOCKS (Redaction) ---
+                $pageKey = (string)($iteratorIndex + 1);
+                $pageBlocks = $blocksData[$pageKey] ?? [];
+
+                foreach ($pageBlocks as $block) {
+                    $u = $block['u'] ?? 0;
+                    $v = $block['v'] ?? 0;
+                    $w = $block['w'] ?? 0;
+                    $h = $block['h'] ?? 0;
+                    $rot = $block['rotation'] ?? 0;
+
+                    $blockW = $w * $imgWidth;
+                    $blockH = $h * $imgHeight;
+
+                    if ($blockW <= 0 || $blockH <= 0) continue;
+
+                    try {
+                        $drawBlock = new \ImagickDraw();
+                        $drawBlock->setFillColor('white');
+                        $drawBlock->rectangle(0, 0, $blockW, $blockH);
+
+                        $blockImg = new \Imagick();
+                        $blockImg->newImage($blockW, $blockH, new \ImagickPixel('transparent'));
+                        $blockImg->setImageFormat('png');
+                        $blockImg->drawImage($drawBlock);
+
+                        if ($rot != 0) {
+                            $blockImg->rotateImage(new \ImagickPixel('transparent'), $rot);
+                        }
+
+                        // Calculate composite position (center-based)
+                        // Original Center
+                        $cx = ($u * $imgWidth) + ($blockW / 2);
+                        $cy = ($v * $imgHeight) + ($blockH / 2);
+
+                        // New dimensions after rotation
+                        $newW = $blockImg->getImageWidth();
+                        $newH = $blockImg->getImageHeight();
+
+                        $compX = $cx - ($newW / 2);
+                        $compY = $cy - ($newH / 2);
+
+                        $imagick->compositeImage($blockImg, \Imagick::COMPOSITE_OVER, $compX, $compY);
+
+                        $blockImg->clear();
+                        $blockImg->destroy();
+                        $drawBlock->clear();
+                        $drawBlock->destroy();
+                    } catch (\Exception $e) {
+                        // Ignore block error, continue to next block/stamp
+                    }
+                }
+                // -------------------------------
 
                 $newStampWidth = max($minStampWidth, (int) ($imgWidth * $stampWidthPercent));
                 $newStampHeight = (int) ($newStampWidth / $stampAspectRatio);
@@ -1545,13 +1644,18 @@ class ReceiptController extends Controller
                 $imagick->writeImage($tempPath);
             }
 
-            $imagick->clear(); $imagick->destroy();
-            $stampOriginal->clear(); $stampOriginal->destroy();
-            $stampCopy->clear(); $stampCopy->destroy();
-            if ($stampObsolete) { $stampObsolete->clear(); $stampObsolete->destroy(); }
+            $imagick->clear();
+            $imagick->destroy();
+            $stampOriginal->clear();
+            $stampOriginal->destroy();
+            $stampCopy->clear();
+            $stampCopy->destroy();
+            if ($stampObsolete) {
+                $stampObsolete->clear();
+                $stampObsolete->destroy();
+            }
 
             return $tempPath;
-
         } catch (\Exception $e) {
             Log::error('Imagick stamp burn-in failed: ' . $e->getMessage(), ['file_id' => $file->id, 'path' => $originalPath]);
             return $originalPath;
