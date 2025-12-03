@@ -659,7 +659,32 @@
                             ticks: {
                                 color: textColor,
                                 font: {
-                                    size: 14
+                                    size: 14 // Ukuran font sedikit disesuaikan agar muat
+                                },
+                                maxRotation: 0, // Paksa teks tegak lurus
+                                minRotation: 0,
+                                autoSkip: false, // Jangan sembunyikan label meskipun padat
+                                callback: function(value) {
+                                    // 1. Ambil label asli
+                                    const label = this.getLabelForValue(value);
+
+                                    // 2. Pecah string berdasarkan tanda strip
+                                    const parts = label.split('-');
+
+                                    // 3. Logika Pemisahan: 2 kata pertama vs Sisanya
+                                    if (parts.length > 2) {
+                                        // Ambil index 0 dan 1, gabung pakai strip -> "MMKI-5P45"
+                                        const line1 = parts.slice(0, 2).join('-');
+
+                                        // Ambil dari index 2 sampai habis, gabung pakai strip -> "PR-HANGEONS"
+                                        const line2 = parts.slice(2).join('-');
+
+                                        // Return array untuk membuat 2 baris
+                                        return [line1, line2];
+                                    }
+
+                                    // Jika formatnya pendek, kembalikan apa adanya
+                                    return label;
                                 }
                             },
                             grid: {
@@ -990,7 +1015,7 @@
             });
         }
 
-       async loadActivityLog() {
+        async loadActivityLog() {
             const container = document.getElementById('activityLogContainer');
             if (!container) return;
 
@@ -1020,13 +1045,15 @@
                             items.forEach((item, index) => {
                                 setTimeout(() => {
                                     item.classList.remove('opacity-0', 'translate-y-4');
-                                }, index * 50); 
+                                }, index * 50);
                             });
                         });
 
                     } else {
                         container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400 opacity-0 transition-opacity duration-500 ease-in" id="emptyMsg">No activity found for this filter.</div>`;
-                        setTimeout(() => { document.getElementById('emptyMsg').classList.remove('opacity-0'); }, 50);
+                        setTimeout(() => {
+                            document.getElementById('emptyMsg').classList.remove('opacity-0');
+                        }, 50);
                     }
                 }
             } catch (error) {
@@ -1038,19 +1065,31 @@
         formatLogEntry(log) {
             if (!log) return '';
             const iconMap = {
-                'UPLOAD': { icon: 'fa-cloud-arrow-up', color: 'text-green-500' },
-                'DEFAULT': { icon: 'fa-circle-info', color: 'text-gray-500' }
+                'UPLOAD': {
+                    icon: 'fa-cloud-arrow-up',
+                    color: 'text-green-500'
+                },
+                'DEFAULT': {
+                    icon: 'fa-circle-info',
+                    color: 'text-gray-500'
+                }
             };
             const logInfo = iconMap[log.activity_code] || iconMap['DEFAULT'];
-            
-            let message = log.activity_code === 'UPLOAD' ? 
-                `<strong>${log.user_name || 'System'}</strong> upload new document.` : 
-                `<strong>${log.user_name || 'System'}</strong> performed action: <strong>${log.activity_code}</strong>.`;
-            
-            const date = log.created_at ? new Date(log.created_at.replace(' ', 'T')) : new Date();
-            const dateStr = date.toLocaleString('id-ID', {day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'});
 
-           let metaDetails = '';
+            let message = log.activity_code === 'UPLOAD' ?
+                `<strong>${log.user_name || 'System'}</strong> upload new document.` :
+                `<strong>${log.user_name || 'System'}</strong> performed action: <strong>${log.activity_code}</strong>.`;
+
+            const date = log.created_at ? new Date(log.created_at.replace(' ', 'T')) : new Date();
+            const dateStr = date.toLocaleString('id-ID', {
+                day: 'numeric',
+                month: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            let metaDetails = '';
             if (log.meta && log.activity_code === 'UPLOAD') {
                 const details = [log.meta.customer_code, log.meta.model_name, log.meta.part_no, log.meta.doctype_group, log.meta.part_group_code].filter(Boolean);
                 if (details.length) metaDetails = `<p class="mt-1 text-[12px] text-gray-600 dark:text-gray-400 font-mono">${details.join(' - ')}</p>`;
