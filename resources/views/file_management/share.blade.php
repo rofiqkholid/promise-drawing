@@ -370,7 +370,7 @@
                     },
                     {
                         data: 'share_to',
-                        name: 'dp.share_to',
+                        name: 'psr.share_to',
                     },
                     {
                         data: 'request_date',

@@ -532,7 +532,7 @@
             const ctx = document.getElementById('monitoringChart').getContext('2d');
             if (this.monitoringChart) this.monitoringChart.destroy();
 
-            const labels = data.map(item => `${item.customer_name} - ${item.model_name} - ${item.project_status}`);
+            const labels = data.map(item => `${item.customer_name}-${item.model_name}-${item.project_status}-${item.part_group}`);
             const planData = data.map(item => parseFloat(item.plan_count));
             const actualData = data.map(item => parseFloat(item.actual_count));
             const percentageData = data.map(item => parseFloat(item.percentage));
@@ -561,7 +561,7 @@
                         yAxisID: 'y',
                         animation: {
                             duration: 500,
-                            easing: 'easeInOutBounce'
+                            easing: 'easeOutQuad'
                         }
                     }, {
                         label: 'Actual Count',
@@ -577,7 +577,7 @@
                         yAxisID: 'y',
                         animation: {
                             duration: 500,
-                            easing: 'easeInOutBounce',
+                            easing: 'easeOutQuad',
                             delay: 200
                         }
                     }, {
@@ -599,7 +599,7 @@
                         },
                         animation: {
                             duration: 500,
-                            easing: 'easeInOutBounce',
+                            easing: 'easeOutQuad',
                             delay: 200
                         }
                     }]
@@ -790,7 +790,7 @@
                         pointBorderWidth: 0,
                         animation: {
                             duration: 1000,
-                            easing: 'easeInOutBounce'
+                            easing: 'easeOutQuad'
                         }
                     }, {
                         label: 'Downloads',
@@ -806,7 +806,7 @@
                         pointBorderWidth: 0,
                         animation: {
                             duration: 1000,
-                            easing: 'easeInOutBounce',
+                            easing: 'easeOutQuad',
                             delay: 100
                         }
                     }]
@@ -935,7 +935,7 @@
                         borderWidth: 2,
                         animation: {
                             duration: 2000,
-                            easing: 'easeInOutBack',
+                            easing: 'easeOutQuad',
                         }
                     }]
                 },

@@ -273,8 +273,7 @@ class ShareController extends Controller
                 ELSE COALESCE(pa.decision, dpr.revision_status)
             END as status
         "),
-            'ps.name as project_status', 
-            'dpr.share_to as share_to',
+            'ps.name as project_status',
             'pa.requested_at as request_date',
             'pa.decided_at   as decision_date'
         );
@@ -302,25 +301,24 @@ class ShareController extends Controller
 
         $roleMap = DB::table('suppliers')->pluck('code', 'id')->all();
 
-        $data->transform(function ($item) use ($roleMap) {
-            if (empty($item->share_to)) {
+        // Ambil data share dari tabel package_shares
+        $revisionIds = $data->pluck('id')->toArray();
+
+        $shares = DB::table('package_shares as psr')
+            ->join('suppliers as s', 'psr.supplier_id', '=', 's.id')
+            ->whereIn('psr.revision_id', $revisionIds)
+            ->select('psr.revision_id', 's.code')
+            ->get()
+            ->groupBy('revision_id');
+
+        $data->transform(function ($item) use ($shares) {
+            $itemShares = $shares->get($item->id);
+
+            if ($itemShares && $itemShares->count() > 0) {
+                $item->share_to = $itemShares->pluck('code')->implode(', ');
+            } else {
                 $item->share_to = 'Not yet distributed';
-                return $item;
             }
-
-            $roleIds = json_decode($item->share_to, true);
-
-            if (empty($roleIds) || !is_array($roleIds)) {
-                $item->share_to = 'Not yet distributed';
-                return $item;
-            }
-
-            $roleNames = [];
-            foreach ($roleIds as $id) {
-                $roleNames[] = $roleMap[$id] ?? "Unknown (ID: {$id})";
-            }
-
-            $item->share_to = implode(', ', $roleNames);
 
             return $item;
         });
@@ -360,7 +358,7 @@ class ShareController extends Controller
 
         // Set Expiry (14 hari dari sekarang)
         $expiredAt = Carbon::now()->addDays(14);
-        
+
         $user = auth()->user();
         $userId = $user ? $user->id : null;
 
@@ -368,7 +366,7 @@ class ShareController extends Controller
             return response()->json(['message' => 'Unauthorized user.'], 401);
         }
 
-                /**
+        /**
          * ===========================================
          *  VALIDASI: FEASIBILITY HARUS PUNYA BLOCK
          * ===========================================
@@ -386,52 +384,52 @@ class ShareController extends Controller
         $isFeasibility = $projectStatusName &&
             in_array(strtolower($projectStatusName), ['feasibility', 'feasibility study']);
 
-       if ($isFeasibility) {
-    // Ambil semua blocks_position yang tidak null
-    $rawBlocksList = DB::table('doc_package_revision_files')
-        ->where('revision_id', $revisionId)
-        ->whereNotNull('blocks_position')
-        ->pluck('blocks_position');
+        if ($isFeasibility) {
+            // Ambil semua blocks_position yang tidak null
+            $rawBlocksList = DB::table('doc_package_revision_files')
+                ->where('revision_id', $revisionId)
+                ->whereNotNull('blocks_position')
+                ->pluck('blocks_position');
 
-    $hasBlocks = false;
+            $hasBlocks = false;
 
-    foreach ($rawBlocksList as $raw) {
-        if (empty($raw)) {
-            continue;
-        }
+            foreach ($rawBlocksList as $raw) {
+                if (empty($raw)) {
+                    continue;
+                }
 
-        $decoded = json_decode($raw, true);
+                $decoded = json_decode($raw, true);
 
-        if (!is_array($decoded)) {
-            continue;
-        }
+                if (!is_array($decoded)) {
+                    continue;
+                }
 
-        // 2 kemungkinan bentuk data:
-        // 1) Lama: [ {block...}, {block...} ]
-        // 2) Baru: { "1": [ {block...} ], "2": [ ... ] }
-        if (array_is_list($decoded)) {
-            // flat array langsung
-            if (count($decoded) > 0) {
-                $hasBlocks = true;
-                break;
-            }
-        } else {
-            // bentuk per halaman
-            foreach ($decoded as $pageBlocks) {
-                if (is_array($pageBlocks) && count($pageBlocks) > 0) {
-                    $hasBlocks = true;
-                    break 2; // keluar dari 2 loop
+                // 2 kemungkinan bentuk data:
+                // 1) Lama: [ {block...}, {block...} ]
+                // 2) Baru: { "1": [ {block...} ], "2": [ ... ] }
+                if (array_is_list($decoded)) {
+                    // flat array langsung
+                    if (count($decoded) > 0) {
+                        $hasBlocks = true;
+                        break;
+                    }
+                } else {
+                    // bentuk per halaman
+                    foreach ($decoded as $pageBlocks) {
+                        if (is_array($pageBlocks) && count($pageBlocks) > 0) {
+                            $hasBlocks = true;
+                            break 2; // keluar dari 2 loop
+                        }
+                    }
                 }
             }
-        }
-    }
 
-   if (!$hasBlocks) {
-    return response()->json([
-        'message' => 'This package has project status "Feasibility Study" and must have at least one block defined on a file page before it can be shared. Please open the preview and add a block first.',
-    ], 422); 
-}
-}
+            if (!$hasBlocks) {
+                return response()->json([
+                    'message' => 'This package has project status "Feasibility Study" and must have at least one block defined on a file page before it can be shared. Please open the preview and add a block first.',
+                ], 422);
+            }
+        }
 
 
 
@@ -490,20 +488,20 @@ class ShareController extends Controller
                 ->whereIn('user_supplier.supplier_id', $supplierIds)
                 ->whereNotNull('users.email')
                 ->select(
-                    'users.id', 
-                    'users.email', 
-                    'users.name', 
-                    'suppliers.name as supplier_name', 
+                    'users.id',
+                    'users.email',
+                    'users.name',
+                    'suppliers.name as supplier_name',
                     'suppliers.code as supplier_code'
                 )
                 ->get();
 
-            $sharedToString = $userSuppliers->map(function($u) {
+            $sharedToString = $userSuppliers->map(function ($u) {
                 return "[{$u->supplier_code}] {$u->name} ({$u->email})";
             })->unique()->implode(', ');
 
             // Format daftar penerima untuk disimpan di Log (Snapshot)
-            $recipientSnapshot = $userSuppliers->map(function($u) {
+            $recipientSnapshot = $userSuppliers->map(function ($u) {
                 return "{$u->name} ({$u->email})";
             })->unique()->implode(', ');
 
@@ -518,7 +516,7 @@ class ShareController extends Controller
                     'package_id'      => $packageDetails->package_id,
                     'revision_no'     => $packageDetails->revision_no,
                     'ecn_no'          => $packageDetails->ecn_no,
-                    
+
                     // --- Custom Data Share ---
                     'shared_to'       => $sharedToString,
                     'recipients'      => $recipientSnapshot,
@@ -570,7 +568,7 @@ class ShareController extends Controller
             // Kirim Email
             foreach ($usersToEmail as $userData) {
                 $supplierNamesStr = implode(', ', $userData['supplier_names']);
-                
+
                 Mail::to($userData['email'])->send(new ShareNotification(
                     $userData['name'],
                     $encryptedId,
@@ -584,7 +582,6 @@ class ShareController extends Controller
             return response()->json([
                 'message' => 'Package shared successfully to ' . count($supplierIds) . ' suppliers.'
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Share Error: ' . $e->getMessage());
@@ -842,70 +839,70 @@ class ShareController extends Controller
     }
 
 
-  public function updateBlocks(Request $request, $fileId): JsonResponse
-{
-    $file = DocPackageRevisionFile::findOrFail($fileId);
+    public function updateBlocks(Request $request, $fileId): JsonResponse
+    {
+        $file = DocPackageRevisionFile::findOrFail($fileId);
 
-    $validated = $request->validate([
-        'page'               => 'nullable|integer|min:1',
-        'blocks'             => 'nullable|array',
-        'blocks.*.id'        => 'nullable|string',
-        'blocks.*.u'         => 'required|numeric',
-        'blocks.*.v'         => 'required|numeric',
-        'blocks.*.w'         => 'required|numeric',
-        'blocks.*.h'         => 'required|numeric',
-        'blocks.*.rotation'  => 'nullable|numeric',
-    ]);
+        $validated = $request->validate([
+            'page'               => 'nullable|integer|min:1',
+            'blocks'             => 'nullable|array',
+            'blocks.*.id'        => 'nullable|string',
+            'blocks.*.u'         => 'required|numeric',
+            'blocks.*.v'         => 'required|numeric',
+            'blocks.*.w'         => 'required|numeric',
+            'blocks.*.h'         => 'required|numeric',
+            'blocks.*.rotation'  => 'nullable|numeric',
+        ]);
 
-    $page      = (int)($validated['page'] ?? 1);
-    $rawBlocks = $validated['blocks'] ?? [];
+        $page      = (int)($validated['page'] ?? 1);
+        $rawBlocks = $validated['blocks'] ?? [];
 
-    // normalisasi & clamp 0..1 biar aman
-    $blocks = [];
-    foreach ($rawBlocks as $i => $block) {
-        $blocks[] = [
-            'id'       => $block['id'] ?? ('blk-' . ($i + 1)),
-            'u'        => max(0, min(1, (float) $block['u'])),
-            'v'        => max(0, min(1, (float) $block['v'])),
-            'w'        => max(0, min(1, (float) $block['w'])),
-            'h'        => max(0, min(1, (float) $block['h'])),
-            'rotation' => isset($block['rotation']) ? (float) $block['rotation'] : 0.0,
-        ];
+        // normalisasi & clamp 0..1 biar aman
+        $blocks = [];
+        foreach ($rawBlocks as $i => $block) {
+            $blocks[] = [
+                'id'       => $block['id'] ?? ('blk-' . ($i + 1)),
+                'u'        => max(0, min(1, (float) $block['u'])),
+                'v'        => max(0, min(1, (float) $block['v'])),
+                'w'        => max(0, min(1, (float) $block['w'])),
+                'h'        => max(0, min(1, (float) $block['h'])),
+                'rotation' => isset($block['rotation']) ? (float) $block['rotation'] : 0.0,
+            ];
+        }
+
+        // ==== MERGE DENGAN VALUE LAMA (BACKWARD COMPATIBLE) ====
+        $existing = $file->blocks_position ?: [];
+
+        // 🔴 TAMBAHAN PENTING: kalau masih string JSON → decode dulu
+        if (is_string($existing)) {
+            $decoded = json_decode($existing, true);
+            $existing = $decoded ?? [];
+        }
+
+        // Kalau data lama masih berupa array flat (tanpa key page) → anggap halaman 1
+        if (is_array($existing) && array_is_list($existing)) {
+            $existing = [
+                '1' => $existing,
+            ];
+        }
+
+        if (!is_array($existing)) {
+            $existing = [];
+        }
+
+        // Update hanya page yang sekarang
+        $existing[(string) $page] = $blocks;
+
+        // Laravel akan simpan sebagai JSON
+        $file->blocks_position = $existing;
+        $file->save();
+
+        return response()->json([
+            'message' => 'Blocks position saved.',
+            'page'    => $page,
+            'blocks'  => $blocks,
+        ]);
     }
-
-    // ==== MERGE DENGAN VALUE LAMA (BACKWARD COMPATIBLE) ====
-    $existing = $file->blocks_position ?: [];
-
-    // 🔴 TAMBAHAN PENTING: kalau masih string JSON → decode dulu
-    if (is_string($existing)) {
-        $decoded = json_decode($existing, true);
-        $existing = $decoded ?? [];
-    }
-
-    // Kalau data lama masih berupa array flat (tanpa key page) → anggap halaman 1
-    if (is_array($existing) && array_is_list($existing)) {
-        $existing = [
-            '1' => $existing,
-        ];
-    }
-
-    if (!is_array($existing)) {
-        $existing = [];
-    }
-
-    // Update hanya page yang sekarang
-    $existing[(string) $page] = $blocks;
-
-    // Laravel akan simpan sebagai JSON
-    $file->blocks_position = $existing;
-    $file->save();
-
-    return response()->json([
-        'message' => 'Blocks position saved.',
-        'page'    => $page,
-        'blocks'  => $blocks,
-    ]);
-}
 
 
 
@@ -956,7 +953,7 @@ class ShareController extends Controller
                 $code = strtoupper($row->activity_code ?? '');
                 $action =
                     (str_starts_with($code, 'UPLOAD')   ? 'uploaded'   : (str_starts_with($code, 'APPROVE')  ? 'approved'   : (str_starts_with($code, 'REJECT')   ? 'rejected'   : (str_starts_with($code, 'ROLLBACK') ? 'rollbacked' :
-                                    strtolower($code ?: 'info')))));
+                        strtolower($code ?: 'info')))));
 
                 $meta = $row->meta;
                 if (is_string($meta)) {
