@@ -994,7 +994,6 @@
             const container = document.getElementById('activityLogContainer');
             if (!container) return;
 
-            // LOADING STATE (Tengah, Besar, Menarik)
             container.innerHTML = `
                 <div class="flex flex-col items-center justify-center h-full w-full min-h-[200px]">
                     <i class="fa-solid fa-circle-notch fa-spin text-blue-500 dark:text-blue-400 text-3xl mb-3"></i>
@@ -1009,21 +1008,16 @@
                 const result = await response.json();
 
                 if (result.status === 'success') {
-                    // Kosongkan container dari loading spinner
                     container.innerHTML = '';
 
                     if (result.data && result.data.length > 0) {
-                        // 1. Masukkan semua elemen (masih invisible karena class opacity-0)
                         result.data.forEach(log => {
                             container.insertAdjacentHTML('beforeend', this.formatLogEntry(log));
                         });
 
-                        // 2. Trigger Animasi Staggered (Bergelombang)
-                        // Kita beri jeda super singkat agar browser selesai merender HTML opacity-0
                         requestAnimationFrame(() => {
                             const items = container.querySelectorAll('.log-item');
                             items.forEach((item, index) => {
-                                // Set delay bertingkat: Item 1 (0ms), Item 2 (50ms), Item 3 (100ms), dst.
                                 setTimeout(() => {
                                     item.classList.remove('opacity-0', 'translate-y-4');
                                 }, index * 50); 
@@ -1031,7 +1025,6 @@
                         });
 
                     } else {
-                        // Animasi fade in simpel untuk pesan kosong
                         container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400 opacity-0 transition-opacity duration-500 ease-in" id="emptyMsg">No activity found for this filter.</div>`;
                         setTimeout(() => { document.getElementById('emptyMsg').classList.remove('opacity-0'); }, 50);
                     }
