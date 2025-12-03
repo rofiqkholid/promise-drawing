@@ -402,13 +402,19 @@
                                 return '<span class="text-xs text-gray-400 dark:text-gray-500">–</span>';
                             }
 
+                            let colorClass = 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300'; // Default / Project
+
+                            if (value === 'Regular') {
+                                colorClass = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
+                            } else if (value === 'Feasibility Study') {
+                                colorClass = 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+                            }
 
                             return `
-            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                   bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300">
-                ${value}
-            </span>
-        `;
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClass}">
+                                    ${value}
+                                </span>
+                            `;
                         }
                     },
 
@@ -446,7 +452,7 @@
                 responsive: true,
                 dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
                 createdRow: function(row) {
-                    $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700/50');
+                    $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700/50 cursor-pointer');
                 }
             });
 
@@ -588,13 +594,11 @@
             });
 
             $('#approvalTable tbody').on('click', 'tr', function(e) {
-                // kalau yang diklik adalah tombol Share, jangan redirect
                 if ($(e.target).closest('.btn-share').length) return;
 
                 const rowData = table.row(this).data();
                 if (!rowData || !rowData.hash) return;
 
-                // pakai placeholder __ID__ lalu di-replace di JS
                 const url = '{{ route("share.detail", ["id" => "__ID__"]) }}'.replace('__ID__', rowData.hash);
                 window.location.href = url;
             });
@@ -604,10 +608,8 @@
                 const $this = $(this);
                 const packageId = $hiddenPackageId.val();
 
-                // Ambil ID dari supplier yang dipilih
                 const selectSupplierIds = selectedSupplier.map(r => r.id);
 
-                // Gunakan Toast untuk validasi UI
                 if (!packageId) {
                     toastError('Error', 'Package ID not found. Please reload.');
                     return;
@@ -624,7 +626,6 @@
                     url: '{{ route("share.save") }}',
                     type: 'POST',
                     data: {
-                        // Token CSRF sudah di-handle oleh $.ajaxSetup di atas
                         package_id: packageId,
                         supplier_ids: selectSupplierIds
                     },
@@ -632,13 +633,10 @@
                     success: function(response) {
                         $shareModal.hide();
 
-                        // Tampilkan pesan sukses dari server
                         toastSuccess('Shared', response.message || 'Package shared successfully!');
 
-                        // Reload tabel tanpa reset paging
                         if (table) table.ajax.reload(null, false);
 
-                        // Reset pilihan supplier agar modal bersih saat dibuka lagi nanti
                         selectedSupplier = [];
                         renderSelectSuppliers();
                     },
@@ -651,10 +649,8 @@
                         }
 
                         if (xhr.status === 422) {
-                            // 💡 untuk kasus Feasibility tanpa block → WARNING
                             toastWarning('Warning', msg);
                         } else {
-                            // selain itu benar-benar error (500, 401, dll)
                             toastError('Error', msg);
                         }
                     },

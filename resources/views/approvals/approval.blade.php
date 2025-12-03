@@ -219,7 +219,7 @@
           </label>
           <textarea id="shareNote"
             rows="3"
-            class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
+            class="mt-1 p-2 block w-full rounded-md border border-gray-300 dark:border-gray-600
                            bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
                            text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
           <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">

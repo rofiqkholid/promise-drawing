@@ -49,39 +49,57 @@
         </div>
 
         <!-- Footer (Approve / Reject / Rollback / Share) -->
-        <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
-          <!-- Waiting: Reject + Approve -->
-          <template x-if="isWaiting()">
-            <div class="flex gap-2">
-              <button @click="rejectPackage()"
-                class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm">
-                <i class="fa-solid fa-circle-xmark mr-2"></i> Reject
-              </button>
-              <button @click="approvePackage()"
-                class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm">
-                <i class="fa-solid fa-circle-check mr-2"></i> Approve
-              </button>
-            </div>
-          </template>
+        <!-- Footer (Approve / Reject / Rollback / Share) -->
+<div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center gap-2">
+  <!-- Badge is_finish -->
+  <div class="mr-auto">
+    <span
+      class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
+      :class="isFinished()
+        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200'
+        : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500'">
+      
+      <i class="fa-solid fa-circle-check"
+         :class="isFinished() ? 'text-blue-500' : 'text-gray-400'"></i>
 
-          <!-- Approved: Rollback + Share -->
-          <template x-if="isApproved()">
-            <div class="flex gap-2">
-              <button @click="rollbackPackage()"
-                class="inline-flex items-center px-3 py-1.5 bg-amber-600 text-white rounded-md hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 text-sm">
-                <i class="fa-solid fa-rotate-left mr-2"></i> Rollback
-              </button>
+      <!-- Teks bisa Tuan ganti sesuka hati -->
+      <span x-text="isFinished() ? 'Finish / Good' : 'Not Finished'"></span>
+    </span>
+  </div>
 
-              <button @click="openShareModal()"
-                class="inline-flex items-center px-3 py-1.5 text-sm rounded-md border border-blue-600
-                      bg-blue-600 text-white hover:bg-blue-500 focus:outline-none focus:ring-2
-                      focus:ring-blue-500 focus:ring-offset-2">
-                <i class="fa-solid fa-share-nodes mr-2"></i>
-                Share
-              </button>
-            </div>
-          </template>
-        </div>
+  <!-- Waiting: Reject + Approve -->
+  <template x-if="isWaiting()">
+    <div class="flex gap-2">
+      <button @click="rejectPackage()"
+        class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm">
+        <i class="fa-solid fa-circle-xmark mr-2"></i> Reject
+      </button>
+      <button @click="approvePackage()"
+        class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm">
+        <i class="fa-solid fa-circle-check mr-2"></i> Approve
+      </button>
+    </div>
+  </template>
+
+  <!-- Approved: Rollback + Share -->
+  <template x-if="isApproved()">
+    <div class="flex gap-2">
+      <button @click="rollbackPackage()"
+        class="inline-flex items-center px-3 py-1.5 bg-amber-600 text-white rounded-md hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 text-sm">
+        <i class="fa-solid fa-rotate-left mr-2"></i> Rollback
+      </button>
+
+      <button @click="openShareModal()"
+        class="inline-flex items-center px-3 py-1.5 text-sm rounded-md border border-blue-600
+               bg-blue-600 text-white hover:bg-blue-500 focus:outline-none focus:ring-2
+               focus:ring-blue-500 focus:ring-offset-2">
+        <i class="fa-solid fa-share-nodes mr-2"></i>
+        Share
+      </button>
+    </div>
+  </template>
+</div>
+
       </div>
 
 
@@ -144,15 +162,7 @@
             x-text="`${pkg.activityLogs?.length || 0} events`"></span>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div class="p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
-            <div class="flex items-center">
-              <i class="fa-solid fa-clock-rotate-left mr-2 text-gray-500 dark:text-gray-400"></i>
-              <span class="text-sm font-medium text-gray-900 dark:text-gray-100">Activity Log</span>
-            </div>
-            <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full"
-              x-text="`${pkg.activityLogs?.length || 0} events`"></span>
-          </div>
+        <div class="bg-white dark:bg-gray-800 overflow-hidden">
 
           <div
             class="p-2 space-y-2"
@@ -955,11 +965,11 @@
           <textarea
             x-model.trim="shareNote"
             rows="3"
-            class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
+            class="mt-1 p-2 block w-full rounded-md border border-gray-300 dark:border-gray-600
                  bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
                  text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
           <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-            Note ini akan menjadi isi email ke user dept. Wajib diisi.
+            This note will be included in the email sent to Purchasing / PUD.
           </p>
           <p class="mt-2 text-xs text-red-500" x-show="shareNoteError">
             Note is required.
@@ -1282,9 +1292,6 @@ applyToAllProcessing: false,
       imageTransformStyle() {
         return `transform: translate(${this.panX}px, ${this.panY}px) scale(${this.imageZoom}); transform-origin: center center;`;
       },
-
-
-
       // mapping dari integer DB -> key string
       // mapping dari integer DB -> key string (0-5)
       positionIntToKey(pos) {
@@ -2460,6 +2467,12 @@ async applyStampToAll() {
       isApproved() {
         return (this.pkg.status || '').toLowerCase() === 'approved';
       },
+      isFinished() {
+  // baca dari root detail: { status, is_finish, metadata, ... }
+  const flag = this.pkg?.is_finish ?? this.pkg?.metadata?.is_finish ?? 0;
+  return Number(flag) === 1 || flag === true;
+},
+
 
       /* ===== approve / reject / rollback ===== */
       approvePackage() {
@@ -2546,7 +2559,7 @@ async applyStampToAll() {
             }
           }
 
-          // === sukses ===
+         
           this.pkg.status = 'Approved';
           this.addPkgActivity('approved', '{{ auth()->user()->name ?? "Reviewer" }}');
           this.showApproveModal = false;
@@ -2674,7 +2687,7 @@ async applyStampToAll() {
               'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
             body: JSON.stringify({
-              revision_id: this.approvalId, // sama kayak dari list, cuma di-detail pakai approvalId
+              revision_id: this.approvalId,
               note: this.shareNote
             })
           });
@@ -2686,7 +2699,7 @@ async applyStampToAll() {
           } catch {}
 
           if (!res.ok) {
-            // kalau nanti Tuan bikin error khusus (EMAIL_FAILED, dll) bisa ditangani di sini
+            
             throw new Error(json.message || 'Failed to share revision.');
           }
 
@@ -2701,7 +2714,7 @@ async applyStampToAll() {
       },
 
 
-      /* ===== render CAD via occt-import-js (STEP/IGES + fallback IGES) ===== */
+     
       async renderCadOcct(fileObj) {
         const url = fileObj?.url;
         if (!url) return;

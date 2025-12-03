@@ -125,39 +125,96 @@
             x-text="`${pkg.activityLogs?.length || 0} events`"></span>
         </div>
 
-        <div
-          class="p-2 space-y-2"
-          :class="(pkg.activityLogs?.length || 0) > 3 ? 'max-h-64 overflow-y-auto pr-1' : ''"
-          role="log"
-          aria-label="Activity Log">
-          <template x-for="(item, idx) in (pkg.activityLogs || [])" :key="idx">
-            <div class="flex items-start gap-3 p-3 rounded-md bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700">
-              <div class="mt-0.5">
-                <template x-if="item.action === 'uploaded'"><i class="fa-solid fa-upload text-blue-500"></i></template>
-                <template x-if="item.action === 'approved'"><i class="fa-solid fa-circle-check text-green-500"></i></template>
-                <template x-if="item.action === 'rejected'"><i class="fa-solid fa-circle-xmark text-red-500"></i></template>
-                <template x-if="item.action === 'rollbacked'"><i class="fa-solid fa-rotate-left text-amber-500"></i></template>
-                <template x-if="!['uploaded','approved','rejected','rollbacked'].includes(item.action)"><i class="fa-solid fa-circle-info text-gray-500"></i></template>
-              </div>
-              <div class="min-w-0">
-                <p class="text-sm text-gray-900 dark:text-gray-100">
-                  <span class="font-medium capitalize" x-text="item.action"></span>
-                  <span class="mx-1">by</span>
-                  <span class="font-medium" x-text="item.user"></span>
-                  <template x-if="item.note">
-                    <span class="text-gray-600 dark:text-gray-400">— <span x-text="item.note"></span></span>
-                  </template>
-                </p>
-                <p class="text-xs text-gray-500 dark:text-gray-400" x-text="item.time"></p>
-              </div>
-            </div>
-          </template>
+        <div class="bg-white dark:bg-gray-800 overflow-hidden">
 
-          <template x-if="(pkg.activityLogs || []).length === 0">
-            <p class="p-3 text-center text-xs text-gray-500 dark:text-gray-400">
-              No activity yet for this package.
-            </p>
-          </template>
+          <div
+            class="p-2 space-y-2"
+            :class="(pkg.activityLogs?.length || 0) > 3 ? 'max-h-96 overflow-y-auto pr-1' : ''"
+            role="log"
+            aria-label="Activity Log">
+            
+            <template x-for="(item, idx) in (pkg.activityLogs || [])" :key="idx">
+              <div class="flex items-start gap-3 p-3 rounded-md bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                
+                <div class="mt-1 flex-shrink-0">
+                  <template x-if="item.action === 'uploaded'"><div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center"><i class="fa-solid fa-cloud-arrow-up text-blue-600 text-xs"></i></div></template>
+                  <template x-if="item.action === 'approved'"><div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center"><i class="fa-solid fa-check text-green-600 text-xs"></i></div></template>
+                  <template x-if="item.action === 'rejected'"><div class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center"><i class="fa-solid fa-xmark text-red-600 text-xs"></i></div></template>
+                  <template x-if="item.action === 'rollbacked'"><div class="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center"><i class="fa-solid fa-rotate-left text-amber-600 text-xs"></i></div></template>
+                  <template x-if="item.action === 'downloaded'"><div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-download text-gray-600 text-xs"></i></div></template>
+                  <template x-if="item.action === 'shared'"><div class="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center"><i class="fa-solid fa-share-nodes text-indigo-600 text-xs"></i></div></template>
+                  
+                  <template x-if="!['uploaded','approved','rejected','rollbacked','downloaded','shared'].includes(item.action)">
+                    <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-circle-info text-gray-500 text-xs"></i></div>
+                  </template>
+                </div>
+
+                <div class="min-w-0 flex-1">
+                  <div class="flex justify-between items-start">
+                    <p class="text-sm text-gray-900 dark:text-gray-100">
+                      <span class="font-bold capitalize" x-text="item.action"></span>
+                      <span class="text-xs text-gray-500 font-normal">by</span>
+                      <span class="font-semibold text-blue-600 dark:text-blue-400" x-text="item.user"></span>
+                    </p>
+                    <span class="text-[10px] text-gray-400 whitespace-nowrap ml-2" x-text="item.time"></span>
+                  </div>
+
+                  <template x-if="item.snapshot && (item.snapshot.part_no || item.snapshot.ecn_no)">
+                    <div class="mt-2 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-xs shadow-sm">
+                        
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="font-bold text-gray-800 dark:text-gray-200" x-text="item.snapshot.part_no || '-'"></span>
+                            <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded font-mono text-[10px] border border-gray-200 dark:border-gray-600">
+                                Rev <span x-text="item.snapshot.revision_no ?? '-'"></span>
+                            </span>
+                            <template x-if="item.snapshot.ecn_no">
+                                <span class="text-blue-600 dark:text-blue-400 font-mono text-[10px] bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800" 
+                                      x-text="item.snapshot.ecn_no"></span>
+                            </template>
+                        </div>
+
+                        <div class="text-gray-500 dark:text-gray-400 text-[10px] flex items-center gap-1">
+                            <i class="fa-solid fa-tag text-[9px]"></i>
+                            <span x-text="item.snapshot.customer || '-'"></span>
+                            <span class="mx-0.5">•</span>
+                            <span x-text="item.snapshot.model || '-'"></span>
+                            <template x-if="item.snapshot.doc_type">
+                                <span>
+                                    <span class="mx-0.5">•</span>
+                                    <span x-text="item.snapshot.doc_type"></span>
+                                </span>
+                            </template>
+                        </div>
+
+                        <template x-if="item.action === 'rollbacked' && item.snapshot.previous_status">
+                            <div class="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700 flex items-center text-amber-600 dark:text-amber-500 font-medium">
+                                <i class="fa-solid fa-code-branch mr-1.5 text-[10px]"></i>
+                                <span x-text="item.snapshot.previous_status" class="capitalize"></span>
+                                <i class="fa-solid fa-arrow-right-long mx-1.5 text-[10px]"></i>
+                                <span>Waiting</span>
+                            </div>
+                        </template>
+                    </div>
+                  </template>
+
+                  <template x-if="item.note">
+                    <div class="mt-1.5 flex items-start gap-1.5">
+                        <i class="fa-solid fa-quote-left text-gray-300 dark:text-gray-600 text-[10px] mt-0.5"></i>
+                        <p class="text-xs text-gray-600 dark:text-gray-300 italic" x-text="item.note"></p>
+                    </div>
+                  </template>
+
+                </div>
+              </div>
+            </template>
+
+            <template x-if="(pkg.activityLogs || []).length === 0">
+              <div class="flex flex-col items-center justify-center py-8 text-gray-400 dark:text-gray-500">
+                <i class="fa-regular fa-calendar-xmark text-2xl mb-2"></i>
+                <p class="text-xs">No activity recorded yet.</p>
+              </div>
+            </template>
+          </div>
         </div>
       </div>
 
@@ -351,8 +408,7 @@
                       alt="File Preview"
                       class="block pointer-events-none select-none max-w-full max-h-[70vh]"
                       loading="lazy"
-                      @load="viewportVersion++"
-                      >
+                      @load="viewportVersion++">
 
                     <!-- WHITE BLOCKS (MULTI) -->
                     <template x-for="mask in masks" :key="mask.id">
@@ -361,6 +417,7 @@
                         x-cloak
                         :style="maskStyle(mask)"
                         class="absolute bg-white/100 shadow-sm cursor-move"
+                        :class="{ 'z-50': mask.active, 'z-10': !mask.active }"
                         @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
                         @click.stop="activateMask(mask)">
 
@@ -371,37 +428,38 @@
                           class="absolute inset-0 border border-blue-500 pointer-events-none">
                         </div>
 
-                        <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
-                        <div
-                          x-show="mask.active && mask.editable"
-                          x-cloak
-                          class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
-                          @mousedown.stop.prevent="startMaskRotate($event, mask)">
+                        <!-- HANDLE ROTATE (Lollipop) -->
+                        <div x-show="mask.active && mask.editable" x-cloak>
+                          <div
+                            class="absolute left-1/2 -translate-x-1/2 -top-8 w-5 h-5 bg-white/80 rounded-full shadow-md border border-gray-200 flex items-center justify-center cursor-alias z-10"
+                            @mousedown.stop.prevent="startMaskRotate($event, mask)">
+                            <i class="fa-solid fa-rotate text-blue-600 text-sm"></i>
+                          </div>
                         </div>
 
                         <!-- ZONA RESIZE: transparan di tepian blok -->
                         <template x-if="mask.active && mask.editable">
                           <div>
                             <!-- atas / bawah -->
-                            <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
+                            <div class="absolute inset-x-3 top-0 h-2" :style="{ cursor: getCursorStyle('n', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
-                            <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
+                            <div class="absolute inset-x-3 bottom-0 h-2" :style="{ cursor: getCursorStyle('s', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
 
                             <!-- kiri / kanan -->
-                            <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
+                            <div class="absolute inset-y-3 left-0 w-2" :style="{ cursor: getCursorStyle('w', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
-                            <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
+                            <div class="absolute inset-y-3 right-0 w-2" :style="{ cursor: getCursorStyle('e', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
 
                             <!-- pojok -->
-                            <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
+                            <div class="absolute left-0  top-0    w-3 h-3" :style="{ cursor: getCursorStyle('nw', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
-                            <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
+                            <div class="absolute right-0 top-0    w-3 h-3" :style="{ cursor: getCursorStyle('ne', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
-                            <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
+                            <div class="absolute left-0  bottom-0 w-3 h-3" :style="{ cursor: getCursorStyle('sw', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
-                            <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
+                            <div class="absolute right-0 bottom-0 w-3 h-3" :style="{ cursor: getCursorStyle('se', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
                           </div>
                         </template>
@@ -514,6 +572,7 @@
                         x-cloak
                         :style="maskStyle(mask)"
                         class="absolute bg-white/100 shadow-sm cursor-move"
+                        :class="{ 'z-50': mask.active, 'z-10': !mask.active }"
                         @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
                         @click.stop="activateMask(mask)">
 
@@ -524,37 +583,38 @@
                           class="absolute inset-0 border border-blue-500 pointer-events-none">
                         </div>
 
-                        <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
-                        <div
-                          x-show="mask.active && mask.editable"
-                          x-cloak
-                          class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
-                          @mousedown.stop.prevent="startMaskRotate($event, mask)">
+                        <!-- HANDLE ROTATE (Lollipop) -->
+                        <div x-show="mask.active && mask.editable" x-cloak>
+                          <div
+                            class="absolute left-1/2 -translate-x-1/2 -top-8 w-5 h-5 bg-white/80 rounded-full shadow-md border border-gray-200 flex items-center justify-center cursor-alias z-10"
+                            @mousedown.stop.prevent="startMaskRotate($event, mask)">
+                            <i class="fa-solid fa-rotate text-blue-600 text-xs"></i>
+                          </div>
                         </div>
 
                         <!-- ZONA RESIZE: transparan di tepian blok -->
                         <template x-if="mask.active && mask.editable">
                           <div>
                             <!-- atas / bawah -->
-                            <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
+                            <div class="absolute inset-x-3 top-0 h-2" :style="{ cursor: getCursorStyle('n', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
-                            <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
+                            <div class="absolute inset-x-3 bottom-0 h-2" :style="{ cursor: getCursorStyle('s', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
 
                             <!-- kiri / kanan -->
-                            <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
+                            <div class="absolute inset-y-3 left-0 w-2" :style="{ cursor: getCursorStyle('w', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
-                            <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
+                            <div class="absolute inset-y-3 right-0 w-2" :style="{ cursor: getCursorStyle('e', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
 
                             <!-- pojok -->
-                            <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
+                            <div class="absolute left-0  top-0    w-3 h-3" :style="{ cursor: getCursorStyle('nw', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
-                            <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
+                            <div class="absolute right-0 top-0    w-3 h-3" :style="{ cursor: getCursorStyle('ne', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
-                            <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
+                            <div class="absolute left-0  bottom-0 w-3 h-3" :style="{ cursor: getCursorStyle('sw', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
-                            <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
+                            <div class="absolute right-0 bottom-0 w-3 h-3" :style="{ cursor: getCursorStyle('se', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
                           </div>
                         </template>
@@ -666,9 +726,8 @@
                     <img
                       x-ref="tifImg"
                       alt="TIFF Preview"
-                      class="block pointer-events-none select-none max-w-full max-h-[70vh]" 
-                      @load="viewportVersion++"
-                      />
+                      class="block pointer-events-none select-none max-w-full max-h-[70vh]"
+                      @load="viewportVersion++" />
 
 
                     <!-- WHITE BLOCKS (MULTI) -->
@@ -678,6 +737,7 @@
                         x-cloak
                         :style="maskStyle(mask)"
                         class="absolute bg-white/100 shadow-sm cursor-move"
+                        :class="{ 'z-50': mask.active, 'z-10': !mask.active }"
                         @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
                         @click.stop="activateMask(mask)">
 
@@ -688,37 +748,38 @@
                           class="absolute inset-0 border border-blue-500 pointer-events-none">
                         </div>
 
-                        <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
-                        <div
-                          x-show="mask.active && mask.editable"
-                          x-cloak
-                          class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
-                          @mousedown.stop.prevent="startMaskRotate($event, mask)">
+                        <!-- HANDLE ROTATE (Lollipop) -->
+                        <div x-show="mask.active && mask.editable" x-cloak>
+                          <div
+                            class="absolute left-1/2 -translate-x-1/2 -top-8 w-5 h-5 bg-white/80 rounded-full shadow-md border border-gray-200 flex items-center justify-center cursor-alias z-10"
+                            @mousedown.stop.prevent="startMaskRotate($event, mask)">
+                            <i class="fa-solid fa-rotate text-blue-600 text-xs"></i>
+                          </div>
                         </div>
 
                         <!-- ZONA RESIZE: transparan di tepian blok -->
                         <template x-if="mask.active && mask.editable">
                           <div>
                             <!-- atas / bawah -->
-                            <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
+                            <div class="absolute inset-x-3 top-0 h-2" :style="{ cursor: getCursorStyle('n', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
-                            <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
+                            <div class="absolute inset-x-3 bottom-0 h-2" :style="{ cursor: getCursorStyle('s', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
 
                             <!-- kiri / kanan -->
-                            <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
+                            <div class="absolute inset-y-3 left-0 w-2" :style="{ cursor: getCursorStyle('w', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
-                            <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
+                            <div class="absolute inset-y-3 right-0 w-2" :style="{ cursor: getCursorStyle('e', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
 
                             <!-- pojok -->
-                            <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
+                            <div class="absolute left-0  top-0    w-3 h-3" :style="{ cursor: getCursorStyle('nw', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
-                            <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
+                            <div class="absolute right-0 top-0    w-3 h-3" :style="{ cursor: getCursorStyle('ne', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
-                            <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
+                            <div class="absolute left-0  bottom-0 w-3 h-3" :style="{ cursor: getCursorStyle('sw', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
-                            <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
+                            <div class="absolute right-0 bottom-0 w-3 h-3" :style="{ cursor: getCursorStyle('se', mask.rotation) }"
                               @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
                           </div>
                         </template>
@@ -838,6 +899,7 @@
                       x-cloak
                       :style="maskStyle(mask)"
                       class="absolute bg-white/100 shadow-sm cursor-move"
+                      :class="{ 'z-50': mask.active, 'z-10': !mask.active }"
                       @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
                       @click.stop="activateMask(mask)">
 
@@ -848,37 +910,38 @@
                         class="absolute inset-0 border border-blue-500 pointer-events-none">
                       </div>
 
-                      <!-- HANDLE ROTATE (bulatan di atas, hanya aktif + editable) -->
-                      <div
-                        x-show="mask.active && mask.editable"
-                        x-cloak
-                        class="w-3 h-3 absolute left-1/2 -translate-x-1/2 -top-4 rounded-full border border-gray-600 bg-gray-200 cursor-alias"
-                        @mousedown.stop.prevent="startMaskRotate($event, mask)">
+                      <!-- HANDLE ROTATE (Lollipop) -->
+                      <div x-show="mask.active && mask.editable" x-cloak>
+                        <div
+                          class="absolute left-1/2 -translate-x-1/2 -top-8 w-5 h-5 bg-white/80 rounded-full shadow-md border border-gray-200 flex items-center justify-center cursor-alias z-10"
+                          @mousedown.stop.prevent="startMaskRotate($event, mask)">
+                          <i class="fa-solid fa-rotate text-blue-600 text-xs"></i>
+                        </div>
                       </div>
 
                       <!-- ZONA RESIZE: transparan di tepian blok -->
                       <template x-if="mask.active && mask.editable">
                         <div>
                           <!-- atas / bawah -->
-                          <div class="absolute inset-x-3 top-0 h-2 cursor-n-resize"
+                          <div class="absolute inset-x-3 top-0 h-2" :style="{ cursor: getCursorStyle('n', mask.rotation) }"
                             @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
-                          <div class="absolute inset-x-3 bottom-0 h-2 cursor-s-resize"
+                          <div class="absolute inset-x-3 bottom-0 h-2" :style="{ cursor: getCursorStyle('s', mask.rotation) }"
                             @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
 
                           <!-- kiri / kanan -->
-                          <div class="absolute inset-y-3 left-0 w-2 cursor-w-resize"
+                          <div class="absolute inset-y-3 left-0 w-2" :style="{ cursor: getCursorStyle('w', mask.rotation) }"
                             @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
-                          <div class="absolute inset-y-3 right-0 w-2 cursor-e-resize"
+                          <div class="absolute inset-y-3 right-0 w-2" :style="{ cursor: getCursorStyle('e', mask.rotation) }"
                             @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
 
                           <!-- pojok -->
-                          <div class="absolute left-0  top-0    w-3 h-3 cursor-nw-resize"
+                          <div class="absolute left-0  top-0    w-3 h-3" :style="{ cursor: getCursorStyle('nw', mask.rotation) }"
                             @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
-                          <div class="absolute right-0 top-0    w-3 h-3 cursor-ne-resize"
+                          <div class="absolute right-0 top-0    w-3 h-3" :style="{ cursor: getCursorStyle('ne', mask.rotation) }"
                             @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
-                          <div class="absolute left-0  bottom-0 w-3 h-3 cursor-sw-resize"
+                          <div class="absolute left-0  bottom-0 w-3 h-3" :style="{ cursor: getCursorStyle('sw', mask.rotation) }"
                             @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
-                          <div class="absolute right-0 bottom-0 w-3 h-3 cursor-se-resize"
+                          <div class="absolute right-0 bottom-0 w-3 h-3" :style="{ cursor: getCursorStyle('se', mask.rotation) }"
                             @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
                         </div>
                       </template>
@@ -1287,7 +1350,7 @@
         // ===== WHITE BLOCKS (MULTI MASK) =====
         masks: [],
         nextMaskId: 1,
-blocksByPage: {},
+        blocksByPage: {},
 
 
         selectedFile: null,
@@ -1566,11 +1629,14 @@ blocksByPage: {},
         },
 
         getObsoleteFormat() {
-            const list = this.stampFormats || [];
-            if (Array.isArray(list) && list.length > 1) {
-                return list[1];
-            }
-            return { prefix: 'DATE UPLOAD', suffix: 'Dept' };
+          const list = this.stampFormats || [];
+          if (Array.isArray(list) && list.length > 1) {
+            return list[1];
+          }
+          return {
+            prefix: 'DATE UPLOAD',
+            suffix: 'Dept'
+          };
         },
 
         getObsoleteInfo() {
@@ -1630,103 +1696,105 @@ blocksByPage: {},
         },
 
         normalizeBlocksData(raw) {
-  if (!raw) return {};
-  if (Array.isArray(raw)) {
-    // data lama: array flat → jadikan page 1
-    return { '1': raw };
-  }
-  if (typeof raw === 'object') {
-    return raw;
-  }
-  return {};
-},
+          if (!raw) return {};
+          if (Array.isArray(raw)) {
+            // data lama: array flat → jadikan page 1
+            return {
+              '1': raw
+            };
+          }
+          if (typeof raw === 'object') {
+            return raw;
+          }
+          return {};
+        },
 
-currentPageForSelectedFile() {
-  if (!this.selectedFile) return 1;
-  const name = this.selectedFile.name || '';
-  if (this.isPdf(name))  return this.pdfPageNum;
-  if (this.isTiff(name)) return this.tifPageNum;
-  // image / hpgl / lainnya dianggap 1 halaman
-  return 1;
-},
+        currentPageForSelectedFile() {
+          if (!this.selectedFile) return 1;
+          const name = this.selectedFile.name || '';
+          if (this.isPdf(name)) return this.pdfPageNum;
+          if (this.isTiff(name)) return this.tifPageNum;
+          // image / hpgl / lainnya dianggap 1 halaman
+          return 1;
+        },
 
-initBlocksForFile(file) {
-  const raw = file?.blocks_position || {};
-  this.blocksByPage = this.normalizeBlocksData(raw);
-},
+        initBlocksForFile(file) {
+          const raw = file?.blocks_position || {};
+          this.blocksByPage = this.normalizeBlocksData(raw);
+        },
 
-buildMasksFromBlocks(blocks) {
-  const arr = Array.isArray(blocks) ? blocks : [];
-  const masks = [];
-  arr.forEach((b, idx) => {
-    const idNum = (() => {
-      if (!b.id) return idx + 1;
-      const match = b.id.toString().match(/\d+$/);
-      return match ? parseInt(match[0], 10) : idx + 1;
-    })();
+        buildMasksFromBlocks(blocks) {
+          const arr = Array.isArray(blocks) ? blocks : [];
+          const masks = [];
+          arr.forEach((b, idx) => {
+            const idNum = (() => {
+              if (!b.id) return idx + 1;
+              const match = b.id.toString().match(/\d+$/);
+              return match ? parseInt(match[0], 10) : idx + 1;
+            })();
 
-    const u = (typeof b.u === 'number') ? b.u : 0.3;
-    const v = (typeof b.v === 'number') ? b.v : 0.3;
-    const w = (typeof b.w === 'number') ? b.w : 0.4;
-    const h = (typeof b.h === 'number') ? b.h : 0.1;
+            const u = (typeof b.u === 'number') ? b.u : 0.3;
+            const v = (typeof b.v === 'number') ? b.v : 0.3;
+            const w = (typeof b.w === 'number') ? b.w : 0.4;
+            const h = (typeof b.h === 'number') ? b.h : 0.1;
 
-    masks.push({
-      id: idNum,
-      visible: true,
-      editable: true,
-      active: idx === 0,
+            masks.push({
+              id: idNum,
+              visible: true,
+              editable: true,
+              active: idx === 0,
 
-      u,
-      v,
-      w,
-      h,
-      rotation: b.rotation ?? 0,
+              u,
+              v,
+              w,
+              h,
+              rotation: b.rotation ?? 0,
 
-      _mode: null,
-      _edge: null,
-      _startX: 0,
-      _startY: 0,
-      _baseW: 1,
-      _baseH: 1,
-      _startU: u,
-      _startV: v,
-      _startWRel: w,
-      _startHRel: h,
-      _centerX: 0,
-      _centerY: 0,
-      _startRot: 0,
-    });
-  });
+              _mode: null,
+              _edge: null,
+              _startX: 0,
+              _startY: 0,
+              _baseW: 1,
+              _baseH: 1,
+              _startU: u,
+              _startV: v,
+              _startWRel: w,
+              _startHRel: h,
+              _centerX: 0,
+              _centerY: 0,
+              _startRot: 0,
+            });
+          });
 
-  this.nextMaskId = masks.reduce((mx, m) => Math.max(mx, (m.id || 0) + 1), 1);
-  return masks;
-},
+          this.nextMaskId = masks.reduce((mx, m) => Math.max(mx, (m.id || 0) + 1), 1);
+          return masks;
+        },
 
-loadMasksForCurrentPage() {
-  if (!this.selectedFile) {
-    this.masks = [];
-    this.nextMaskId = 1;
-    return;
-  }
-  const page = this.currentPageForSelectedFile();
-  const blocks = this.blocksByPage[String(page)] || [];
-  this.masks = this.buildMasksFromBlocks(blocks);
-},
-persistMasksToCurrentPage() {
-  if (!this.selectedFile) return;
+        loadMasksForCurrentPage() {
+          if (!this.selectedFile) {
+            this.masks = [];
+            this.nextMaskId = 1;
+            return;
+          }
+          const page = this.currentPageForSelectedFile();
+          const blocks = this.blocksByPage[String(page)] || [];
+          this.masks = this.buildMasksFromBlocks(blocks);
+        },
+        persistMasksToCurrentPage() {
+          if (!this.selectedFile) return;
 
-  const page = this.currentPageForSelectedFile();
-  const blocks = this.masks.map((m, idx) => ({
-    id: m.id ? `blk-${m.id}` : `blk-${idx + 1}`,
-    u: m.u,
-    v: m.v,
-    w: m.w,
-    h: m.h,
-    rotation: m.rotation,
-  }));
+          const page = this.currentPageForSelectedFile();
+          const blocks = this.masks.map((m, idx) => ({
+            id: m.id ? `blk-${m.id}` : `blk-${idx + 1}`,
+            u: m.u,
+            v: m.v,
+            w: m.w,
+            h: m.h,
+            rotation: m.rotation,
+          }));
 
-  this.blocksByPage[String(page)] = blocks;
-},
+          this.blocksByPage[String(page)] = blocks;
+        },
 
 
 
@@ -2040,10 +2108,10 @@ persistMasksToCurrentPage() {
 
             await this.$nextTick();
             const img = this.$refs.tifImg;
-if (img) {
-  img.src = dataUrl;
-  this.viewportVersion++;
-}
+            if (img) {
+              img.src = dataUrl;
+              this.viewportVersion++;
+            }
           } catch (e) {
             console.error(e);
             this.tifError = e?.message || 'Failed to render TIFF page';
@@ -2051,24 +2119,24 @@ if (img) {
         },
 
         nextTifPage() {
-  if (this.tifPageNum >= this.tifNumPages) return;
+          if (this.tifPageNum >= this.tifNumPages) return;
 
-  this.persistMasksToCurrentPage();
+          this.persistMasksToCurrentPage();
 
-  this.tifPageNum++;
-  this.loadMasksForCurrentPage();
-  this.renderTiffPage();
-},
+          this.tifPageNum++;
+          this.loadMasksForCurrentPage();
+          this.renderTiffPage();
+        },
 
         prevTifPage() {
-  if (this.tifPageNum <= 1) return;
+          if (this.tifPageNum <= 1) return;
 
-  this.persistMasksToCurrentPage();
+          this.persistMasksToCurrentPage();
 
-  this.tifPageNum--;
-  this.loadMasksForCurrentPage();
-  this.renderTiffPage();
-},
+          this.tifPageNum--;
+          this.loadMasksForCurrentPage();
+          this.renderTiffPage();
+        },
 
 
 
@@ -2131,26 +2199,26 @@ if (img) {
 
 
         nextPdfPage() {
-  if (!pdfDoc) return;
-  if (this.pdfPageNum >= this.pdfNumPages) return;
+          if (!pdfDoc) return;
+          if (this.pdfPageNum >= this.pdfNumPages) return;
 
-  // simpan blok halaman sekarang ke cache
-  this.persistMasksToCurrentPage();
+          // simpan blok halaman sekarang ke cache
+          this.persistMasksToCurrentPage();
 
-  this.pdfPageNum++;
-  this.loadMasksForCurrentPage();
-  this.renderPdfPage();
-},
-       prevPdfPage() {
-  if (!pdfDoc) return;
-  if (this.pdfPageNum <= 1) return;
+          this.pdfPageNum++;
+          this.loadMasksForCurrentPage();
+          this.renderPdfPage();
+        },
+        prevPdfPage() {
+          if (!pdfDoc) return;
+          if (this.pdfPageNum <= 1) return;
 
-  this.persistMasksToCurrentPage();
+          this.persistMasksToCurrentPage();
 
-  this.pdfPageNum--;
-  this.loadMasksForCurrentPage();
-  this.renderPdfPage();
-},
+          this.pdfPageNum--;
+          this.loadMasksForCurrentPage();
+          this.renderPdfPage();
+        },
 
         /* ===== HPGL renderer ===== */
         async renderHpgl(url) {
@@ -2579,80 +2647,82 @@ if (img) {
           else this.openSections.push(c);
         },
 
-       selectFile(file) {
-  // simpan posisi stamp file sebelumnya
-  if (this.selectedFile) {
-    this.saveStampConfigForCurrent();
-  }
+        selectFile(file) {
+          // simpan posisi stamp file sebelumnya
+          if (this.selectedFile) {
+            this.saveStampConfigForCurrent();
+          }
 
-  // cleanup viewer sebelumnya (CAD, TIFF, HPGL, PDF) — BIARKAN seperti punya Tuan
-  if (this.isCad(this.selectedFile?.name)) this.disposeCad();
-  if (this.isTiff(this.selectedFile?.name)) {
-    this.tifError = '';
-    this.tifLoading = false;
-    this.tifIfds = [];
-    this.tifDecoder = null;
-    this.tifPageNum = 1;
-    this.tifNumPages = 1;
-    if (this.$refs.tifImg) this.$refs.tifImg.src = '';
-  }
-  if (this.isHpgl(this.selectedFile?.name)) {
-    this.hpglError = '';
-    this.hpglLoading = false;
-    if (this.$refs.hpglCanvas) {
-      const c = this.$refs.hpglCanvas;
-      const ctx = c.getContext('2d');
-      ctx && ctx.clearRect(0, 0, c.width, c.height);
-    }
-  }
-  if (this.isPdf(this.selectedFile?.name)) {
-    this.pdfError = '';
-    this.pdfLoading = false;
-    pdfDoc = null;
-    if (this.$refs.pdfCanvas) {
-      const c = this.$refs.pdfCanvas;
-      const ctx = c.getContext('2d');
-      ctx && ctx.clearRect(0, 0, c.width, c.height);
-    }
-  }
+          // cleanup viewer sebelumnya (CAD, TIFF, HPGL, PDF) — BIARKAN seperti punya Tuan
+          if (this.isCad(this.selectedFile?.name)) this.disposeCad();
+          if (this.isTiff(this.selectedFile?.name)) {
+            this.tifError = '';
+            this.tifLoading = false;
+            this.tifIfds = [];
+            this.tifDecoder = null;
+            this.tifPageNum = 1;
+            this.tifNumPages = 1;
+            if (this.$refs.tifImg) this.$refs.tifImg.src = '';
+          }
+          if (this.isHpgl(this.selectedFile?.name)) {
+            this.hpglError = '';
+            this.hpglLoading = false;
+            if (this.$refs.hpglCanvas) {
+              const c = this.$refs.hpglCanvas;
+              const ctx = c.getContext('2d');
+              ctx && ctx.clearRect(0, 0, c.width, c.height);
+            }
+          }
+          if (this.isPdf(this.selectedFile?.name)) {
+            this.pdfError = '';
+            this.pdfLoading = false;
+            pdfDoc = null;
+            if (this.$refs.pdfCanvas) {
+              const c = this.$refs.pdfCanvas;
+              const ctx = c.getContext('2d');
+              ctx && ctx.clearRect(0, 0, c.width, c.height);
+            }
+          }
 
-  this.imageZoom = 1;
-  this.panX = 0;
-  this.panY = 0;
+          this.imageZoom = 1;
+          this.panX = 0;
+          this.panY = 0;
 
-  // set selected file
-  this.selectedFile = { ...file };
+          // set selected file
+          this.selectedFile = {
+            ...file
+          };
 
-  // reset page untuk file baru
-  if (this.isPdf(file?.name))  this.pdfPageNum = 1;
-  if (this.isTiff(file?.name)) this.tifPageNum = 1;
+          // reset page untuk file baru
+          if (this.isPdf(file?.name)) this.pdfPageNum = 1;
+          if (this.isTiff(file?.name)) this.tifPageNum = 1;
 
-  // load config stamp per file
-  this.loadStampConfigFor(this.selectedFile);
+          // load config stamp per file
+          this.loadStampConfigFor(this.selectedFile);
 
-  // ==== INISIALISASI BLOCKS PER FILE ====
-  this.blocksByPage = {};
-  this.initBlocksForFile(this.selectedFile);
+          // ==== INISIALISASI BLOCKS PER FILE ====
+          this.blocksByPage = {};
+          this.initBlocksForFile(this.selectedFile);
 
-  this.masks = [];
-  this.nextMaskId = 1;
+          this.masks = [];
+          this.nextMaskId = 1;
 
-  // load blok untuk halaman pertama file ini
-  this.loadMasksForCurrentPage();
+          // load blok untuk halaman pertama file ini
+          this.loadMasksForCurrentPage();
 
-  this.$nextTick(() => {
-    this.viewportVersion++;
-    if (this.isTiff(file?.name)) {
-      this.renderTiff(file.url);
-    } else if (this.isCad(file?.name)) {
-      this.renderCadOcct(file);
-    } else if (this.isHpgl(file?.name)) {
-      this.renderHpgl(file.url);
-    } else if (this.isPdf(file?.name)) {
-      this.renderPdf(file.url);
-    }
-  });
-},
+          this.$nextTick(() => {
+            this.viewportVersion++;
+            if (this.isTiff(file?.name)) {
+              this.renderTiff(file.url);
+            } else if (this.isCad(file?.name)) {
+              this.renderCadOcct(file);
+            } else if (this.isHpgl(file?.name)) {
+              this.renderHpgl(file.url);
+            } else if (this.isPdf(file?.name)) {
+              this.renderPdf(file.url);
+            }
+          });
+        },
 
 
         addPkgActivity(action, user, note = '') {
@@ -2886,6 +2956,25 @@ if (img) {
           });
         },
 
+        getCursorStyle(edge, rot) {
+          const map = ['n-resize', 'ne-resize', 'e-resize', 'se-resize', 's-resize', 'sw-resize', 'w-resize', 'nw-resize'];
+          const offsets = {
+            n: 0,
+            ne: 1,
+            e: 2,
+            se: 3,
+            s: 4,
+            sw: 5,
+            w: 6,
+            nw: 7
+          };
+          const offset = offsets[edge] || 0;
+          const rotInt = Math.round((rot || 0) / 45);
+          const idx = (offset + rotInt) % 8;
+          const finalIdx = (idx + 8) % 8;
+          return map[finalIdx];
+        },
+
         maskStyle(mask) {
           const {
             width: baseW,
@@ -2970,73 +3059,119 @@ if (img) {
           mask._centerY = cy;
           mask._startRot = mask.rotation;
 
+          // Calculate initial angle of mouse relative to center
+          const startAng = Math.atan2(e.clientY - cy, e.clientX - cx);
+          mask._startMouseAng = (startAng * 180) / Math.PI;
+
           window.addEventListener('mousemove', this._onMaskMouseMove);
           window.addEventListener('mouseup', this._onMaskMouseUp);
         },
 
         handleMaskMouseMove(ev) {
-  const mask = this.masks.find(m => m._mode);
-  if (!mask) return;
+          const mask = this.masks.find(m => m._mode);
+          if (!mask) return;
 
-  const dx = ev.clientX - mask._startX;
-  const dy = ev.clientY - mask._startY;
+          const dx = ev.clientX - mask._startX;
+          const dy = ev.clientY - mask._startY;
 
-  const baseW = mask._baseW || 1;
-  const baseH = mask._baseH || 1;
+          const baseW = mask._baseW || 1;
+          const baseH = mask._baseH || 1;
 
-  if (mask._mode === 'move') {
-    mask.u = mask._startU + dx / baseW;
-    mask.v = mask._startV + dy / baseH;
+          if (mask._mode === 'move') {
+            mask.u = mask._startU + dx / baseW;
+            mask.v = mask._startV + dy / baseH;
 
-  } else if (mask._mode === 'resize') {
-    const minW = 20 / baseW;
-    const minH = 20 / baseH;
+          } else if (mask._mode === 'resize') {
+            const rad = (mask.rotation || 0) * Math.PI / 180;
+            const cos = Math.cos(rad);
+            const sin = Math.sin(rad);
 
-    let u = mask._startU;
-    let v = mask._startV;
-    let w = mask._startWRel;
-    let h = mask._startHRel;
+            const Ux = {
+              x: cos,
+              y: sin
+            };
+            const Uy = {
+              x: -sin,
+              y: cos
+            };
 
-    if (mask._edge.includes('e')) {
-      w = Math.max(minW, mask._startWRel + dx / baseW);
-    }
-    if (mask._edge.includes('s')) {
-      h = Math.max(minH, mask._startHRel + dy / baseH);
-    }
-    if (mask._edge.includes('w')) {
-      u = mask._startU + dx / baseW;
-      w = Math.max(minW, mask._startWRel - dx / baseW);
-    }
-    if (mask._edge.includes('n')) {
-      v = mask._startV + dy / baseH;
-      h = Math.max(minH, mask._startHRel - dy / baseH);
-    }
+            const edge = mask._edge;
+            let sgnX = 0;
+            if (edge.includes('e')) sgnX = 1;
+            else if (edge.includes('w')) sgnX = -1;
 
-    mask.u = u;
-    mask.v = v;
-    mask.w = w;
-    mask.h = h;
+            let sgnY = 0;
+            if (edge.includes('s')) sgnY = 1;
+            else if (edge.includes('n')) sgnY = -1;
 
-  } else if (mask._mode === 'rotate') {
-    const ang = Math.atan2(
-      ev.clientY - mask._centerY,
-      ev.clientX - mask._centerX
-    );
-    const deg = (ang * 180) / Math.PI;
-    mask.rotation = deg;
-  }
-},
+            const w0 = mask._startWRel * baseW;
+            const h0 = mask._startHRel * baseH;
 
-      handleMaskMouseUp() {
-  const mask = this.masks.find(m => m._mode);
-  if (mask) mask._mode = null;
+            const cx0 = (mask._startU + mask._startWRel / 2) * baseW;
+            const cy0 = (mask._startV + mask._startHRel / 2) * baseH;
 
-  window.removeEventListener('mousemove', this._onMaskMouseMove);
-  window.removeEventListener('mouseup', this._onMaskMouseUp);
+            // Anchor F (Fixed Point)
+            const fx = cx0 - sgnX * (w0 / 2) * Ux.x - sgnY * (h0 / 2) * Uy.x;
+            const fy = cy0 - sgnX * (w0 / 2) * Ux.y - sgnY * (h0 / 2) * Uy.y;
 
-  // setelah drag / resize / rotate selesai → simpan ke cache per halaman
-  this.persistMasksToCurrentPage();
-},
+            // Vector H0 - F (Handle start relative to Anchor)
+            const hf_x = sgnX * w0 * Ux.x + sgnY * h0 * Uy.x;
+            const hf_y = sgnX * w0 * Ux.y + sgnY * h0 * Uy.y;
+
+            // Vector FM = (H0 - F) + D
+            const fmx = hf_x + dx;
+            const fmy = hf_y + dy;
+
+            const minW = 20;
+            const minH = 20;
+
+            let newW = w0;
+            let newH = h0;
+
+            if (sgnX !== 0) {
+              const proj = fmx * Ux.x + fmy * Ux.y;
+              newW = sgnX * proj;
+            }
+
+            if (sgnY !== 0) {
+              const proj = fmx * Uy.x + fmy * Uy.y;
+              newH = sgnY * proj;
+            }
+
+            newW = Math.max(minW, newW);
+            newH = Math.max(minH, newH);
+
+            // New Center
+            const cnew_x = fx + sgnX * (newW / 2) * Ux.x + sgnY * (newH / 2) * Uy.x;
+            const cnew_y = fy + sgnX * (newW / 2) * Ux.y + sgnY * (newH / 2) * Uy.y;
+
+            mask.w = newW / baseW;
+            mask.h = newH / baseH;
+            mask.u = (cnew_x / baseW) - mask.w / 2;
+            mask.v = (cnew_y / baseH) - mask.h / 2;
+
+          } else if (mask._mode === 'rotate') {
+            const ang = Math.atan2(
+              ev.clientY - mask._centerY,
+              ev.clientX - mask._centerX
+            );
+            const currentMouseAng = (ang * 180) / Math.PI;
+            const deltaAng = currentMouseAng - mask._startMouseAng;
+
+            mask.rotation = mask._startRot + deltaAng;
+          }
+        },
+
+
+        handleMaskMouseUp() {
+          const mask = this.masks.find(m => m._mode);
+          if (mask) mask._mode = null;
+
+          window.removeEventListener('mousemove', this._onMaskMouseMove);
+          window.removeEventListener('mouseup', this._onMaskMouseUp);
+
+          this.persistMasksToCurrentPage();
+        },
 
         removeActiveMask() {
           const active = this.getActiveMask();
@@ -3046,92 +3181,93 @@ if (img) {
           this.persistMasksToCurrentPage();
         },
 
-       updateBlocksUrlTemplate: `{{ route('share.files.updateBlocks', ['fileId' => '__FILE_ID__']) }}`,
+        updateBlocksUrlTemplate: `{{ route('share.files.updateBlocks', ['fileId' => '__FILE_ID__']) }}`,
 
-async saveBlocks(blocks, page) {
-  if (!this.selectedFile?.id) return;
+        async saveBlocks(blocks, page) {
+          if (!this.selectedFile?.id) return;
 
-  const url = this.updateBlocksUrlTemplate.replace('__FILE_ID__', this.selectedFile.id);
+          const url = this.updateBlocksUrlTemplate.replace('__FILE_ID__', this.selectedFile.id);
 
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-      },
-      body: JSON.stringify({ page, blocks }),
-    });
+          try {
+            const res = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+              },
+              body: JSON.stringify({
+                page,
+                blocks
+              }),
+            });
 
-    const json = await res.json();
-    if (!res.ok) {
-      throw new Error(json.message || 'Failed to save blocks position');
+            const json = await res.json();
+            if (!res.ok) {
+              throw new Error(json.message || 'Failed to save blocks position');
+            }
+
+            // update local selectedFile
+            const all = this.normalizeBlocksData(this.selectedFile.blocks_position || {});
+            all[String(page)] = blocks;
+            this.selectedFile.blocks_position = all;
+
+            this.blocksByPage[String(page)] = blocks;
+
+            const groups = this.pkg.files || {};
+            const currentKey = this.getFileKey(this.selectedFile);
+
+            for (const groupKey of Object.keys(groups)) {
+              const list = groups[groupKey] || [];
+              const idx = list.findIndex(f => this.getFileKey(f) === currentKey);
+              if (idx !== -1) {
+                const fileAll = this.normalizeBlocksData(list[idx].blocks_position || {});
+                fileAll[String(page)] = blocks;
+                list[idx].blocks_position = fileAll;
+                break;
+              }
+            }
+
+            toastSuccess('Saved', json.message || 'Blocks position saved.');
+          } catch (e) {
+            console.error(e);
+            toastError('Error', e.message || 'Failed to save blocks position');
+          }
+        },
+        saveCurrentMask() {
+          if (!this.selectedFile?.id) {
+            toastWarning('No file selected', 'Pilih file dulu sebelum menyimpan block.');
+            return;
+          }
+
+          if (this.masks.length === 0) {
+            toastWarning('No block', 'Tambah block dulu sebelum menyimpan.');
+            return;
+          }
+
+          const blocks = this.masks.map((m, idx) => ({
+            id: m.id ? `blk-${m.id}` : `blk-${idx + 1}`,
+            u: m.u,
+            v: m.v,
+            w: m.w,
+            h: m.h,
+            rotation: m.rotation,
+          }));
+
+          const page = this.currentPageForSelectedFile();
+          this.persistMasksToCurrentPage();
+
+          this.saveBlocks(blocks, page);
+        }
+      };
     }
-
-    // update local selectedFile
-    const all = this.normalizeBlocksData(this.selectedFile.blocks_position || {});
-    all[String(page)] = blocks;
-    this.selectedFile.blocks_position = all;
-
-    // sync juga ke cache per-halaman
-    this.blocksByPage[String(page)] = blocks;
-
-    // sync juga ke pkg.files (seperti kode Tuan)
-    const groups = this.pkg.files || {};
-    const currentKey = this.getFileKey(this.selectedFile);
-
-    for (const groupKey of Object.keys(groups)) {
-      const list = groups[groupKey] || [];
-      const idx = list.findIndex(f => this.getFileKey(f) === currentKey);
-      if (idx !== -1) {
-        const fileAll = this.normalizeBlocksData(list[idx].blocks_position || {});
-        fileAll[String(page)] = blocks;
-        list[idx].blocks_position = fileAll;
-        break;
-      }
-    }
-
-    toastSuccess('Saved', json.message || 'Blocks position saved.');
-  } catch (e) {
-    console.error(e);
-    toastError('Error', e.message || 'Failed to save blocks position');
-  }
-},
-          saveCurrentMask() {
-  if (!this.selectedFile?.id) {
-    toastWarning('No file selected', 'Pilih file dulu sebelum menyimpan block.');
-    return;
-  }
-
-  if (this.masks.length === 0) {
-    toastWarning('No block', 'Tambah block dulu sebelum menyimpan.');
-    return;
-  }
-
-  const blocks = this.masks.map((m, idx) => ({
-    id: m.id ? `blk-${m.id}` : `blk-${idx + 1}`,
-    u: m.u,
-    v: m.v,
-    w: m.w,
-    h: m.h,
-    rotation: m.rotation,
-  }));
-
-  const page = this.currentPageForSelectedFile();
-  this.persistMasksToCurrentPage();
-
-  this.saveBlocks(blocks, page);
- }
-  };   // <— TUTUP objek yang di-return
-}  
 
 
     // ========== SHARE DARI HALAMAN DETAIL ==========
     document.addEventListener('DOMContentLoaded',
       function() {
         const $ = window.jQuery;
-        if (!$) return; // jaga-jaga kalau jQuery belum ada
+        if (!$) return;
 
         const $shareModal = $('#shareModal');
         const $supplierListContainer = $('#supplierListContainer');
@@ -3211,8 +3347,7 @@ async saveBlocks(blocks, page) {
           });
         }
 
-        // 🔹 tombol di halaman detail untuk buka modal share
-        // pastikan Tuan punya button dengan id="btnOpenShareFromDetail" dan data-id="{{ $revisionId }}"
+        // tombol di halaman detail untuk buka modal share
         $('#btnOpenShareFromDetail').on('click', function() {
           const packageId = $(this).data('id');
           if (!packageId) {
@@ -3235,14 +3370,12 @@ async saveBlocks(blocks, page) {
           $shareModal.hide();
         });
 
-        // klik backdrop tutup modal
         $shareModal.on('click', function(e) {
           if ($(e.target).is($shareModal)) {
             $shareModal.hide();
           }
         });
 
-        // hapus supplier yang terpilih (badge kecil X)
         $(document).on('click', '.remove-select', function() {
           const id = $(this).data('id');
           $(this).parent().fadeOut(150, function() {
@@ -3292,21 +3425,19 @@ async saveBlocks(blocks, page) {
               }, 1500);
             },
             error: function(xhr) {
-    console.error('Failed to share:', xhr.responseText);
-    let msg = 'Failed to share package.';
+              console.error('Failed to share:', xhr.responseText);
+              let msg = 'Failed to share package.';
 
-    if (xhr.responseJSON && xhr.responseJSON.message) {
-        msg = xhr.responseJSON.message;
-    }
+              if (xhr.responseJSON && xhr.responseJSON.message) {
+                msg = xhr.responseJSON.message;
+              }
 
-    if (xhr.status === 422) {
-        // 💡 untuk kasus Feasibility tanpa block → WARNING
-        toastWarning('Warning', msg);
-    } else {
-        // selain itu benar-benar error (500, 401, dll)
-        toastError('Error', msg);
-    }
-},
+              if (xhr.status === 422) {
+                toastWarning('Warning', msg);
+              } else {
+                toastError('Error', msg);
+              }
+            },
 
             complete: function() {
               $this.prop('disabled', false).text('Share');
@@ -3315,7 +3446,6 @@ async saveBlocks(blocks, page) {
           });
         });
       });
-    
   </script>
 
   @endpush

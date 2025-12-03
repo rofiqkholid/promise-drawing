@@ -722,22 +722,17 @@ class DashboardController extends Controller
 
     public function getSaveEnv(Request $request)
     {
-        // 1. Base Query
         $query = DB::connection('sqlsrv')
             ->table('activity_logs as al')
             ->leftJoin('doc_package_revision_files as dprf', 'al.revision_id', '=', 'dprf.revision_id')
             ->where('al.activity_code', 'DOWNLOAD')
             ->whereIn('dprf.category', ['2D', 'ECN']);
 
-        // 2. Filter Tanggal Akumulatif (Seperti getPhaseStatus)
-        // Logika: Ambil semua data sampai dengan tanggal akhir (<= date_end)
-        // Abaikan date_start
+        
         if ($request->filled('date_end')) {
-            // Kita tambahkan jam 23:59:59 agar mencakup seluruh hari tersebut
             $query->where('al.created_at', '<=', $request->date_end . ' 23:59:59');
         }
 
-        // 3. Filter Customer (Logika WhereIn untuk JSON)
         if ($request->filled('customer')) {
             $customers = $request->customer;
             $query->where(function ($q) use ($customers) {
@@ -747,7 +742,6 @@ class DashboardController extends Controller
             });
         }
 
-        // 4. Filter Model (Logika WhereIn untuk JSON)
         if ($request->filled('model')) {
             $models = $request->model;
             $query->where(function ($q) use ($models) {
@@ -757,7 +751,6 @@ class DashboardController extends Controller
             });
         }
 
-        // 5. Filter Part Group (Logika WhereIn untuk JSON)
         if ($request->filled('part_group')) {
             $partGroups = $request->part_group;
             $query->where(function ($q) use ($partGroups) {
@@ -767,15 +760,12 @@ class DashboardController extends Controller
             });
         }
 
-        // 6. Eksekusi Calculation
         $data = $query->selectRaw('COUNT(al.activity_code) as paper, COUNT(al.activity_code) * 186 as harga')
             ->first();
 
-        // Handle null values
         $paperCount = $data->paper ?? 0;
         $hargaTotal = $data->harga ?? 0;
 
-        // Rumus Environment
         $saveTree = $paperCount / 80000;
         $co2Reduced = $saveTree * 22;
 

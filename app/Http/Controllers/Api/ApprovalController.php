@@ -58,7 +58,7 @@ class ApprovalController extends Controller
             $q->where('dsc.name', $req->category);
         }
         if ($req->filled('status') && $req->status !== 'All') {
-            // kalau ada data lama 'waiting', tetap ikut
+            
             $statusMapping = [
                 'Waiting'  => ['pending', 'waiting'],
                 'Approved' => ['approved'],
@@ -69,10 +69,10 @@ class ApprovalController extends Controller
                 $q->whereIn('dpr.revision_status', $vals);
             }
         }
-        // filter Project Status (Feasibility, SOP, dsb)
+        
         if ($req->filled('project_status')) {
             $ps = $req->project_status;
-            if (strcasecmp($ps, 'All') !== 0) {   // beda dengan "All" -> baru filter
+            if (strcasecmp($ps, 'All') !== 0) {   
                 $q->where('ps.name', $ps);
             }
         }
@@ -102,14 +102,14 @@ class ApprovalController extends Controller
 
     public function filters(Request $request): JsonResponse
     {
-        // ====== MODE SELECT2 (server-side) ======
+        
         if ($request->filled('select2')) {
             $field   = $request->get('select2');
             $q       = trim($request->get('q', ''));
             $page    = max(1, (int)$request->get('page', 1));
             $perPage = 20;
 
-            // dependent params
+            
             $customerCode = $request->get('customer_code');
             $docTypeName  = $request->get('doc_type');
 
@@ -182,7 +182,7 @@ class ApprovalController extends Controller
                     $items = $filtered->slice(($page - 1) * $perPage, $perPage)->values();
                     break;
 
-                case 'project_status':   // <--- BARU
+                case 'project_status':   
                     $builder = DB::table('project_status as ps')
                         ->selectRaw('ps.name AS id, ps.name AS text')
                         ->when($q, fn($x) => $x->where('ps.name', 'like', "%{$q}%"))
@@ -360,7 +360,7 @@ class ApprovalController extends Controller
             'pg.code_part_group as part_group',
             'dpr.ecn_no as ecn_no',
             'dpr.revision_no as revision',
-            'dpr.receipt_date as receipt_date',   // <--- NEW
+            'dpr.receipt_date as receipt_date',   
             DB::raw("
             CASE COALESCE(pa.decision, dpr.revision_status)
                 WHEN 'pending'  THEN 'Waiting'
@@ -379,7 +379,7 @@ class ApprovalController extends Controller
             'dpr.updated_at',
             'pa.requested_at',
             'pa.decided_at',
-            'dpr.receipt_date',      // <--- NEW
+            'dpr.receipt_date',     
             'dpr.revision_status',
             'c.code',
             'm.name',
@@ -415,12 +415,12 @@ class ApprovalController extends Controller
 
     public function showDetail(string $id)
     {
-        // 1. Tentukan revisionId sebenarnya
+        
         if (ctype_digit($id)) {
-            // URL lama /approval/92
+            
             $revisionId = (int) $id;
         } else {
-            // URL baru /approval/{hash}
+            
             try {
                 $revisionId = decrypt($id);
             } catch (DecryptException $e) {
@@ -428,7 +428,7 @@ class ApprovalController extends Controller
             }
         }
 
-        // 2. Ambil data revisi
+     
         $revision = DB::table('doc_package_revisions as dpr')
             ->leftJoin('users as ou', 'ou.id', '=', 'dpr.obsolete_by')
             ->leftJoin('departments as od', 'od.id', '=', 'ou.id_dept')
@@ -444,12 +444,12 @@ class ApprovalController extends Controller
             abort(404, 'Approval request not found.');
         }
 
-        // --- Tambahan: data untuk stamp ---
+       
         $receiptDate = $revision->receipt_date
             ? Carbon::parse($revision->receipt_date)
             : null;
 
-        // "Date Upload" di stamp = created_at di doc_package_revisions
+      
         $uploadDateRevision = $revision->created_at
             ? Carbon::parse($revision->created_at)
             : null;
@@ -460,9 +460,7 @@ class ApprovalController extends Controller
             ? Carbon::parse($revision->obsolete_at)
             : null;
 
-        // --- Tambahan khusus format stamp OBSOLETE (Date / Name / Dept.) ---
-
-        // ambil approver terakhir untuk revisi ini (untuk Nama di stamp)
+     
         $lastApproval = DB::table('package_approvals as pa')
             ->leftJoin('users as u', 'u.id', '=', 'pa.decided_by')
             ->leftJoin('departments as d', 'd.id', '=', 'u.id_dept')
@@ -516,7 +514,7 @@ class ApprovalController extends Controller
             abort(404, 'Package not found.');
         }
 
-        // 4. File per kategori + icon berdasarkan file extension
+     
         $fileRows = DB::table('doc_package_revision_files')
             ->where('revision_id', $revisionId)
             ->select(
@@ -532,7 +530,7 @@ class ApprovalController extends Controller
             ->get();
 
 
-        // daftar extension yang dipakai
+        
         $extList = $fileRows
             ->map(fn($r) => strtolower(pathinfo($r->name, PATHINFO_EXTENSION)))
             ->filter()
@@ -541,7 +539,7 @@ class ApprovalController extends Controller
 
         $extUpper = $extList->map(fn($e) => strtoupper($e));
 
-        // ambil icon dari master file_extensions
+        
         $extIcons = $extUpper->isEmpty()
             ? []
             : FileExtensions::whereIn('code', $extUpper)
@@ -556,7 +554,7 @@ class ApprovalController extends Controller
                     $url = URL::signedRoute('preview.file', ['id' => $item->id]);
 
                     $ext = strtolower(pathinfo($item->name, PATHINFO_EXTENSION));
-                    $iconSrc = $extIcons[$ext] ?? null; // bisa null kalau tidak ada di master
+                    $iconSrc = $extIcons[$ext] ?? null; 
 
                     return [
                         'id'            => $item->id,
@@ -566,17 +564,17 @@ class ApprovalController extends Controller
                         'ori_position'  => $item->ori_position,
                         'copy_position' => $item->copy_position,
                         'obslt_position' => $item->obslt_position,
-                        'size'          => $item->file_size, // <--- ukuran (byte) dari DB
+                        'size'          => $item->file_size, 
                     ];
                 });
             })
             ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
 
-        // 5. Activity logs dari tabel activity_logs
+       
         $logs = $this->buildApprovalLogs($revision->package_id, $revisionId);
 
-        // 6. Inject fallback log "uploaded" kalau belum ada
+    
         $uploaderName   = $package->uploader_name ?? 'System';
         $uploadedAt     = optional($package->created_at);
         $hasUploadedLog = $logs->contains(fn($log) => ($log['action'] ?? '') === 'uploaded');
@@ -591,11 +589,11 @@ class ApprovalController extends Controller
                 'time_ts' => $uploadedAt->timestamp,
             ]);
 
-            // supaya urutannya tetap terbaru di atas
+          
             $logs = $logs->sortByDesc('time_ts')->values();
         }
 
-        // 7. Data yang dikirim ke Blade
+   
         $detail = [
             'metadata' => [
                 'customer'    => $package->customer,
@@ -618,7 +616,9 @@ class ApprovalController extends Controller
             'files'        => $files,
             'activityLogs' => $logs,
 
-            // --- Tambahan: block khusus untuk stamp di preview 2D ---
+             'is_finish'    => (int) ($revision->is_finish ?? 0),
+
+            
             'stamp'        => [
                 'receipt_date' => $receiptDate?->toDateString(),
                 'upload_date'  => $uploadDateRevision?->toDateString(),
@@ -628,15 +628,15 @@ class ApprovalController extends Controller
             ],
         ];
 
-        // selalu kirim hash baru ke Blade untuk dipakai approve/reject
+        
         $hash = encrypt($revisionId);
 
-        // --- Tambahan: ambil format label stamp (prefix/suffix) dari master ---
+       
         $stampFormats = StampFormat::where('is_active', true)
             ->orderBy('id')
             ->get();
 
-        // Mendapatkan kode departemen dan nama pengguna untuk teks stamp "controlled copy"
+       
         $userDeptCode = null;
         if (Auth::check() && Auth::user()->id_dept) {
             $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
@@ -659,7 +659,7 @@ class ApprovalController extends Controller
 
     public function updateFileStampPosition(Request $request, int $fileId): JsonResponse
     {
-        // 0..5 sesuai mapping posisi yang kita sepakati
+       
         $data = $request->validate([
             'ori_position'   => 'nullable|integer|min:0|max:5',
             'copy_position'  => 'nullable|integer|min:0|max:5',
@@ -671,7 +671,7 @@ class ApprovalController extends Controller
             return response()->json(['message' => 'File not found.'], 404);
         }
 
-        // hanya update field yang dikirim
+        
         if (array_key_exists('ori_position', $data)) {
             $file->ori_position = $data['ori_position'];
         }
@@ -710,7 +710,7 @@ class ApprovalController extends Controller
         try {
             DB::beginTransaction();
 
-            // --- ambil revisi (tambahkan ecn_no) ---
+          
             $revision = DB::table('doc_package_revisions')
                 ->where('id', $revisionId)
                 ->lockForUpdate()
@@ -741,7 +741,7 @@ class ApprovalController extends Controller
             $isOlder   = !is_null($currentNo) && $revNo < (int) $currentNo;
 
             if (!$isOlder) {
-                // obsolete-kan approved aktif lainnya
+              
                 DB::table('doc_package_revisions')
                     ->where('package_id', $packageId)
                     ->where('id', '!=', $revisionId)
@@ -792,7 +792,7 @@ class ApprovalController extends Controller
                     'updated_at' => Carbon::now(),
                 ]);
 
-            // --- ambil info package (tambahkan part_group) ---
+          
             $packageInfo = DB::table('doc_packages as dp')
                 ->join('customers as c', 'dp.customer_id', '=', 'c.id')
                 ->join('models as m', 'dp.model_id', '=', 'm.id')
@@ -843,7 +843,7 @@ class ApprovalController extends Controller
             $token       = str_replace('=', '-', $rawToken);
             $downloadUrl = route('file-manager.export.detail', ['id' => $token]);
 
-            // --- SUSUN STRING PACKAGE DATA (tanpa rev) ---
+          
             $segments = array_filter([
                 $packageInfo->customer ?? null,
                 $packageInfo->model ?? null,
@@ -856,7 +856,7 @@ class ApprovalController extends Controller
 
             $packageData = implode(' - ', $segments);
 
-            // --- data untuk email ---
+            
             $approvalData = [
                 'package_data'  => $packageData,
                 'revision_id'   => $revision->id,
@@ -879,7 +879,7 @@ class ApprovalController extends Controller
             ];
 
             try {
-                // pakai helper, otomatis filter Feasibility vs non-Feasibility
+               
                 $users = $this->getNotificationUsersForPackage($packageId);
 
                 foreach ($users as $user) {
@@ -933,7 +933,7 @@ class ApprovalController extends Controller
 
         $userId = Auth::user()->id ?? 1;
 
-        // decrypt hash -> revisionId (int)
+       
         try {
             $revisionId = decrypt($id);
         } catch (DecryptException $e) {
@@ -994,7 +994,7 @@ class ApprovalController extends Controller
                 'user_id'       => $userId,
                 'meta'          => [
                     'note'            => $request->note,
-                    // Data Snapshot
+                   
                     'customer_code'   => $packageInfo->customer,
                     'model_name'      => $packageInfo->model,
                     'part_no'         => $packageInfo->part_no,
@@ -1058,59 +1058,59 @@ class ApprovalController extends Controller
             'al.created_at',
             'u.name as user_name'
         ])
-        ->map(function ($row) {
-            $code = strtoupper($row->activity_code ?? '');
-            
-            // Mapping Action Text
-            $action = match(true) {
-                str_starts_with($code, 'UPLOAD') => 'uploaded',
-                str_starts_with($code, 'APPROVE') => 'approved',
-                str_starts_with($code, 'REJECT') => 'rejected',
-                str_starts_with($code, 'ROLLBACK') => 'rollbacked',
-                str_starts_with($code, 'SHARE') => 'shared',
-                str_starts_with($code, 'DOWNLOAD') => 'downloaded',
-                default => strtolower($code ?: 'info')
-            };
+            ->map(function ($row) {
+                $code = strtoupper($row->activity_code ?? '');
 
-            // --- LOGIKA PARSING META (HYBRID SUPPORT) ---
-            $rawMeta = $row->meta;
-            $metaArr = [];
-
-            if (is_array($rawMeta)) {
-                $metaArr = $rawMeta;
-            } elseif (is_string($rawMeta)) {
-                $decoded = json_decode($rawMeta, true);
-                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                    $metaArr = $decoded;
-                } else {
-                    $metaArr = ['note' => $rawMeta];
-                }
-            }
-
-            return [
-                'id'      => (int) $row->id,
-                'action'  => $action,
-                'user'    => $row->user_name ?? 'System',
-                'note'    => $metaArr['note'] ?? '',
-                'time'    => optional($row->created_at)->format('Y-m-d H:i'),
                 
-                // Kirim Snapshot Data ke Frontend
-                'snapshot' => [
-                    'part_no'     => $metaArr['part_no'] ?? null,
-                    'revision_no' => $metaArr['revision_no'] ?? null,
-                    'ecn_no'      => $metaArr['ecn_no'] ?? null,
-                    'customer'    => $metaArr['customer_code'] ?? null,
-                    'model'       => $metaArr['model_name'] ?? null,
-                ]
-            ];
-        });
+                $action = match (true) {
+                    str_starts_with($code, 'UPLOAD') => 'uploaded',
+                    str_starts_with($code, 'APPROVE') => 'approved',
+                    str_starts_with($code, 'REJECT') => 'rejected',
+                    str_starts_with($code, 'ROLLBACK') => 'rollbacked',
+                    str_starts_with($code, 'SHARE') => 'shared',
+                    str_starts_with($code, 'DOWNLOAD') => 'downloaded',
+                    default => strtolower($code ?: 'info')
+                };
+
+              
+                $rawMeta = $row->meta;
+                $metaArr = [];
+
+                if (is_array($rawMeta)) {
+                    $metaArr = $rawMeta;
+                } elseif (is_string($rawMeta)) {
+                    $decoded = json_decode($rawMeta, true);
+                    if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                        $metaArr = $decoded;
+                    } else {
+                        $metaArr = ['note' => $rawMeta];
+                    }
+                }
+
+                return [
+                    'id'      => (int) $row->id,
+                    'action'  => $action,
+                    'user'    => $row->user_name ?? 'System',
+                    'note'    => $metaArr['note'] ?? '',
+                    'time'    => optional($row->created_at)->format('Y-m-d H:i'),
+
+                 
+                    'snapshot' => [
+                        'part_no'     => $metaArr['part_no'] ?? null,
+                        'revision_no' => $metaArr['revision_no'] ?? null,
+                        'ecn_no'      => $metaArr['ecn_no'] ?? null,
+                        'customer'    => $metaArr['customer_code'] ?? null,
+                        'model'       => $metaArr['model_name'] ?? null,
+                    ]
+                ];
+            });
     }
 
     public function rollback(Request $request, string $id): JsonResponse
     {
         $userId = Auth::user()->id ?? 1;
 
-        // decrypt hash -> revisionId (int)
+       
         try {
             $revisionId = decrypt($id);
         } catch (DecryptException $e) {
@@ -1136,16 +1136,15 @@ class ApprovalController extends Controller
 
             $packageId = (int) $revision->package_id;
 
-            // Simpan status lama untuk log
-            $previousStatus = ucfirst($revision->revision_status); 
+           
+            $previousStatus = ucfirst($revision->revision_status);
 
-            // flag: ini revisi approved & aktif (bukan obsolete)?
+            
             $wasActiveApproved = (
                 $revision->revision_status === 'approved'
                 && (int) $revision->is_obsolete === 0
             );
 
-            // Selalu ubah revisi ini jadi pending + obsolete
             DB::table('doc_package_revisions')
                 ->where('id', $revisionId)
                 ->update([
@@ -1156,7 +1155,7 @@ class ApprovalController extends Controller
                     'updated_at'      => Carbon::now(),
                 ]);
 
-            // Re-aktivasi approved revision sebelumnya (jika ada)
+           
             if ($wasActiveApproved) {
                 $prev = DB::table('doc_package_revisions as r')
                     ->join('package_approvals as pa', 'pa.revision_id', '=', 'r.id')
@@ -1205,7 +1204,6 @@ class ApprovalController extends Controller
                     'updated_at' => Carbon::now(),
                 ]);
 
-            // Ambil Info Package untuk Snapshot Log
             $packageInfo = DB::table('doc_packages as dp')
                 ->join('customers as c', 'dp.customer_id', '=', 'c.id')
                 ->join('models as m', 'dp.model_id', '=', 'm.id')
@@ -1221,7 +1219,7 @@ class ApprovalController extends Controller
                     'dtg.name as doc_type'
                 ]);
 
-            // Simpan Log dengan Snapshot Lengkap
+            
             ActivityLog::create([
                 'scope_type'    => 'package',
                 'scope_id'      => $packageId,
@@ -1230,10 +1228,10 @@ class ApprovalController extends Controller
                 'user_id'       => $userId,
                 'meta'          => [
                     'note'            => 'Rollback performed (Reset to Waiting)',
-                    'previous_status' => $previousStatus, // Approved / Rejected
+                    'previous_status' => $previousStatus, 
                     'current_status'  => 'Waiting',
+
                     
-                    // Snapshot Data 
                     'customer_code'   => $packageInfo->customer,
                     'model_name'      => $packageInfo->model,
                     'part_no'         => $packageInfo->part_no,
@@ -1262,16 +1260,27 @@ class ApprovalController extends Controller
     {
         $currentUser = Auth::user();
 
-        $validated = $request->validate([
-            'revision_id' => ['required', 'integer', 'exists:doc_package_revisions,id'],
+        $request->validate([
+            'revision_id' => ['required'],
             'note'        => ['required', 'string', 'max:500'],
         ]);
 
-        $revisionId = (int) $validated['revision_id'];
+        $inputRevisionId = $request->input('revision_id');
+        $revisionId = null;
+
+        if (is_numeric($inputRevisionId)) {
+            $revisionId = (int) $inputRevisionId;
+        } else {
+            try {
+                $revisionId = decrypt($inputRevisionId);
+            } catch (\Exception $e) {
+                return response()->json(['message' => 'Invalid revision ID.'], 404);
+            }
+        }
 
         DB::beginTransaction();
         try {
-            // Fetch Revision + Package + Part Group Data
+            
             $revision = DB::table('doc_package_revisions as dpr')
                 ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
                 ->join('customers as c', 'dp.customer_id', '=', 'c.id')
@@ -1299,7 +1308,7 @@ class ApprovalController extends Controller
                 return response()->json(['message' => 'Revision not found.'], 404);
             }
 
-            // Get Department IDs for Purchasing / PUD
+        
             $deptRows = DB::table('departments')
                 ->whereIn('code', ['PURCHASING', 'PUD'])
                 ->get(['id', 'code']);
@@ -1310,11 +1319,11 @@ class ApprovalController extends Controller
                 ], 422);
             }
 
-            $deptIds  = $deptRows->pluck('id')->all();             
-            $deptCode = $deptRows->pluck('code')->implode(', ');   
+            $deptIds  = $deptRows->pluck('id')->all();
+            $deptCode = $deptRows->pluck('code')->implode(', ');
             $shareToDeptStr = '|' . implode('|', $deptIds) . '|';
 
-            // Update doc_package_revisions (Inside Transaction)
+
             DB::table('doc_package_revisions')
                 ->where('id', $revisionId)
                 ->update([
@@ -1323,26 +1332,25 @@ class ApprovalController extends Controller
                     'updated_at'    => Carbon::now(),
                 ]);
 
-            // Fetch Target Users
+            
             $recipients = User::query()
                 ->whereIn('id_dept', $deptIds)
                 ->whereNotNull('email')
                 ->get();
 
-            // CRITICAL VALIDATION
             if ($recipients->isEmpty()) {
-                DB::rollBack(); 
+                DB::rollBack();
                 return response()->json([
                     'message' => 'Share failed: No active users found in the target departments.',
                 ], 422);
             }
 
-            // Create Recipient List String (Snapshot)
-            $recipientNames = $recipients->map(function($u) {
+         
+            $recipientNames = $recipients->map(function ($u) {
                 return "{$u->name} ({$u->email})";
             })->implode(', ');
 
-            // Send Emails (Side effect)
+            
             $shareData = [
                 'customer'    => $revision->customer,
                 'model'       => $revision->model,
@@ -1350,7 +1358,7 @@ class ApprovalController extends Controller
                 'doc_type'    => $revision->doc_type,
                 'category'    => $revision->category,
                 'revision_no' => $revision->revision_no,
-                'note'        => $validated['note'],
+                'note'        => $request->input('note'),
                 'shared_by'   => $currentUser->name ?? 'System',
                 'shared_at'   => now()->format('Y-m-d H:i'),
                 'dept_codes'  => $deptCode,
@@ -1369,7 +1377,7 @@ class ApprovalController extends Controller
                 }
             }
 
-            // Create Activity Log (Only if successful)
+          
             ActivityLog::create([
                 'scope_type'    => 'package',
                 'scope_id'      => $revision->package_id,
@@ -1377,17 +1385,17 @@ class ApprovalController extends Controller
                 'activity_code' => 'SHARE_INTERNAL',
                 'user_id'       => $currentUser->id,
                 'meta'          => [
-                    // Sender Info
+                   
                     'shared_by'       => $currentUser->name,
                     'sender_email'    => $currentUser->email,
-                    
-                    // Share Info
-                    'note'            => $validated['note'],
-                    'shared_to_dept'  => $deptCode, 
+
+                   
+                    'note'            => $request->input('note'),
+                    'shared_to_dept'  => $deptCode,
                     'recipients'      => $recipientNames,
                     'recipient_count' => $recipients->count(),
-                    
-                    // Item Snapshot
+
+                  
                     'part_no'         => $revision->part_no,
                     'customer_code'   => $revision->customer,
                     'model_name'      => $revision->model,
@@ -1403,11 +1411,10 @@ class ApprovalController extends Controller
             return response()->json([
                 'message' => 'Revision successfully shared to Purchasing/PUD departments.',
             ]);
-
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('Share Internal Error: ' . $e->getMessage());
-            
+
             return response()->json([
                 'message' => 'System error occurred while sharing.',
                 'error'   => $e->getMessage()
@@ -1447,9 +1454,7 @@ class ApprovalController extends Controller
                     ->where('pa.rn', '=', 1);
             })
             ->where('dpr.revision_status', '<>', 'draft');
-        // ->whereColumn('dp.current_revision_id', 'dpr.id'); // kalau mau hanya current
-
-        // filter sama seperti sebelumnya
+       
         if ($request->filled('customer') && $request->customer !== 'All') {
             $query->where('c.code', $request->customer);
         }
@@ -1470,7 +1475,7 @@ class ApprovalController extends Controller
         }
 
 
-        // hanya Approved
+       
         $query->whereRaw("COALESCE(pa.decision, dpr.revision_status) = 'approved'");
 
         $rowsDb = $query->select(
@@ -1507,16 +1512,16 @@ class ApprovalController extends Controller
             $ecnNo      = $r->ecn_no ?? '';
             $revisionNo = $r->revision_no ?? '';
 
-            // handle kolom BIT -> string '1' atau '0'
+            
             if (is_null($r->is_finish)) {
-                // kalau null mau dianggap 0 juga
+               
                 $isFinish = '0';
             } else {
-                // true / 1 / '1' -> '1', selain itu -> '0'
+               
                 $isFinish = $r->is_finish ? '1' : '0';
             }
 
-            // urutan kolom (tanpa No, karena No ditambah di Export class)
+           
             $rows[] = [
                 $r->customer,
                 $r->model,
@@ -1545,9 +1550,9 @@ class ApprovalController extends Controller
 
     private function formatObsoleteDate(Carbon $date): string
     {
-        $month = $date->format('M');       // "Oct"
-        $day   = (int) $date->format('j'); // 25
-        $year  = $date->format('Y');       // 2025
+        $month = $date->format('M');      
+        $day   = (int) $date->format('j');
+        $year  = $date->format('Y');      
 
         if (in_array($day % 100, [11, 12, 13], true)) {
             $suffix = 'th';
@@ -1567,7 +1572,7 @@ class ApprovalController extends Controller
     private function getFeasibilityStatusId(): ?int
     {
         return DB::table('project_status')
-            ->where('name', 'Feasibility Study')   // sesuaikan kalau nama status beda
+            ->where('name', 'Feasibility Study')   
             ->value('id');
     }
 
@@ -1586,24 +1591,13 @@ class ApprovalController extends Controller
         return (int) $statusId === (int) $feasId;
     }
 
-    //  private function userHasAnyRole(User $user, array $roleNames): bool
-    // {
-    //     if (!$user) {
-    //         return false;
-    //     }
-
-    //     return DB::table('user_roles as ur')
-    //         ->join('roles as r', 'ur.role_id', '=', 'r.id')
-    //         ->where('ur.user_id', $user->id)
-    //         ->whereIn('r.role_name', $roleNames)   
-    //         ->exists();
-    // }
+    
 
     private function getNotificationUsersForPackage(int $packageId)
     {
         $isFeasibility = $this->isFeasibilityPackage($packageId);
 
-        // base query = logic lama (semua user punya email, exclude role_id 5)
+       
         $query = User::select('users.*')
             ->distinct()
             ->leftJoin('user_roles', 'user_roles.user_id', '=', 'users.id')
@@ -1614,8 +1608,8 @@ class ApprovalController extends Controller
             });
 
         if ($isFeasibility) {
-            // FEASIBILITY: batasi ke role yang punya akses Feasibility (sama seperti ExportController)
-            $allowedRoles = ['ENG']; // sesuaikan dengan data nyata
+          
+            $allowedRoles = ['ENG'];
 
             $query->whereExists(function ($q2) use ($allowedRoles) {
                 $q2->select(DB::raw(1))

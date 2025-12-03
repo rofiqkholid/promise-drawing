@@ -292,7 +292,6 @@
             this.dateStart = '';
             this.dateEnd = '';
 
-            // Tambahan variable tahun
             this.trendYear = document.getElementById('trendYearInput') ? document.getElementById('trendYearInput').value : new Date().getFullYear();
 
             this.selectedCustomers = [];
@@ -309,13 +308,20 @@
             this.initThemeListener();
             this.initDateRange();
             this.initSelect2();
-            this.loadCards();
-            this.loadActivityLog();
-            this.loadMonitoringChart();
-            this.loadTrendChart();
-            this.loadPhaseStatusChart();
             this.loadSaveEnv();
             this.attachButtonEvents();
+            this.loadMonitoringChart();
+            this.loadTrendChart();
+            this.loadActivityLog();
+            this.loadPhaseStatusChart();
+            this.loadCards();
+
+            setInterval(() => this.loadCards(), 10000);
+            setInterval(() => this.loadMonitoringChart(), 10000);
+            setInterval(() => this.loadTrendChart(), 10000);
+            setInterval(() => this.loadActivityLog(), 10000);
+            setInterval(() => this.loadPhaseStatusChart(), 10000);
+            setInterval(() => this.loadSaveEnv(), 10000);
         }
 
         getFilterParams() {
@@ -347,18 +353,72 @@
             return [year, month, day].join('-');
         }
 
+        parseStorageString(str) {
+            if (!str || str === 'N/A') return {
+                value: 0,
+                unit: ''
+            };
+            const value = parseFloat(str);
+            const unit = str.replace(/[0-9.]/g, '').trim();
+            return {
+                value: isNaN(value) ? 0 : value,
+                unit: unit ? ' ' + unit : ''
+            };
+        }
+
+        animateCount(el, to, suffix = '', decimals = 0) {
+            if (to === null || to === undefined || isNaN(to)) {
+                el.textContent = (0).toLocaleString('id-ID', {
+                    minimumFractionDigits: decimals,
+                    maximumFractionDigits: decimals
+                }) + suffix;
+                return;
+            }
+
+            const target = parseFloat(to);
+            let from = 0;
+            const duration = 1500;
+            const startTime = performance.now();
+
+            const update = (currentTime) => {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const ease = 1 - Math.pow(1 - progress, 4);
+
+                let current = from + (target - from) * ease;
+
+                el.textContent = current.toLocaleString('id-ID', {
+                    minimumFractionDigits: decimals,
+                    maximumFractionDigits: decimals
+                }) + suffix;
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    el.textContent = target.toLocaleString('id-ID', {
+                        minimumFractionDigits: decimals,
+                        maximumFractionDigits: decimals
+                    }) + suffix;
+                }
+            };
+
+            requestAnimationFrame(update);
+        }
+
         async loadCards() {
             const fetchText = async (url, elemId) => {
                 const el = document.getElementById(elemId);
                 if (!el) return;
-                el.textContent = '...';
+
                 try {
                     const res = await fetch(url);
                     const data = await res.json();
-                    let countVal = (data && data.status === 'success') ? data.count : 0;
-                    el.textContent = countVal;
+                    let countVal = (data && data.status === 'success') ? parseFloat(data.count) : 0;
+                    if (isNaN(countVal)) countVal = 0;
+
+                    this.animateCount(el, countVal);
                 } catch (e) {
-                    el.textContent = 'Error';
+                    el.textContent = '0';
                 }
             };
 
@@ -367,58 +427,78 @@
             fetchText('/api/download-count', 'downloadCount');
             fetchText('/api/doc-count', 'docCount');
 
-            const u = document.getElementById('usedSpace'),
-                t = document.getElementById('totalSpace');
+            const u = document.getElementById('usedSpace');
+            const t = document.getElementById('totalSpace');
+
             if (u && t) {
                 try {
                     const res = await fetch('/api/disk-space');
                     const data = await res.json();
+
                     if (data.status === 'success') {
-                        u.textContent = data.used;
-                        t.textContent = data.total;
+                        const usedData = this.parseStorageString(data.used);
+                        const totalData = this.parseStorageString(data.total);
+
+                        this.animateCount(u, usedData.value, usedData.unit);
+                        this.animateCount(t, totalData.value, totalData.unit);
+                    } else {
+                        u.textContent = '0 B';
+                        t.textContent = '0 B';
                     }
                 } catch (e) {
-                    u.textContent = 'Err';
+                    console.error("Error loading disk space", e);
+                    u.textContent = '0 B';
+                    t.textContent = '0 B';
                 }
             }
         }
 
         async loadSaveEnv() {
             try {
-                // 1. Ambil parameter filter saat ini (termasuk tanggal)
                 const params = this.getFilterParams();
-
-                // 2. Kirim request dengan parameter query string
                 const response = await fetch(`{{ route('api.get-save-env') }}?${params.toString()}`);
                 const data = await response.json();
 
-                // Update DOM elements (kode lama tetap sama)
+                const getVal = (val) => {
+                    if (typeof val === 'number') return val;
+                    if (typeof val === 'string' && val.trim() !== '') return parseFloat(val);
+                    return 0;
+                };
+
                 const elPaper = document.getElementById('ecoPaper');
-                if (elPaper) elPaper.textContent = parseInt(data.paper || 0).toLocaleString('id-ID');
+                if (elPaper) {
+                    this.animateCount(elPaper, getVal(data.paper), '', 0);
+                }
 
                 const elCost = document.getElementById('ecoCost');
                 if (elCost) {
-                    let harga = parseInt(data.harga || 0);
-                    if (harga > 1000000) {
-                        elCost.textContent = (harga / 1000000).toFixed(1) + 'Jt';
-                    } else if (harga > 1000) {
-                        elCost.textContent = (harga / 1000).toFixed(1) + 'K';
-                    } else {
-                        elCost.textContent = harga.toLocaleString('id-ID');
+                    let harga = getVal(data.harga);
+                    let displayVal = harga;
+                    let suffix = '';
+                    let dec = 0;
+
+                    if (harga >= 1000000) {
+                        displayVal = harga / 1000000;
+                        suffix = 'Jt';
+                        dec = 1;
+                    } else if (harga >= 1000) {
+                        displayVal = harga / 1000;
+                        suffix = 'K';
+                        dec = 1;
                     }
+
+                    this.animateCount(elCost, displayVal, suffix, dec);
                 }
 
                 const elTrees = document.getElementById('ecoTrees');
-                if (elTrees) elTrees.textContent = parseFloat(data.save_tree || 0).toLocaleString('id-ID', {
-                    minimumFractionDigits: 5,
-                    maximumFractionDigits: 5
-                });
+                if (elTrees) {
+                    this.animateCount(elTrees, getVal(data.save_tree), '', 5);
+                }
 
                 const elCO2 = document.getElementById('ecoCO2');
-                if (elCO2) elCO2.textContent = parseFloat(data.co2_reduced || 0).toLocaleString('id-ID', {
-                    minimumFractionDigits: 3,
-                    maximumFractionDigits: 3
-                });
+                if (elCO2) {
+                    this.animateCount(elCO2, getVal(data.co2_reduced), '', 3);
+                }
 
             } catch (error) {
                 console.error("Failed to load environment stats", error);
@@ -452,7 +532,7 @@
             const ctx = document.getElementById('monitoringChart').getContext('2d');
             if (this.monitoringChart) this.monitoringChart.destroy();
 
-            const labels = data.map(item => `${item.customer_name} - ${item.model_name}`);
+            const labels = data.map(item => `${item.customer_name} - ${item.model_name} - ${item.project_status}`);
             const planData = data.map(item => parseFloat(item.plan_count));
             const actualData = data.map(item => parseFloat(item.actual_count));
             const percentageData = data.map(item => parseFloat(item.percentage));
@@ -481,7 +561,7 @@
                         yAxisID: 'y',
                         animation: {
                             duration: 500,
-                            easing: 'easeOutQuart'
+                            easing: 'easeInOutBounce'
                         }
                     }, {
                         label: 'Actual Count',
@@ -497,7 +577,7 @@
                         yAxisID: 'y',
                         animation: {
                             duration: 500,
-                            easing: 'easeOutQuart',
+                            easing: 'easeInOutBounce',
                             delay: 200
                         }
                     }, {
@@ -519,7 +599,7 @@
                         },
                         animation: {
                             duration: 500,
-                            easing: 'easeOutQuart',
+                            easing: 'easeInOutBounce',
                             delay: 200
                         }
                     }]
@@ -709,8 +789,8 @@
                         pointBackgroundColor: 'rgba(34, 197, 94, 1)',
                         pointBorderWidth: 0,
                         animation: {
-                            duration: 200,
-                            easing: 'easeOutQuart'
+                            duration: 1000,
+                            easing: 'easeInOutBounce'
                         }
                     }, {
                         label: 'Downloads',
@@ -725,8 +805,8 @@
                         pointBackgroundColor: 'rgba(234, 179, 8, 1)',
                         pointBorderWidth: 0,
                         animation: {
-                            duration: 200,
-                            easing: 'easeOutQuart',
+                            duration: 1000,
+                            easing: 'easeInOutBounce',
                             delay: 100
                         }
                     }]
@@ -852,7 +932,11 @@
                         data: values.length ? values : [1],
                         backgroundColor: values.length ? colors.slice(0, values.length) : ['#9CA3AF'],
                         borderColor: borderColor,
-                        borderWidth: 2
+                        borderWidth: 2,
+                        animation: {
+                            duration: 2000,
+                            easing: 'easeInOutBack',
+                        }
                     }]
                 },
                 options: {
@@ -906,27 +990,50 @@
             });
         }
 
-        async loadActivityLog() {
+       async loadActivityLog() {
             const container = document.getElementById('activityLogContainer');
             if (!container) return;
 
-            // Tampilkan loading state
-            container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Loading activities...</div>`;
+            // LOADING STATE (Tengah, Besar, Menarik)
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full w-full min-h-[200px]">
+                    <i class="fa-solid fa-circle-notch fa-spin text-blue-500 dark:text-blue-400 text-3xl mb-3"></i>
+                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400 animate-pulse">Loading activities...</span>
+                </div>
+            `;
 
-            // Ambil filter yang sedang aktif
             const params = this.getFilterParams();
 
             try {
-                // Tambahkan params ke URL
                 const response = await fetch(`{{ route('api.getDataActivityLog') }}?${params.toString()}`);
                 const result = await response.json();
 
                 if (result.status === 'success') {
+                    // Kosongkan container dari loading spinner
                     container.innerHTML = '';
+
                     if (result.data && result.data.length > 0) {
-                        result.data.forEach(log => container.insertAdjacentHTML('beforeend', this.formatLogEntry(log)));
+                        // 1. Masukkan semua elemen (masih invisible karena class opacity-0)
+                        result.data.forEach(log => {
+                            container.insertAdjacentHTML('beforeend', this.formatLogEntry(log));
+                        });
+
+                        // 2. Trigger Animasi Staggered (Bergelombang)
+                        // Kita beri jeda super singkat agar browser selesai merender HTML opacity-0
+                        requestAnimationFrame(() => {
+                            const items = container.querySelectorAll('.log-item');
+                            items.forEach((item, index) => {
+                                // Set delay bertingkat: Item 1 (0ms), Item 2 (50ms), Item 3 (100ms), dst.
+                                setTimeout(() => {
+                                    item.classList.remove('opacity-0', 'translate-y-4');
+                                }, index * 50); 
+                            });
+                        });
+
                     } else {
-                        container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400">No activity found for this filter.</div>`;
+                        // Animasi fade in simpel untuk pesan kosong
+                        container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400 opacity-0 transition-opacity duration-500 ease-in" id="emptyMsg">No activity found for this filter.</div>`;
+                        setTimeout(() => { document.getElementById('emptyMsg').classList.remove('opacity-0'); }, 50);
                     }
                 }
             } catch (error) {
@@ -938,47 +1045,34 @@
         formatLogEntry(log) {
             if (!log) return '';
             const iconMap = {
-                'UPLOAD': {
-                    icon: 'fa-cloud-arrow-up',
-                    color: 'text-green-500'
-                },
-                'DEFAULT': {
-                    icon: 'fa-circle-info',
-                    color: 'text-gray-500'
-                }
+                'UPLOAD': { icon: 'fa-cloud-arrow-up', color: 'text-green-500' },
+                'DEFAULT': { icon: 'fa-circle-info', color: 'text-gray-500' }
             };
             const logInfo = iconMap[log.activity_code] || iconMap['DEFAULT'];
-
-            let message = log.activity_code === 'UPLOAD' ?
-                `<strong>${log.user_name || 'System'}</strong> upload new document.` :
+            
+            let message = log.activity_code === 'UPLOAD' ? 
+                `<strong>${log.user_name || 'System'}</strong> upload new document.` : 
                 `<strong>${log.user_name || 'System'}</strong> performed action: <strong>${log.activity_code}</strong>.`;
-
+            
             const date = log.created_at ? new Date(log.created_at.replace(' ', 'T')) : new Date();
+            const dateStr = date.toLocaleString('id-ID', {day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'});
 
-            const dateOptions = {
-                day: 'numeric',
-                month: 'numeric',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            };
-
-            let metaDetails = '';
+           let metaDetails = '';
             if (log.meta && log.activity_code === 'UPLOAD') {
                 const details = [log.meta.customer_code, log.meta.model_name, log.meta.part_no, log.meta.doctype_group, log.meta.part_group_code].filter(Boolean);
                 if (details.length) metaDetails = `<p class="mt-1 text-[12px] text-gray-600 dark:text-gray-400 font-mono">${details.join(' - ')}</p>`;
             }
 
-            return `<div class="py-2 px-1 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
-        <div class="flex-shrink-0 pt-1"><i class="fa-solid ${logInfo.icon} fa-lg ${logInfo.color} w-5 text-center"></i></div>
-        <div class="flex-1 min-w-0">
-            <div class="flex justify-between items-start">
-                <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
-            </div>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${date.toLocaleString('id-ID', dateOptions)}</p>
-            ${metaDetails}
-        </div>
-    </div>`;
+            return `<div class="log-item py-2 px-1 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-all duration-500 ease-out opacity-0 translate-y-4" data-id="${log.id}">
+                <div class="flex-shrink-0 pt-1"><i class="fa-solid ${logInfo.icon} ${logInfo.color} w-5 text-center"></i></div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-start">
+                        <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${dateStr}</p>
+                    ${metaDetails}
+                </div>
+            </div>`;
         }
 
         initSelect2() {
