@@ -316,12 +316,12 @@
             this.loadPhaseStatusChart();
             this.loadCards();
 
-            setInterval(() => this.loadCards(), 10000);
-            setInterval(() => this.loadMonitoringChart(), 10000);
-            setInterval(() => this.loadTrendChart(), 10000);
-            setInterval(() => this.loadActivityLog(), 10000);
-            setInterval(() => this.loadPhaseStatusChart(), 10000);
-            setInterval(() => this.loadSaveEnv(), 10000);
+            setInterval(() => this.loadCards(), 60000);
+            setInterval(() => this.loadMonitoringChart(), 60000);
+            setInterval(() => this.loadTrendChart(), 60000);
+            setInterval(() => this.loadActivityLog(), 60000);
+            setInterval(() => this.loadPhaseStatusChart(), 60000);
+            setInterval(() => this.loadSaveEnv(), 60000);
         }
 
         getFilterParams() {
