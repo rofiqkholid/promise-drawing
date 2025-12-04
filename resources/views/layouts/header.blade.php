@@ -1,7 +1,5 @@
 <header class="fixed top-0 left-20 right-0 z-40 flex justify-between items-center p-1 pl-4 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300">
 
-    {{-- BAGIAN DUMMY DATA SUDAH DIHAPUS --}}
-    {{-- Variabel $notifUpload, $notifExport, $notifShare sekarang dikirim otomatis dari AppServiceProvider --}}
 
     <div>
         <h1 class="titlePromise text-[1.5rem] font-semibold text-gray-700 dark:text-gray-200">Promise</h1>
@@ -12,14 +10,12 @@
 
         <div class="hidden gap-2 md:flex items-center space-x-1 border-r border-gray-200 dark:border-gray-700 pr-5 mr-5">
 
-            {{-- TOMBOL UPLOAD --}}
             @if (session()->has('allowed_menus') && in_array(3, session('allowed_menus')))
             <a href="{{ route('file-manager.upload') }}"
                 class="relative p-2 w-10 h-10 flex items-center justify-center rounded-full text-gray-500 hover:bg-green-100 hover:text-green-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-green-400 transition-colors duration-200"
                 title="Upload">
                 <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
 
-                {{-- Badge Notif --}}
                 @if(isset($notifUpload) && $notifUpload > 0)
                 <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[0.6rem] font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full border-2 border-white dark:border-gray-800">
                     {{ $notifUpload > 99 ? '99+' : $notifUpload }}
@@ -28,7 +24,6 @@
             </a>
             @endif
 
-            {{-- TOMBOL EXPORT / DOWNLOAD --}}
             @if (session()->has('allowed_menus') && in_array(4, session('allowed_menus')))
             <a href="{{ route('file-manager.export') }}"
                 class="relative p-2 w-10 h-10 flex items-center justify-center rounded-full text-gray-500 hover:bg-yellow-100 hover:text-yellow-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-yellow-400 transition-colors duration-200"
@@ -44,14 +39,12 @@
             </a>
             @endif
 
-            {{-- TOMBOL SHARE --}}
             @if (session()->has('allowed_menus') && in_array(29, session('allowed_menus')))
             <a href="{{ route('file-manager.share') }}"
                 class="relative p-2 w-10 h-10 flex items-center justify-center rounded-full text-gray-500 hover:bg-purple-100 hover:text-purple-600 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-purple-400 transition-colors duration-200"
                 title="Shared Files">
                 <i class="fa-solid fa-share-nodes text-lg"></i>
 
-                {{-- Badge Notif --}}
                 @if(isset($notifShare) && $notifShare > 0)
                 <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-[0.6rem] font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-500 rounded-full border-2 border-white dark:border-gray-800">
                     {{ $notifShare > 99 ? '99+' : $notifShare }}
@@ -62,7 +55,6 @@
 
         </div>
 
-        {{-- SEARCH COMPONENT (TIDAK BERUBAH) --}}
         <div x-data="searchComponent({{ json_encode($menuItems ?? []) }})" class="relative">
             <div class="relative">
                 <input
@@ -164,7 +156,6 @@
             </div>
         </div>
 
-        {{-- USER DROPDOWN (TIDAK BERUBAH) --}}
         <div x-data="{ userDropdownOpen: false }" class="relative ml-2">
 
             <button @click="userDropdownOpen = !userDropdownOpen"

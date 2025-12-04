@@ -6,28 +6,24 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; // Penting untuk query builder
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Models\Menu;
-// Tidak perlu use App\Models\File dll, kita pakai DB::table
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         View::composer('layouts.header', function ($view) {
 
+            // -----------------------------------------------------------
+            // 1. LOGIKA MENU (TETAP SAMA - TIDAK DIUBAH)
+            // -----------------------------------------------------------
             $routes = Route::getRoutes();
             $menuItems = [];
             $allowedMenuIds = session('allowed_menus', []);
@@ -50,7 +46,6 @@ class AppServiceProvider extends ServiceProvider
                 foreach ($routes as $route) {
                     $middlewares = $route->gatherMiddleware();
                     $hasCheckMenu = false;
-
                     foreach ($middlewares as $middleware) {
                         if (is_string($middleware) && str_starts_with($middleware, 'check.menu')) {
                             $hasCheckMenu = true;
@@ -61,58 +56,63 @@ class AppServiceProvider extends ServiceProvider
                     if (in_array('GET', $route->methods()) && $hasCheckMenu) {
                         $name = $route->getName();
                         $uri = $route->uri();
-
                         if (str_contains($uri, '{') && str_contains($uri, '}')) continue;
-
                         if ($name) {
                             $dbMenu = $allDbMenus->get($name);
                             if (!$dbMenu) continue;
                             if (!in_array($dbMenu->id, $allowedMenuIds)) continue;
-
-                            $menuItems[] = [
-                                'name' => $dbMenu->title,
-                                'url' => route($name),
-                            ];
+                            $menuItems[] = ['name' => $dbMenu->title, 'url' => route($name)];
                         }
                     }
                 }
-
-                $menuItems = collect($menuItems)
-                    ->unique('url')
-                    ->sortBy('name')
-                    ->values()
-                    ->toArray();
+                $menuItems = collect($menuItems)->unique('url')->sortBy('name')->values()->toArray();
             }
+
+            // -----------------------------------------------------------
+            // 2. LOGIKA NOTIFIKASI (TANPA created_at)
+            // -----------------------------------------------------------
 
             $user = Auth::user();
             $lastSeen = $user->lastSeen;
-            
-            $timeUpload = ($lastSeen && $lastSeen->last_seen_upload)
-                ? $lastSeen->last_seen_upload
-                : $user->created_at;
 
-            $notifUpload = DB::table('doc_package_revisions')
-                ->where('created_at', '>', $timeUpload)
-                ->count();
+            // === A. NOTIF UPLOAD ===
+            $queryUpload = DB::table('doc_package_revisions');
 
-            $timeExport = ($lastSeen && $lastSeen->last_seen_export)
-                ? $lastSeen->last_seen_export
-                : $user->created_at;
+            // Jika user pernah melihat sebelumnya, filter data SETELAH waktu tersebut.
+            // Jika belum pernah (NULL), JANGAN difilter (tampilkan Total Semua Data).
+            if ($lastSeen && $lastSeen->last_seen_upload) {
+                $queryUpload->where('created_at', '>', $lastSeen->last_seen_upload);
+            }
 
-        
-            $notifExport = DB::table('doc_packages as dp')
+            $notifUpload = $queryUpload->count();
+
+
+            // === B. NOTIF EXPORT ===
+            $queryExport = DB::table('doc_packages as dp')
                 ->leftJoin('package_approvals as pa', 'pa.package_id', '=', 'dp.id')
-                ->where('pa.decision', 'approved')
-                ->where('pa.decided_at', '>', $timeExport)
-                ->count();
+                ->leftJoin('doc_package_revisions as dpr', 'dp.id', '=', 'dpr.package_id')
+                ->where('dpr.revision_status', 'approved');
 
-            $timeShare = ($lastSeen && $lastSeen->last_seen_share)
-                ? $lastSeen->last_seen_share
-                : $user->created_at;
+            // Filter waktu hanya jika user pernah melihat export sebelumnya
+            if ($lastSeen && $lastSeen->last_seen_export) {
+                $queryExport->where('pa.decided_at', '>', $lastSeen->last_seen_export);
+            }
+
+            $notifExport = $queryExport->count();
 
 
+            // === C. NOTIF SHARE ===
+            // Ganti angka 0 dengan query di bawah jika tabel 'shared_files' sudah ada
             $notifShare = 0;
-    
+
+            /* $queryShare = DB::table('shared_files')->where('target_user_id', $user->id);
+            
+            if ($lastSeen && $lastSeen->last_seen_share) {
+                $queryShare->where('created_at', '>', $lastSeen->last_seen_share);
+            }
+            
+            $notifShare = $queryShare->count();
+            */
 
             $view->with([
                 'menuItems'   => $menuItems,
@@ -121,7 +121,8 @@ class AppServiceProvider extends ServiceProvider
                 'notifShare'  => $notifShare
             ]);
         });
-    
+
+        // 3. CARBON MACRO (TETAP)
         Carbon::macro('toSaiStampFormat', function () {
             /** @var Carbon $this */
             $day = $this->day;
@@ -133,12 +134,11 @@ class AppServiceProvider extends ServiceProvider
                     1 => 'st',
                     2 => 'nd',
                     3 => 'rd',
-                    default => 'th',
+                    default => 'th'
                 };
             }
             $superscripts = ['st' => 'ˢᵗ', 'nd' => 'ⁿᵈ', 'rd' => 'ʳᵈ', 'th' => 'ᵗʰ'];
-            $suffix = $superscripts[$suffixRaw];
-            return $this->format('M') . '.' . $day . $suffix . ' ' . $this->format('Y');
+            return $this->format('M') . '.' . $day . $superscripts[$suffixRaw] . ' ' . $this->format('Y');
         });
     }
 }
