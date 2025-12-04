@@ -93,7 +93,8 @@ class AppServiceProvider extends ServiceProvider
                 ->leftJoin('doc_package_revisions as dpr', 'dp.id', '=', 'dpr.package_id')
                 ->select('dpr.package_id')
                 ->where('dpr.revision_status', 'approved')
-                ->groupBy('dpr.package_id');
+                ->groupBy('dpr.package_id')
+                ->get();
 
             // Filter waktu hanya jika user pernah melihat export sebelumnya
             if ($lastSeen && $lastSeen->last_seen_export) {
