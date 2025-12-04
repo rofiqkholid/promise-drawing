@@ -3,7 +3,8 @@
 namespace App\Models;
 
 use App\Models\Suppliers;
-use App\Models\Departments; // <-- MODEL DEPARTMENT (SESUIKAN NAMANYA)
+use App\Models\Departments;
+use App\Models\LastSeen;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -17,7 +18,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'is_active' => 'integer',
-        'id_dept'   => 'integer', 
+        'id_dept'   => 'integer',
     ];
 
     protected $fillable = [
@@ -26,7 +27,7 @@ class User extends Authenticatable
         'nik',
         'password',
         'is_active',
-        'id_dept',   
+        'id_dept',
     ];
 
     protected $hidden = [
@@ -70,5 +71,9 @@ class User extends Authenticatable
         return $this->belongsTo(Departments::class, 'id_dept', 'id');
         // kalau PK di tabel departments namanya 'id', ganti jadi:
         // return $this->belongsTo(Departments::class, 'id_dept', 'id');
+    }
+    public function lastSeen()
+    {
+        return $this->hasOne(LastSeen::class);
     }
 }

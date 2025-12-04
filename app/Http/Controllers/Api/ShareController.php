@@ -664,6 +664,7 @@ class ShareController extends Controller
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
             ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
             ->leftJoin('users as u', 'u.id', '=', 'dp.created_by')
+            ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
             ->where('dp.id', $revision->package_id)
             ->select(
                 'c.code as customer',
@@ -673,7 +674,8 @@ class ShareController extends Controller
                 'dsc.name as category',
                 'pg.code_part_group as part_group',
                 'dp.created_at',
-                'u.name as uploader_name'
+                'u.name as uploader_name',
+                'ps.name as project_status'
             )
             ->first();
 
@@ -808,6 +810,7 @@ class ShareController extends Controller
                 'ecn_no'      => $revision->ecn_no ?? null,
                 'uploader'    => $package->uploader_name ?? 'System',
                 'uploaded_at' => $uploadedAt ? $uploadedAt->format('Y-m-d H:i') : null,
+                'project_status' => $package->project_status, 
             ],
             'files'        => $files,
             'shares'       => $shares,

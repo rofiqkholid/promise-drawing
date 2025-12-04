@@ -315,7 +315,6 @@ class ExportController extends Controller
             ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
             ->where('dpr.revision_status', '=', 'approved');
 
-        // === BATASIN FEASIBILITY HANYA UNTUK ROLE TERTENTU ===
         $user   = Auth::user();
         $feasId = $this->getFeasibilityStatusId();
 

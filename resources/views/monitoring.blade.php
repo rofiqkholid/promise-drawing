@@ -659,11 +659,11 @@
                             ticks: {
                                 color: textColor,
                                 font: {
-                                    size: 14 
+                                    size: 14
                                 },
-                                maxRotation: 0, 
+                                maxRotation: 0,
                                 minRotation: 0,
-                                autoSkip: false, 
+                                autoSkip: false,
                                 callback: function(value) {
                                     const label = this.getLabelForValue(value);
                                     const parts = label.split('-');
@@ -945,7 +945,7 @@
                         data: values.length ? values : [1],
                         backgroundColor: values.length ? colors.slice(0, values.length) : ['#9CA3AF'],
                         borderColor: borderColor,
-                        borderWidth: 4,
+                        borderWidth: 5,
                         animation: {
                             duration: 2000,
                             easing: 'easeOutQuad',
@@ -965,6 +965,30 @@
                                 padding: 15,
                                 font: {
                                     size: 14
+                                },
+                                boxWidth: 14,
+                                boxHeight: 14,
+                                generateLabels: function(chart) {
+                                    const data = chart.data;
+                                    if (data.labels.length && data.datasets.length) {
+                                        return data.labels.map((label, i) => {
+                                            const dataset = data.datasets[0];
+                                            const bgColor = dataset.backgroundColor[i];
+
+                                            return {
+                                                text: label,
+                                                fillStyle: bgColor,
+                                                strokeStyle: bgColor,  
+                                                lineWidth: 0, 
+                                                hidden: !chart.getDataVisibility(i),
+                                                index: i,
+                                                fontColor: textColor,
+                                                fontSize: 14,
+                                                pointStyle: 'rect'
+                                            };
+                                        });
+                                    }
+                                    return [];
                                 }
                             }
                         },

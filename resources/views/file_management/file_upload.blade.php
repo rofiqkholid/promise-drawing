@@ -11,9 +11,7 @@
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage and upload your files to the Data Center.</p>
     </div>
 
-    {{-- Statistik Cards --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {{-- Card 1 --}}
         <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
             <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-full">
                 <i class="fa-solid fa-cloud-arrow-up"></i>
@@ -23,7 +21,6 @@
                 <p id="totalUpload" class="text-2xl font-semibold text-gray-900 dark:text-gray-100">-</p>
             </div>
         </div>
-        {{-- Card 2 --}}
         <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
             <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-full">
                 <i class="fa-solid fa-file-pen fa-lg"></i>

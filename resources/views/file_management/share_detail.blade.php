@@ -132,18 +132,30 @@
             :class="(pkg.activityLogs?.length || 0) > 3 ? 'max-h-96 overflow-y-auto pr-1' : ''"
             role="log"
             aria-label="Activity Log">
-            
+
             <template x-for="(item, idx) in (pkg.activityLogs || [])" :key="idx">
               <div class="flex items-start gap-3 p-3 rounded-md bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                
+
                 <div class="mt-1 flex-shrink-0">
-                  <template x-if="item.action === 'uploaded'"><div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center"><i class="fa-solid fa-cloud-arrow-up text-blue-600 text-xs"></i></div></template>
-                  <template x-if="item.action === 'approved'"><div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center"><i class="fa-solid fa-check text-green-600 text-xs"></i></div></template>
-                  <template x-if="item.action === 'rejected'"><div class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center"><i class="fa-solid fa-xmark text-red-600 text-xs"></i></div></template>
-                  <template x-if="item.action === 'rollbacked'"><div class="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center"><i class="fa-solid fa-rotate-left text-amber-600 text-xs"></i></div></template>
-                  <template x-if="item.action === 'downloaded'"><div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-download text-gray-600 text-xs"></i></div></template>
-                  <template x-if="item.action === 'shared'"><div class="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center"><i class="fa-solid fa-share-nodes text-indigo-600 text-xs"></i></div></template>
-                  
+                  <template x-if="item.action === 'uploaded'">
+                    <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center"><i class="fa-solid fa-cloud-arrow-up text-blue-600 text-xs"></i></div>
+                  </template>
+                  <template x-if="item.action === 'approved'">
+                    <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center"><i class="fa-solid fa-check text-green-600 text-xs"></i></div>
+                  </template>
+                  <template x-if="item.action === 'rejected'">
+                    <div class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center"><i class="fa-solid fa-xmark text-red-600 text-xs"></i></div>
+                  </template>
+                  <template x-if="item.action === 'rollbacked'">
+                    <div class="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center"><i class="fa-solid fa-rotate-left text-amber-600 text-xs"></i></div>
+                  </template>
+                  <template x-if="item.action === 'downloaded'">
+                    <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-download text-gray-600 text-xs"></i></div>
+                  </template>
+                  <template x-if="item.action === 'shared'">
+                    <div class="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center"><i class="fa-solid fa-share-nodes text-indigo-600 text-xs"></i></div>
+                  </template>
+
                   <template x-if="!['uploaded','approved','rejected','rollbacked','downloaded','shared'].includes(item.action)">
                     <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-circle-info text-gray-500 text-xs"></i></div>
                   </template>
@@ -161,46 +173,46 @@
 
                   <template x-if="item.snapshot && (item.snapshot.part_no || item.snapshot.ecn_no)">
                     <div class="mt-2 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-xs shadow-sm">
-                        
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="font-bold text-gray-800 dark:text-gray-200" x-text="item.snapshot.part_no || '-'"></span>
-                            <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded font-mono text-[10px] border border-gray-200 dark:border-gray-600">
-                                Rev <span x-text="item.snapshot.revision_no ?? '-'"></span>
-                            </span>
-                            <template x-if="item.snapshot.ecn_no">
-                                <span class="text-blue-600 dark:text-blue-400 font-mono text-[10px] bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800" 
-                                      x-text="item.snapshot.ecn_no"></span>
-                            </template>
-                        </div>
 
-                        <div class="text-gray-500 dark:text-gray-400 text-[10px] flex items-center gap-1">
-                            <i class="fa-solid fa-tag text-[9px]"></i>
-                            <span x-text="item.snapshot.customer || '-'"></span>
-                            <span class="mx-0.5">•</span>
-                            <span x-text="item.snapshot.model || '-'"></span>
-                            <template x-if="item.snapshot.doc_type">
-                                <span>
-                                    <span class="mx-0.5">•</span>
-                                    <span x-text="item.snapshot.doc_type"></span>
-                                </span>
-                            </template>
-                        </div>
-
-                        <template x-if="item.action === 'rollbacked' && item.snapshot.previous_status">
-                            <div class="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700 flex items-center text-amber-600 dark:text-amber-500 font-medium">
-                                <i class="fa-solid fa-code-branch mr-1.5 text-[10px]"></i>
-                                <span x-text="item.snapshot.previous_status" class="capitalize"></span>
-                                <i class="fa-solid fa-arrow-right-long mx-1.5 text-[10px]"></i>
-                                <span>Waiting</span>
-                            </div>
+                      <div class="flex items-center gap-2 mb-1">
+                        <span class="font-bold text-gray-800 dark:text-gray-200" x-text="item.snapshot.part_no || '-'"></span>
+                        <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded font-mono text-[10px] border border-gray-200 dark:border-gray-600">
+                          Rev <span x-text="item.snapshot.revision_no ?? '-'"></span>
+                        </span>
+                        <template x-if="item.snapshot.ecn_no">
+                          <span class="text-blue-600 dark:text-blue-400 font-mono text-[10px] bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800"
+                            x-text="item.snapshot.ecn_no"></span>
                         </template>
+                      </div>
+
+                      <div class="text-gray-500 dark:text-gray-400 text-[10px] flex items-center gap-1">
+                        <i class="fa-solid fa-tag text-[9px]"></i>
+                        <span x-text="item.snapshot.customer || '-'"></span>
+                        <span class="mx-0.5">•</span>
+                        <span x-text="item.snapshot.model || '-'"></span>
+                        <template x-if="item.snapshot.doc_type">
+                          <span>
+                            <span class="mx-0.5">•</span>
+                            <span x-text="item.snapshot.doc_type"></span>
+                          </span>
+                        </template>
+                      </div>
+
+                      <template x-if="item.action === 'rollbacked' && item.snapshot.previous_status">
+                        <div class="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700 flex items-center text-amber-600 dark:text-amber-500 font-medium">
+                          <i class="fa-solid fa-code-branch mr-1.5 text-[10px]"></i>
+                          <span x-text="item.snapshot.previous_status" class="capitalize"></span>
+                          <i class="fa-solid fa-arrow-right-long mx-1.5 text-[10px]"></i>
+                          <span>Waiting</span>
+                        </div>
+                      </template>
                     </div>
                   </template>
 
                   <template x-if="item.note">
                     <div class="mt-1.5 flex items-start gap-1.5">
-                        <i class="fa-solid fa-quote-left text-gray-300 dark:text-gray-600 text-[10px] mt-0.5"></i>
-                        <p class="text-xs text-gray-600 dark:text-gray-300 italic" x-text="item.note"></p>
+                      <i class="fa-solid fa-quote-left text-gray-300 dark:text-gray-600 text-[10px] mt-0.5"></i>
+                      <p class="text-xs text-gray-600 dark:text-gray-300 italic" x-text="item.note"></p>
                     </div>
                   </template>
 
@@ -286,7 +298,7 @@
                   </div>
                 </div>
 
-                <div>
+                <!-- <div>
                   <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Type: Copy</label>
                   <div class="relative">
                     <select x-model="copyType" @change="onStampChange()"
@@ -295,7 +307,7 @@
                       <option value="uncontrolled">Uncontrolled Copy</option>
                     </select>
                   </div>
-                </div>
+                </div> -->
 
                 <div>
                   <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Position: Obsolete</label>
@@ -1168,16 +1180,16 @@
   @endsection
 
   @push('scripts')
-  <!-- SweetAlert -->
+
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <!-- Alpine collapse (untuk x-collapse) -->
+
   <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 
-  <!-- UTIF.js untuk render TIFF (v2 classic API) -->
+
   <script src="https://unpkg.com/utif@2.0.1/UTIF.js"></script>
 
-  <!-- pdf.js 2.x (lebih stabil untuk UMD) -->
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script>
     if (window['pdfjsLib']) {
@@ -1186,7 +1198,7 @@
     }
   </script>
 
-  <!-- ES Module shims + Import Map untuk Three.js (module) -->
+
   <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
   <script type="importmap">
     {
@@ -1198,11 +1210,10 @@
     }
   </script>
 
-  <!-- OCCT: parser STEP/IGES (WASM) -->
+
   <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
 
   <script>
-    /* ========== Toast Utilities ========== */
     function detectTheme() {
       const isDark = document.documentElement.classList.contains('dark');
       return isDark ? {
@@ -1322,6 +1333,7 @@
       let pdfDoc = null;
 
       return {
+        
         // data dari backend
         pkg: JSON.parse(`@json($detail)`),
         stampFormats: JSON.parse(`@json($stampFormats)`),
@@ -1342,9 +1354,7 @@
           obsolete: 'bottom-right',
         },
 
-        // per file: jenis Copy stamp
-        copyTypePerFile: {}, // { [fileKey]: 'controlled' | 'uncontrolled' }
-        copyType: 'controlled',
+        
 
 
         // ===== WHITE BLOCKS (MULTI MASK) =====
@@ -1605,8 +1615,7 @@
 
         // teks tengah stamp Control Copy
         stampCenterCopy() {
-          const statusId = this.pkg?.metadata?.model_status_id;
-          if (statusId == 4) {
+          if (this.isFeasibilityStatus()) {
             return 'SAI-DRAWING UNCONTROLLED COPY';
           }
           return 'SAI-DRAWING CONTROLLED COPY';
@@ -1796,24 +1805,19 @@
           this.blocksByPage[String(page)] = blocks;
         },
 
+        isFeasibilityStatus() {
+          const meta = this.pkg?.metadata || {};
+          const id = Number(meta.model_status_id);
+          const name = (meta.model_status || meta.project_status || '').toString().toLowerCase();
 
+          return id === 4 || name.includes('feasibility');
+        },
 
 
         isUncontrolledCopy() {
-          const statusId = this.pkg?.metadata?.model_status_id;
-
-          // Kalau user pilih dari dropdown => pakai itu
-          if (this.copyType === 'uncontrolled') {
-            return true;
-          }
-
-          // Fallback: kalau masih mau pakai rule dari status_id (misal =4 = uncontrolled)
-          if (Number(statusId) === 4) {
-            return true;
-          }
-
-          return false;
+          return this.isFeasibilityStatus();
         },
+
 
 
         stampTopLine(which = 'original') {
@@ -1831,13 +1835,11 @@
             const label = fmt.prefix || 'Date Received';
             return date ? `${label} : ${this.formatStampDate(date)}` : '';
           } else if (which === 'copy') {
-            const statusId = this.pkg?.metadata?.model_status_id;
-
-            if (statusId == 4) {
+            if (this.isFeasibilityStatus()) {
               // UNCONTROLLED
               return 'SAI / PUD / For Quotation';
             } else {
-              // CONTROLLED (Existing logic)
+              // CONTROLLED
               const now = new Date();
               const dateStr = this.formatStampDate(now.toISOString().split('T')[0]);
 
@@ -1850,7 +1852,6 @@
 
               return `SAI / ${deptCode} / ${dateStr} ${timeStr}`;
             }
-
           } else {
             fmt = this.getNormalFormat();
             date = s.receipt_date || s.upload_date || '';
@@ -1864,17 +1865,14 @@
           let fmt;
 
           if (which === 'copy') {
-            const statusId = this.pkg?.metadata?.model_status_id;
-
-            if (statusId == 4) {
+            if (this.isFeasibilityStatus()) {
               // UNCONTROLLED
-              // Mengambil tanggal shared_at dari pkg.stamp
               const sharedDate = s.shared_at || '';
               return `Date Share : ${this.formatStampDate(sharedDate)}`;
             } else {
-              // CONTROLLED (Existing logic)
+              // CONTROLLED
               const userName = this.userName || '--';
-              return `External - Ditributed To Supplier`;
+              return `External - Distributed To Supplier`;
             }
           } else if (which === 'obsolete') {
             fmt = this.getObsoleteFormat();
@@ -1920,20 +1918,6 @@
             };
           }
           this.stampConfig = this.stampPerFile[key];
-
-          // load type Copy per file
-          if (!this.copyTypePerFile[key]) {
-            // kalau backend nanti kirim copy_type di file, pakai itu
-            const initial =
-              file.copy_type === 'uncontrolled' ?
-              'uncontrolled' :
-              'controlled';
-
-            this.copyTypePerFile[key] = initial;
-            this.copyType = initial;
-          } else {
-            this.copyType = this.copyTypePerFile[key];
-          }
         },
 
 
@@ -1947,7 +1931,6 @@
             ...this.stampConfig,
           };
 
-          this.copyTypePerFile[key] = this.copyType || 'controlled';
         },
 
 
@@ -1962,8 +1945,9 @@
             ori_position: this.positionKeyToInt(this.stampConfig.original),
             copy_position: this.positionKeyToInt(this.stampConfig.copy),
             obslt_position: this.positionKeyToInt(this.stampConfig.obsolete),
-            copy_type: this.copyType || 'controlled',
+            copy_type: this.isFeasibilityStatus() ? 'uncontrolled' : 'controlled',
           };
+
 
           try {
             const res = await fetch(url, {

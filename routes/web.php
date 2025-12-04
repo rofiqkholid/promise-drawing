@@ -63,16 +63,16 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/file-manager.upload', function () {
         return view('file_management.file_upload');
-    })->middleware(['auth', 'check.menu:3'])->name('file-manager.upload');
+    })->middleware(['auth', 'check.menu:3', 'log.seen:upload'])->name('file-manager.upload');
 
     Route::get('/file-manager.export', function () {
         return view('file_management.file_export');
-    })->middleware(['auth', 'check.menu:4'])->name('file-manager.export');
+    })->middleware(['auth', 'check.menu:4', 'log.seen:export'])->name('file-manager.export');
 
     Route::get('/file-manager.share', function () {
         return view('file_management.share');
-    })->middleware(['auth', 'check.menu:29'])->name('file-manager.share');
-
+    })->middleware(['auth', 'check.menu:29', 'log.seen:share'])->name('file-manager.share');
+    
     Route::get('/receipt', function () {
         return view('receipt.receipt');
     })->middleware(['auth', 'check.menu:30'])->name('receipt');

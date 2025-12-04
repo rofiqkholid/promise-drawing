@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
             'check.menu' => \App\Http\Middleware\CheckMenuAccess::class,
+            'log.seen' => \App\Http\Middleware\LogLastSeen::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
