@@ -659,31 +659,19 @@
                             ticks: {
                                 color: textColor,
                                 font: {
-                                    size: 14 // Ukuran font sedikit disesuaikan agar muat
+                                    size: 14 
                                 },
-                                maxRotation: 0, // Paksa teks tegak lurus
+                                maxRotation: 0, 
                                 minRotation: 0,
-                                autoSkip: false, // Jangan sembunyikan label meskipun padat
+                                autoSkip: false, 
                                 callback: function(value) {
-                                    // 1. Ambil label asli
                                     const label = this.getLabelForValue(value);
-
-                                    // 2. Pecah string berdasarkan tanda strip
                                     const parts = label.split('-');
-
-                                    // 3. Logika Pemisahan: 2 kata pertama vs Sisanya
                                     if (parts.length > 2) {
-                                        // Ambil index 0 dan 1, gabung pakai strip -> "MMKI-5P45"
                                         const line1 = parts.slice(0, 2).join('-');
-
-                                        // Ambil dari index 2 sampai habis, gabung pakai strip -> "PR-HANGEONS"
                                         const line2 = parts.slice(2).join('-');
-
-                                        // Return array untuk membuat 2 baris
                                         return [line1, line2];
                                     }
-
-                                    // Jika formatnya pendek, kembalikan apa adanya
                                     return label;
                                 }
                             },
@@ -957,7 +945,7 @@
                         data: values.length ? values : [1],
                         backgroundColor: values.length ? colors.slice(0, values.length) : ['#9CA3AF'],
                         borderColor: borderColor,
-                        borderWidth: 2,
+                        borderWidth: 4,
                         animation: {
                             duration: 2000,
                             easing: 'easeOutQuad',
