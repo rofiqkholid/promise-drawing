@@ -91,6 +91,7 @@ class AppServiceProvider extends ServiceProvider
             $queryExport = DB::table('doc_packages as dp')
                 ->leftJoin('package_approvals as pa', 'pa.package_id', '=', 'dp.id')
                 ->leftJoin('doc_package_revisions as dpr', 'dp.id', '=', 'dpr.package_id')
+                ->select('dpr.package_id')
                 ->where('dpr.revision_status', 'approved')
                 ->groupBy('dpr.package_id');
 
