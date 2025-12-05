@@ -89,19 +89,21 @@ class AppServiceProvider extends ServiceProvider
 
             // === B. NOTIF EXPORT ===
             $queryExport = DB::table('doc_packages as dp')
-                ->leftJoin('package_approvals as pa', 'pa.package_id', '=', 'dp.id')
-                ->leftJoin('doc_package_revisions as dpr', 'dp.id', '=', 'dpr.package_id')
-                ->select('dpr.package_id')
-                ->where('dpr.revision_status', 'approved')
-                ->groupBy('dpr.package_id')
-                ->get();
+                ->join('package_approvals as pa', 'pa.package_id', '=', 'dp.id')
+                ->join('doc_package_revisions as dpr', 'dp.id', '=', 'dpr.package_id')
+                ->where('dpr.revision_status', 'approved');
+            // Note: select() dan groupBy() tidak diperlukan untuk sekedar count()
 
-            // Filter waktu hanya jika user pernah melihat export sebelumnya
+            // Filter waktu: Hanya hitung data yang LEBIH BARU dari terakhir dilihat
             if ($lastSeen && $lastSeen->last_seen_export) {
+                // Pastikan kolom waktunya benar (pa.decided_at atau dpr.created_at)
+                // Disini kita pakai pa.decided_at (waktu approval)
                 $queryExport->where('pa.decided_at', '>', $lastSeen->last_seen_export);
             }
 
-            $notifExport = $queryExport->count();
+            // Eksekusi query hitung di sini
+            // Jika last_seen update, query di atas akan menghasilkan 0
+            $notifExport = $queryExport->distinct('dpr.package_id')->count('dpr.package_id');
 
 
             // === C. NOTIF SHARE ===
