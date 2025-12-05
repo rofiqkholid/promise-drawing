@@ -21,9 +21,6 @@ class AppServiceProvider extends ServiceProvider
     {
         View::composer('layouts.header', function ($view) {
 
-            // -----------------------------------------------------------
-            // 1. LOGIKA MENU (TETAP SAMA)
-            // -----------------------------------------------------------
             $routes = Route::getRoutes();
             $menuItems = [];
             $allowedMenuIds = session('allowed_menus', []);
@@ -68,43 +65,29 @@ class AppServiceProvider extends ServiceProvider
                 $menuItems = collect($menuItems)->unique('url')->sortBy('name')->values()->toArray();
             }
 
-            // -----------------------------------------------------------
-            // 2. LOGIKA NOTIFIKASI (FIXED)
-            // -----------------------------------------------------------
-
             $user = Auth::user();
             $lastSeen = $user->lastSeen;
 
-            // === A. NOTIF UPLOAD ===
             $queryUpload = DB::table('doc_package_revisions');
 
-            // Jika user pernah melihat, filter waktu. Jika belum (NULL), tampilkan semua.
             if ($lastSeen && $lastSeen->last_seen_upload) {
                 $queryUpload->where('created_at', '>', $lastSeen->last_seen_upload);
             }
 
             $notifUpload = $queryUpload->count();
-
-
-            // === B. NOTIF EXPORT (PERBAIKAN UTAMA DISINI) ===
-            // Jangan gunakan ->get() karena itu akan mengeksekusi query terlalu dini.
-            // Gunakan Query Builder sampai akhir.
             
             $queryExport = DB::table('doc_packages as dp')
                 ->join('package_approvals as pa', 'pa.package_id', '=', 'dp.id')
                 ->join('doc_package_revisions as dpr', 'dp.id', '=', 'dpr.package_id')
                 ->where('dpr.revision_status', 'approved');
 
-            // Filter waktu: Hanya hitung jika decided_at LEBIH BARU dari last_seen user
             if ($lastSeen && $lastSeen->last_seen_export) {
                 $queryExport->where('pa.decided_at', '>', $lastSeen->last_seen_export);
             }
 
-            // Gunakan distinct() untuk menghindari duplikasi paket, lalu count()
             $notifExport = $queryExport->distinct('dpr.package_id')->count('dpr.package_id');
 
 
-            // === C. NOTIF SHARE ===
             $notifShare = 0;
             /* $queryShare = DB::table('shared_files')->where('target_user_id', $user->id);
             if ($lastSeen && $lastSeen->last_seen_share) {
@@ -121,7 +104,6 @@ class AppServiceProvider extends ServiceProvider
             ]);
         });
 
-        // 3. CARBON MACRO (TETAP)
         Carbon::macro('toSaiStampFormat', function () {
             /** @var Carbon $this */
             $day = $this->day;

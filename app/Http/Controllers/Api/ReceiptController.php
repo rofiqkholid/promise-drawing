@@ -912,8 +912,9 @@ class ReceiptController extends Controller
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
             ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
             ->where('dp.id', $revision->package_id)
-            ->select('c.code as customer', 'm.name as model', 'm.status_id', 'p.part_no', 'dp.part_group_id')
+            ->select('c.code as customer', 'm.name as model', 'm.status_id', 'p.part_no', 'dp.part_group_id', 'ps.name as project_status_name')
             ->first();
 
         if (!$package) {
@@ -930,13 +931,24 @@ class ReceiptController extends Controller
         $stampableTypes = ['jpg', 'jpeg', 'png', 'tif', 'tiff', 'pdf'];
         $canStamp = class_exists('\Imagick') && $stampFormat;
 
-        $customer = Str::slug($package->customer);
         $model = Str::slug($package->model);
-        $partNo = Str::slug($package->part_no);
-        $ecn = Str::slug($revision->ecn_no);
-        $timestamp = now()->format('Ymd');
 
-        $zipFileName = strtoupper("{$customer}-{$model}-{$partNo}-{$ecn}-{$timestamp}") . ".zip";
+        $sharedAtRaw = $stampContext['sharedAt'];
+        $sharedAtDate = Carbon::parse($sharedAtRaw);
+        $timestampYmd = $sharedAtDate->format('Ymd');
+
+        $sequence = ActivityLog::where('activity_code', 'SHARE_PACKAGE')
+            ->whereYear('created_at', $sharedAtDate->year)
+            ->whereMonth('created_at', $sharedAtDate->month)
+            ->count();
+            
+        if ($sequence == 0) {
+            $sequence = 1;
+        }
+
+        $sequenceStr = str_pad($sequence, 3, '0', STR_PAD_LEFT);
+
+        $zipFileName = strtoupper("SAI-{$model}-{$timestampYmd}-{$sequenceStr}") . ".zip";
 
         $zipDirectory = storage_path('app/public');
         $zipDirectory = str_replace('/', DIRECTORY_SEPARATOR, $zipDirectory);
@@ -987,9 +999,9 @@ class ReceiptController extends Controller
 
             if (file_exists($fileToAdd)) {
                 $category = strtolower(trim($file->category));
-                $folderInZip = 'ecn';
-                if ($category === '2d') $folderInZip = '2d';
-                elseif ($category === '3d') $folderInZip = '3d';
+                $folderInZip = 'ECN';
+                if ($category === '2d') $folderInZip = '2D';
+                elseif ($category === '3d') $folderInZip = '3D';
 
                 $pathInZip = str_replace('/', DIRECTORY_SEPARATOR, $folderInZip . '/' . $file->filename);
                 $zip->addFile($fileToAdd, $pathInZip);

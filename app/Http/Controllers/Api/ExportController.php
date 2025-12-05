@@ -944,11 +944,11 @@ class ExportController extends Controller
 
             if (file_exists($fileToAdd)) {
                 $category = strtolower(trim($file->category));
-                $folderInZip = 'ecn';
+                $folderInZip = 'ECN';
                 if ($category === '2d') {
-                    $folderInZip = '2d';
+                    $folderInZip = '2D';
                 } elseif ($category === '3d') {
-                    $folderInZip = '3d';
+                    $folderInZip = '3D';
                 }
 
                 $pathInZip = str_replace('/', DIRECTORY_SEPARATOR, $folderInZip . '/' . $file->filename);
