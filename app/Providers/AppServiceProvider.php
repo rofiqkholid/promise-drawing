@@ -22,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('layouts.header', function ($view) {
 
             // -----------------------------------------------------------
-            // 1. LOGIKA MENU (TETAP SAMA - TIDAK DIUBAH)
+            // 1. LOGIKA MENU (TETAP SAMA)
             // -----------------------------------------------------------
             $routes = Route::getRoutes();
             $menuItems = [];
@@ -69,7 +69,7 @@ class AppServiceProvider extends ServiceProvider
             }
 
             // -----------------------------------------------------------
-            // 2. LOGIKA NOTIFIKASI (TANPA created_at)
+            // 2. LOGIKA NOTIFIKASI (FIXED)
             // -----------------------------------------------------------
 
             $user = Auth::user();
@@ -78,8 +78,7 @@ class AppServiceProvider extends ServiceProvider
             // === A. NOTIF UPLOAD ===
             $queryUpload = DB::table('doc_package_revisions');
 
-            // Jika user pernah melihat sebelumnya, filter data SETELAH waktu tersebut.
-            // Jika belum pernah (NULL), JANGAN difilter (tampilkan Total Semua Data).
+            // Jika user pernah melihat, filter waktu. Jika belum (NULL), tampilkan semua.
             if ($lastSeen && $lastSeen->last_seen_upload) {
                 $queryUpload->where('created_at', '>', $lastSeen->last_seen_upload);
             }
@@ -87,35 +86,30 @@ class AppServiceProvider extends ServiceProvider
             $notifUpload = $queryUpload->count();
 
 
-            // === B. NOTIF EXPORT ===
+            // === B. NOTIF EXPORT (PERBAIKAN UTAMA DISINI) ===
+            // Jangan gunakan ->get() karena itu akan mengeksekusi query terlalu dini.
+            // Gunakan Query Builder sampai akhir.
+            
             $queryExport = DB::table('doc_packages as dp')
                 ->join('package_approvals as pa', 'pa.package_id', '=', 'dp.id')
                 ->join('doc_package_revisions as dpr', 'dp.id', '=', 'dpr.package_id')
                 ->where('dpr.revision_status', 'approved');
-            // Note: select() dan groupBy() tidak diperlukan untuk sekedar count()
 
-            // Filter waktu: Hanya hitung data yang LEBIH BARU dari terakhir dilihat
+            // Filter waktu: Hanya hitung jika decided_at LEBIH BARU dari last_seen user
             if ($lastSeen && $lastSeen->last_seen_export) {
-                // Pastikan kolom waktunya benar (pa.decided_at atau dpr.created_at)
-                // Disini kita pakai pa.decided_at (waktu approval)
                 $queryExport->where('pa.decided_at', '>', $lastSeen->last_seen_export);
             }
 
-            // Eksekusi query hitung di sini
-            // Jika last_seen update, query di atas akan menghasilkan 0
+            // Gunakan distinct() untuk menghindari duplikasi paket, lalu count()
             $notifExport = $queryExport->distinct('dpr.package_id')->count('dpr.package_id');
 
 
             // === C. NOTIF SHARE ===
-            // Ganti angka 0 dengan query di bawah jika tabel 'shared_files' sudah ada
             $notifShare = 0;
-
             /* $queryShare = DB::table('shared_files')->where('target_user_id', $user->id);
-            
             if ($lastSeen && $lastSeen->last_seen_share) {
                 $queryShare->where('created_at', '>', $lastSeen->last_seen_share);
             }
-            
             $notifShare = $queryShare->count();
             */
 
@@ -136,10 +130,7 @@ class AppServiceProvider extends ServiceProvider
             } else {
                 $last = $day % 10;
                 $suffixRaw = match ($last) {
-                    1 => 'st',
-                    2 => 'nd',
-                    3 => 'rd',
-                    default => 'th'
+                    1 => 'st', 2 => 'nd', 3 => 'rd', default => 'th'
                 };
             }
             $superscripts = ['st' => 'ˢᵗ', 'nd' => 'ⁿᵈ', 'rd' => 'ʳᵈ', 'th' => 'ᵗʰ'];
