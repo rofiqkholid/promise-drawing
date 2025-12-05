@@ -856,8 +856,9 @@ class ReceiptController extends Controller
                 ->join('customers as c', 'dp.customer_id', '=', 'c.id')
                 ->join('models as m', 'dp.model_id', '=', 'm.id')
                 ->join('products as p', 'dp.product_id', '=', 'p.id')
+                ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
                 ->where('dp.id', $revision->package_id)
-                ->select('c.code as customer', 'm.name as model', 'm.status_id', 'p.part_no')
+                ->select('c.code as customer', 'm.name as model', 'm.status_id', 'p.part_no', 'ps.name as project_status_name')
                 ->first();
 
             $stampFormat = StampFormat::where('is_active', true)->first();
@@ -1080,8 +1081,9 @@ class ReceiptController extends Controller
                         ->join('customers as c', 'dp.customer_id', '=', 'c.id')
                         ->join('models as m', 'dp.model_id', '=', 'm.id')
                         ->join('products as p', 'dp.product_id', '=', 'p.id')
+                        ->leftJoin('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
                         ->where('dp.id', $revision->package_id)
-                        ->select('c.code as customer', 'm.name as model', 'p.part_no', 'dp.part_group_id')
+                        ->select('c.code as customer', 'm.name as model', 'p.part_no', 'dp.part_group_id', 'dtg.name as doctype_group')
                         ->first();
                 }
 
@@ -1095,16 +1097,33 @@ class ReceiptController extends Controller
                         $partGroupCode = DB::table('part_groups')->where('id', $package->part_group_id)->value('code_part_group');
                     }
 
+                    // Calculate File Size
+                    $fileSize = null;
+                    if (file_exists($zipFilePath)) {
+                        $bytes = filesize($zipFilePath);
+                        if ($bytes >= 1073741824) {
+                            $fileSize = number_format($bytes / 1073741824, 2) . ' GB';
+                        } elseif ($bytes >= 1048576) {
+                            $fileSize = number_format($bytes / 1048576, 2) . ' MB';
+                        } elseif ($bytes >= 1024) {
+                            $fileSize = number_format($bytes / 1024, 2) . ' KB';
+                        } else {
+                            $fileSize = $bytes . ' bytes';
+                        }
+                    }
+
                     $metaLogData = [
                         'part_no' => $package->part_no,
                         'customer_code' => $package->customer,
                         'model_name' => $package->model,
                         'part_group_code' => $partGroupCode,
+                        'doctype_group' => $package->doctype_group,
                         'package_id' => $revision->package_id,
                         'revision_no' => $revision->revision_no,
                         'ecn_no' => $revision->ecn_no,
                         'revision_label' => $labelName,
-                        'downloaded_file' => $safe_filename
+                        'downloaded_file' => $safe_filename,
+                        'file_size' => $fileSize,
                     ];
 
                     ActivityLog::create([
@@ -1255,6 +1274,9 @@ class ReceiptController extends Controller
             if ($colorMode === 'red') {
                 $borderColor = new \ImagickPixel("rgba(220, 38, 38, $opacity)");
                 $textColor   = new \ImagickPixel("rgba(185, 28, 28, $opacity)");
+            } elseif ($colorMode === 'gray') {
+                $borderColor = new \ImagickPixel("rgba(107, 114, 128, $opacity)"); // Gray 500
+                $textColor   = new \ImagickPixel("rgba(107, 114, 128, $opacity)");
             } else {
                 $borderColor = new \ImagickPixel("rgba(37, 99, 235, $opacity)");
                 $textColor   = new \ImagickPixel("rgba(29, 78, 216, $opacity)");
@@ -1376,7 +1398,11 @@ class ReceiptController extends Controller
             $supplierCode = $extraData['supplierCode'] ?? '-';
             $sharedAtRaw  = $extraData['sharedAt'] ?? $revision->shared_at;
 
-            if ($modelStatusId == 4) {
+            // --- GENERATE MASTER GAMBAR ---
+            $projectStatusName = $package->project_status_name ?? '';
+            $isFeasibility = strcasecmp($projectStatusName, 'Feasibility Study') === 0 || strcasecmp($projectStatusName, 'Feasibility') === 0;
+
+            if ($modelStatusId == 4 || $isFeasibility) {
                 // === UNCONTROLLED COPY ===
                 $centerTextCopy = 'SAI-DRAWING UNCONTROLLED COPY';
 
@@ -1407,7 +1433,14 @@ class ReceiptController extends Controller
             $posObsolete = $this->positionIntToKey($file->obslt_position ?? 2, 'bottom-right');
 
             // --- GENERATE MASTER GAMBAR ---
-            $stampOriginal = $this->_createStampImage('SAI-DRAWING ORIGINAL', $topLine, $bottomLine, 'blue');
+            // $projectStatusName & $isFeasibility already defined above
+
+            if ($isFeasibility) {
+                $stampOriginal = null;
+            } else {
+                $stampOriginal = $this->_createStampImage('SAI-DRAWING ORIGINAL', $topLine, $bottomLine, 'gray');
+            }
+
             $stampCopy     = $this->_createStampImage($centerTextCopy, $topLineCopy, $bottomLineCopy, 'blue');
             $stampObsolete = null;
 
@@ -1444,13 +1477,15 @@ class ReceiptController extends Controller
                 $stampObsolete = $this->_createStampImage('SAI-DRAWING OBSOLETE', $topLineObsolete, $bottomLineObsolete, 'red');
             }
 
-            if (!$stampOriginal || !$stampCopy) {
+            if (!$stampOriginal && !$stampCopy) {
                 return $originalPath;
             }
 
             // --- IMAGICK PROCESSING ---
-            $masterStampWidth = $stampOriginal->getImageWidth();
-            $masterStampHeight = $stampOriginal->getImageHeight();
+            // Use stampCopy for dimensions if stampOriginal is null
+            $refStamp = $stampOriginal ?? $stampCopy;
+            $masterStampWidth = $refStamp->getImageWidth();
+            $masterStampHeight = $refStamp->getImageHeight();
             $stampAspectRatio = $masterStampWidth / $masterStampHeight;
 
             $imagick = new \Imagick();
@@ -1588,39 +1623,58 @@ class ReceiptController extends Controller
                 // -------------------------------
 
                 $newStampWidth = max($minStampWidth, (int) ($imgWidth * $stampWidthPercent));
-                $newStampHeight = (int) ($newStampWidth / $stampAspectRatio);
 
                 // Original
-                $stampOrigResized = $stampOriginal->clone();
-                $stampOrigResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
+                if ($stampOriginal) {
+                    $origW = $stampOriginal->getImageWidth();
+                    $origH = $stampOriginal->getImageHeight();
+                    $origRatio = $origW / $origH;
+                    $newHeightOrig = (int) ($newStampWidth / $origRatio);
+
+                    $stampOrigResized = $stampOriginal->clone();
+                    $stampOrigResized->resizeImage($newStampWidth, $newHeightOrig, \Imagick::FILTER_LANCZOS, 1);
+
+                    // Composite Original
+                    list($x, $y) = $this->calculateStampCoordinates($posOriginal, $imgWidth, $imgHeight, $newStampWidth, $newHeightOrig, $margin);
+                    $imagick->compositeImage($stampOrigResized, \Imagick::COMPOSITE_OVER, (int)$x, (int)$y);
+
+                    $stampOrigResized->clear();
+                    $stampOrigResized->destroy();
+                }
 
                 // Copy
+                $copyW = $stampCopy->getImageWidth();
+                $copyH = $stampCopy->getImageHeight();
+                $copyRatio = $copyW / $copyH;
+                $newHeightCopy = (int) ($newStampWidth / $copyRatio);
+
                 $stampCopyResized = $stampCopy->clone();
-                $stampCopyResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
+                $stampCopyResized->resizeImage($newStampWidth, $newHeightCopy, \Imagick::FILTER_LANCZOS, 1);
 
                 // Obsolete
                 $stampObsResized = null;
+                $newHeightObs = 0; // Default
                 if ($isObsolete && $stampObsolete) {
+                    $obsW = $stampObsolete->getImageWidth();
+                    $obsH = $stampObsolete->getImageHeight();
+                    $obsRatio = $obsW / $obsH;
+                    $newHeightObs = (int) ($newStampWidth / $obsRatio);
+
                     $stampObsResized = $stampObsolete->clone();
-                    $stampObsResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
+                    $stampObsResized->resizeImage($newStampWidth, $newHeightObs, \Imagick::FILTER_LANCZOS, 1);
                 }
 
-                // Composite Original
-                list($x, $y) = $this->calculateStampCoordinates($posOriginal, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
-                $imagick->compositeImage($stampOrigResized, \Imagick::COMPOSITE_OVER, (int)$x, (int)$y);
-
                 // Composite Copy
-                list($xCopy, $yCopy) = $this->calculateStampCoordinates($posCopy, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
+                list($xCopy, $yCopy) = $this->calculateStampCoordinates($posCopy, $imgWidth, $imgHeight, $newStampWidth, $newHeightCopy, $margin);
                 $imagick->compositeImage($stampCopyResized, \Imagick::COMPOSITE_OVER, (int)$xCopy, (int)$yCopy);
 
                 // Composite Obsolete
                 if ($stampObsResized) {
-                    list($xObs, $yObs) = $this->calculateStampCoordinates($posObsolete, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
+                    list($xObs, $yObs) = $this->calculateStampCoordinates($posObsolete, $imgWidth, $imgHeight, $newStampWidth, $newHeightObs, $margin);
                     $imagick->compositeImage($stampObsResized, \Imagick::COMPOSITE_OVER, (int)$xObs, (int)$yObs);
                     $stampObsResized->destroy();
                 }
 
-                $stampOrigResized->destroy();
                 $stampCopyResized->destroy();
             };
 
@@ -1658,8 +1712,10 @@ class ReceiptController extends Controller
 
             $imagick->clear();
             $imagick->destroy();
-            $stampOriginal->clear();
-            $stampOriginal->destroy();
+            if ($stampOriginal) {
+                $stampOriginal->clear();
+                $stampOriginal->destroy();
+            }
             $stampCopy->clear();
             $stampCopy->destroy();
             if ($stampObsolete) {

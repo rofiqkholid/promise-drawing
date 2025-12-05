@@ -313,12 +313,30 @@ $(function () {
 
                 const code = row.activity_code;
                 
-                // --- Helper Styles (Agar konsisten) ---
+                // --- Helper Styles ---
                 const mainTextClass = "text-sm font-bold text-gray-800 dark:text-gray-200 block";
                 const subTextClass  = "text-xs text-gray-500 dark:text-gray-400 mt-0.5 block";
                 const badgeRev = (rev) => `<span class="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 font-mono">Rev ${rev ?? '-'}</span>`;
+                const badgeLabel = (label) => label ? `<span class="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">${label}</span>` : '';
 
-                // 1. SUBMIT APPROVAL (Baru ditambahkan)
+                // 1. UPLOAD
+                if (code === 'UPLOAD') {
+                    const fileInfo = data.file_count ? `<span class="ml-1 text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-1 rounded border border-gray-200 dark:border-gray-600">${data.file_count} Files (${data.file_types || '-'})</span>` : '';
+                    return `
+                        <div class="flex flex-col">
+                            <div class="${mainTextClass}">
+                                <i class="fa-solid fa-cloud-arrow-up text-blue-500 mr-1"></i>
+                                ${data.part_no || '-'} ${badgeRev(data.revision_no)} ${badgeLabel(data.revision_label)}
+                            </div>
+                            <div class="${subTextClass}">
+                                ${data.customer_code || ''} • ${data.model_name || ''} • ${data.doctype_group || ''}
+                                ${fileInfo}
+                            </div>
+                            ${data.note ? `<div class="text-xs italic text-gray-400 mt-0.5">"${data.note}"</div>` : ''}
+                        </div>`;
+                }
+
+                // 2. SUBMIT_APPROVAL
                 if (code === 'SUBMIT_APPROVAL') {
                     return `
                         <div class="flex flex-col">
@@ -326,146 +344,133 @@ $(function () {
                                 <i class="fa-solid fa-file-signature mr-1"></i> Request Approval
                             </span>
                             <div class="${subTextClass}">
-                                ${data.part_no || '-'} ${badgeRev(data.revision_no)}
+                                ${data.part_no || '-'} ${badgeRev(data.revision_no)} ${badgeLabel(data.revision_label)}
                                 <span class="mx-1">•</span>
                                 ${data.customer_code || ''} ${data.model_name ? '• ' + data.model_name : ''}
                             </div>
-                        </div>`;
-                }
-
-                // 2. REVISE CONFIRM (Baru ditambahkan)
-                if (code === 'REVISE_CONFIRM') {
-                    return `
-                        <div class="flex flex-col">
-                            <span class="${mainTextClass} text-teal-600 dark:text-teal-400">
-                                <i class="fa-solid fa-pen-to-square mr-1"></i> Revision Confirmed
-                            </span>
-                            <div class="${subTextClass}">
-                                ${data.part_no || '-'} ${badgeRev(data.revision_no)}
-                                <div class="mt-0.5 flex items-center gap-1 text-[10px] opacity-80">
-                                    <span>${data.previous_status || 'Approved'}</span>
-                                    <i class="fa-solid fa-arrow-right-long mx-0.5"></i>
-                                    <span>Draft</span>
-                                </div>
-                            </div>
+                             ${data.ecn_no ? `<div class="text-[10px] text-gray-400 mt-0.5">ECN: ${data.ecn_no}</div>` : ''}
                         </div>`;
                 }
 
                 // 3. APPROVE & REJECT
                 if (code === 'APPROVE' || code === 'REJECT') {
-                    const isApprove = code === 'APPROVE';
+                    const isApprove = code === 'APPROVE' || (data.action_status && data.action_status === 'Approved');
                     const colorClass = isApprove ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
                     const iconClass  = isApprove ? 'fa-circle-check' : 'fa-circle-xmark';
-                    const labelText  = isApprove ? 'Approved' : 'Rejected';
-
-                    let detailHtml = '';
-                    if (data.part_no) {
-                        detailHtml = `
-                            <div class="mt-1 p-1.5 bg-gray-50 dark:bg-gray-700/50 rounded border border-gray-100 dark:border-gray-600 inline-block min-w-[200px]">
-                                <div class="text-xs font-bold text-gray-700 dark:text-gray-300">
-                                    ${data.part_no} ${badgeRev(data.revision_no)}
-                                </div>
-                                <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
-                                    ${data.customer_code || '-'} • ${data.model_name || '-'} • ${data.ecn_no || '-'}
-                                </div>
-                            </div>
-                        `;
-                    } else if (data.note) {
-                        // Fallback untuk data lama yg cuma punya note
-                        detailHtml = `<div class="text-xs italic text-gray-500 mt-1">"${data.note}"</div>`;
-                    }
+                    const labelText  = data.action_status || (isApprove ? 'Approved' : 'Rejected');
 
                     return `
                         <div class="flex flex-col items-start">
                             <span class="${mainTextClass} ${colorClass}">
                                 <i class="fa-regular ${iconClass} mr-1"></i> ${labelText}
                             </span>
-                            ${detailHtml}
-                            ${code === 'REJECT' && data.note ? `<div class="text-xs italic text-red-400 mt-1">"${data.note}"</div>` : ''}
-                        </div>
-                    `;
-                }
-
-                // 4. ROLLBACK
-                if (code === 'ROLLBACK') {
-                    let statusTransition = '';
-                    if (data.previous_status) {
-                        statusTransition = `
-                            <div class="flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-500 mt-0.5">
-                                <span>${data.previous_status}</span>
-                                <i class="fa-solid fa-arrow-right-long text-[10px]"></i>
-                                <span>${data.current_status || 'Waiting'}</span>
-                            </div>
-                        `;
-                    }
-                    let snapshotHtml = '';
-                    if (data.part_no) {
-                        snapshotHtml = `<div class="text-[10px] text-gray-500 mt-0.5">${data.part_no} ${badgeRev(data.revision_no)} • ${data.ecn_no || ''}</div>`;
-                    }
-
-                    return `
-                        <div class="flex flex-col">
-                            <span class="${mainTextClass} text-amber-600 dark:text-amber-500">
-                                <i class="fa-solid fa-rotate-left mr-1"></i> Rollback
-                            </span>
-                            ${statusTransition}
-                            ${snapshotHtml}
-                            ${data.reason || data.note ? `<div class="text-xs italic text-gray-400 mt-1">"${data.reason || data.note}"</div>` : ''}
-                        </div>
-                    `;
-                }
-
-                // 5. UPLOAD
-                if (code === 'UPLOAD') {
-                    const fileInfo = data.file_count ? `<span class="ml-1 text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-1 rounded">${data.file_count} Files</span>` : '';
-                    return `
-                        <div class="flex flex-col">
-                            <div class="${mainTextClass}">
-                                <i class="fa-solid fa-cloud-arrow-up text-blue-500 mr-1"></i>
-                                ${data.part_no || '-'} ${badgeRev(data.revision_no)}
-                            </div>
                             <div class="${subTextClass}">
-                                ${data.customer_code || ''} • ${data.model_name || ''} ${fileInfo}
+                                ${data.part_no || '-'} ${badgeRev(data.revision_no)}
+                                <span class="mx-1">•</span>
+                                ${data.customer_code || ''} ${data.model_name ? '• ' + data.model_name : ''}
+                            </div>
+                            ${data.note ? `<div class="text-xs italic text-gray-400 mt-0.5">"${data.note}"</div>` : ''}
+                        </div>
+                    `;
+                }
+
+                // 4. SHARE_PACKAGE
+                if (code === 'SHARE_PACKAGE') {
+                    let target = data.shared_to || data.recipients || 'Unknown';
+                    // Clean up [EXP] prefix if present for display
+                    target = target.replace('[EXP] ', '');
+                    const displayTarget = target.length > 90 ? target.substring(0, 90) + '...' : target;
+
+                    return `
+                        <div class="flex flex-col">
+                            <span class="${mainTextClass} text-indigo-600 dark:text-indigo-400">
+                                <i class="fa-solid fa-share-nodes mr-1"></i> Shared Package
+                            </span>
+                            <div class="${subTextClass}" title="${target}">
+                                <span class="font-medium">To:</span> ${displayTarget}
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-0.5">
+                                ${data.part_no || '-'} ${badgeRev(data.revision_no)} • Exp: ${data.expired_at || '-'}
                             </div>
                         </div>`;
                 }
 
-                // 6. DOWNLOAD
+                // 5. DOWNLOAD
                 if (code === 'DOWNLOAD') {
                     let fileName = data.downloaded_file || '-';
-                    const shortName = fileName.length > 30 ? fileName.substring(0, 27) + '...' : fileName;
+                    const shortName = fileName.length > 60 ? fileName.substring(0, 57) + '...' : fileName;
                     
                     return `
                         <div class="flex flex-col">
                             <span class="${mainTextClass} font-normal" title="${fileName}">
-                                <i class="fa-solid fa-file-arrow-down text-gray-400 mr-1"></i> ${shortName}
+                                <i class="fa-solid fa-file-arrow-down text-gray-500 mr-1"></i> ${shortName}
                             </span>
                             <div class="${subTextClass}">
-                                ${data.part_no || ''} ${data.revision_no ? badgeRev(data.revision_no) : ''}
+                                ${data.part_no || ''} ${badgeRev(data.revision_no)} ${badgeLabel(data.revision_label)}
                                 ${data.file_size ? `<span class="mx-1">•</span> ${data.file_size}` : ''}
                             </div>
                         </div>`;
                 }
 
-                // 7. SHARE (PACKAGE & INTERNAL)
-                if (code === 'SHARE_PACKAGE' || code === 'SHARE_INTERNAL') {
-                    let target = data.shared_to || data.shared_with || data.shared_to_dept || 'Unknown';
-                    // Cek jika target berbentuk array/list nama, potong biar tidak terlalu panjang
-                    const displayTarget = target.length > 40 ? target.substring(0, 40) + '...' : target;
-
+                // 6. ROLLBACK
+                if (code === 'ROLLBACK') {
                     return `
                         <div class="flex flex-col">
-                            <span class="${mainTextClass} text-indigo-600 dark:text-indigo-400">
-                                <i class="fa-solid fa-share-nodes mr-1"></i> Sent Package
+                            <span class="${mainTextClass} text-amber-600 dark:text-amber-500">
+                                <i class="fa-solid fa-rotate-left mr-1"></i> Rollback
                             </span>
-                            <span class="${subTextClass}" title="${target}">
-                                To: ${displayTarget}
+                            <div class="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">
+                                <span>${data.previous_status || '?'}</span>
+                                <i class="fa-solid fa-arrow-right-long text-[10px]"></i>
+                                <span>${data.current_status || '?'}</span>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-0.5">
+                                ${data.part_no || '-'} ${badgeRev(data.revision_no)}
+                            </div>
+                            ${data.note ? `<div class="text-xs italic text-gray-400 mt-0.5">"${data.note}"</div>` : ''}
+                        </div>
+                    `;
+                }
+
+                // 7. REVISE_CONFIRM
+                if (code === 'REVISE_CONFIRM') {
+                    return `
+                        <div class="flex flex-col">
+                            <span class="${mainTextClass} text-teal-600 dark:text-teal-400">
+                                <i class="fa-solid fa-pen-to-square mr-1"></i> Revision Confirmed
                             </span>
-                            ${data.expired_at ? `<span class="text-[10px] text-gray-400">Exp: ${data.expired_at}</span>` : ''}
+                            <div class="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">
+                                <span>${data.previous_status || '?'}</span>
+                                <i class="fa-solid fa-arrow-right-long text-[10px]"></i>
+                                <span>${data.current_status || '?'}</span>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-0.5">
+                                ${data.part_no || '-'} ${badgeRev(data.revision_no)} ${badgeLabel(data.revision_label)}
+                            </div>
                         </div>`;
                 }
 
-                // Default Fallback (Untuk data lama atau tipe lain)
+                // 8. SHARE_INTERNAL
+                if (code === 'SHARE_INTERNAL') {
+                     let target = data.shared_to_dept ? `Dept: ${data.shared_to_dept}` : (data.recipients || 'Unknown');
+                     const displayTarget = target.length > 90 ? target.substring(0, 90) + '...' : target;
+
+                    return `
+                        <div class="flex flex-col">
+                            <span class="${mainTextClass} text-teal-600 dark:text-teal-400">
+                                <i class="fa-solid fa-share-from-square mr-1"></i> Shared Internal
+                            </span>
+                            <div class="${subTextClass}" title="${target}">
+                                <span class="font-medium">To:</span> ${displayTarget}
+                            </div>
+                             <div class="text-[10px] text-gray-500 mt-0.5">
+                                ${data.part_no || '-'} ${badgeRev(data.revision_no)}
+                            </div>
+                            ${data.note ? `<div class="text-xs italic text-gray-400 mt-0.5">"${data.note}"</div>` : ''}
+                        </div>`;
+                }
+
+                // Default Fallback
                 return `<span class="text-xs text-gray-500 break-all">${JSON.stringify(data).substring(0, 50)}...</span>`;
             }
         }
