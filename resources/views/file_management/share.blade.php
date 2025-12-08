@@ -100,6 +100,42 @@
             </div>
 
         </div>
+        </div>
+    </div>
+
+    <!-- Share Details Modal -->
+    <div id="shareDetailsModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75"
+        style="display: none;">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg">
+            <div class="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Shared With</h3>
+                <button type="button" class="btn-close-share-details text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <i class="fa-solid fa-times fa-lg"></i>
+                </button>
+            </div>
+            <div class="p-0 overflow-y-auto max-h-[60vh]">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700/50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Supplier</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Shared At</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Expired At</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shareDetailsBody" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        <!-- Content via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex justify-end p-4 bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700 rounded-b-lg">
+                <button type="button"
+                    class="btn-close-share-details px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600">
+                    Close
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -359,9 +395,11 @@
                             const parts = [
                                 row.customer,
                                 row.model,
+                                row.part_no,
                                 row.doc_type,
                                 row.category,
-                                row.part_no,
+                                row.part_group,
+                                row.ecn_no,
                                 revTxt
                             ].filter(Boolean);
 
@@ -371,6 +409,20 @@
                     {
                         data: 'share_to',
                         name: 'psr.share_to',
+                        render: function(data, type, row) {
+                            if (!data || data.length === 0) {
+                                return '<span class="text-gray-400 text-xs italic">Not yet distributed</span>';
+                            }
+                            // Store data in a data attribute (JSON stringified)
+                            const json = JSON.stringify(data).replace(/"/g, '&quot;');
+                            return `
+                                <button type="button" 
+                                    class="btn-view-shares inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-indigo-700 bg-indigo-100 rounded-full hover:bg-indigo-200 dark:text-indigo-300 dark:bg-indigo-900/50 dark:hover:bg-indigo-900"
+                                    data-shares="${json}">
+                                    <i class="fa-solid fa-eye"></i> View (${data.length})
+                                </button>
+                            `;
+                        }
                     },
                     {
                         data: 'request_date',
@@ -665,6 +717,58 @@
 
         initTable();
         bindHandlers();
+
+        // --- Share Details Modal Logic ---
+        const $shareDetailsModal = $('#shareDetailsModal');
+        const $shareDetailsBody = $('#shareDetailsBody');
+
+        $('body').on('click', '.btn-close-share-details', function() {
+            $shareDetailsModal.hide();
+        });
+
+        $shareDetailsModal.on('click', function(e) {
+            if ($(e.target).is($shareDetailsModal)) {
+                $(this).hide();
+            }
+        });
+
+        $('#approvalTable tbody').on('click', '.btn-view-shares', function(e) {
+            e.stopPropagation();
+            const json = $(this).attr('data-shares');
+            if (!json) return;
+
+            const shares = JSON.parse(json);
+            $shareDetailsBody.empty();
+
+            shares.forEach(s => {
+                const sharedDate = fmtDate(s.shared_at);
+                
+                let statusHtml = '';
+                if (s.expired_at) {
+                    const expDate = new Date(s.expired_at);
+                    const now = new Date();
+                    if (expDate < now) {
+                        statusHtml = `<span class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300">Expired</span>`;
+                    } else {
+                        statusHtml = `<span class="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">Active</span>`;
+                    }
+                } else {
+                        statusHtml = `<span class="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">Active</span>`;
+                }
+
+                const row = `
+                    <tr>
+                        <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 font-medium">${s.code}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">${sharedDate}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">${s.expired_at ? fmtDate(s.expired_at) : '-'}</td>
+                        <td class="px-4 py-3 text-sm">${statusHtml}</td>
+                    </tr>
+                `;
+                $shareDetailsBody.append(row);
+            });
+
+            $shareDetailsModal.show();
+        });
     });
 </script>
 @endpush

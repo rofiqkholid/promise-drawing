@@ -568,7 +568,7 @@
       } else {
         $btn.find('.btn-label').removeClass('hidden');
         $btn.find('.btn-spinner').addClass('hidden');
-        updateShareButtonState(); // balik ke state normal tergantung note
+        updateShareButtonState();
       }
     }
 

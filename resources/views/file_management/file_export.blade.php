@@ -603,150 +603,166 @@ $(function () {
       return Math.floor(seconds) + "s ago";
   }
 
-  function renderActivityLogs(logs) {
-      const container = $('#activity-log-content');
-      container.empty();
+        function renderActivityLogs(logs) {
+            const container = $('#activity-log-content');
+            container.empty();
 
-      if (!logs || !logs.length) {
-          container.html(
-              '<p class="italic text-center text-gray-500 dark:text-gray-400">No activity yet. This panel will display recent package activities and approvals.</p>'
-          );
-          return;
-      }
+            if (!logs || !logs.length) {
+                container.html(
+                    '<div class="flex flex-col items-center justify-center py-8 text-gray-400 dark:text-gray-500"><i class="fa-regular fa-calendar-xmark text-2xl mb-2"></i><p class="text-xs">No activity recorded yet.</p></div>'
+                );
+                return;
+            }
 
-      container.off('click', '.log-toggle-btn').on('click', '.log-toggle-btn', function() {
-          const target = $(this).data('target');
-          const $targetEl = $(target);
+            // Sort logs desc
+            logs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-          if ($targetEl.hasClass('hidden')) {
-              $targetEl.removeClass('hidden');
-              $(this).html('Hide additional details <i class="fa-solid fa-chevron-up fa-xs ml-1"></i>');
-          } else {
-              $targetEl.addClass('hidden');
-              $(this).html('Show additional details <i class="fa-solid fa-chevron-down fa-xs ml-1"></i>');
-          }
-      });
+            logs.forEach((l, index) => {
+                const m = l.meta || {};
+                const code = l.activity_code;
+                const isLast = index === logs.length - 1;
+                
+                let icon = 'fa-circle-info';
+                let colorClass = 'bg-gray-100 text-gray-600';
+                let title = code;
 
-      logs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                if (code === 'UPLOAD') {
+                    icon = 'fa-cloud-arrow-up';
+                    colorClass = 'bg-blue-100 text-blue-600';
+                    title = 'Uploaded';
+                } else if (code === 'SUBMIT_APPROVAL') {
+                    icon = 'fa-paper-plane';
+                    colorClass = 'bg-yellow-100 text-yellow-600';
+                    title = 'Approval Requested';
+                } else if (code === 'APPROVE') {
+                    icon = 'fa-check';
+                    colorClass = 'bg-green-100 text-green-600';
+                    title = 'Approved';
+                } else if (code === 'REJECT') {
+                    icon = 'fa-xmark';
+                    colorClass = 'bg-red-100 text-red-600';
+                    title = 'Rejected';
+                } else if (code === 'ROLLBACK') {
+                    icon = 'fa-rotate-left';
+                    colorClass = 'bg-amber-100 text-amber-600';
+                    title = 'Rollback';
+                } else if (code === 'DOWNLOAD') {
+                    icon = 'fa-download';
+                    colorClass = 'bg-gray-100 text-gray-600';
+                    title = 'Downloaded';
+                } else if (code.includes('SHARE')) {
+                    icon = 'fa-share-nodes';
+                    colorClass = 'bg-indigo-100 text-indigo-600';
+                    title = 'Shared';
+                } else if (code === 'REVISE_CONFIRM') {
+                    icon = 'fa-pen-to-square';
+                    colorClass = 'bg-purple-100 text-purple-600';
+                    title = 'Revision Confirmed';
+                }
 
-      const createPrimaryDetail = (key, val) => {
-          if (val === null || val === undefined || val === '') return '';
-          return `<div class="text-xs"><span class="font-semibold text-gray-600 dark:text-gray-400">${key}:</span> <span class="text-gray-800 dark:text-gray-200">${val}</span></div>`;
-      };
-      const createPrimaryNote = (note) => {
-          if (note === null || note === undefined || note === '') return '';
-          return `<div class="text-xs mt-1 italic"><span class="font-semibold text-gray-600 dark:text-gray-400">Note:</span> <span class="text-gray-800 dark:text-gray-200">"${note}"</span></div>`;
-      };
-      const createCollapsibleItem = (key, val) => {
-          if (val === null || val === undefined || val === '') return '';
-          return `<div class="text-xs flex justify-between items-center space-x-2">
-                      <span class="text-gray-500 dark:text-gray-400">${key}</span>
-                      <span class="font-medium text-gray-800 dark:text-gray-200 text-right">${val}</span>
-                  </div>`;
-      };
+                const timeStr = l.created_at ? formatDateTime(l.created_at) : '-';
+                const userStr = l.user_name || 'System';
 
-      logs.forEach((l, index) => {
-          const m = l.meta || {};
-          const revisionNo = m.revision_no !== undefined ? `rev${m.revision_no}` : '';
+                // Content Logic
+                let contentHtml = '';
+                
+                // Snapshot / Meta Details
+                if (m.part_no || m.ecn_no) {
+                     contentHtml += `
+                        <div class="mt-2 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-xs shadow-sm">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-bold text-gray-800 dark:text-gray-200">${m.part_no || '-'}</span>
+                                <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded font-mono text-[10px] border border-gray-200 dark:border-gray-600">
+                                    Rev ${m.revision_no ?? '-'}
+                                </span>
+                                ${m.ecn_no ? `<span class="text-blue-600 dark:text-blue-400 font-mono text-[10px] bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800">${m.ecn_no}</span>` : ''}
+                            </div>
+                            <div class="text-gray-500 dark:text-gray-400 text-[10px] flex items-center gap-1">
+                                <i class="fa-solid fa-tag text-[9px]"></i>
+                                <span>${m.customer_code || m.customer || '-'}</span>
+                                <span class="mx-0.5">•</span>
+                                <span>${m.model_name || m.model || '-'}</span>
+                                ${m.doctype_group ? `<span><span class="mx-0.5">•</span>${m.doctype_group}</span>` : ''}
+                            </div>
+                            ${code === 'ROLLBACK' && m.previous_status ? `
+                                <div class="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700 flex items-center text-amber-600 dark:text-amber-500 font-medium">
+                                    <i class="fa-solid fa-code-branch mr-1.5 text-[10px]"></i>
+                                    <span class="capitalize">${m.previous_status}</span>
+                                    <i class="fa-solid fa-arrow-right-long mx-1.5 text-[10px]"></i>
+                                    <span>Waiting</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
 
-          const activity = {
-              UPLOAD: { icon: 'fa-upload', color: 'bg-blue-500', title: 'Draft Saved / Uploaded' },
-              DOWNLOAD: { icon: 'fa-download', color: 'bg-green-500', title: 'Downloaded' },
-              SUBMIT_APPROVAL: { icon: 'fa-paper-plane', color: 'bg-yellow-500', title: 'Approval Submitted' },
-              APPROVE: { icon: 'fa-check-double', color: 'bg-green-500', title: 'Package Approved' },
-              REVISE_CONFIRM: { icon: 'fa-pen-to-square', color: 'bg-purple-500', title: 'Revision Confirmed' },
-              REJECT: { icon: 'fa-times-circle', color: 'bg-red-500', title: 'Package Rejected' },
-              ROLLBACK: { icon: 'fa-undo', color: 'bg-orange-500', title: 'Revision Rolled Back' },
-              default: { icon: 'fa-info-circle', color: 'bg-gray-500', title: l.activity_code }
-          };
+                // Note
+                if (m.note) {
+                    contentHtml += `
+                        <div class="mt-1.5 flex items-start gap-1.5">
+                            <i class="fa-solid fa-quote-left text-gray-300 dark:text-gray-600 text-[10px] mt-0.5"></i>
+                            <p class="text-xs text-gray-600 dark:text-gray-300 italic">${m.note}</p>
+                        </div>
+                    `;
+                }
+                
+                // Specific for Share
+                if (code.includes('SHARE')) {
+                     let target = m.shared_to_dept || m.shared_with || m.shared_to || '-';
+                     target = target.replace('[EXP] ', '');
+                     
+                     contentHtml += `
+                        <div class="mt-1.5 text-xs text-gray-600 dark:text-gray-400">
+                            <div class="flex items-center gap-1">
+                                <i class="fa-solid fa-arrow-right-to-bracket text-[10px]"></i>
+                                <span>To: <strong>${target}</strong></span>
+                            </div>
+                            ${m.recipients ? `<div class="mt-0.5 ml-3.5 text-[10px] text-gray-500">Recipients: ${m.recipients}</div>` : ''}
+                            ${m.expired_at ? `<div class="mt-0.5 ml-3.5 text-[10px] text-red-500">Exp: ${m.expired_at}</div>` : ''}
+                        </div>
+                     `;
+                }
+                
+                // Specific for Download
+                if (code === 'DOWNLOAD' && m.downloaded_file) {
+                     contentHtml += `
+                        <div class="mt-1.5 text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                            <i class="fa-solid fa-file text-[10px]"></i>
+                            <span>${m.downloaded_file}</span>
+                            ${m.file_size ? `<span class="text-gray-400">(${m.file_size})</span>` : ''}
+                        </div>
+                     `;
+                }
 
-          const { icon, color, title } = activity[l.activity_code] || activity.default;
-
-          const timeAgo = l.created_at ? formatTimeAgo(new Date(l.created_at)) : '';
-          const fullTimestamp = l.created_at ? formatDateTime(l.created_at) : '';
-          const userLabel = l.user_name ? `${l.user_name}` : (l.user_id ? `User #${l.user_id}` : 'System');
-
-          const logId = `log-details-${l.id}`;
-
-          let alwaysVisibleHtml = '';
-          let collapsibleHtml = '';
-
-          if (l.activity_code === 'UPLOAD') {
-              alwaysVisibleHtml = [
-                  createPrimaryDetail("ECN", m.ecn_no),
-                  createPrimaryDetail("Label", m.revision_label),
-                  createPrimaryNote(m.note)
-              ].filter(Boolean).join('');
-
-              const productInfo = [
-                  createCollapsibleItem("Customer", m.customer_code),
-                  createCollapsibleItem("Model", m.model_name),
-                  createCollapsibleItem("Part No", m.part_no)
-              ].filter(Boolean).join('');
-
-              const docInfo = [
-                  createCollapsibleItem("Doc Group", m.doctype_group),
-                  createCollapsibleItem("Sub-Category", m.doctype_subcategory)
-              ].filter(Boolean).join('');
-
-              collapsibleHtml = [
-                  productInfo,
-                  docInfo ? `<div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700/50 space-y-1">${docInfo}</div>` : ''
-              ].filter(Boolean).join('');
-
-          } else if (['SUBMIT_APPROVAL', 'REVISE_CONFIRM'].includes(l.activity_code)) {
-              alwaysVisibleHtml = [
-                  createPrimaryDetail("ECN", m.ecn_no),
-                  createPrimaryDetail("Label", m.revision_label),
-                  createPrimaryDetail("Previous Status", m.previous_status),
-                  createPrimaryNote(m.note)
-              ].filter(Boolean).join('');
-
-          } else {
-              alwaysVisibleHtml = createPrimaryNote(m.note);
-          }
-
-
-          const isLast = index === logs.length - 1;
-
-          const el = $(`
-              <div class="relative">
-                  ${!isLast ? '<div class="absolute left-5 top-5 -ml-px h-full w-0.5 bg-gray-300 dark:bg-gray-700"></div>' : ''}
-                  <div class="relative flex items-start space-x-4 pb-8">
-                      <div class="flex-shrink-0">
-                          <span class="flex items-center justify-center h-10 w-10 rounded-full ${color} text-white shadow-md z-10"><i class="fa-solid ${icon}"></i></span>
-                      </div>
-                      <div class="min-w-0 flex-1 pt-1.5">
-                          <div class="flex justify-between items-center">
-                              <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                  ${title}
-                                  ${revisionNo ? `<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">${revisionNo}</span>` : ''}
-                              </p>
-                              <span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
-                                  ${fullTimestamp} | ${timeAgo}
-                              </span>
-                          </div>
-                          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">by <strong>${userLabel}</strong></p>
-
-                          ${alwaysVisibleHtml ? `<div class="mt-2 space-y-1">${alwaysVisibleHtml}</div>` : ''}
-
-                          ${collapsibleHtml ? `
-                              <div class="mt-2">
-                                  <button class="log-toggle-btn text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline" data-target="#${logId}">
-                                      Show additional details <i class="fa-solid fa-chevron-down fa-xs ml-1"></i>
-                                  </button>
-                                  <div id="${logId}" class="hidden mt-2 space-y-2 p-3 bg-gray-100 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700/50">
-                                      ${collapsibleHtml}
-                                  </div>
-                              </div>
-                          ` : ''}
-                      </div>
-                  </div>
-              </div>
-          `);
-          container.append(el);
-      });
-  }
+                const el = $(`
+                    <div class="relative flex gap-3">
+                        ${!isLast ? '<div class="absolute top-4 left-3 -ml-px h-full w-0.5 bg-gray-200 dark:bg-gray-700" aria-hidden="true"></div>' : ''}
+                        
+                        <div class="relative flex-shrink-0 mt-1">
+                             <div class="w-6 h-6 rounded-full flex items-center justify-center ${colorClass} ring-4 ring-white dark:ring-gray-800 z-10 relative">
+                                <i class="fa-solid ${icon} text-xs"></i>
+                             </div>
+                        </div>
+                        
+                        <div class="flex-1 min-w-0 mb-6 ${isLast ? 'mb-0' : ''}">
+                            <div class="p-3 rounded-md bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                <div class="flex justify-between items-start">
+                                    <p class="text-sm text-gray-900 dark:text-gray-100">
+                                        <span class="font-bold capitalize">${title}</span>
+                                        <span class="text-xs text-gray-500 font-normal">by</span>
+                                        <span class="font-semibold text-blue-600 dark:text-blue-400">${userStr}</span>
+                                    </p>
+                                    <span class="text-[10px] text-gray-400 whitespace-nowrap ml-2">${timeStr}</span>
+                                </div>
+                                ${contentHtml}
+                            </div>
+                        </div>
+                    </div>
+                `);
+                
+                container.append(el);
+            });
+        }
 
   window.openPackageDetails = function(id) {
       const existing = document.getElementById('package-details-modal');
@@ -879,7 +895,7 @@ $(function () {
                               <i class="fa-solid fa-clipboard-list mr-2 text-blue-500"></i>
                               Activity Log
                           </h4>
-                          <div id="activity-log-content" class="space-y-4 max-h-96 overflow-y-auto pr-2">
+                          <div id="activity-log-content" class="max-h-96 overflow-y-auto pr-2 pl-1 pt-1">
                               <p class="italic text-center text-gray-500 dark:text-gray-400">Loading activity logs...</p>
                           </div>
                       </div>

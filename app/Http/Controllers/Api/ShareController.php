@@ -208,6 +208,7 @@ class ShareController extends Controller
             ->join('products as p', 'dp.product_id', '=', 'p.id')
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
             ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id') // <--- TAMBAH INI
             ->leftJoinSub($latestPa, 'pa', function ($join) {
                 $join->on('pa.revision_id', '=', 'dpr.id')
@@ -262,7 +263,9 @@ class ShareController extends Controller
             'm.name as model',
             'dtg.name as doc_type',
             'dsc.name as category',
+            'pg.code_part_group as part_group',
             'p.part_no',
+            'dpr.ecn_no',
             'dpr.revision_no as revision',
             DB::raw("
             CASE COALESCE(pa.decision, dpr.revision_status)
@@ -307,7 +310,7 @@ class ShareController extends Controller
         $shares = DB::table('package_shares as psr')
             ->join('suppliers as s', 'psr.supplier_id', '=', 's.id')
             ->whereIn('psr.revision_id', $revisionIds)
-            ->select('psr.revision_id', 's.code')
+            ->select('psr.revision_id', 's.code', 'psr.shared_at', 'psr.expired_at')
             ->get()
             ->groupBy('revision_id');
 
@@ -315,9 +318,16 @@ class ShareController extends Controller
             $itemShares = $shares->get($item->id);
 
             if ($itemShares && $itemShares->count() > 0) {
-                $item->share_to = $itemShares->pluck('code')->implode(', ');
+                // $item->share_to = $itemShares->pluck('code')->implode(', ');
+                $item->share_to = $itemShares->map(function($s) {
+                    return [
+                        'code'       => $s->code,
+                        'shared_at'  => $s->shared_at,
+                        'expired_at' => $s->expired_at,
+                    ];
+                });
             } else {
-                $item->share_to = 'Not yet distributed';
+                $item->share_to = []; // Return empty array instead of string
             }
 
             return $item;
@@ -501,9 +511,9 @@ class ShareController extends Controller
             })->unique()->implode(', ');
 
             // Format daftar penerima untuk disimpan di Log (Snapshot)
-            $recipientSnapshot = $userSuppliers->map(function ($u) {
-                return "{$u->name} ({$u->email})";
-            })->unique()->implode(', ');
+            // $recipientSnapshot = $userSuppliers->map(function ($u) {
+            //     return "{$u->name} ({$u->email})";
+            // })->unique()->implode(', ');
 
             // Buat Activity Log
             if ($packageDetails) {
@@ -519,7 +529,7 @@ class ShareController extends Controller
 
                     // --- Custom Data Share ---
                     'shared_to'       => $sharedToString,
-                    'recipients'      => $recipientSnapshot,
+                    // 'recipients'      => $recipientSnapshot,
                     'shared_count'    => count($supplierIds),
                     'expired_at'      => $expiredAt->format('Y-m-d')
                 ];
@@ -687,7 +697,7 @@ class ShareController extends Controller
         $logs = $this->buildApprovalLogs($revision->package_id, $revisionId);
 
         // fallback "Uploaded" kalau belum ada
-        $uploadedAt     = optional($package->created_at);
+        $uploadedAt     = $package->created_at ? Carbon::parse($package->created_at) : null;
         $uploaderName   = $package->uploader_name ?? 'System';
         $hasUploadedLog = $logs->contains(fn($log) => ($log['action'] ?? '') === 'uploaded');
 
@@ -706,7 +716,6 @@ class ShareController extends Controller
         }
         // ==== END ACTIVITY LOG ====
 
-        // 4. Ambil file-file di revisi ini, dikelompokkan per kategori
         $fileRows = DB::table('doc_package_revision_files')
             ->where('revision_id', $revisionId)
             ->select(
@@ -782,13 +791,13 @@ class ShareController extends Controller
                         's.name as supplier_name',
                     ]);
 
-                $sharedAt = $revision->shared_at ?? null;
+                $sharedAtRaw = $revision->shared_at ?? null;
 
-                $shares = $supplierRows->map(function ($row) use ($sharedAt) {
+                $shares = $supplierRows->map(function ($row) use ($sharedAtRaw) {
                     return (object) [
                         'supplier_code' => $row->supplier_code,
                         'supplier_name' => $row->supplier_name,
-                        'shared_at'     => $sharedAt,
+                        'shared_at'     => $sharedAtRaw,
                     ];
                 });
             }
@@ -972,8 +981,9 @@ class ShareController extends Controller
                     'action'  => $action,
                     'user'    => $row->user_name ?? 'System',
                     'note'    => is_array($meta) ? ($meta['note'] ?? '') : ($meta ?: ''),
-                    'time'    => optional($row->created_at)->format('Y-m-d H:i'),
-                    'time_ts' => optional($row->created_at)?->timestamp ?? 0,
+                    'time'    => $row->created_at ? Carbon::parse($row->created_at)->format('Y-m-d H:i') : null,
+                    'time_ts' => $row->created_at ? Carbon::parse($row->created_at)->timestamp : 0,
+                    'snapshot' => is_array($meta) ? $meta : null,
                 ];
             });
     }
