@@ -465,11 +465,13 @@ class DrawingUploadController extends Controller
             DB::commit();
 
             return response()->json(['success' => true, 'message' => 'Draft has been saved successfully.', 'revision_id' => $revisionId, 'package_id' => $packageId]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
 
             foreach ($savedFilePaths as $path) {
-                Storage::disk($this->disk)->delete($path);
+                if (Storage::disk($this->disk)->exists($path)) {
+                    Storage::disk($this->disk)->delete($path);
+                }
             }
 
             $errors = [];
@@ -478,18 +480,25 @@ class DrawingUploadController extends Controller
                 $message = $e->getMessage();
                 $statusCode = 422;
             } else {
-                $message = 'An unexpected error occurred on the server.';
+                $message = $e->getMessage(); // Expose the error message for debugging
+                // For production, you might want to hide this: $message = 'An unexpected error occurred on the server.';
                 $statusCode = 500;
             }
 
             Log::error('Upload failed and rolled back', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
                 'errors' => $errors,
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
             ]);
 
             return response()->json([
                 'message' => $message,
                 'errors' => $errors,
+                'exception' => config('app.debug') ? get_class($e) : null,
+                'file' => config('app.debug') ? $e->getFile() : null,
+                'line' => config('app.debug') ? $e->getLine() : null,
             ], $statusCode);
         }
     }
@@ -882,117 +891,136 @@ class DrawingUploadController extends Controller
         return $result ? (int)$result : null;
     }
 
-    public function requestApproval(Request $r): JsonResponse
-    {
-        $r->validate([
-            'package_id' => 'required|integer|exists:doc_packages,id',
-            'revision_id' => 'required|integer|exists:doc_package_revisions,id',
+  public function requestApproval(Request $r): JsonResponse
+{
+    $r->validate([
+        'package_id'  => 'required|integer|exists:doc_packages,id',
+        'revision_id' => 'required|integer|exists:doc_package_revisions,id',
+    ]);
+
+    $packageId  = (int) $r->package_id;
+    $revisionId = (int) $r->revision_id;
+
+    // find revision
+    $revision = DB::table('doc_package_revisions')->where('id', $revisionId)->first();
+
+    if (!$revision || $revision->package_id != $packageId) {
+        return response()->json(['message' => 'Revision not found for the given package.'], 422);
+    }
+
+    DB::beginTransaction();
+    try {
+        $now    = Carbon::now();
+        $userId = $this->getAuthUserInt();
+
+        // 1) Set status revision jadi pending (apapun status sebelumnya: rejected / waiting / dsb)
+        DB::table('doc_package_revisions')
+            ->where('id', $revision->id)
+            ->update([
+                'revision_status' => 'pending',
+                'updated_at'      => $now,
+            ]);
+
+        // 2) Reset / buat record di package_approvals
+        $existingApproval = DB::table('package_approvals')
+            ->where('package_id', $packageId)
+            ->where('revision_id', $revision->id)
+            ->where('is_active', 1)
+            ->first(['id']);
+
+        if ($existingApproval) {
+            // UPDATE: dari rejected (atau status lain) jadi pending lagi
+            DB::table('package_approvals')
+                ->where('id', $existingApproval->id)
+                ->update([
+                    'decision'     => 'pending',
+                    'reason'       => null,
+                    'decided_by'   => null,
+                    'decided_at'   => null,
+                    'requested_by' => $userId,
+                    'requested_at' => $now,
+                    'updated_at'   => $now,
+                ]);
+        } else {
+            // INSERT: kalau belum pernah ada approval untuk revision ini
+            DB::table('package_approvals')->insertGetId([
+                'package_id'    => $packageId,
+                'revision_id'   => $revision->id,
+                'requested_by'  => $userId,
+                'requested_at'  => $now,
+                'decision'      => 'pending',
+                'is_active'     => 1,
+                'created_at'    => $now,
+                'updated_at'    => $now,
+            ]);
+        }
+
+        // Activity Logging --- (bagian ini boleh tetap pakai punyamu tadi, cuma saya copy ulang)
+        $packageInfo = DB::table('doc_packages as dp')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+            ->where('dp.id', $packageId)
+            ->select(
+                'c.code as customer',
+                'm.name as model',
+                'p.part_no',
+                'dtg.name as doc_type',
+                'pg.code_part_group'
+            )
+            ->first();
+
+        $labelName = null;
+        if (!empty($revision->revision_label_id)) {
+            $labelName = DB::table('customer_revision_labels')
+                ->where('id', $revision->revision_label_id)
+                ->value('label');
+        }
+
+        $metaLogData = [
+            'part_no'         => $packageInfo->part_no,
+            'customer_code'   => $packageInfo->customer,
+            'model_name'      => $packageInfo->model,
+            'doc_type'        => $packageInfo->doc_type,
+            'part_group_code' => $packageInfo->code_part_group ?? '-',
+            'package_id'      => $packageId,
+            'revision_no'     => $revision->revision_no,
+            'ecn_no'          => $revision->ecn_no,
+            'revision_label'  => $labelName,
+        ];
+
+        ActivityLog::create([
+            'user_id'       => $userId,
+            'activity_code' => 'SUBMIT_APPROVAL',
+            'scope_type'    => 'revision',
+            'scope_id'      => $packageId,   // boleh tetap seperti ini kalau mau konsisten dengan historimu
+            'revision_id'   => $revision->id,
+            'meta'          => $metaLogData,
         ]);
 
-        $packageId = (int) $r->package_id;
-        $revisionId = (int) $r->revision_id;
+        DB::commit();
 
-        // find revision
-        $revision = DB::table('doc_package_revisions')->where('id', $revisionId)->first();
+        $encryptedId = str_replace('=', '-', encrypt($revisionId));
 
-        if (!$revision || $revision->package_id != $packageId) {
-            return response()->json(['message' => 'Revision not found for the given package.'], 422);
-        }
-
-        if ($revision->revision_status === 'pending') {
-            return response()->json(['success' => true, 'message' => 'Revision already pending.']);
-        }
-
-        DB::beginTransaction();
-        try {
-            DB::table('doc_package_revisions')
-                ->where('id', $revision->id)
-                ->update(['revision_status' => 'pending', 'updated_at' => Carbon::now()]);
-
-            // create approval record if not exists
-            $existingApproval = DB::table('package_approvals')
-                ->where('package_id', $packageId)
-                ->where('revision_id', $revision->id)
-                ->where('is_active', 1)
-                ->first(['id']);
-
-            if (!$existingApproval) {
-                DB::table('package_approvals')->insertGetId([
-                    'package_id' => $packageId,
-                    'revision_id' => $revision->id,
-                    'requested_by' => $this->getAuthUserInt(),
-                    'requested_at' => Carbon::now(),
-                    'is_active' => 1,
-                    'created_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                ]);
-            }
-
-            // Activity Logging ---
-            $packageInfo = DB::table('doc_packages as dp')
-                ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-                ->join('models as m', 'dp.model_id', '=', 'm.id')
-                ->join('products as p', 'dp.product_id', '=', 'p.id')
-                ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-                ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
-                ->where('dp.id', $packageId)
-                ->select(
-                    'c.code as customer',
-                    'm.name as model',
-                    'p.part_no',
-                    'dtg.name as doc_type',
-                    'pg.code_part_group'
-                )
-                ->first();
-
-            // 2. Ambil Nama Label Revisi
-            $labelName = null;
-            if (!empty($revision->revision_label_id)) {
-                $labelName = DB::table('customer_revision_labels')
-                    ->where('id', $revision->revision_label_id)
-                    ->value('label');
-            }
-
-            // 3. Susun Meta Data
-            $metaLogData = [
-                // Snapshot Data Utama
-                'part_no'         => $packageInfo->part_no,
-                'customer_code'   => $packageInfo->customer,
-                'model_name'      => $packageInfo->model,
-                'doc_type'        => $packageInfo->doc_type,
-                'part_group_code' => $packageInfo->code_part_group ?? '-',
-                
-                // Detail Revisi
-                'package_id'      => $packageId,
-                'revision_no'     => $revision->revision_no,
-                'ecn_no'          => $revision->ecn_no,
-                'revision_label'  => $labelName,
-            ];
-
-            ActivityLog::create([
-                'user_id'       => $this->getAuthUserInt(),
-                'activity_code' => 'SUBMIT_APPROVAL',
-                'scope_type'    => 'revision',
-                'scope_id'      => $packageId,
-                'revision_id'   => $revision->id,
-                'meta'          => $metaLogData,
-            ]);
-
-            DB::commit();
-
-            $encryptedId = str_replace('=', '-', encrypt($revisionId));
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Revision set to pending and approval requested.',
-                'revision_id' => $encryptedId
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Failed to request approval', ['error' => $e->getMessage(), 'package_id' => $packageId, 'revision_no' => $revision->revision_no]);
-            return response()->json(['message' => 'Failed to request approval.'], 500);
-        }
+        return response()->json([
+            'success'     => true,
+            'message'     => 'Revision set to pending and approval requested.',
+            'revision_id' => $encryptedId
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Failed to request approval', [
+            'error'       => $e->getMessage(),
+            'package_id'  => $packageId,
+            'revision_no' => $revision->revision_no,
+        ]);
+        return response()->json(['message' => 'Failed to request approval.'], 500);
     }
+}
+
+
 
     public function activityLogs(Request $r): JsonResponse
     {

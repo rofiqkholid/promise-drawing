@@ -460,7 +460,7 @@
 
             <div class="flex justify-end pt-4 gap-4" x-show="!isReadOnly" x-transition>
                 <button type="submit" id="submit-button"
-                    :disabled="!isMetadataFilled || isUploading || (draftSaved && !isDirty)"
+                    :disabled="!isMetadataFilled || !ecn_no || isUploading || (draftSaved && !isDirty) || revisionCheck.status === 'checking'"
                     class="inline-flex items-center gap-2 justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 enabled:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800">
                     <i class="fa-solid" :class="{ 'fa-upload': !isUploading, 'fa-spinner fa-spin': isUploading }"></i>
                     <span x-text="isUploading ? 'Uploading...' : (draftSaved ? 'Update Draft' : 'Save to Draft')"></span>
@@ -782,7 +782,16 @@
                     if (this.ecn_no !== this.originalDraftData.ecn_no) return true;
                     if (this.receipt_date !== this.originalDraftData.receipt_date) return true;
                     if ((this.note || '') !== this.originalDraftData.note) return true;
-                    if (this.revision_label_id != this.originalDraftData.revision_label_id) return true;
+
+                    // Normalize revision_label_id comparison
+                    let currentLabel = this.revision_label_id;
+                    if (currentLabel === '' || currentLabel === 'null') currentLabel = null;
+
+                    let originalLabel = this.originalDraftData.revision_label_id;
+                    if (originalLabel === '' || originalLabel === 'null') originalLabel = null;
+
+                    if (currentLabel != originalLabel) return true;
+
                     if (this.is_finish !== this.originalDraftData.is_finish) return true;
                     return false;
                 },
@@ -894,6 +903,12 @@
                     //     if (!this.isLoadingDraft) this.isDirty = true;
                     // });
 
+                    this.$watch('ecn_no', (val) => {
+                        if (this.isFormReady && !this.isLoadingDraft && !this.isReadOnly) {
+                            this.checkRevisionStatus();
+                        }
+                    });
+
                     this.$watch('isFormReady', (isReady) => {
                         if (isReady && !this.isLoadingDraft && !this.isReadOnly) {
                             this.checkRevisionStatus();
@@ -922,6 +937,10 @@
                         this.styleSelect2Error('docType', errors.docType);
                         this.styleSelect2Error('partGroup', errors.partGroup);
                         // this.styleSelect2Error('revision_label_id', errors.revision_label_id);
+
+                        if (Object.keys(errors).length > 0) {
+                            this.scrollToFirstError();
+                        }
                     });
                 },
 
@@ -935,6 +954,45 @@
                     } else {
                         selectionBox.removeClass('validation-error-select2');
                     }
+                },
+
+                scrollToFirstError() {
+                    this.$nextTick(() => {
+                        const fieldOrder = [
+                            'customer', 'model', 'partNo', 'docType', 'category', 'partGroup',
+                            'ecn_no', 'receipt_date', 'revision_label_id', 'is_finish', 'note'
+                        ];
+
+                        const errors = Object.keys(this.validationErrors);
+                        if (errors.length === 0) return;
+
+                        const firstErrorField = fieldOrder.find(field => errors.includes(field));
+
+                        if (firstErrorField) {
+                            const element = document.getElementById(firstErrorField);
+                            if (element) {
+                                if ($(element).hasClass("select2-hidden-accessible")) {
+                                    const container = $(element).next('.select2-container');
+                                    if (container.length) {
+                                        container[0].scrollIntoView({
+                                            behavior: 'smooth',
+                                            block: 'center'
+                                        });
+                                        return;
+                                    }
+                                }
+                                element.scrollIntoView({
+                                    behavior: 'smooth',
+                                    block: 'center'
+                                });
+                                if (!element.disabled) {
+                                    element.focus({
+                                        preventScroll: true
+                                    });
+                                }
+                            }
+                        }
+                    });
                 },
 
                 fetchAllowedExtensions() {
@@ -1011,7 +1069,7 @@
                 },
 
                 loadDraftData(revisionId, isReadOnly = false) {
-                    const url = `{{ url('/files') }}` + '/' + revisionId;
+                    const url = `{{ url('/files') }}` + '/' + encodeURIComponent(revisionId);
 
                     $.ajax({
                         url: url,

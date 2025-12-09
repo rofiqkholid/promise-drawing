@@ -38,9 +38,8 @@ class DashboardController extends Controller
     {
         try {
             $uploadCount = DB::connection('sqlsrv')
-                ->table('activity_logs')
-                ->where('activity_code', 'UPLOAD')
-                ->count('activity_code');
+                ->table('doc_package_revisions')
+                ->count();
 
             return response()->json([
                 'status' => 'success',

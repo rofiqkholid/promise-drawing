@@ -87,7 +87,7 @@ class UploadController extends Controller
             'pg.code_part_group as part_group'
         ])->map(function($row) {
             return [
-                'id' => str_replace('=', '-', encrypt($row->id)),
+                'id' => str_replace(['+', '/', '='], ['-', '_', '~'], encrypt($row->id)),
                 'package_no' => $row->package_no,
                 'customer' => $row->customer ?? '-',
                 'model' => $row->model ?? '-',
@@ -114,7 +114,7 @@ class UploadController extends Controller
     public function getPackageDetails(Request $request, $id): JsonResponse
     {
         try {
-            $revisionId = (int) decrypt(str_replace('-', '=', $id));
+            $revisionId = (int) decrypt(str_replace(['-', '_', '~'], ['+', '/', '='], $id));
         } catch (\Exception $e) {
             return response()->json(['error' => 'Invalid package ID'], 400);
         }
@@ -188,7 +188,7 @@ class UploadController extends Controller
     public function getExportDetail($id)
     {
         try {
-            $revisionId = (int) decrypt(str_replace('-', '=', $id));
+            $revisionId = (int) decrypt(str_replace(['-', '_', '~'], ['+', '/', '='], $id));
         } catch (\Exception $e) {
             return response()->json(['error' => 'Invalid package ID'], 400);
         }
@@ -234,7 +234,7 @@ class UploadController extends Controller
             ->get(['id', 'filename as name', 'category', 'file_size as size'])
             ->groupBy('category')->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
-        $exportId = str_replace('=', '-', encrypt($rev->id));
+        $exportId = str_replace(['+', '/', '='], ['-', '_', '~'], encrypt($rev->id));
         
         $detail = [
             'metadata' => [
