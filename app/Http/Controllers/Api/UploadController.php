@@ -18,7 +18,7 @@ class UploadController extends Controller
         $order = $request->get('order')[0] ?? null;
 
         $query = DB::table('doc_package_revisions as r')
-            ->leftJoin('doc_packages as p', 'r.package_id', '=', 'p.id')
+            ->join('doc_packages as p', 'r.package_id', '=', 'p.id')
             ->leftJoin('customers as c', 'p.customer_id', '=', 'c.id')
             ->leftJoin('models as m', 'p.model_id', '=', 'm.id')
             ->leftJoin('products as pr', 'p.product_id', '=', 'pr.id')
@@ -42,9 +42,9 @@ class UploadController extends Controller
             });
         }
 
-        $totalRecords = DB::table('doc_package_revisions')->count();
-
         $filteredRecords = $query->count();
+
+        $totalRecords = DB::table('doc_package_revisions')->count();
 
         if ($order) {
             $sortBy = $order['column'];
@@ -71,22 +71,29 @@ class UploadController extends Controller
             $query->orderBy('r.created_at', 'desc');
         }
 
-        $rows = $query->skip($start)->take($length)->get([
-            'r.id as id',
-            'p.package_no as package_no',
-            'c.code as customer',
-            'm.name as model',
-            'pr.part_no as part_no',
-            'r.revision_no as revision_no',
-            'r.created_at as uploaded_at',
-            'r.revision_status as status',
-            'r.ecn_no as ecn_no',
-            'crl.label as revision_label_name',
-            'dg.name as doctype_group',
-            'sc.name as doctype_subcategory',
-            'pg.code_part_group as part_group'
-        ])->map(function($row) {
-            return [
+        // Retrieve Data
+        $data = $query->skip($start)
+            ->take($length)
+            ->select([
+                'r.id',
+                'p.package_no',
+                'c.code as customer',
+                'm.name as model',
+                'pr.part_no',
+                'r.revision_no',
+                'r.created_at as uploaded_at',
+                'r.revision_status as status',
+                'r.ecn_no',
+                'crl.label as revision_label_name',
+                'dg.name as doctype_group',
+                'sc.name as doctype_subcategory',
+                'pg.code_part_group as part_group'
+            ])
+            ->get();
+
+        // Transform Data
+        $rows = $data->map(function($row) {
+             return [
                 'id' => str_replace(['+', '/', '='], ['-', '_', '~'], encrypt($row->id)),
                 'package_no' => $row->package_no,
                 'customer' => $row->customer ?? '-',
