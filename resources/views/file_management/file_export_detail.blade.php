@@ -3,15 +3,43 @@
 @section('header-title', 'File Manager - Download Detail')
 
 @section('content')
+<nav class="flex px-5 py-3 mb-3 text-gray-700 bg-gray-50 shadow-sm" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
 
-<div class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen" 
+        <li class="inline-flex items-center">
+            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600">
+                Monitoring
+            </a>
+        </li>
+
+        <li aria-current="page">
+            <div class="flex items-center">
+                <span class="mx-1 text-gray-400">/</span>
+
+                <a href="{{ route('file-manager.export') }}" class="text-sm font-semibold text-gray-500 px-2.5 py-0.5 hover:text-blue-600 rounded">
+                    Download Files
+                </a>
+            </div>
+        </li>
+        <li aria-current="page">
+            <div class="flex items-center">
+                <span class="mx-1 text-gray-400">/</span>
+
+                <span class="text-sm font-semibold text-blue-800 px-2.5 py-0.5 rounded">
+                    Download Detail Files
+                </span>
+            </div>
+        </li>
+    </ol>
+</nav>
+<div class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen"
     x-data="exportDetail({
         userDeptCode: @js($userDeptCode ?? null),
         isEngineering: @js($isEngineering ?? false)
-    })" 
+    })"
     x-init="init()"
-    @mousemove.window="onPan($event)" 
-    @mouseup.window="endPan()" 
+    @mousemove.window="onPan($event)"
+    @mouseup.window="endPan()"
     @mouseleave.window="endPan()">
 
     <div x-show="isLoadingRevision" x-transition
@@ -172,43 +200,43 @@
 
                         <div class="flex items-center bg-white dark:bg-gray-700 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm">
                             <button @click="zoomOut()" class="p-1.5 px-3 text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-l-md transition-colors" title="Zoom Out">
-                            <i class="fa-solid fa-minus fa-xs"></i>
+                                <i class="fa-solid fa-minus fa-xs"></i>
                             </button>
                             <span class="px-2 text-xs font-mono font-semibold text-gray-600 dark:text-gray-300 border-l border-r border-gray-200 dark:border-gray-600 min-w-[3.5rem] text-center"
-                            x-text="Math.round(imageZoom * 100) + '%'"></span>
+                                x-text="Math.round(imageZoom * 100) + '%'"></span>
                             <button @click="zoomIn()" class="p-1.5 px-3 text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors" title="Zoom In">
-                            <i class="fa-solid fa-plus fa-xs"></i>
+                                <i class="fa-solid fa-plus fa-xs"></i>
                             </button>
                             <button @click="resetZoom()" class="p-1.5 px-3 text-gray-500 dark:text-gray-400 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-600 border-l border-gray-200 dark:border-gray-600 rounded-r-md transition-colors" title="Reset Fit">
-                            <i class="fa-solid fa-compress fa-xs"></i>
+                                <i class="fa-solid fa-compress fa-xs"></i>
                             </button>
                         </div>
 
                         <div x-show="isPdf(selectedFile?.name)" class="flex items-center gap-2 pl-3 border-l border-gray-300 dark:border-gray-600">
                             <button @click="prevPdfPage()" :disabled="pdfPageNum <= 1"
-                            class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
-                            <i class="fa-solid fa-chevron-left"></i>
+                                class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
+                                <i class="fa-solid fa-chevron-left"></i>
                             </button>
                             <span class="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap min-w-[3rem] text-center">
-                            <span x-text="pdfPageNum"></span> / <span x-text="pdfNumPages"></span>
+                                <span x-text="pdfPageNum"></span> / <span x-text="pdfNumPages"></span>
                             </span>
                             <button @click="nextPdfPage()" :disabled="pdfPageNum >= pdfNumPages"
-                            class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
-                            <i class="fa-solid fa-chevron-right"></i>
+                                class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
+                                <i class="fa-solid fa-chevron-right"></i>
                             </button>
                         </div>
                         <div x-show="isTiff(selectedFile?.name) && tifNumPages > 1"
                             class="flex items-center gap-2 pl-3 border-l border-gray-300 dark:border-gray-600">
                             <button @click="prevTifPage()" :disabled="tifPageNum <= 1"
-                            class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
-                            <i class="fa-solid fa-chevron-left"></i>
+                                class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
+                                <i class="fa-solid fa-chevron-left"></i>
                             </button>
                             <span class="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap min-w-[3rem] text-center">
-                            <span x-text="tifPageNum"></span> / <span x-text="tifNumPages"></span>
+                                <span x-text="tifPageNum"></span> / <span x-text="tifNumPages"></span>
                             </span>
                             <button @click="nextTifPage()" :disabled="tifPageNum >= tifNumPages"
-                            class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
-                            <i class="fa-solid fa-chevron-right"></i>
+                                class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
+                                <i class="fa-solid fa-chevron-right"></i>
                             </button>
                         </div>
                     </div>
@@ -221,24 +249,24 @@
                                 @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
                                 <div class="w-full h-full flex items-center justify-center">
                                     <div class="relative inline-block" :style="imageTransformStyle()">
-                                        <img x-ref="mainImage" 
-                                            :src="selectedFile?.url" 
-                                            @@load="imgLoading = false" 
+                                        <img x-ref="mainImage"
+                                            :src="selectedFile?.url"
+                                            @@load="imgLoading = false"
                                             @@error="imgLoading = false"
                                             alt="Preview"
-                                            class="..." 
+                                            class="..."
                                             loading="lazy">
 
                                         <!-- STAMP ORIGINAL -->
                                         <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
-                                            <div 
+                                            <div
                                                 class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                                                
+
                                                 :class="[
                                                     stampOriginClass('original'), 
                                                     isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
                                                 ]"
-                                                
+
                                                 style="transform: scale(0.45);">
 
                                                 <div class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
@@ -309,7 +337,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div x-show="imgLoading" 
+                                <div x-show="imgLoading"
                                     x-transition.opacity
                                     class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-gray-900/90 z-50 backdrop-blur-sm">
                                     <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600 mb-2"></i>
@@ -329,14 +357,14 @@
 
                                         <!-- STAMP ORIGINAL -->
                                         <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
-                                            <div 
+                                            <div
                                                 class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                                                
+
                                                 :class="[
                                                     stampOriginClass('original'), 
                                                     isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
                                                 ]"
-                                                
+
                                                 style="transform: scale(0.45);">
 
                                                 <div class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
@@ -408,7 +436,7 @@
                                     </div>
                                 </div>
 
-                                <div x-show="pdfLoading" 
+                                <div x-show="pdfLoading"
                                     x-transition.opacity
                                     class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-gray-900/90 z-20 backdrop-blur-sm">
                                     <i class="fa-solid fa-circle-notch fa-spin text-3xl text-red-600 mb-2"></i>
@@ -429,14 +457,14 @@
 
                                         <!-- STAMP ORIGINAL -->
                                         <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
-                                            <div 
+                                            <div
                                                 class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                                                
+
                                                 :class="[
                                                     stampOriginClass('original'), 
                                                     isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
                                                 ]"
-                                                
+
                                                 style="transform: scale(0.45);">
 
                                                 <div class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
@@ -508,13 +536,13 @@
                                     </div>
                                 </div>
 
-                                <div x-show="tifLoading" 
+                                <div x-show="tifLoading"
                                     x-transition.opacity
                                     class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-gray-900/90 z-20 backdrop-blur-sm">
                                     <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600 mb-2"></i>
                                     <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Processing TIFF...</span>
                                 </div>
-                                
+
                                 <div x-show="tifError" class="..." x-text="tifError"></div>
                             </div>
                         </template>
@@ -528,14 +556,14 @@
                                     <canvas x-ref="hpglCanvas" class="pointer-events-none select-none"></canvas>
 
                                     <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
-                                        <div 
+                                        <div
                                             class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                                            
+
                                             :class="[
                                                 stampOriginClass('original'), 
                                                 isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
                                             ]"
-                                            
+
                                             style="transform: scale(0.45);">
 
                                             <div class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
@@ -605,92 +633,93 @@
 
                                 </div>
 
-                                <div x-show="hpglLoading" 
+                                <div x-show="hpglLoading"
                                     x-transition.opacity
                                     class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-gray-900/90 z-20 backdrop-blur-sm">
                                     <i class="fa-solid fa-circle-notch fa-spin text-3xl text-green-600 mb-2"></i>
                                     <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Rendering Plotter File...</span>
                                 </div>
-                                
+
                                 <div x-show="hpglError" class="..." x-text="hpglError"></div>
-                                </div>
                             </div>
-                        </template>
+                    </div>
+                    </template>
 
-                        <template x-if="isCad(selectedFile?.name)">
-                            <div x-ref="cadContainer"
-                                class="w-full flex flex-col transition-all duration-300"
-                                :class="isFullscreen ? 'fixed inset-0 z-50 h-screen bg-gray-100 dark:bg-gray-900 p-4 overflow-y-auto' : 'h-[75vh]'">
-                                
-                                <div class="flex-1 relative border border-gray-200 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-900 overflow-hidden group">
-                                    
-                                    <button @click="isPartListOpen = !isPartListOpen"
-                                        x-show="cadPartsList.length > 0"
-                                        class="absolute top-3 left-3 z-30 px-3 py-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-md border border-gray-200 dark:border-gray-700 rounded text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 transition flex items-center gap-2">
-                                        <i class="fa-solid" :class="isPartListOpen ? 'fa-xmark' : 'fa-list-tree'"></i>
-                                        <span x-text="isPartListOpen ? 'Close List' : 'Part List'"></span>
-                                        <span class="bg-gray-200 dark:bg-gray-600 text-[10px] px-1.5 rounded-full ml-1" 
-                                            x-text="cadPartsList.length"></span>
-                                    </button>
+                    <template x-if="isCad(selectedFile?.name)">
+                        <div x-ref="cadContainer"
+                            class="w-full flex flex-col transition-all duration-300"
+                            :class="isFullscreen ? 'fixed inset-0 z-50 h-screen bg-gray-100 dark:bg-gray-900 p-4 overflow-y-auto' : 'h-[75vh]'">
 
-                                    <div x-show="isPartListOpen" 
-                                        x-transition:enter="transition ease-out duration-200"
-                                        x-transition:enter-start="opacity-0 -translate-x-2"
-                                        x-transition:enter-end="opacity-100 translate-x-0"
-                                        x-transition:leave="transition ease-in duration-150"
-                                        x-transition:leave-start="opacity-100 translate-x-0"
-                                        x-transition:leave-end="opacity-0 -translate-x-2"
-                                        class="absolute top-12 left-3 bottom-3 z-20 w-64 flex flex-col bg-white/95 dark:bg-gray-800/95 backdrop-blur-md shadow-xl border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                                        
-                                        <div class="px-3 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-700/50 flex justify-between items-center flex-shrink-0">
-                                            <span class="text-sm font-bold text-gray-800 dark:text-gray-100">Assembly Tree</span>
-                                            <button @click="isPartListOpen = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
-                                                <i class="fa-solid fa-chevron-left text-xs"></i>
-                                            </button>
-                                        </div>
+                            <div class="flex-1 relative border border-gray-200 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-900 overflow-hidden group">
 
-                                        <div class="flex-1 overflow-y-auto p-1 custom-scrollbar min-h-0">
-                                            <ul class="space-y-0.5">
-                                                <template x-for="part in cadPartsList" :key="part.uuid">
-                                                    <li @click="highlightPart(part.uuid)"
-                                                        class="cursor-pointer px-3 py-2 rounded text-xs flex items-center gap-2 truncate select-none transition-colors border border-transparent"
-                                                        :class="selectedPartUuid === part.uuid ? 
+                                <button @click="isPartListOpen = !isPartListOpen"
+                                    x-show="cadPartsList.length > 0"
+                                    class="absolute top-3 left-3 z-30 px-3 py-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-md border border-gray-200 dark:border-gray-700 rounded text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 transition flex items-center gap-2">
+                                    <i class="fa-solid" :class="isPartListOpen ? 'fa-xmark' : 'fa-list-tree'"></i>
+                                    <span x-text="isPartListOpen ? 'Close List' : 'Part List'"></span>
+                                    <span class="bg-gray-200 dark:bg-gray-600 text-[10px] px-1.5 rounded-full ml-1"
+                                        x-text="cadPartsList.length"></span>
+                                </button>
+
+                                <div x-show="isPartListOpen"
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 -translate-x-2"
+                                    x-transition:enter-end="opacity-100 translate-x-0"
+                                    x-transition:leave="transition ease-in duration-150"
+                                    x-transition:leave-start="opacity-100 translate-x-0"
+                                    x-transition:leave-end="opacity-0 -translate-x-2"
+                                    class="absolute top-12 left-3 bottom-3 z-20 w-64 flex flex-col bg-white/95 dark:bg-gray-800/95 backdrop-blur-md shadow-xl border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+
+                                    <div class="px-3 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-700/50 flex justify-between items-center flex-shrink-0">
+                                        <span class="text-sm font-bold text-gray-800 dark:text-gray-100">Assembly Tree</span>
+                                        <button @click="isPartListOpen = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+                                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                                        </button>
+                                    </div>
+
+                                    <div class="flex-1 overflow-y-auto p-1 custom-scrollbar min-h-0">
+                                        <ul class="space-y-0.5">
+                                            <template x-for="part in cadPartsList" :key="part.uuid">
+                                                <li @click="highlightPart(part.uuid)"
+                                                    class="cursor-pointer px-3 py-2 rounded text-xs flex items-center gap-2 truncate select-none transition-colors border border-transparent"
+                                                    :class="selectedPartUuid === part.uuid ? 
                                                             'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-medium' : 
                                                             'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50'">
-                                                        <i class="fa-solid fa-cube text-[10px]" 
+                                                    <i class="fa-solid fa-cube text-[10px]"
                                                         :class="selectedPartUuid === part.uuid ? 'text-blue-500' : 'text-gray-400'"></i>
-                                                        <span x-text="part.name" class="truncate"></span>
-                                                    </li>
-                                                </template>
-                                            </ul>
+                                                    <span x-text="part.name" class="truncate"></span>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+
+                                    <div x-show="selectedPartUuid"
+                                        x-transition:enter="transition ease-out duration-200"
+                                        x-transition:enter-start="opacity-0 translate-y-2"
+                                        x-transition:enter-end="opacity-100 translate-y-0"
+                                        class="p-3 border-t border-blue-100 dark:border-gray-700 bg-blue-50/80 dark:bg-gray-800 flex-shrink-0">
+
+                                        <div class="flex items-center justify-between gap-3">
+                                            <span class="text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider min-w-[50px]">
+                                                Opacity
+                                            </span>
+
+                                            <input type="range"
+                                                min="0.1" max="1.0" step="0.1"
+                                                x-model.number="partOpacity"
+                                                @input="updatePartOpacity()"
+                                                class="flex-1 h-2 bg-blue-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
                                         </div>
 
-                                        <div x-show="selectedPartUuid" 
-                                            x-transition:enter="transition ease-out duration-200"
-                                            x-transition:enter-start="opacity-0 translate-y-2"
-                                            x-transition:enter-end="opacity-100 translate-y-0"
-                                            class="p-3 border-t border-blue-100 dark:border-gray-700 bg-blue-50/80 dark:bg-gray-800 flex-shrink-0">
-                                            
-                                            <div class="flex items-center justify-between gap-3">
-                                                <span class="text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider min-w-[50px]">
-                                                    Opacity
-                                                </span>
-                                                
-                                                <input type="range" 
-                                                    min="0.1" max="1.0" step="0.1" 
-                                                    x-model.number="partOpacity" 
-                                                    @input="updatePartOpacity()"
-                                                    class="flex-1 h-2 bg-blue-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer accent-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
-                                            </div>
-                                            
-                                            <div class="flex justify-between mt-1 px-1">
-                                                <span class="text-[9px] text-gray-400">10%</span>
-                                                <span class="text-[9px] font-mono text-blue-600" x-text="Math.round(partOpacity * 100) + '%'"></span>
-                                                <span class="text-[9px] text-gray-400">100%</span>
-                                            </div>
+                                        <div class="flex justify-between mt-1 px-1">
+                                            <span class="text-[9px] text-gray-400">10%</span>
+                                            <span class="text-[9px] font-mono text-blue-600" x-text="Math.round(partOpacity * 100) + '%'"></span>
+                                            <span class="text-[9px] text-gray-400">100%</span>
                                         </div>
+                                    </div>
 
-                                        <div x-show="selectedPartUuid" class="..."> <div class="mt-3 pt-2 border-t border-blue-100 dark:border-gray-600 grid grid-cols-2 gap-2">
+                                    <div x-show="selectedPartUuid" class="...">
+                                        <div class="mt-3 pt-2 border-t border-blue-100 dark:border-gray-600 grid grid-cols-2 gap-2">
                                             <div class="bg-white dark:bg-gray-900/50 p-1.5 rounded border border-gray-100 dark:border-gray-600">
                                                 <div class="text-[9px] text-gray-400 uppercase font-bold">Volume</div>
                                                 <div class="text-[10px] text-gray-700 dark:text-gray-200 font-mono" x-text="partInfo.volume"></div>
@@ -700,238 +729,239 @@
                                                 <div class="text-[10px] text-gray-700 dark:text-gray-200 font-mono" x-text="partInfo.area"></div>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <button @click="toggleFullscreen()" title="Toggle Fullscreen"
+                                    class="absolute top-3 right-3 z-30 w-8 h-8 flex items-center justify-center bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-md border border-gray-200 dark:border-gray-700 rounded text-gray-600 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 transition">
+                                    <i class="fa-solid" :class="isFullscreen ? 'fa-compress' : 'fa-expand'"></i>
+                                </button>
+
+                                <div x-ref="igesWrap" class="w-full h-full bg-black/5 cursor-grab active:cursor-grabbing">
+                                </div>
+
+                                <div x-show="iges.loading" class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 dark:bg-gray-900/80 z-50 backdrop-blur-sm">
+                                    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600 mb-2"></i>
+                                    <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Processing CAD Geometry...</span>
+                                </div>
+
+                                <div x-show="iges.error" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-red-100 border border-red-300 text-red-700 rounded-md shadow-lg text-xs" x-text="iges.error"></div>
+                            </div>
+
+                            <div class="mt-3 flex flex-wrap items-center justify-between gap-2 select-none"
+                                x-data="{ isViewMenuOpen: false, isMatMenuOpen: false }">
+                                <div class="flex items-center gap-2">
+
+                                    <div class="inline-flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg border border-gray-200 dark:border-gray-600">
+                                        <button @click="setDisplayStyle('shaded')" class="px-2 py-1.5 text-[10px] font-semibold rounded transition-all"
+                                            :class="currentStyle === 'shaded' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200 dark:text-gray-300'">
+                                            Shaded
+                                        </button>
+                                        <button @click="setDisplayStyle('shaded-edges')" class="px-2 py-1.5 text-[10px] font-semibold rounded transition-all"
+                                            :class="currentStyle === 'shaded-edges' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200 dark:text-gray-300'">
+                                            Edges
+                                        </button>
+                                        <button @click="setDisplayStyle('wireframe')" class="px-2 py-1.5 text-[10px] font-semibold rounded transition-all"
+                                            :class="currentStyle === 'wireframe' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200 dark:text-gray-300'">
+                                            Wire
+                                        </button>
+                                    </div>
+
+                                    <div class="relative">
+                                        <button @click="isMatMenuOpen = !isMatMenuOpen" @click.outside="isMatMenuOpen = false" title="Change Material"
+                                            class="w-[34px] h-[34px] flex items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition shadow-sm"
+                                            :class="activeMaterial !== 'default' ? 'text-purple-600 border-purple-200 bg-purple-50' : 'text-gray-600 dark:text-gray-200'">
+                                            <i class="fa-solid fa-fill-drip"></i>
+                                        </button>
+
+                                        <div x-show="isMatMenuOpen" x-transition
+                                            class="absolute bottom-full left-0 mb-2 p-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 w-32 flex flex-col gap-1">
+                                            <div class="text-[9px] font-bold text-gray-400 px-2 py-1 uppercase tracking-wider">Material</div>
+
+
+
+                                            <button @click="setMaterialMode('clay'); isMatMenuOpen=false"
+                                                class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                :class="activeMaterial==='clay' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
+                                                <i class="fa-solid fa-circle text-orange-200 text-[8px]"></i> Clay
+                                            </button>
+
+                                            <button @click="setMaterialMode('metal'); isMatMenuOpen=false"
+                                                class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                :class="activeMaterial==='metal' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
+                                                <i class="fa-solid fa-circle text-gray-400 text-[8px]"></i> Metal
+                                            </button>
+
+                                            <button @click="setMaterialMode('normal'); isMatMenuOpen=false"
+                                                class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                :class="activeMaterial==='normal' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
+                                                <i class="fa-solid fa-circle text-purple-400 text-[8px]"></i> Normal
+                                            </button>
+
+                                            <button @click="setMaterialMode('glass'); isMatMenuOpen=false"
+                                                class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                :class="activeMaterial==='glass' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
+                                                <i class="fa-solid fa-square-full text-blue-200 opacity-50 text-[8px]"></i> Glass
+                                            </button>
+
+                                            <button @click="setMaterialMode('ecoat'); isMatMenuOpen=false"
+                                                class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                :class="activeMaterial==='ecoat' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
+                                                <i class="fa-solid fa-square text-gray-500 text-[10px]"></i> E-Coat
+                                            </button>
+
+                                            <button @click="setMaterialMode('steel'); isMatMenuOpen=false"
+                                                class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                :class="activeMaterial==='steel' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
+                                                <i class="fa-solid fa-square text-gray-300 text-[10px]"></i> Raw Steel
+                                            </button>
+
+                                            <button @click="setMaterialMode('aluminum'); isMatMenuOpen=false"
+                                                class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                :class="activeMaterial==='aluminum' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
+                                                <i class="fa-solid fa-square text-white border border-gray-300 text-[10px]"></i> Aluminum
+                                            </button>
+
+                                            <button @click="setMaterialMode('zinc'); isMatMenuOpen=false"
+                                                class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                :class="activeMaterial==='zinc' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
+                                                <i class="fa-solid fa-circle text-yellow-500 text-[8px]"></i> Yellow Zinc
+                                            </button>
+
+                                            <button @click="setMaterialMode('redox'); isMatMenuOpen=false"
+                                                class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                :class="activeMaterial==='redox' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
+                                                <i class="fa-solid fa-circle text-red-700 text-[8px]"></i> Red Oxide
+                                            </button>
+
+
+                                            <button @click="setMaterialMode('dark'); isMatMenuOpen=false"
+                                                class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                :class="activeMaterial==='dark' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
+                                                <i class="fa-solid fa-circle text-gray-800 text-[8px]"></i> Dark
+                                            </button>
+
+                                            <div class="h-px bg-gray-100 dark:bg-gray-700 my-0.5"></div>
+
+                                            <button @click="setMaterialMode('default'); isMatMenuOpen=false"
+                                                class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                                                :class="activeMaterial==='default' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
+                                                <i class="fa-solid fa-circle text-gray-400 text-[8px]"></i> Default
+                                            </button>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+
+                                    <div class="flex items-center gap-2 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm h-[34px]">
+                                        <label class="flex items-center gap-1 cursor-pointer" title="Exploded View">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-0 border-gray-300 w-3 h-3"
+                                                :checked="explode.enabled" @change="toggleExplode()">
+                                            <i class="fa-solid fa-expand-arrows-alt text-xs" :class="explode.enabled ? 'text-blue-500' : 'text-gray-400'"></i>
+                                        </label>
+                                        <div x-show="explode.enabled" x-transition class="flex items-center gap-1 pl-2 border-l border-gray-200">
+                                            <input type="range" min="0" max="100" x-model.number="explode.value" @input="updateExplode()"
+                                                class="w-16 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
                                         </div>
                                     </div>
 
-                                    <button @click="toggleFullscreen()" title="Toggle Fullscreen"
-                                            class="absolute top-3 right-3 z-30 w-8 h-8 flex items-center justify-center bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-md border border-gray-200 dark:border-gray-700 rounded text-gray-600 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 transition">
-                                        <i class="fa-solid" :class="isFullscreen ? 'fa-compress' : 'fa-expand'"></i>
+                                    <div class="flex items-center gap-2 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm h-[34px]">
+                                        <label class="flex items-center gap-1 cursor-pointer" title="Section Cut">
+                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-0 border-gray-300 w-3 h-3"
+                                                :checked="clipping.enabled" @change="toggleClipping()">
+                                            <i class="fa-solid fa-scissors rotate-90 text-xs" :class="clipping.enabled ? 'text-blue-500' : 'text-gray-400'"></i>
+                                        </label>
+                                        <div x-show="clipping.enabled" x-transition class="flex items-center gap-1 pl-2 border-l border-gray-200">
+                                            <input type="range" :min="clipping.min" :max="clipping.max" x-model.number="clipping.value" @input="updateClippingVal()"
+                                                class="w-16 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                                        </div>
+                                    </div>
+
+                                    <button @click="toggleAutoRotate()" title="Auto Rotate"
+                                        class="w-[34px] h-[34px] flex items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition shadow-sm"
+                                        :class="{'text-blue-600 border-blue-200 bg-blue-50': autoRotate, 'text-gray-600': !autoRotate}">
+                                        <i class="fa-solid fa-sync" :class="{'fa-spin': autoRotate}"></i>
                                     </button>
 
-                                    <div x-ref="igesWrap" class="w-full h-full bg-black/5 cursor-grab active:cursor-grabbing">
-                                        </div>
+                                    <button @click="toggleHeadlight()" title="Flashlight (H)"
+                                        class="w-[34px] h-[34px] flex items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition shadow-sm"
+                                        :class="{'text-yellow-500 border-yellow-200 bg-yellow-50': headlight.enabled, 'text-gray-600': !headlight.enabled}">
+                                        <i class="fa-solid fa-lightbulb"></i>
+                                    </button>
 
-                                    <div x-show="iges.loading" class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 dark:bg-gray-900/80 z-50 backdrop-blur-sm">
-                                        <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600 mb-2"></i>
-                                        <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Processing CAD Geometry...</span>
-                                    </div>
-                                    
-                                    <div x-show="iges.error" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-red-100 border border-red-300 text-red-700 rounded-md shadow-lg text-xs" x-text="iges.error"></div>
                                 </div>
 
-                                <div class="mt-3 flex flex-wrap items-center justify-between gap-2 select-none" 
-                                    x-data="{ isViewMenuOpen: false, isMatMenuOpen: false }"> <div class="flex items-center gap-2">
-                                        
-                                        <div class="inline-flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg border border-gray-200 dark:border-gray-600">
-                                            <button @click="setDisplayStyle('shaded')" class="px-2 py-1.5 text-[10px] font-semibold rounded transition-all"
-                                                :class="currentStyle === 'shaded' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200 dark:text-gray-300'">
-                                                Shaded
-                                            </button>
-                                            <button @click="setDisplayStyle('shaded-edges')" class="px-2 py-1.5 text-[10px] font-semibold rounded transition-all"
-                                                :class="currentStyle === 'shaded-edges' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200 dark:text-gray-300'">
-                                                Edges
-                                            </button>
-                                            <button @click="setDisplayStyle('wireframe')" class="px-2 py-1.5 text-[10px] font-semibold rounded transition-all"
-                                                :class="currentStyle === 'wireframe' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200 dark:text-gray-300'">
-                                                Wire
-                                            </button>
-                                        </div>
+                                <div class="flex items-center gap-2">
 
-                                        <div class="relative">
-                                            <button @click="isMatMenuOpen = !isMatMenuOpen" @click.outside="isMatMenuOpen = false" title="Change Material"
-                                                class="w-[34px] h-[34px] flex items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition shadow-sm"
-                                                :class="activeMaterial !== 'default' ? 'text-purple-600 border-purple-200 bg-purple-50' : 'text-gray-600 dark:text-gray-200'">
-                                                <i class="fa-solid fa-fill-drip"></i>
-                                            </button>
+                                    <button @click="toggleAxes()" title="Toggle Axes Helper"
+                                        class="w-[34px] h-[34px] flex items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition shadow-sm"
+                                        :class="axesHelper.active ? 'text-red-500 border-red-200 bg-red-50' : 'text-gray-600 dark:text-gray-200'">
+                                        <i class="fa-solid fa-arrows-to-dot"></i>
+                                    </button>
 
-                                            <div x-show="isMatMenuOpen" x-transition 
-                                                class="absolute bottom-full left-0 mb-2 p-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 w-32 flex flex-col gap-1">
-                                                <div class="text-[9px] font-bold text-gray-400 px-2 py-1 uppercase tracking-wider">Material</div>
-                                                
-                                                
-                                                
-                                                <button @click="setMaterialMode('clay'); isMatMenuOpen=false" 
-                                                    class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                    :class="activeMaterial==='clay' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
-                                                    <i class="fa-solid fa-circle text-orange-200 text-[8px]"></i> Clay
-                                                </button>
-
-                                                <button @click="setMaterialMode('metal'); isMatMenuOpen=false" 
-                                                    class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                    :class="activeMaterial==='metal' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
-                                                    <i class="fa-solid fa-circle text-gray-400 text-[8px]"></i> Metal
-                                                </button>
-
-                                                <button @click="setMaterialMode('normal'); isMatMenuOpen=false" 
-                                                    class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                    :class="activeMaterial==='normal' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
-                                                    <i class="fa-solid fa-circle text-purple-400 text-[8px]"></i> Normal
-                                                </button>
-
-                                                <button @click="setMaterialMode('glass'); isMatMenuOpen=false" 
-                                                    class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                    :class="activeMaterial==='glass' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
-                                                    <i class="fa-solid fa-square-full text-blue-200 opacity-50 text-[8px]"></i> Glass
-                                                </button>
-
-                                                <button @click="setMaterialMode('ecoat'); isMatMenuOpen=false" 
-                                                    class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                    :class="activeMaterial==='ecoat' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
-                                                    <i class="fa-solid fa-square text-gray-500 text-[10px]"></i> E-Coat
-                                                </button>
-
-                                                <button @click="setMaterialMode('steel'); isMatMenuOpen=false" 
-                                                    class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                    :class="activeMaterial==='steel' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
-                                                    <i class="fa-solid fa-square text-gray-300 text-[10px]"></i> Raw Steel
-                                                </button>
-
-                                                <button @click="setMaterialMode('aluminum'); isMatMenuOpen=false" 
-                                                    class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                    :class="activeMaterial==='aluminum' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
-                                                    <i class="fa-solid fa-square text-white border border-gray-300 text-[10px]"></i> Aluminum
-                                                </button>
-
-                                                <button @click="setMaterialMode('zinc'); isMatMenuOpen=false" 
-                                                    class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                    :class="activeMaterial==='zinc' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
-                                                    <i class="fa-solid fa-circle text-yellow-500 text-[8px]"></i> Yellow Zinc
-                                                </button>
-
-                                                <button @click="setMaterialMode('redox'); isMatMenuOpen=false" 
-                                                    class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                    :class="activeMaterial==='redox' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
-                                                    <i class="fa-solid fa-circle text-red-700 text-[8px]"></i> Red Oxide
-                                                </button>
-
-                                                
-                                                <button @click="setMaterialMode('dark'); isMatMenuOpen=false" 
-                                                    class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                    :class="activeMaterial==='dark' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
-                                                    <i class="fa-solid fa-circle text-gray-800 text-[8px]"></i> Dark
-                                                </button>
-
-                                                <div class="h-px bg-gray-100 dark:bg-gray-700 my-0.5"></div>
-
-                                                <button @click="setMaterialMode('default'); isMatMenuOpen=false" 
-                                                    class="text-left px-2 py-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
-                                                    :class="activeMaterial==='default' ? 'font-bold text-blue-600' : 'text-gray-700 dark:text-gray-200'">
-                                                    <i class="fa-solid fa-circle text-gray-400 text-[8px]"></i> Default
-                                                </button>
-                                                
-                                            </div>
+                                    <div class="relative">
+                                        <button @click="isViewMenuOpen = !isViewMenuOpen" @click.outside="isViewMenuOpen = false"
+                                            class="px-2 py-1.5 h-[34px] text-xs font-medium rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition shadow-sm flex items-center gap-1">
+                                            <i class="fa-solid fa-cube text-gray-500"></i> Views
+                                        </button>
+                                        <div x-show="isViewMenuOpen" x-transition class="absolute bottom-full right-0 mb-2 p-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-32 grid grid-cols-3 gap-1">
+                                            <button @click="setStandardView('iso'); isViewMenuOpen=false" class="col-span-3 p-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded">ISO HOME</button>
+                                            <button @click="setStandardView('top'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">T</button>
+                                            <button @click="setStandardView('front'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">F</button>
+                                            <button @click="setStandardView('right'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">R</button>
+                                            <button @click="setStandardView('left'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">L</button>
+                                            <button @click="setStandardView('back'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">B</button>
+                                            <button @click="setStandardView('bottom'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">Bt</button>
                                         </div>
                                     </div>
 
-                                    <div class="flex items-center gap-2">
-                                        
-                                        <div class="flex items-center gap-2 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm h-[34px]">
-                                            <label class="flex items-center gap-1 cursor-pointer" title="Exploded View">
-                                                <input type="checkbox" class="rounded text-blue-600 focus:ring-0 border-gray-300 w-3 h-3"
-                                                    :checked="explode.enabled" @change="toggleExplode()">
-                                                <i class="fa-solid fa-expand-arrows-alt text-xs" :class="explode.enabled ? 'text-blue-500' : 'text-gray-400'"></i>
-                                            </label>
-                                            <div x-show="explode.enabled" x-transition class="flex items-center gap-1 pl-2 border-l border-gray-200">
-                                                <input type="range" min="0" max="100" x-model.number="explode.value" @input="updateExplode()"
-                                                    class="w-16 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-                                            </div>
-                                        </div>
+                                    <button @click="toggleCameraMode()" title="Toggle Perspective/Orthographic"
+                                        class="w-[34px] h-[34px] rounded border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 text-[10px] font-bold shadow-sm flex items-center justify-center">
+                                        <span x-text="cameraMode === 'perspective' ? '3D' : '2D'"></span>
+                                    </button>
 
-                                        <div class="flex items-center gap-2 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm h-[34px]">
-                                            <label class="flex items-center gap-1 cursor-pointer" title="Section Cut">
-                                                <input type="checkbox" class="rounded text-blue-600 focus:ring-0 border-gray-300 w-3 h-3"
-                                                    :checked="clipping.enabled" @change="toggleClipping()">
-                                                <i class="fa-solid fa-scissors rotate-90 text-xs" :class="clipping.enabled ? 'text-blue-500' : 'text-gray-400'"></i>
-                                            </label>
-                                            <div x-show="clipping.enabled" x-transition class="flex items-center gap-1 pl-2 border-l border-gray-200">
-                                                <input type="range" :min="clipping.min" :max="clipping.max" x-model.number="clipping.value" @input="updateClippingVal()"
-                                                    class="w-16 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-                                            </div>
-                                        </div>
+                                    <button @click="takeScreenshot()" title="Take Screenshot"
+                                        class="w-[34px] h-[34px] rounded border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 shadow-sm flex items-center justify-center">
+                                        <i class="fa-solid fa-camera"></i>
+                                    </button>
 
-                                        <button @click="toggleAutoRotate()" title="Auto Rotate"
-                                            class="w-[34px] h-[34px] flex items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition shadow-sm"
-                                            :class="{'text-blue-600 border-blue-200 bg-blue-50': autoRotate, 'text-gray-600': !autoRotate}">
-                                            <i class="fa-solid fa-sync" :class="{'fa-spin': autoRotate}"></i>
+                                    <div class="flex items-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden h-[34px]">
+                                        <button @click="toggleMeasure()" title="Measure Tool"
+                                            class="w-[34px] h-full flex items-center justify-center transition"
+                                            :class="iges.measure.enabled ? 'bg-blue-600 text-white' : 'hover:bg-gray-50 text-gray-600'">
+                                            <i class="fa-solid fa-ruler-combined"></i>
                                         </button>
 
-                                        <button @click="toggleHeadlight()" title="Flashlight (H)"
-                                            class="w-[34px] h-[34px] flex items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition shadow-sm"
-                                            :class="{'text-yellow-500 border-yellow-200 bg-yellow-50': headlight.enabled, 'text-gray-600': !headlight.enabled}">
-                                            <i class="fa-solid fa-lightbulb"></i>
+                                        <button @click="clearMeasurements()" x-show="iges.measure.enabled" title="Clear Measurements"
+                                            x-transition
+                                            class="w-[34px] h-full flex items-center justify-center border-l border-gray-200 dark:border-gray-700 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                            <i class="fa-solid fa-trash-can text-xs"></i>
                                         </button>
-
                                     </div>
 
-                                    <div class="flex items-center gap-2">
-                                        
-                                        <button @click="toggleAxes()" title="Toggle Axes Helper"
-                                            class="w-[34px] h-[34px] flex items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition shadow-sm"
-                                            :class="axesHelper.active ? 'text-red-500 border-red-200 bg-red-50' : 'text-gray-600 dark:text-gray-200'">
-                                            <i class="fa-solid fa-arrows-to-dot"></i>
-                                        </button>
-                                        
-                                        <div class="relative">
-                                            <button @click="isViewMenuOpen = !isViewMenuOpen" @click.outside="isViewMenuOpen = false"
-                                                class="px-2 py-1.5 h-[34px] text-xs font-medium rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition shadow-sm flex items-center gap-1">
-                                                <i class="fa-solid fa-cube text-gray-500"></i> Views
-                                            </button>
-                                            <div x-show="isViewMenuOpen" x-transition class="absolute bottom-full right-0 mb-2 p-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-32 grid grid-cols-3 gap-1">
-                                                <button @click="setStandardView('iso'); isViewMenuOpen=false" class="col-span-3 p-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded">ISO HOME</button>
-                                                <button @click="setStandardView('top'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">T</button>
-                                                <button @click="setStandardView('front'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">F</button>
-                                                <button @click="setStandardView('right'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">R</button>
-                                                <button @click="setStandardView('left'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">L</button>
-                                                <button @click="setStandardView('back'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">B</button>
-                                                <button @click="setStandardView('bottom'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">Bt</button>
-                                            </div>
-                                        </div>
-
-                                        <button @click="toggleCameraMode()" title="Toggle Perspective/Orthographic"
-                                            class="w-[34px] h-[34px] rounded border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 text-[10px] font-bold shadow-sm flex items-center justify-center">
-                                            <span x-text="cameraMode === 'perspective' ? '3D' : '2D'"></span>
-                                        </button>
-
-                                        <button @click="takeScreenshot()" title="Take Screenshot"
-                                            class="w-[34px] h-[34px] rounded border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 shadow-sm flex items-center justify-center">
-                                            <i class="fa-solid fa-camera"></i>
-                                        </button>
-
-                                        <div class="flex items-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden h-[34px]">
-                                            <button @click="toggleMeasure()" title="Measure Tool"
-                                                class="w-[34px] h-full flex items-center justify-center transition"
-                                                :class="iges.measure.enabled ? 'bg-blue-600 text-white' : 'hover:bg-gray-50 text-gray-600'">
-                                                <i class="fa-solid fa-ruler-combined"></i>
-                                            </button>
-                                            
-                                            <button @click="clearMeasurements()" x-show="iges.measure.enabled" title="Clear Measurements"
-                                                x-transition
-                                                class="w-[34px] h-full flex items-center justify-center border-l border-gray-200 dark:border-gray-700 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
-                                                <i class="fa-solid fa-trash-can text-xs"></i>
-                                            </button>
-                                        </div>
-
-                                    </div>
                                 </div>
                             </div>
-                        </template>
+                        </div>
+                    </template>
 
-                        <template
-                            x-if="!isImage(selectedFile?.name) && !isPdf(selectedFile?.name) && !isTiff(selectedFile?.name) && !isCad(selectedFile?.name) && !isHpgl(selectedFile?.name)">
-                            <div class="text-center">
-                                <i class="fa-solid fa-file text-6xl text-gray-400 dark:text-gray-500"></i>
-                                <p class="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400">Preview Unavailable
-                                </p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">This file type is not supported for
-                                    preview.</p>
-                            </div>
-                        </template>
+                    <template
+                        x-if="!isImage(selectedFile?.name) && !isPdf(selectedFile?.name) && !isTiff(selectedFile?.name) && !isCad(selectedFile?.name) && !isHpgl(selectedFile?.name)">
+                        <div class="text-center">
+                            <i class="fa-solid fa-file text-6xl text-gray-400 dark:text-gray-500"></i>
+                            <p class="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400">Preview Unavailable
+                            </p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">This file type is not supported for
+                                preview.</p>
+                        </div>
+                    </template>
 
-                    </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 @endsection
 
@@ -1905,44 +1935,49 @@
             _buildThreeFromOcct(result, THREE) {
                 const group = new THREE.Group();
                 const meshes = result.meshes || [];
-                
+
                 // 1. Bersihkan list lama agar tidak duplikat saat reload
-                this.cadPartsList = []; 
+                this.cadPartsList = [];
 
                 for (let i = 0; i < meshes.length; i++) {
                     const m = meshes[i];
-                    
+
                     // ... (Kode pembuatan geometry g & attributes tetap sama) ...
                     const g = new THREE.BufferGeometry();
                     g.setAttribute('position', new THREE.Float32BufferAttribute(m.attributes.position.array, 3));
                     if (m.attributes.normal?.array) g.setAttribute('normal', new THREE.Float32BufferAttribute(m.attributes.normal.array, 3));
                     if (m.index?.array) g.setIndex(m.index.array);
-                    
+
                     // Pastikan BVH (dari langkah sebelumnya) tetap ada
                     if (g.attributes.position.count > 0) g.computeBoundsTree();
 
                     // ... (Kode warna color tetap sama) ...
                     let color = 0xcccccc;
                     if (m.color && m.color.length === 3) color = (m.color[0] << 16) | (m.color[1] << 8) | (m.color[2]);
-                    const mat = new THREE.MeshStandardMaterial({ color, metalness: 0, roughness: 1, side: THREE.DoubleSide });
-                    
+                    const mat = new THREE.MeshStandardMaterial({
+                        color,
+                        metalness: 0,
+                        roughness: 1,
+                        side: THREE.DoubleSide
+                    });
+
                     const mesh = new THREE.Mesh(g, mat);
-                    
+
                     // 2. Beri nama yang jelas. Jika kosong, pakai "Part X"
                     mesh.name = m.name || `Part ${i + 1}`;
-                    
+
                     group.add(mesh);
 
                     // 3. Masukkan ke dalam Alpine State (Daftar Part)
                     this.cadPartsList.push({
-                        uuid: mesh.uuid,   // ID unik dari Three.js
+                        uuid: mesh.uuid, // ID unik dari Three.js
                         name: mesh.name
                     });
                 }
                 return group;
             },
 
-        
+
             /* ===== Cleanup CAD ===== */
             disposeCad() {
                 try {
@@ -2085,23 +2120,24 @@
                 });
             },
             setDisplayStyle(mode) {
-                const root = this.iges.rootModel; if (!root) return;
+                const root = this.iges.rootModel;
+                if (!root) return;
                 this.currentStyle = mode;
                 this._restoreMaterials(root);
                 if (mode === 'shaded') {
                     // Normal
-                } 
-                else if (mode === 'shaded-edges') {
+                } else if (mode === 'shaded-edges') {
                     this._setPolygonOffset(root, true, 1, 1);
                     this._toggleEdges(root, true, 0x000000);
-                } 
-                else if (mode === 'wireframe') {
+                } else if (mode === 'wireframe') {
                     // Mode Wireframe Murni
                     root.traverse(o => {
                         if (o.isMesh && o.material) {
                             // Ubah material jadi wireframe
                             const mats = Array.isArray(o.material) ? o.material : [o.material];
-                            mats.forEach(m => { m.wireframe = true; });
+                            mats.forEach(m => {
+                                m.wireframe = true;
+                            });
                         }
                     });
                 }
@@ -2132,13 +2168,19 @@
             },
 
             toggleCameraMode() {
-                const { scene, camera, renderer, controls, THREE } = this.iges;
+                const {
+                    scene,
+                    camera,
+                    renderer,
+                    controls,
+                    THREE
+                } = this.iges;
                 if (!scene || !camera) return;
 
                 const width = renderer.domElement.clientWidth;
                 const height = renderer.domElement.clientHeight;
                 const aspect = width / height;
-                
+
                 // Simpan posisi & target lama agar transisi mulus
                 const oldPos = camera.position.clone();
                 const target = controls.target.clone();
@@ -2155,7 +2197,7 @@
                         frustumSize * aspect / 2,
                         frustumSize / 2,
                         frustumSize / -2,
-                        0.1, 
+                        0.1,
                         10000
                     );
                     this.cameraMode = 'orthographic';
@@ -2174,17 +2216,20 @@
                 this.iges.camera = newCamera;
                 controls.object = newCamera;
                 controls.update();
-                
+
                 // Perbarui measure tool jika aktif (karena raycaster butuh kamera yg benar)
-                if(this.iges.measure.enabled) {
+                if (this.iges.measure.enabled) {
                     this.toggleMeasure(); // matikan dulu
                     this.toggleMeasure(); // nyalakan lagi dengan kamera baru
                 }
-                
+
             },
 
             highlightPart(uuid) {
-                const { rootModel, THREE } = this.iges;
+                const {
+                    rootModel,
+                    THREE
+                } = this.iges;
                 if (!rootModel) return;
 
                 // A. Jika klik part yang sama (Deselect)
@@ -2196,21 +2241,24 @@
 
                 // B. Reset part lain ke kondisi normal
                 this._restoreMaterials(rootModel);
-                
+
                 this.selectedPartUuid = uuid;
                 this.partOpacity = 1.0;
 
                 const target = this.iges.rootModel.getObjectByProperty('uuid', uuid);
-                if(target) {
+                if (target) {
                     this.calculateGeoProperties(target);
                 } else {
-                    this.partInfo = { volume: '-', area: '-' };
+                    this.partInfo = {
+                        volume: '-',
+                        area: '-'
+                    };
                 }
 
                 // C. Cari part target
                 const targetMesh = rootModel.getObjectByProperty('uuid', uuid);
                 if (targetMesh && targetMesh.isMesh) {
-                    
+
                     // Simpan material asli jika belum ada
                     if (!this._oriMats.has(targetMesh)) {
                         const m = targetMesh.material;
@@ -2223,12 +2271,12 @@
 
                     // Buat material Highlight (Merah) DENGAN data clipping
                     const highlightMat = new THREE.MeshBasicMaterial({
-                        color: 0xff0000,    
-                        opacity: 0.6,       
+                        color: 0xff0000,
+                        opacity: 0.6,
                         transparent: true,
                         depthTest: false,
                         // Langsung masukkan clipping planes di sini saat inisialisasi
-                        clippingPlanes: currentPlanes, 
+                        clippingPlanes: currentPlanes,
                         clipShadows: true
                     });
 
@@ -2238,12 +2286,14 @@
 
             toggleClipping() {
                 this.clipping.enabled = !this.clipping.enabled;
-                const { THREE } = this.iges; // Kita butuh THREE untuk bikin Plane
+                const {
+                    THREE
+                } = this.iges; // Kita butuh THREE untuk bikin Plane
 
                 if (this.clipping.enabled) {
                     // Reset slider ke 0
                     this.clipping.value = 0;
-                    
+
                     // Buat Plane Baru
                     this.clipping.plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
                 } else {
@@ -2256,13 +2306,15 @@
                 if (this.clipping.plane) {
                     // Update posisi irisan berdasarkan slider
                     // Negatif agar arah gesernya intuitif (Kanan = Maju, Kiri = Mundur)
-                    this.clipping.plane.constant = -this.clipping.value; 
+                    this.clipping.plane.constant = -this.clipping.value;
                 }
             },
 
             // Helper untuk menempelkan plane ke material
             _updateMaterialsWithClipping() {
-                const { rootModel } = this.iges;
+                const {
+                    rootModel
+                } = this.iges;
                 if (!rootModel) return;
 
                 const planes = this.clipping.enabled && this.clipping.plane ? [this.clipping.plane] : [];
@@ -2271,7 +2323,7 @@
                     if (o.isMesh && o.material) {
                         // Kita handle jika materialnya Array atau Single
                         const mats = Array.isArray(o.material) ? o.material : [o.material];
-                        
+
                         mats.forEach(m => {
                             m.clippingPlanes = planes;
                             m.clipShadows = true; // Agar bayangan ikut terpotong (opsional)
@@ -2282,7 +2334,7 @@
             },
 
             _bindMeasureEvents(on) {
-                const canvas = this.iges.renderer?.domElement; 
+                const canvas = this.iges.renderer?.domElement;
                 if (!canvas) return;
 
                 if (on) {
@@ -2293,13 +2345,14 @@
                         if (!p) return;
 
                         const M = this.iges.measure;
-                        if (!M.p1) { 
-                            M.p1 = p; 
+                        if (!M.p1) {
+                            M.p1 = p;
                             // Opsional: Beri tanda visual di P1
                         } else {
-                            M.p2 = p; 
-                            this._drawMeasurement(M.p1, M.p2); 
-                            M.p1 = null; M.p2 = null; // Reset setelah garis terbentuk
+                            M.p2 = p;
+                            this._drawMeasurement(M.p1, M.p2);
+                            M.p1 = null;
+                            M.p2 = null; // Reset setelah garis terbentuk
                         }
                     };
 
@@ -2314,13 +2367,18 @@
                 } else {
                     if (this._onMeasureClick) canvas.removeEventListener('click', this._onMeasureClick);
                     if (this._onMeasureMove) canvas.removeEventListener('mousemove', this._onMeasureMove);
-                    
+
                     // Sembunyikan marker saat mode measure mati
                     if (this.snapMarker) this.snapMarker.visible = false;
                 }
             },
             _pickPoint(ev) {
-                const { THREE, camera, rootModel, renderer } = this.iges;
+                const {
+                    THREE,
+                    camera,
+                    rootModel,
+                    renderer
+                } = this.iges;
                 if (!renderer) return null;
 
                 const rect = renderer.domElement.getBoundingClientRect();
@@ -2331,25 +2389,25 @@
 
                 const raycaster = new THREE.Raycaster();
                 raycaster.setFromCamera(mouse, camera);
-                
+
                 // Gunakan boundsTree untuk performa (karena Anda sudah fix BVH sebelumnya)
-                raycaster.firstHitOnly = true; 
-                
+                raycaster.firstHitOnly = true;
+
                 const hits = raycaster.intersectObjects(rootModel.children, true);
                 if (!hits.length) {
-                    if(this.snapMarker) this.snapMarker.visible = false;
+                    if (this.snapMarker) this.snapMarker.visible = false;
                     return null;
                 }
 
                 const hit = hits[0];
                 let finalPoint = hit.point.clone(); // Default: titik di permukaan
-                
+
                 // === LOGIKA SNAPPING (MAGNET) ===
                 // Cek 3 titik sudut (vertex) dari segitiga yang kena raycast
                 if (hit.face) {
                     const mesh = hit.object;
                     const pos = mesh.geometry.attributes.position;
-                    
+
                     // Ambil koordinat 3 sudut segitiga tersebut
                     const vA = new THREE.Vector3().fromBufferAttribute(pos, hit.face.a).applyMatrix4(mesh.matrixWorld);
                     const vB = new THREE.Vector3().fromBufferAttribute(pos, hit.face.b).applyMatrix4(mesh.matrixWorld);
@@ -2368,9 +2426,18 @@
                     let closest = null;
                     let minInfo = snapThreshold;
 
-                    if (distA < minInfo) { closest = vA; minInfo = distA; }
-                    if (distB < minInfo) { closest = vB; minInfo = distB; }
-                    if (distC < minInfo) { closest = vC; minInfo = distC; }
+                    if (distA < minInfo) {
+                        closest = vA;
+                        minInfo = distA;
+                    }
+                    if (distB < minInfo) {
+                        closest = vB;
+                        minInfo = distB;
+                    }
+                    if (distC < minInfo) {
+                        closest = vC;
+                        minInfo = distC;
+                    }
 
                     // Jika ada yang dekat, ganti titik akhir jadi vertex tersebut
                     if (closest) {
@@ -2384,14 +2451,17 @@
                 return finalPoint;
             },
             _updateSnapMarker(position) {
-                const { THREE, scene } = this.iges;
-                
+                const {
+                    THREE,
+                    scene
+                } = this.iges;
+
                 // Jika marker belum ada, buat dulu
                 if (!this.snapMarker) {
                     const geom = new THREE.SphereGeometry(2, 16, 16); // Ukuran bola sesuaikan skala
-                    const mat = new THREE.MeshBasicMaterial({ 
+                    const mat = new THREE.MeshBasicMaterial({
                         color: 0xff0000, // Warna Merah
-                        transparent: true, 
+                        transparent: true,
                         opacity: 0.8,
                         depthTest: false // Agar terlihat di atas objek (always on top)
                     });
@@ -2402,9 +2472,9 @@
 
                 this.snapMarker.visible = true;
                 this.snapMarker.position.copy(position);
-                
+
                 // Skalakan marker agar ukurannya konsisten di layar (opsional tapi bagus)
-                const scale = this.iges.camera.position.distanceTo(position) * 0.01; 
+                const scale = this.iges.camera.position.distanceTo(position) * 0.01;
                 this.snapMarker.scale.set(scale, scale, scale);
             },
 
@@ -2414,26 +2484,34 @@
 
                 // 1. Gambar Garis (Line)
                 const geom = new THREE.BufferGeometry().setFromPoints([a, b]);
-                const line = new THREE.Line(geom, new THREE.LineBasicMaterial({ color: 0xffffff })); // Putih biar kontras
+                const line = new THREE.Line(geom, new THREE.LineBasicMaterial({
+                    color: 0xffffff
+                })); // Putih biar kontras
                 group.add(line);
 
                 // 2. Gambar Titik Ujung (Sphere)
                 const s = Math.max(0.4, a.distanceTo(b) / 160); // Ukuran dinamis
                 const sg = new THREE.SphereGeometry(s, 16, 16);
-                const sm = new THREE.MeshBasicMaterial({ color: 0xff0000 }); // Merah
-                const s1 = new THREE.Mesh(sg, sm); s1.position.copy(a); group.add(s1);
-                const s2 = new THREE.Mesh(sg, sm); s2.position.copy(b); group.add(s2);
+                const sm = new THREE.MeshBasicMaterial({
+                    color: 0xff0000
+                }); // Merah
+                const s1 = new THREE.Mesh(sg, sm);
+                s1.position.copy(a);
+                group.add(s1);
+                const s2 = new THREE.Mesh(sg, sm);
+                s2.position.copy(b);
+                group.add(s2);
 
                 // 3. Label (HTML DOM Overlay)
                 const wrap = this.$refs.igesWrap;
                 const lbl = document.createElement('div');
                 lbl.className = 'measure-label';
-                
+
                 // === PERBAIKAN CSS DI SINI ===
                 Object.assign(lbl.style, {
                     position: 'absolute',
-                    top: '0px',     // <--- WAJIB: Paksa mulai dari atas
-                    left: '0px',    // <--- WAJIB: Paksa mulai dari kiri
+                    top: '0px', // <--- WAJIB: Paksa mulai dari atas
+                    left: '0px', // <--- WAJIB: Paksa mulai dari kiri
                     padding: '4px 8px',
                     background: 'rgba(0, 0, 0, 0.8)',
                     color: '#fff',
@@ -2441,12 +2519,12 @@
                     fontSize: '11px',
                     fontFamily: 'monospace',
                     pointerEvents: 'none', // Agar klik tembus ke canvas
-                    zIndex: '50',          // Pastikan di atas canvas
+                    zIndex: '50', // Pastikan di atas canvas
                     whiteSpace: 'nowrap',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
                 });
                 // =============================
-                
+
                 wrap.appendChild(lbl);
 
                 // Fungsi Update Posisi (Dipanggil setiap frame di animate loop)
@@ -2455,10 +2533,10 @@
 
                     // Ambil titik tengah antara A dan B
                     const mid = a.clone().add(b).multiplyScalar(0.5);
-                    
+
                     // Proyeksikan titik 3D ke Layar 2D
                     // Hasil project() adalah range -1 s/d 1 (NDC)
-                    mid.project(this.iges.camera); 
+                    mid.project(this.iges.camera);
 
                     const w = wrap.clientWidth;
                     const h = wrap.clientHeight;
@@ -2469,14 +2547,14 @@
 
                     // Terapkan posisi. Translate -50% agar titik tengah label pas di titik ukur
                     lbl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -150%)`; // -150% biar label agak naik dikit di atas garis
-                    
+
                     // Update teks jarak
                     const dist = a.distanceTo(b);
                     lbl.textContent = `${dist.toFixed(2)} mm`;
                 };
 
                 group.userData.update = updateLabel;
-                
+
                 // Fungsi pembersihan saat tombol Clear ditekan
                 group.userData.dispose = () => {
                     if (lbl.parentNode) lbl.parentNode.removeChild(lbl);
@@ -2494,30 +2572,49 @@
             },
 
             setStandardView(view) {
-                const { camera, controls, rootModel, THREE } = this.iges;
+                const {
+                    camera,
+                    controls,
+                    rootModel,
+                    THREE
+                } = this.iges;
                 if (!rootModel || !camera) return;
 
                 // 1. Hitung ulang ukuran benda agar jarak kamera pas
                 const box = new THREE.Box3().setFromObject(rootModel);
-                const center = new THREE.Vector3(); box.getCenter(center); // Harusnya (0,0,0) kalau sudah di-center
-                const size = new THREE.Vector3(); box.getSize(size);
+                const center = new THREE.Vector3();
+                box.getCenter(center); // Harusnya (0,0,0) kalau sudah di-center
+                const size = new THREE.Vector3();
+                box.getSize(size);
                 const maxDim = Math.max(size.x, size.y, size.z);
-                
+
                 // Jarak kamera ideal (Fit Distance)
                 const fitDist = maxDim * 1.5; // Faktor pengali jarak
 
                 // 2. Tentukan posisi baru berdasarkan View
                 let newPos = new THREE.Vector3();
-                
-                switch(view) {
-                    case 'front': newPos.set(0, 0, fitDist); break;
-                    case 'back':  newPos.set(0, 0, -fitDist); break;
-                    case 'top':   newPos.set(0, fitDist, 0); break;
-                    case 'bottom':newPos.set(0, -fitDist, 0); break;
-                    case 'right': newPos.set(fitDist, 0, 0); break;
-                    case 'left':  newPos.set(-fitDist, 0, 0); break;
-                    case 'iso':   
-                    default:      
+
+                switch (view) {
+                    case 'front':
+                        newPos.set(0, 0, fitDist);
+                        break;
+                    case 'back':
+                        newPos.set(0, 0, -fitDist);
+                        break;
+                    case 'top':
+                        newPos.set(0, fitDist, 0);
+                        break;
+                    case 'bottom':
+                        newPos.set(0, -fitDist, 0);
+                        break;
+                    case 'right':
+                        newPos.set(fitDist, 0, 0);
+                        break;
+                    case 'left':
+                        newPos.set(-fitDist, 0, 0);
+                        break;
+                    case 'iso':
+                    default:
                         // Isometric (Pojok)
                         newPos.set(fitDist, fitDist, fitDist).normalize().multiplyScalar(fitDist);
                         break;
@@ -2526,23 +2623,26 @@
                 // 3. Pindahkan Kamera (Bisa pakai animasi tweening kalau mau halus, tapi langsung set juga oke)
                 camera.position.copy(newPos);
                 camera.lookAt(center);
-                
+
                 // Reset rotasi kamera (PENTING untuk mode Orthographic/2D)
-                camera.up.set(0, 1, 0); 
+                camera.up.set(0, 1, 0);
                 if (view === 'top' || view === 'bottom') {
                     // Khusus pandangan atas/bawah, sumbu UP harus diubah agar tidak pusing
-                    camera.up.set(0, 0, -1); 
+                    camera.up.set(0, 0, -1);
                 }
-                
+
                 controls.target.copy(center);
                 controls.update();
-                
+
                 // Refresh clipping agar tidak glitch
                 if (this.clipping.enabled) this._updateMaterialsWithClipping();
             },
 
             updatePartOpacity() {
-                const { rootModel, THREE } = this.iges;
+                const {
+                    rootModel,
+                    THREE
+                } = this.iges;
                 if (!this.selectedPartUuid) return;
 
                 const target = rootModel.getObjectByProperty('uuid', this.selectedPartUuid);
@@ -2558,13 +2658,16 @@
             },
 
             updateExplode() {
-                const { rootModel, THREE } = this.iges;
+                const {
+                    rootModel,
+                    THREE
+                } = this.iges;
                 if (!rootModel) return;
 
                 // A. Caching Data Awal (Hanya sekali saat pertama kali dijalankan)
                 if (!this.iges.originalPositions) {
                     this.iges.originalPositions = new Map();
-                    
+
                     // 1. Hitung Pusat Global Assembly (Titik Tengah Total)
                     const globalBox = new THREE.Box3().setFromObject(rootModel);
                     this.iges.center = new THREE.Vector3();
@@ -2581,14 +2684,14 @@
                             if (!child.geometry.boundingBox) child.geometry.computeBoundingBox();
                             const meshCenter = new THREE.Vector3();
                             child.geometry.boundingBox.getCenter(meshCenter);
-                            
+
                             // Konversi titik tengah lokal ke World Space
                             meshCenter.applyMatrix4(child.matrixWorld);
 
                             // Simpan "Arah Ledakan" yang spesifik untuk part ini
                             // Arah = (Titik Tengah Part) - (Titik Tengah Assembly)
                             const direction = new THREE.Vector3().subVectors(meshCenter, this.iges.center).normalize();
-                            
+
                             // Simpan di userData agar tidak perlu hitung ulang terus
                             child.userData.explodeDirection = direction;
                         }
@@ -2601,14 +2704,14 @@
                 rootModel.traverse(child => {
                     if (child.isMesh && this.iges.originalPositions.has(child.uuid)) {
                         const originalPos = this.iges.originalPositions.get(child.uuid);
-                        
+
                         if (this.explode.value === 0 || !this.explode.enabled) {
                             // Reset ke posisi rapat
                             child.position.copy(originalPos);
                         } else {
                             // Ambil arah ledakan yang sudah kita hitung dengan akurat tadi
                             const direction = child.userData.explodeDirection;
-                            
+
                             if (direction) {
                                 // Pindahkan: Posisi Awal + (Arah * Kekuatan Slider)
                                 child.position.copy(originalPos).add(direction.clone().multiplyScalar(scalar));
@@ -2616,9 +2719,9 @@
                         }
                     }
                 });
-                
+
                 // Update clipping plane agar ikut bergerak
-                if(this.clipping.enabled) this._updateMaterialsWithClipping();
+                if (this.clipping.enabled) this._updateMaterialsWithClipping();
             },
 
             toggleExplode() {
@@ -2633,8 +2736,12 @@
 
             takeScreenshot() {
                 // 1. Ambil objek dari state
-                let { renderer, scene, camera } = this.iges;
-                
+                let {
+                    renderer,
+                    scene,
+                    camera
+                } = this.iges;
+
                 // 2. CEK KEAMANAN & KUPAS PROXY (SOLUSI ERROR)
                 // Kita gunakan Alpine.raw() untuk mengambil objek asli yang belum dibungkus
                 if (typeof Alpine !== 'undefined' && Alpine.raw) {
@@ -2654,7 +2761,7 @@
 
                     // 4. Ambil data gambar
                     const imgData = renderer.domElement.toDataURL('image/png');
-                    
+
                     // 5. Generate nama file
                     const rawName = this.selectedFile?.name || 'model_3d';
                     const cleanName = rawName.replace(/\.[^/.]+$/, "") || 'screenshot';
@@ -2689,22 +2796,25 @@
 
             toggleHeadlight() {
                 this.headlight.enabled = !this.headlight.enabled;
-                const { camera, THREE } = this.iges;
+                const {
+                    camera,
+                    THREE
+                } = this.iges;
 
                 const rawCamera = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(camera) : camera;
                 if (!rawCamera) return;
 
                 if (this.headlight.enabled) {
                     if (!this.headlight.object) {
-                        const spot = new THREE.SpotLight(0xffffee, 2.5); 
-                        
+                        const spot = new THREE.SpotLight(0xffffee, 2.5);
+
                         spot.position.set(0, 0, 0);
                         spot.target.position.set(0, 0, -1);
-                        spot.angle = 0.6; 
-                        spot.penumbra = 1.0; 
-                        spot.decay = 0;       // Tetap 0 agar jangkauan jauh
-                        spot.distance = 5000; 
-                        
+                        spot.angle = 0.6;
+                        spot.penumbra = 1.0;
+                        spot.decay = 0; // Tetap 0 agar jangkauan jauh
+                        spot.distance = 5000;
+
                         rawCamera.add(spot.target);
                         this.headlight.object = spot;
                     }
@@ -2718,8 +2828,8 @@
 
             toggleFullscreen() {
                 // Ganti target ke container paling luar yang mencakup toolbar
-                const el = this.$refs.cadContainer; 
-                
+                const el = this.$refs.cadContainer;
+
                 if (!document.fullscreenElement) {
                     el.requestFullscreen().then(() => {
                         this.isFullscreen = true;
@@ -2737,10 +2847,12 @@
 
             calculateGeoProperties(mesh) {
                 if (!mesh || !mesh.geometry) return;
-                
-                const { THREE } = this.iges;
+
+                const {
+                    THREE
+                } = this.iges;
                 const geom = mesh.geometry;
-                
+
                 // Hitung Volume (Signed Volume of Triangles)
                 let vol = 0;
                 // Hitung Area
@@ -2749,15 +2861,17 @@
                 // Pastikan ada index/position
                 const pos = geom.attributes.position;
                 const index = geom.index;
-                
+
                 if (pos && index) {
-                    const p1 = new THREE.Vector3(), p2 = new THREE.Vector3(), p3 = new THREE.Vector3();
+                    const p1 = new THREE.Vector3(),
+                        p2 = new THREE.Vector3(),
+                        p3 = new THREE.Vector3();
                     for (let i = 0; i < index.count; i += 3) {
                         // Ambil 3 titik segitiga
                         p1.fromBufferAttribute(pos, index.getX(i));
-                        p2.fromBufferAttribute(pos, index.getX(i+1));
-                        p3.fromBufferAttribute(pos, index.getX(i+2));
-                        
+                        p2.fromBufferAttribute(pos, index.getX(i + 1));
+                        p3.fromBufferAttribute(pos, index.getX(i + 2));
+
                         // Rumus Volume (Signed)
                         vol += p1.dot(p2.cross(p3)) / 6.0;
 
@@ -2778,18 +2892,26 @@
                 window.addEventListener('keydown', (e) => {
                     // Jangan jalan jika user sedang mengetik di input text (jika ada)
                     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-                    
+
                     // Hanya jalan jika mode CAD aktif
                     if (!this.isCad(this.selectedFile?.name)) return;
 
-                    switch(e.key.toLowerCase()) {
-                        case 'f': this.setStandardView('front'); break;
-                        case 't': this.setStandardView('top'); break;
-                        case 'r': this.setStandardView('right'); break;
-                        case 'i': this.setStandardView('iso'); break;
+                    switch (e.key.toLowerCase()) {
+                        case 'f':
+                            this.setStandardView('front');
+                            break;
+                        case 't':
+                            this.setStandardView('top');
+                            break;
+                        case 'r':
+                            this.setStandardView('right');
+                            break;
+                        case 'i':
+                            this.setStandardView('iso');
+                            break;
                         case ' ': // Spasi untuk Auto Rotate
                             e.preventDefault(); // Cegah scroll halaman
-                            this.toggleAutoRotate(); 
+                            this.toggleAutoRotate();
                             break;
                         case 'h': // H untuk Headlight/Flashlight
                             this.toggleHeadlight();
@@ -2800,8 +2922,12 @@
 
             toggleAxes() {
                 this.axesHelper.active = !this.axesHelper.active;
-                const { scene, rootModel, THREE } = this.iges;
-                
+                const {
+                    scene,
+                    rootModel,
+                    THREE
+                } = this.iges;
+
                 // 1. Ambil Scene ASLI (Raw)
                 const rawScene = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(scene) : scene;
 
@@ -2810,49 +2936,52 @@
                         // Hitung ukuran helper
                         // Gunakan Alpine.raw pada rootModel juga untuk keamanan
                         const rawRoot = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(rootModel) : rootModel;
-                        
+
                         const box = new THREE.Box3().setFromObject(rawRoot);
                         const size = new THREE.Vector3();
                         box.getSize(size);
                         const maxDim = Math.max(size.x, size.y, size.z);
-                        
+
                         const axes = new THREE.AxesHelper(maxDim * 0.8);
-                        
+
                         axes.material.depthTest = false;
                         axes.renderOrder = 999;
-                        
+
                         this.axesHelper.object = axes;
                     }
-                    
+
                     // 2. PENTING: Kupas object AxesHelper sebelum dimasukkan ke Scene
                     // Ini kuncinya agar tidak freeze!
-                    const rawAxes = (typeof Alpine !== 'undefined' && Alpine.raw) ? 
-                                    Alpine.raw(this.axesHelper.object) : 
-                                    this.axesHelper.object;
+                    const rawAxes = (typeof Alpine !== 'undefined' && Alpine.raw) ?
+                        Alpine.raw(this.axesHelper.object) :
+                        this.axesHelper.object;
 
                     rawScene.add(rawAxes);
 
                 } else {
                     if (this.axesHelper.object) {
                         // Saat menghapus pun, gunakan object raw
-                        const rawAxes = (typeof Alpine !== 'undefined' && Alpine.raw) ? 
-                                        Alpine.raw(this.axesHelper.object) : 
-                                        this.axesHelper.object;
-                                        
+                        const rawAxes = (typeof Alpine !== 'undefined' && Alpine.raw) ?
+                            Alpine.raw(this.axesHelper.object) :
+                            this.axesHelper.object;
+
                         rawScene.remove(rawAxes);
                     }
                 }
-                
+
                 // Paksa render ulang frame baru agar langsung muncul
                 const rawRenderer = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(this.iges.renderer) : this.iges.renderer;
                 const rawCamera = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(this.iges.camera) : this.iges.camera;
-                if(rawRenderer && rawCamera) {
+                if (rawRenderer && rawCamera) {
                     rawRenderer.render(rawScene, rawCamera);
                 }
             },
 
             setMaterialMode(mode) {
-                const { rootModel, THREE } = this.iges;
+                const {
+                    rootModel,
+                    THREE
+                } = this.iges;
                 if (!rootModel) return;
 
                 this.activeMaterial = mode;
@@ -2880,28 +3009,25 @@
                     newMat = new THREE.MeshStandardMaterial({
                         ...commonProps,
                         color: 0xdddddd, // Putih abu
-                        roughness: 1.0,  // Kasar (tidak memantul)
+                        roughness: 1.0, // Kasar (tidak memantul)
                         metalness: 0.0
                     });
-                } 
-                else if (mode === 'metal') {
+                } else if (mode === 'metal') {
                     // Tampilan Logam (Chrome)
                     newMat = new THREE.MeshStandardMaterial({
                         ...commonProps,
                         color: 0xffffff,
-                        roughness: 0.2,  // Licin
-                        metalness: 1.0   // Logam murni
+                        roughness: 0.2, // Licin
+                        metalness: 1.0 // Logam murni
                     });
-                } 
-                else if (mode === 'normal') {
+                } else if (mode === 'normal') {
                     // Tampilan Normal (Warna-warni berdasarkan arah)
                     // Sangat bagus untuk cek orientasi permukaan
                     newMat = new THREE.MeshNormalMaterial({
                         ...commonProps
                         // MeshNormalMaterial tidak butuh color/roughness
                     });
-                }
-                else if (mode === 'glass') {
+                } else if (mode === 'glass') {
                     // Tampilan Kaca/Akrilik Transparan
                     newMat = new THREE.MeshStandardMaterial({
                         ...commonProps,
@@ -2912,13 +3038,12 @@
                         opacity: 0.3, // 30% terlihat, 70% tembus
                         depthWrite: false // Agar rendering urutan transparansi benar
                     });
-                }
-                else if (mode === 'ecoat') {
+                } else if (mode === 'ecoat') {
                     newMat = new THREE.MeshStandardMaterial({
                         ...commonProps,
                         color: 0x757a75, // Abu-abu kehijauan (Olive Grey)
-                        roughness: 0.7,  // Matte / Doff (tidak mantul)
-                        metalness: 0.1   // Sedikit sifat logam
+                        roughness: 0.7, // Matte / Doff (tidak mantul)
+                        metalness: 0.1 // Sedikit sifat logam
                     });
                 }
 
@@ -2928,8 +3053,8 @@
                     newMat = new THREE.MeshStandardMaterial({
                         ...commonProps,
                         color: 0xc0c6c9, // Abu-abu dingin (kebiruan dikit)
-                        roughness: 0.4,  // Semi-mengkilap (permukaan oli tipis)
-                        metalness: 0.8   // Sangat logam
+                        roughness: 0.4, // Semi-mengkilap (permukaan oli tipis)
+                        metalness: 0.8 // Sangat logam
                     });
                 }
 
@@ -2950,7 +3075,7 @@
                     newMat = new THREE.MeshStandardMaterial({
                         ...commonProps,
                         color: 0xffffff, // Putih terang
-                        roughness: 0.5,  // Agak kasar (kulit jeruk casting)
+                        roughness: 0.5, // Agak kasar (kulit jeruk casting)
                         metalness: 0.7
                     });
                 }
@@ -2961,16 +3086,15 @@
                     newMat = new THREE.MeshStandardMaterial({
                         ...commonProps,
                         color: 0x803020, // Merah Bata Gelap
-                        roughness: 0.9,  // Sangat matte
+                        roughness: 0.9, // Sangat matte
                         metalness: 0.0
                     });
-                }
-                else if (mode === 'dark') {
+                } else if (mode === 'dark') {
                     // Tampilan Plastik Hitam / Besi Cor
                     newMat = new THREE.MeshStandardMaterial({
                         ...commonProps,
                         color: 0x222222, // Hampir hitam
-                        roughness: 0.6,  // Agak kasar
+                        roughness: 0.6, // Agak kasar
                         metalness: 0.2
                     });
                 }
@@ -3037,7 +3161,10 @@
                     }
                 });
 
-                const { THREE, scene } = this.iges;
+                const {
+                    THREE,
+                    scene
+                } = this.iges;
                 this.setupKeyboardShortcuts();
             },
 
@@ -3050,15 +3177,18 @@
 
             selectFile(file) {
                 if (this.selectedFile && this.getFileKey(this.selectedFile) === this.getFileKey(file)) return;
-    
+
                 if (this.selectedFile) this.saveStampConfigForCurrent();
                 const currentId = ++this.activeLoadId;
 
-                this.tifLoading = false; this.tifError = '';
-                this.hpglLoading = false; this.hpglError = '';
-                this.pdfLoading = false; this.pdfError = '';
+                this.tifLoading = false;
+                this.tifError = '';
+                this.hpglLoading = false;
+                this.hpglError = '';
+                this.pdfLoading = false;
+                this.pdfError = '';
                 this.imgLoading = false;
-                
+
                 if (this.isCad(this.selectedFile?.name)) this.disposeCad();
 
                 if (this.isTiff(this.selectedFile?.name)) {
@@ -3096,10 +3226,14 @@
                 this.panX = 0;
                 this.panY = 0;
 
-                this.selectedFile = { ...file };
+                this.selectedFile = {
+                    ...file
+                };
                 this.loadStampConfigFor(this.selectedFile);
 
-                this.selectedFile = { ...file };
+                this.selectedFile = {
+                    ...file
+                };
                 this.loadStampConfigFor(this.selectedFile);
 
                 this.$nextTick(() => {
@@ -3108,21 +3242,17 @@
                     if (this.isTiff(file?.name)) {
                         this.tifLoading = true;
                         this.renderTiff(file.url, currentId);
-                    } 
-                    else if (this.isCad(file?.name)) {
+                    } else if (this.isCad(file?.name)) {
                         this.renderCadOcct(file);
-                    } 
-                    else if (this.isHpgl(file?.name)) {
+                    } else if (this.isHpgl(file?.name)) {
                         this.hpglLoading = true;
                         this.renderHpgl(file.url, currentId);
-                    } 
-                    else if (this.isPdf(file?.name)) {
+                    } else if (this.isPdf(file?.name)) {
                         this.pdfLoading = true;
                         this.renderPdf(file.url, currentId);
-                    } 
-                    else if (this.isImage(file?.name)) {
+                    } else if (this.isImage(file?.name)) {
                         this.imgLoading = true;
-                        
+
                         const img = this.$refs.mainImage;
                         if (img && img.complete && img.naturalWidth > 0) {
                             this.imgLoading = false;
@@ -3400,16 +3530,16 @@
                     wrap.style.overflow = 'hidden';
 
                     // lights
-                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); 
+                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
                     scene.add(ambientLight);
                     scene.add(camera);
 
                     const keyLight = new THREE.DirectionalLight(0xffffff, 0.7);
                     keyLight.position.set(50, 50, 100);
-                    camera.add(keyLight); 
+                    camera.add(keyLight);
 
                     const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
-                    fillLight.position.set(-50, -50, 100); 
+                    fillLight.position.set(-50, -50, 100);
                     camera.add(fillLight);
 
                     // controls
@@ -3488,7 +3618,7 @@
                     box.getCenter(center);
 
                     // 2. GESER BENDA KE TITIK NOL (0,0,0) - PENTING UNTUK CLIPPING
-                    group.position.sub(center); 
+                    group.position.sub(center);
 
                     // 3. ATUR RANGE SLIDER CLIPPING (Berdasarkan ukuran benda)
                     const maxDim = Math.max(size.x, size.y, size.z) || 100;
@@ -3520,7 +3650,7 @@
                         controls.update();
                         const rawRenderer = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(renderer) : renderer;
                         const rawScene = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(scene) : scene;
-                        
+
                         let activeCam = this.iges.camera;
                         if (typeof Alpine !== 'undefined' && Alpine.raw) {
                             activeCam = Alpine.raw(activeCam);
@@ -3531,62 +3661,62 @@
                         }
                         const g = this.iges.measure.group;
                         if (g) g.children.forEach(ch => ch.userData?.update?.());
-                        
+
                         this.iges.animId = requestAnimationFrame(animate);
                     };
                     animate();
 
                     // resize
                     const resizeObserver = new ResizeObserver(() => {
-                    // 1. Cek ukuran wadah pembungkus saat ini
-                    const w = wrap.clientWidth;
-                    const h = wrap.clientHeight;
+                        // 1. Cek ukuran wadah pembungkus saat ini
+                        const w = wrap.clientWidth;
+                        const h = wrap.clientHeight;
 
-                    // Safety check: Jangan update jika elemen tersembunyi/kecil
-                    if (w === 0 || h === 0) return;
+                        // Safety check: Jangan update jika elemen tersembunyi/kecil
+                        if (w === 0 || h === 0) return;
 
-                    // 2. Update Kamera (Agar aspek rasio tidak gepeng)
-                    // Cek dulu apakah camera punya method update (karena bisa jadi null saat awal)
-                    if (camera && camera.updateProjectionMatrix) {
-                        // Logika khusus: Orthographic vs Perspective butuh rumus beda
-                        if (camera.isOrthographicCamera) {
-                            // Update frustum untuk Orthographic
-                            // Kita perlu hitung ulang frustum berdasarkan zoom/dist yang ada
-                            // TAPI, cara paling aman untuk viewer sederhana adalah sekedar update aspek:
-                            const aspect = w / h;
-                            
-                            // Ambil size frustum lama (trik sederhana)
-                            const frustumHeight = (camera.top - camera.bottom);
-                            const frustumWidth = frustumHeight * aspect;
+                        // 2. Update Kamera (Agar aspek rasio tidak gepeng)
+                        // Cek dulu apakah camera punya method update (karena bisa jadi null saat awal)
+                        if (camera && camera.updateProjectionMatrix) {
+                            // Logika khusus: Orthographic vs Perspective butuh rumus beda
+                            if (camera.isOrthographicCamera) {
+                                // Update frustum untuk Orthographic
+                                // Kita perlu hitung ulang frustum berdasarkan zoom/dist yang ada
+                                // TAPI, cara paling aman untuk viewer sederhana adalah sekedar update aspek:
+                                const aspect = w / h;
 
-                            camera.left = -frustumWidth / 2;
-                            camera.right = frustumWidth / 2;
-                            camera.top = frustumHeight / 2;
-                            camera.bottom = -frustumHeight / 2;
-                        } else {
-                            // Update aspect untuk Perspective
-                            camera.aspect = w / h;
+                                // Ambil size frustum lama (trik sederhana)
+                                const frustumHeight = (camera.top - camera.bottom);
+                                const frustumWidth = frustumHeight * aspect;
+
+                                camera.left = -frustumWidth / 2;
+                                camera.right = frustumWidth / 2;
+                                camera.top = frustumHeight / 2;
+                                camera.bottom = -frustumHeight / 2;
+                            } else {
+                                // Update aspect untuk Perspective
+                                camera.aspect = w / h;
+                            }
+                            camera.updateProjectionMatrix();
                         }
-                        camera.updateProjectionMatrix();
-                    }
 
-                    // 3. Update Renderer (Ubah ukuran canvas fisik)
-                    if (renderer) {
-                        renderer.setSize(w, h);
-                        // Paksa render ulang frame baru agar tidak flickering hitam
-                        // Gunakan Alpine.raw untuk keamanan
-                        const rawRenderer = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(renderer) : renderer;
-                        const rawScene = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(scene) : scene;
-                        const rawCam = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(camera) : camera;
-                        rawRenderer.render(rawScene, rawCam);
-                    }
-                });
+                        // 3. Update Renderer (Ubah ukuran canvas fisik)
+                        if (renderer) {
+                            renderer.setSize(w, h);
+                            // Paksa render ulang frame baru agar tidak flickering hitam
+                            // Gunakan Alpine.raw untuk keamanan
+                            const rawRenderer = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(renderer) : renderer;
+                            const rawScene = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(scene) : scene;
+                            const rawCam = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(camera) : camera;
+                            rawRenderer.render(rawScene, rawCam);
+                        }
+                    });
 
-                // Mulai pantau wadah pembungkus
-                resizeObserver.observe(wrap);
+                    // Mulai pantau wadah pembungkus
+                    resizeObserver.observe(wrap);
 
-                // Simpan reference untuk dibersihkan nanti saat dispose
-                this._resizeObserver = resizeObserver;
+                    // Simpan reference untuk dibersihkan nanti saat dispose
+                    this._resizeObserver = resizeObserver;
 
                 } catch (e) {
                     console.error(e);

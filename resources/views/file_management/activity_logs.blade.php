@@ -4,6 +4,26 @@
 @section('header-title', 'Activity Logs')
 
 @section('content')
+<nav class="flex px-5 py-3 mb-3 text-gray-700 bg-gray-50 shadow-sm" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+
+    <li class="inline-flex items-center">
+      <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600">
+        Monitoring
+      </a>
+    </li>
+
+    <li aria-current="page">
+      <div class="flex items-center">
+        <span class="mx-1 text-gray-400">/</span>
+
+        <span class="text-sm font-semibold text-blue-800 px-2.5 py-0.5 rounded">
+          Activity Logs
+        </span>
+      </div>
+    </li>
+  </ol>
+</nav>
 <div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900">
   <div class="sm:flex sm:items-center sm:justify-between">
     <div>
@@ -16,24 +36,24 @@
   <div class="mt-8 bg-white dark:bg-gray-800 p-7 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
     <div class="flex items-center justify-between mb-4">
       <div class="relative w-full sm:w-72">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i id="search-icon-static" class="fa-solid fa-magnifying-glass text-gray-400 transition-opacity duration-200"></i>
-              <i id="search-icon-loading" class="fa-solid fa-spinner fa-spin text-blue-500 opacity-0 transition-opacity duration-200 absolute left-3"></i>
-          </div>
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <i id="search-icon-static" class="fa-solid fa-magnifying-glass text-gray-400 transition-opacity duration-200"></i>
+          <i id="search-icon-loading" class="fa-solid fa-spinner fa-spin text-blue-500 opacity-0 transition-opacity duration-200 absolute left-3"></i>
+        </div>
 
-          <input type="text" 
-              id="custom-search" 
-              class="block w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-full leading-5 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out shadow-sm" 
-              placeholder="Search User, Activity, etc..."
-              autocomplete="off">
+        <input type="text"
+          id="custom-search"
+          class="block w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-full leading-5 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out shadow-sm"
+          placeholder="Search User, Activity, etc..."
+          autocomplete="off">
 
-          <div class="absolute inset-y-0 right-0 pr-2 flex items-center">
-              <button id="btn-clear-search" 
-                      type="button"
-                      class="hidden text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none transition-colors p-1">
-                  <i class="fa-solid fa-circle-xmark"></i>
-              </button>
-          </div>
+        <div class="absolute inset-y-0 right-0 pr-2 flex items-center">
+          <button id="btn-clear-search"
+            type="button"
+            class="hidden text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none transition-colors p-1">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </button>
+        </div>
       </div>
       <div class="flex items-center gap-2">
         <button id="btnDownloadExcel"
@@ -66,13 +86,13 @@
       <div>
         <label for="date_range_input" class="text-sm font-medium text-gray-700 dark:text-gray-300">Date Range</label>
         <div class="relative mt-1">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <i class="fa-solid fa-calendar-days text-gray-400"></i>
-            </div>
-            <input type="text" id="date_range_input" class="block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:ring-0 focus:outline-none sm:text-sm py-2 pl-10 pr-3" placeholder="Select Date Range">
+          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <i class="fa-solid fa-calendar-days text-gray-400"></i>
+          </div>
+          <input type="text" id="date_range_input" class="block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:ring-0 focus:outline-none sm:text-sm py-2 pl-10 pr-3" placeholder="Select Date Range">
         </div>
       </div>
-      
+
       <div>
         <label for="user" class="text-sm font-medium text-gray-700 dark:text-gray-300">User</label>
         <div class="relative mt-1">
@@ -95,68 +115,68 @@
 
   {{-- Tabel section --}}
   <div class="mt-8 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <table id="activityTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead class="bg-gray-50 dark:bg-gray-700/50">
-          <tr>
-            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No</th>
-            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">User</th>
-            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Activity</th>
-            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ECN</th>
-            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
-        </tbody>
-      </table>
+    <table id="activityTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+      <thead class="bg-gray-50 dark:bg-gray-700/50">
+        <tr>
+          <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No</th>
+          <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+          <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">User</th>
+          <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Activity</th>
+          <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ECN</th>
+          <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
+      </tbody>
+    </table>
   </div>
 
 </div>
 @endsection
 
 @push('scripts')
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
 <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
 <script>
-$(function () {
-  let table;
-  const ENDPOINT = '{{ route("activity-logs.filters") }}';
-  let dateStart = '';
-  let dateEnd = '';
-  let dateRangeInstance = null;
+  $(function() {
+    let table;
+    const ENDPOINT = '{{ route("activity-logs.filters") }}';
+    let dateStart = '';
+    let dateEnd = '';
+    let dateRangeInstance = null;
 
-  function initDateRange() {
+    function initDateRange() {
       const now = new Date();
       const year = now.getFullYear();
       const month = (now.getMonth() + 1).toString().padStart(2, '0');
       const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
-      
+
       // Default to current month
       dateStart = `${year}-${month}-01`;
       dateEnd = `${year}-${month}-${lastDay}`;
 
       dateRangeInstance = new Litepicker({
-          element: document.getElementById('date_range_input'),
-          singleMode: false,
-          allowRepick: true,
-          format: 'DD MMM YYYY',
-          startDate: dateStart,
-          endDate: dateEnd,
-          setup: (picker) => {
-              picker.on('selected', (d1, d2) => {
-                  dateStart = formatDateJS(d1.dateInstance);
-                  dateEnd = formatDateJS(d2.dateInstance);
-                  if (table) table.ajax.reload(null, true);
-              });
-              picker.on('show', () => {
-                  const isDarkMode = document.documentElement.classList.contains('dark');
-                  isDarkMode ? picker.ui.classList.add('dark') : picker.ui.classList.remove('dark');
-              });
-          }
+        element: document.getElementById('date_range_input'),
+        singleMode: false,
+        allowRepick: true,
+        format: 'DD MMM YYYY',
+        startDate: dateStart,
+        endDate: dateEnd,
+        setup: (picker) => {
+          picker.on('selected', (d1, d2) => {
+            dateStart = formatDateJS(d1.dateInstance);
+            dateEnd = formatDateJS(d2.dateInstance);
+            if (table) table.ajax.reload(null, true);
+          });
+          picker.on('show', () => {
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            isDarkMode ? picker.ui.classList.add('dark') : picker.ui.classList.remove('dark');
+          });
+        }
       });
-  }
+    }
 
-  function formatDateJS(date) {
+    function formatDateJS(date) {
       if (!date) return '';
       const d = new Date(date);
       if (isNaN(d.getTime())) return '';
@@ -166,164 +186,180 @@ $(function () {
       if (month.length < 2) month = '0' + month;
       if (day.length < 2) day = '0' + day;
       return [year, month, day].join('-');
-  }
+    }
 
-  function resetSelect2ToAll($el) {
-    $el.empty();
-    const opt = new Option('All', 'All', true, true);
-    $el.append(opt);
-    $el.trigger('change');
-    $el.trigger('select2:select');
-  }
+    function resetSelect2ToAll($el) {
+      $el.empty();
+      const opt = new Option('All', 'All', true, true);
+      $el.append(opt);
+      $el.trigger('change');
+      $el.trigger('select2:select');
+    }
 
-  function makeSelect2($el, field) {
-    $el.select2({
-      width: '100%',
-      placeholder: 'All',
-      allowClear: false,
-      minimumResultsForSearch: 0,
-      ajax: {
-        url: ENDPOINT,
-        dataType: 'json',
-        delay: 250,
-        cache: true,
-        data: function (params) {
-          return {
-            select2: field,
-            q: params.term || '',
-            page: params.page || 1
-          };
-        },
-        processResults: function (data, params) {
-          params.page = params.page || 1;
-          const results = Array.isArray(data.results) ? data.results.slice() : [];
-          if (params.page === 1 && !results.some(r => r.id === 'All')) {
-            results.unshift({ id: 'All', text: 'All' });
+    function makeSelect2($el, field) {
+      $el.select2({
+        width: '100%',
+        placeholder: 'All',
+        allowClear: false,
+        minimumResultsForSearch: 0,
+        ajax: {
+          url: ENDPOINT,
+          dataType: 'json',
+          delay: 250,
+          cache: true,
+          data: function(params) {
+            return {
+              select2: field,
+              q: params.term || '',
+              page: params.page || 1
+            };
+          },
+          processResults: function(data, params) {
+            params.page = params.page || 1;
+            const results = Array.isArray(data.results) ? data.results.slice() : [];
+            if (params.page === 1 && !results.some(r => r.id === 'All')) {
+              results.unshift({
+                id: 'All',
+                text: 'All'
+              });
+            }
+            return {
+              results,
+              pagination: {
+                more: data.pagination ? data.pagination.more : false
+              }
+            };
+          },
+          templateResult: function(item) {
+            if (item.loading) return item.text;
+            return $('<div class="text-sm">' + (item.text || item.id) + '</div>');
+          },
+          templateSelection: function(item) {
+            return item.text || item.id || 'All';
           }
-          return {
-            results,
-            pagination: { more: data.pagination ? data.pagination.more : false }
-          };
-        },
-        templateResult: function (item) {
-          if (item.loading) return item.text;
-          return $('<div class="text-sm">' + (item.text || item.id) + '</div>');
-        },
-        templateSelection: function (item) {
-          return item.text || item.id || 'All';
         }
-      }
-    });
-  }
+      });
+    }
 
-  makeSelect2($('#user'), 'user');
-  makeSelect2($('#activity_code'), 'activity_code');
+    makeSelect2($('#user'), 'user');
+    makeSelect2($('#activity_code'), 'activity_code');
 
-  function getCurrentFilters() {
-    const valOrAll = v => (v && v.length ? v : 'All');
-    return {
-      user_id:       valOrAll($('#user').val()),
-      activity_code: valOrAll($('#activity_code').val()),
-      date_start:    dateStart,
-      date_end:      dateEnd
-    };
-  }
+    function getCurrentFilters() {
+      const valOrAll = v => (v && v.length ? v : 'All');
+      return {
+        user_id: valOrAll($('#user').val()),
+        activity_code: valOrAll($('#activity_code').val()),
+        date_start: dateStart,
+        date_end: dateEnd
+      };
+    }
 
-  // Initialize DataTable
-  function initTable() {
-    const $staticIcon  = $('#search-icon-static');
-    const $loadingIcon = $('#search-icon-loading')
+    // Initialize DataTable
+    function initTable() {
+      const $staticIcon = $('#search-icon-static');
+      const $loadingIcon = $('#search-icon-loading')
 
-    table = $('#activityTable').DataTable({
-      processing: true,
-      serverSide: true,
-      responsive: true,
-      dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
-      ajax: {
-        url: '{{ route("activity-logs.list") }}',
-        type: 'GET',
-        data: function (d) {
-          const f = getCurrentFilters();
-          d.user_id       = f.user_id;
-          d.activity_code = f.activity_code;
-          d.date_start    = f.date_start;
-          d.date_end      = f.date_end;
-        },
-        error: function (xhr, error, thrown) {
+      table = $('#activityTable').DataTable({
+        processing: true,
+        serverSide: true,
+        responsive: true,
+        dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
+        ajax: {
+          url: '{{ route("activity-logs.list") }}',
+          type: 'GET',
+          data: function(d) {
+            const f = getCurrentFilters();
+            d.user_id = f.user_id;
+            d.activity_code = f.activity_code;
+            d.date_start = f.date_start;
+            d.date_end = f.date_end;
+          },
+          error: function(xhr, error, thrown) {
             console.error('DataTable Error:', error);
             $loadingIcon.removeClass('opacity-100').addClass('opacity-0');
             $staticIcon.removeClass('opacity-0');
-        }
-      },
-      order: [[ 1, 'desc' ]],
+          }
+        },
+        order: [
+          [1, 'desc']
+        ],
 
-      createdRow: function(row, data, dataIndex) {
-        $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700');
-      },
+        createdRow: function(row, data, dataIndex) {
+          $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700');
+        },
 
-      columns: [
-        { data: null, name: 'No', orderable: false, searchable: false },
-        { 
-            data: 'created_at', 
-            name: 'created_at', 
+        columns: [{
+            data: null,
+            name: 'No',
+            orderable: false,
+            searchable: false
+          },
+          {
+            data: 'created_at',
+            name: 'created_at',
             searchable: false,
             render: function(data) {
-                if(!data) return '-';
-                const d = new Date(data);
-                return d.toLocaleString('id-ID');
+              if (!data) return '-';
+              const d = new Date(data);
+              return d.toLocaleString('id-ID');
             }
-        },
-        { data: 'user_name', name: 'user_name', searchable: true, defaultContent: 'System' },
-        { 
-            data: 'activity_code', 
-            name: 'activity_code', 
+          },
+          {
+            data: 'user_name',
+            name: 'user_name',
+            searchable: true,
+            defaultContent: 'System'
+          },
+          {
+            data: 'activity_code',
+            name: 'activity_code',
             searchable: true,
             render: function(data) {
-                const colors = {
-                    'UPLOAD': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-                    'APPROVE': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-                    'REJECT': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-                    'DOWNLOAD': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-                    'SUBMIT_APPROVAL': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-                    'SHARE_PACKAGE': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300',
-                    'SHARE_INTERNAL': 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300',
-                    'ROLLBACK': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-                    'REVISE_CONFIRM': 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300',
-                    'DELETE_PACKAGE': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-                };
-                const colorClass = colors[data] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
-                return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}">${data}</span>`;
+              const colors = {
+                'UPLOAD': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+                'APPROVE': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                'REJECT': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                'DOWNLOAD': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+                'SUBMIT_APPROVAL': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
+                'SHARE_PACKAGE': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300',
+                'SHARE_INTERNAL': 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300',
+                'ROLLBACK': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+                'REVISE_CONFIRM': 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300',
+                'DELETE_PACKAGE': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+              };
+              const colorClass = colors[data] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+              return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}">${data}</span>`;
             }
-        },
-        { 
-            data: 'meta', 
-            name: 'ecn_no', 
-            orderable: true, 
+          },
+          {
+            data: 'meta',
+            name: 'ecn_no',
+            orderable: true,
             searchable: true,
             render: function(data) {
-                return (data && data.ecn_no) ? `<span class="font-mono text-sm">${data.ecn_no}</span>` : '-';
+              return (data && data.ecn_no) ? `<span class="font-mono text-sm">${data.ecn_no}</span>` : '-';
             }
-        },
-        {
+          },
+          {
             data: 'meta',
             name: 'meta',
             orderable: false,
             searchable: true,
             render: function(data, type, row) {
-                if (!data) return '-';
+              if (!data) return '-';
 
-                const code = row.activity_code;
-                
-                // --- Helper Styles ---
-                const mainTextClass = "text-sm font-bold text-gray-800 dark:text-gray-200 block";
-                const subTextClass  = "text-xs text-gray-500 dark:text-gray-400 mt-0.5 block";
-                const badgeRev = (rev) => `<span class="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 font-mono">Rev ${rev ?? '-'}</span>`;
-                const badgeLabel = (label) => label ? `<span class="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">${label}</span>` : '';
+              const code = row.activity_code;
 
-                // 1. UPLOAD
-                if (code === 'UPLOAD') {
-                    const fileInfo = data.file_count ? `<span class="ml-1 text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-1 rounded border border-gray-200 dark:border-gray-600">${data.file_count} Files (${data.file_types || '-'})</span>` : '';
-                    return `
+              // --- Helper Styles ---
+              const mainTextClass = "text-sm font-bold text-gray-800 dark:text-gray-200 block";
+              const subTextClass = "text-xs text-gray-500 dark:text-gray-400 mt-0.5 block";
+              const badgeRev = (rev) => `<span class="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 font-mono">Rev ${rev ?? '-'}</span>`;
+              const badgeLabel = (label) => label ? `<span class="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">${label}</span>` : '';
+
+              // 1. UPLOAD
+              if (code === 'UPLOAD') {
+                const fileInfo = data.file_count ? `<span class="ml-1 text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-1 rounded border border-gray-200 dark:border-gray-600">${data.file_count} Files (${data.file_types || '-'})</span>` : '';
+                return `
                         <div class="flex flex-col">
                             <div class="${mainTextClass}">
                                 <i class="fa-solid fa-cloud-arrow-up text-blue-500 mr-1"></i>
@@ -335,11 +371,11 @@ $(function () {
                             </div>
                             ${data.note ? `<div class="text-xs italic text-gray-400 mt-0.5">"${data.note}"</div>` : ''}
                         </div>`;
-                }
+              }
 
-                // 2. SUBMIT_APPROVAL
-                if (code === 'SUBMIT_APPROVAL') {
-                    return `
+              // 2. SUBMIT_APPROVAL
+              if (code === 'SUBMIT_APPROVAL') {
+                return `
                         <div class="flex flex-col">
                             <span class="${mainTextClass} text-purple-600 dark:text-purple-400">
                                 <i class="fa-solid fa-file-signature mr-1"></i> Request Approval
@@ -351,16 +387,16 @@ $(function () {
                             </div>
                              ${data.ecn_no ? `<div class="text-[10px] text-gray-400 mt-0.5">ECN: ${data.ecn_no}</div>` : ''}
                         </div>`;
-                }
+              }
 
-                // 3. APPROVE & REJECT
-                if (code === 'APPROVE' || code === 'REJECT') {
-                    const isApprove = code === 'APPROVE' || (data.action_status && data.action_status === 'Approved');
-                    const colorClass = isApprove ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
-                    const iconClass  = isApprove ? 'fa-circle-check' : 'fa-circle-xmark';
-                    const labelText  = data.action_status || (isApprove ? 'Approved' : 'Rejected');
+              // 3. APPROVE & REJECT
+              if (code === 'APPROVE' || code === 'REJECT') {
+                const isApprove = code === 'APPROVE' || (data.action_status && data.action_status === 'Approved');
+                const colorClass = isApprove ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+                const iconClass = isApprove ? 'fa-circle-check' : 'fa-circle-xmark';
+                const labelText = data.action_status || (isApprove ? 'Approved' : 'Rejected');
 
-                    return `
+                return `
                         <div class="flex flex-col items-start">
                             <span class="${mainTextClass} ${colorClass}">
                                 <i class="fa-regular ${iconClass} mr-1"></i> ${labelText}
@@ -373,16 +409,16 @@ $(function () {
                             ${data.note ? `<div class="text-xs italic text-gray-400 mt-0.5">"${data.note}"</div>` : ''}
                         </div>
                     `;
-                }
+              }
 
-                // 4. SHARE_PACKAGE
-                if (code === 'SHARE_PACKAGE') {
-                    let target = data.shared_to || data.recipients || 'Unknown';
-                    // Clean up [EXP] prefix if present for display
-                    target = target.replace('[EXP] ', '');
-                    const displayTarget = target.length > 90 ? target.substring(0, 90) + '...' : target;
+              // 4. SHARE_PACKAGE
+              if (code === 'SHARE_PACKAGE') {
+                let target = data.shared_to || data.recipients || 'Unknown';
+                // Clean up [EXP] prefix if present for display
+                target = target.replace('[EXP] ', '');
+                const displayTarget = target.length > 90 ? target.substring(0, 90) + '...' : target;
 
-                    return `
+                return `
                         <div class="flex flex-col">
                             <span class="${mainTextClass} text-indigo-600 dark:text-indigo-400">
                                 <i class="fa-solid fa-share-nodes mr-1"></i> Shared Package
@@ -394,14 +430,14 @@ $(function () {
                                 ${data.part_no || '-'} ${badgeRev(data.revision_no)} • Exp: ${data.expired_at || '-'}
                             </div>
                         </div>`;
-                }
+              }
 
-                // 5. DOWNLOAD
-                if (code === 'DOWNLOAD') {
-                    let fileName = data.downloaded_file || '-';
-                    const shortName = fileName.length > 60 ? fileName.substring(0, 57) + '...' : fileName;
-                    
-                    return `
+              // 5. DOWNLOAD
+              if (code === 'DOWNLOAD') {
+                let fileName = data.downloaded_file || '-';
+                const shortName = fileName.length > 60 ? fileName.substring(0, 57) + '...' : fileName;
+
+                return `
                         <div class="flex flex-col">
                             <span class="${mainTextClass} font-normal" title="${fileName}">
                                 <i class="fa-solid fa-file-arrow-down text-gray-500 mr-1"></i> ${shortName}
@@ -411,11 +447,11 @@ $(function () {
                                 ${data.file_size ? `<span class="mx-1">•</span> ${data.file_size}` : ''}
                             </div>
                         </div>`;
-                }
+              }
 
-                // 6. ROLLBACK
-                if (code === 'ROLLBACK') {
-                    return `
+              // 6. ROLLBACK
+              if (code === 'ROLLBACK') {
+                return `
                         <div class="flex flex-col">
                             <span class="${mainTextClass} text-amber-600 dark:text-amber-500">
                                 <i class="fa-solid fa-rotate-left mr-1"></i> Rollback
@@ -431,11 +467,11 @@ $(function () {
                             ${data.note ? `<div class="text-xs italic text-gray-400 mt-0.5">"${data.note}"</div>` : ''}
                         </div>
                     `;
-                }
+              }
 
-                // 7. REVISE_CONFIRM
-                if (code === 'REVISE_CONFIRM') {
-                    return `
+              // 7. REVISE_CONFIRM
+              if (code === 'REVISE_CONFIRM') {
+                return `
                         <div class="flex flex-col">
                             <span class="${mainTextClass} text-teal-600 dark:text-teal-400">
                                 <i class="fa-solid fa-pen-to-square mr-1"></i> Revision Confirmed
@@ -449,14 +485,14 @@ $(function () {
                                 ${data.part_no || '-'} ${badgeRev(data.revision_no)} ${badgeLabel(data.revision_label)}
                             </div>
                         </div>`;
-                }
+              }
 
-                // 8. SHARE_INTERNAL
-                if (code === 'SHARE_INTERNAL') {
-                     let target = data.shared_to_dept ? `Dept: ${data.shared_to_dept}` : (data.recipients || 'Unknown');
-                     const displayTarget = target.length > 90 ? target.substring(0, 90) + '...' : target;
+              // 8. SHARE_INTERNAL
+              if (code === 'SHARE_INTERNAL') {
+                let target = data.shared_to_dept ? `Dept: ${data.shared_to_dept}` : (data.recipients || 'Unknown');
+                const displayTarget = target.length > 90 ? target.substring(0, 90) + '...' : target;
 
-                    return `
+                return `
                         <div class="flex flex-col">
                             <span class="${mainTextClass} text-teal-600 dark:text-teal-400">
                                 <i class="fa-solid fa-share-from-square mr-1"></i> Shared Internal
@@ -469,11 +505,11 @@ $(function () {
                             </div>
                             ${data.note ? `<div class="text-xs italic text-gray-400 mt-0.5">"${data.note}"</div>` : ''}
                         </div>`;
-                }
+              }
 
-                // 9. DELETE_PACKAGE
-                if (code === 'DELETE_PACKAGE') {
-                    return `
+              // 9. DELETE_PACKAGE
+              if (code === 'DELETE_PACKAGE') {
+                return `
                         <div class="flex flex-col">
                             <span class="${mainTextClass} text-red-600 dark:text-red-400">
                                 <i class="fa-solid fa-trash-can mr-1"></i> Package Deleted
@@ -486,110 +522,112 @@ $(function () {
                             </div>
                              ${data.ecn_no ? `<div class="text-[10px] text-gray-400 mt-0.5">ECN: ${data.ecn_no}</div>` : ''}
                         </div>`;
-                }
+              }
 
-                // Default Fallback
-                return `<span class="text-xs text-gray-500 break-all">${JSON.stringify(data).substring(0, 50)}...</span>`;
+              // Default Fallback
+              return `<span class="text-xs text-gray-500 break-all">${JSON.stringify(data).substring(0, 50)}...</span>`;
             }
-        }
-      ],
-    });
+          }
+        ],
+      });
 
-    table.on('processing.dt', function (e, settings, processing) {
+      table.on('processing.dt', function(e, settings, processing) {
         if (processing) {
-            $staticIcon.addClass('opacity-0');
-            $loadingIcon.removeClass('opacity-0').addClass('opacity-100');
+          $staticIcon.addClass('opacity-0');
+          $loadingIcon.removeClass('opacity-0').addClass('opacity-100');
         } else {
-            $loadingIcon.removeClass('opacity-100').addClass('opacity-0');
-            $staticIcon.removeClass('opacity-0');
+          $loadingIcon.removeClass('opacity-100').addClass('opacity-0');
+          $staticIcon.removeClass('opacity-0');
         }
-    });
-    
-    $('#custom-search').on('keyup', function () {
+      });
+
+      $('#custom-search').on('keyup', function() {
         const val = this.value;
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(function() {
-            table.search(val).draw(); 
+          table.search(val).draw();
         }, 500);
-    });
-
-    table.on('draw.dt', function () {
-      const info = table.page.info();
-      table.column(0, { page: 'current' }).nodes().each(function (cell, i) {
-        cell.innerHTML = i + 1 + info.start;
       });
-    });
-  }
 
-  function bindHandlers() {
-    $('#user, #activity_code').on('change', function () {
-      if (table) table.ajax.reload(null, true);
-    });
+      table.on('draw.dt', function() {
+        const info = table.page.info();
+        table.column(0, {
+          page: 'current'
+        }).nodes().each(function(cell, i) {
+          cell.innerHTML = i + 1 + info.start;
+        });
+      });
+    }
 
-    $('#btnResetFilters').on('click', function () {
-      resetSelect2ToAll($('#user'));
-      resetSelect2ToAll($('#activity_code'));
-      
-      // Reset Date Range to current month
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = (now.getMonth() + 1).toString().padStart(2, '0');
-      const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
-      dateStart = `${year}-${month}-01`;
-      dateEnd = `${year}-${month}-${lastDay}`;
-      
-      if (dateRangeInstance) {
+    function bindHandlers() {
+      $('#user, #activity_code').on('change', function() {
+        if (table) table.ajax.reload(null, true);
+      });
+
+      $('#btnResetFilters').on('click', function() {
+        resetSelect2ToAll($('#user'));
+        resetSelect2ToAll($('#activity_code'));
+
+        // Reset Date Range to current month
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
+        dateStart = `${year}-${month}-01`;
+        dateEnd = `${year}-${month}-${lastDay}`;
+
+        if (dateRangeInstance) {
           dateRangeInstance.setDateRange(dateStart, dateEnd);
-      }
+        }
 
-      if (table) table.ajax.reload(null, true);
-    });
+        if (table) table.ajax.reload(null, true);
+      });
 
-    const $inputSearch = $('#custom-search');
-    const $btnClear    = $('#btn-clear-search');
-    let searchTimeout  = null;
+      const $inputSearch = $('#custom-search');
+      const $btnClear = $('#btn-clear-search');
+      let searchTimeout = null;
 
-    $inputSearch.on('keyup input', function () {
+      $inputSearch.on('keyup input', function() {
         const val = this.value;
         if (val.length > 0) {
-            $btnClear.removeClass('hidden');
+          $btnClear.removeClass('hidden');
         } else {
-            $btnClear.addClass('hidden');
+          $btnClear.addClass('hidden');
         }
-        
+
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(function() {
-            if (table.search() !== val) {
-                table.search(val).draw(); 
-            }
+          if (table.search() !== val) {
+            table.search(val).draw();
+          }
         }, 600);
-    });
+      });
 
-    $btnClear.on('click', function () {
+      $btnClear.on('click', function() {
         $inputSearch.val('').focus();
         $btnClear.addClass('hidden');
         table.search('').draw();
-    });
+      });
 
-    $('#btnDownloadExcel').on('click', function() {
+      $('#btnDownloadExcel').on('click', function() {
         const filters = getCurrentFilters();
-        const searchValue = $('#custom-search').val(); 
+        const searchValue = $('#custom-search').val();
 
         const params = new URLSearchParams({
-            user_id: filters.user_id,
-            activity_code: filters.activity_code,
-            date_start: filters.date_start,
-            date_end: filters.date_end,
-            search_value: searchValue
+          user_id: filters.user_id,
+          activity_code: filters.activity_code,
+          date_start: filters.date_start,
+          date_end: filters.date_end,
+          search_value: searchValue
         });
 
         window.location.href = '{{ route("activity-logs.export") }}?' + params.toString();
-    });
-  }
+      });
+    }
 
-  initDateRange();
-  initTable();
-  bindHandlers();
-});
+    initDateRange();
+    initTable();
+    bindHandlers();
+  });
 </script>
 @endpush

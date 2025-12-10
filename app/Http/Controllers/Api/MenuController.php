@@ -99,6 +99,8 @@ class MenuController extends Controller
             'route' => 'nullable|string|max:255',
             'icon' => 'nullable|string|max:255',
             'sort_order' => 'required|integer',
+            'is_active' => 'nullable|boolean',
+            'is_visible' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -114,8 +116,8 @@ class MenuController extends Controller
             }
 
             $data['level'] = $data['parent_id'] ? (Menu::find($data['parent_id'])->level + 1) : 0;
-            $data['is_active'] = true;
-            $data['is_visible'] = true;
+            $data['is_active'] = $request->boolean('is_active');
+            $data['is_visible'] = $request->boolean('is_visible');
 
             Menu::create($data);
 
@@ -141,6 +143,8 @@ class MenuController extends Controller
             'route' => 'nullable|string|max:255',
             'icon' => 'nullable|string|max:255',
             'sort_order' => 'required|integer',
+            'is_active' => 'nullable|boolean',
+            'is_visible' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -160,6 +164,8 @@ class MenuController extends Controller
             }
 
             $data['level'] = $data['parent_id'] ? (Menu::find($data['parent_id'])->level + 1) : 0;
+            $data['is_active'] = $request->boolean('is_active');
+            $data['is_visible'] = $request->boolean('is_visible');
 
             $menu->update($data);
 

@@ -736,7 +736,7 @@ class DrawingUploadController extends Controller
         $model = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($labels['model_name'] ?? 'MDL'));
         $part = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($labels['part_no'] ?? 'PRT'));
         
-        $timestamp = Carbon::now()->format('YmdHis');
+        $timestamp = Carbon::now()->format('Ymd');
         $random = strtoupper(Str::random(5));
         
         $pkgNo = sprintf('SAI-%s-%s-%s-%s-%s', $cust, $model, $part, $timestamp, $random);

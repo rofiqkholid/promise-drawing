@@ -3,6 +3,26 @@
 @section('header-title', 'File Manager/Dashboard')
 
 @section('content')
+<nav class="flex px-5 py-3 mb-3 text-gray-700 bg-gray-50 shadow-sm" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+
+        <li class="inline-flex items-center">
+            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600">
+                Monitoring
+            </a>
+        </li>
+
+        <li aria-current="page">
+            <div class="flex items-center">
+                <span class="mx-1 text-gray-400">/</span>
+
+                <span class="text-sm font-semibold text-blue-800 px-2.5 py-0.5 rounded">
+                    Upload Files
+                </span>
+            </div>
+        </li>
+    </ol>
+</nav>
 
 <div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 font-sans">
 
@@ -62,24 +82,24 @@
         </div>
 
         <!-- <div class="overflow-x-auto > -->
-            <table id="fileTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700/50">
-                    <tr>
-                        <th class="py-3 px-4 text-left ...">No</th>
-                        <th class="py-3 px-4 text-left ...">Package Info</th>
-                        <th class="py-3 px-4 text-left ...">Revision</th>
-                        <th class="py-3 px-4 text-left ...">ECN No</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Doc Group</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sub-Category</th>
-                        <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Part Group</th>
-                        <th class="py-3 px-4 text-left ...">Uploaded At</th>
-                        <th class="py-3 px-4 text-left ...">Status</th>
-                        <th class="py-3 px-4 text-center ...">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
-                </tbody>
-            </table>
+        <table id="fileTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700/50">
+                <tr>
+                    <th class="py-3 px-4 text-left ...">No</th>
+                    <th class="py-3 px-4 text-left ...">Package Info</th>
+                    <th class="py-3 px-4 text-left ...">Revision</th>
+                    <th class="py-3 px-4 text-left ...">ECN No</th>
+                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Doc Group</th>
+                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sub-Category</th>
+                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Part Group</th>
+                    <th class="py-3 px-4 text-left ...">Uploaded At</th>
+                    <th class="py-3 px-4 text-left ...">Status</th>
+                    <th class="py-3 px-4 text-center ...">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
+            </tbody>
+        </table>
         <!-- </div> -->
     </div>
 
@@ -88,313 +108,350 @@
 @endsection
 
 @push('scripts')
-    <script>
-        $(document).ready(function() {
-            loadKpiStats();
+<script>
+    $(document).ready(function() {
+        loadKpiStats();
 
-            let table = $('#fileTable').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: '{{ route("api.files.list") }}',
-                    type: 'GET',
+        let table = $('#fileTable').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: '{{ route("api.files.list") }}',
+                type: 'GET',
+            },
+            order: [
+                [7, "desc"]
+            ],
+            columns: [{
+                    data: null,
+                    name: 'No',
+                    orderable: false,
+                    searchable: false
                 },
-                order: [[ 7, "desc" ]],
-                columns: [
-                    { data: null, name: 'No', orderable: false, searchable: false },
-                    {
-                        data: null,
-                        name: 'Package Info',
-                        searchable: true,
-                        orderable: false,
-                        render: function(data, type, row) {
-                            return `${row.customer} - ${row.model} - ${row.part_no}`;
-                        }
-                    },
-                    {
-                        data: null,
-                        name: 'Revision',
-                        searchable: true,
-                        orderable: false,
-                        render: function(data, type, row) {
-                            let revStr = `Rev${row.revision_no}`;
-                            if (row.revision_label_name) {
-                                return `${row.revision_label_name} - ${revStr}`;
-                            }
-                            return revStr;
-                        }
-                    },
-                    {data: 'ecn_no', name: 'ecn_no', searchable: true},
-                    {data: 'doctype_group', name: 'doctype_group', searchable: true, orderable: true},
-                    {data: 'doctype_subcategory', name: 'doctype_subcategory', searchable: true, orderable: true},
-                    {data: 'part_group', name: 'part_group', searchable: true, orderable: true},
-                    {data: 'uploaded_at', name: 'uploaded_at', searchable: true},
-                    {
-                        data: 'status',
-                        name: 'status',
-                        render: function(data, type, row) {
-                            let colorClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-300';
-                            if (data === 'draft') {
-                                colorClass = 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300';
-                            } else if (data === 'pending') {
-                                colorClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
-                            } else if (data === 'rejected') {
-                                colorClass = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
-                            } else if (data === 'approved') {
-                                colorClass = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
-                            }
-                            return `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClass}">${data}</span>`;
-                        }
-                    },
-                    {
-                        data: null,
-                        name: 'Info',
-                        orderable: false,
-                        searchable: false,
-                        render: function(data, type, row) {
-                            return `<button class="text-blue-600 hover:text-blue-900 dark:hover:text-blue-300 dark:text-blue-400 transition-colors" title="Details" onclick="openPackageDetails('${row.id}')"><i class="fa-solid fa-eye fa-lg"></i></button>`;
-                        }
+                {
+                    data: null,
+                    name: 'Package Info',
+                    searchable: true,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        return `${row.customer} - ${row.model} - ${row.part_no}`;
                     }
-                ],
-                responsive: true,
-                dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
-                createdRow: function(row, data, dataIndex) {
-                    $(row).addClass(
-                        'transition-colors duration-150 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700'
-                    );
-                }
-            });
-
-            table.on('draw.dt', function () {
-                var PageInfo = $('#fileTable').DataTable().page.info();
-                table.column(0, { page: 'current' }).nodes().each(function (cell, i) {
-                    cell.innerHTML = i + 1 + PageInfo.start;
-                });
-            });
-
-
-            $('#fileTable tbody').on('click', 'tr', function (e) {
-                if ($(e.target).closest('button').length) return;
-
-                const data = table.row(this).data();
-                if (!data || !data.id) return;
-
-                let targetUrl = `{{ route('drawing.upload') }}`;
-                targetUrl += '?revision_id=' + data.id;
-
-                if (data.status !== 'draft') {
-                    targetUrl += '&read_only=true';
-                }
-
-                const t = detectTheme();
-                const titleText = data.status === 'draft' ? 'Loading Draft...' : 'Opening Details...';
-                Swal.fire({
-                    title: titleText,
-                    text: 'Redirecting to details page, please wait.',
-                    // icon: 'info',
-                    timer: 1500,
-                    showConfirmButton: false,
-                    allowOutsideClick: false,
-                    iconColor: t.icon.info,
-                    background: t.bg,
-                    color: t.fg,
-                    customClass: {
-                        popup: 'border',
-                        loader: 'custom-loader-color'
-                    },
-                    didOpen: () => {
-                        Swal.showLoading();
-                        const popup = Swal.getPopup();
-                        if (popup) {
-                            popup.style.borderColor = t.border;
+                },
+                {
+                    data: null,
+                    name: 'Revision',
+                    searchable: true,
+                    orderable: false,
+                    render: function(data, type, row) {
+                        let revStr = `Rev${row.revision_no}`;
+                        if (row.revision_label_name) {
+                            return `${row.revision_label_name} - ${revStr}`;
                         }
-                        const loader = Swal.getLoader();
-                        if (loader) {
-                            loader.style.borderColor = `${t.icon.info} transparent transparent transparent`;
-                        }
-                        window.location.href = targetUrl;
+                        return revStr;
                     }
-                });
+                },
+                {
+                    data: 'ecn_no',
+                    name: 'ecn_no',
+                    searchable: true
+                },
+                {
+                    data: 'doctype_group',
+                    name: 'doctype_group',
+                    searchable: true,
+                    orderable: true
+                },
+                {
+                    data: 'doctype_subcategory',
+                    name: 'doctype_subcategory',
+                    searchable: true,
+                    orderable: true
+                },
+                {
+                    data: 'part_group',
+                    name: 'part_group',
+                    searchable: true,
+                    orderable: true
+                },
+                {
+                    data: 'uploaded_at',
+                    name: 'uploaded_at',
+                    searchable: true
+                },
+                {
+                    data: 'status',
+                    name: 'status',
+                    render: function(data, type, row) {
+                        let colorClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-300';
+                        if (data === 'draft') {
+                            colorClass = 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300';
+                        } else if (data === 'pending') {
+                            colorClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
+                        } else if (data === 'rejected') {
+                            colorClass = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
+                        } else if (data === 'approved') {
+                            colorClass = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
+                        }
+                        return `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClass}">${data}</span>`;
+                    }
+                },
+                {
+                    data: null,
+                    name: 'Info',
+                    orderable: false,
+                    searchable: false,
+                    render: function(data, type, row) {
+                        return `<button class="text-blue-600 hover:text-blue-900 dark:hover:text-blue-300 dark:text-blue-400 transition-colors" title="Details" onclick="openPackageDetails('${row.id}')"><i class="fa-solid fa-eye fa-lg"></i></button>`;
+                    }
+                }
+            ],
+            responsive: true,
+            dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
+            createdRow: function(row, data, dataIndex) {
+                $(row).addClass(
+                    'transition-colors duration-150 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700'
+                );
+            }
+        });
+
+        table.on('draw.dt', function() {
+            var PageInfo = $('#fileTable').DataTable().page.info();
+            table.column(0, {
+                page: 'current'
+            }).nodes().each(function(cell, i) {
+                cell.innerHTML = i + 1 + PageInfo.start;
             });
         });
 
-        function loadKpiStats() {
-            fetch('{{ route("api.files.kpi-stats") }}')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('totalUpload').textContent = data.totalupload || 0;
-                    document.getElementById('totalDraft').textContent = data.totaldraft || 0;
-                    document.getElementById('totalPending').textContent = data.totalpending || 0;
-                    document.getElementById('totalRejected').textContent = data.totalrejected || 0;
-                })
-                .catch(error => {
-                    console.error('Error loading KPI stats:', error);
-                });
-        }
 
-        function deleteFile(id) {
-            if (confirm('Are you sure you want to delete this file?')) {
-                alert('Delete functionality to be implemented for ID: ' + id);
+        $('#fileTable tbody').on('click', 'tr', function(e) {
+            if ($(e.target).closest('button').length) return;
+
+            const data = table.row(this).data();
+            if (!data || !data.id) return;
+
+            let targetUrl = `{{ route('drawing.upload') }}`;
+            targetUrl += '?revision_id=' + data.id;
+
+            if (data.status !== 'draft') {
+                targetUrl += '&read_only=true';
             }
-        }
 
-        
-        // Modal utilities
-        function bytesToSize(bytes) {
-            if (!bytes && bytes !== 0) return '0 Bytes';
-            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-            if (bytes === 0) return '0 Bytes';
-            const i = Math.floor(Math.log(bytes) / Math.log(1024));
-            return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
-        }
+            const t = detectTheme();
+            const titleText = data.status === 'draft' ? 'Loading Draft...' : 'Opening Details...';
+            Swal.fire({
+                title: titleText,
+                text: 'Redirecting to details page, please wait.',
+                // icon: 'info',
+                timer: 1500,
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                iconColor: t.icon.info,
+                background: t.bg,
+                color: t.fg,
+                customClass: {
+                    popup: 'border',
+                    loader: 'custom-loader-color'
+                },
+                didOpen: () => {
+                    Swal.showLoading();
+                    const popup = Swal.getPopup();
+                    if (popup) {
+                        popup.style.borderColor = t.border;
+                    }
+                    const loader = Swal.getLoader();
+                    if (loader) {
+                        loader.style.borderColor = `${t.icon.info} transparent transparent transparent`;
+                    }
+                    window.location.href = targetUrl;
+                }
+            });
+        });
+    });
 
-        function formatDateTime(dt) {
-            if (!dt) return '-';
-            try {
+    function loadKpiStats() {
+        fetch('{{ route("api.files.kpi-stats") }}')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('totalUpload').textContent = data.totalupload || 0;
+                document.getElementById('totalDraft').textContent = data.totaldraft || 0;
+                document.getElementById('totalPending').textContent = data.totalpending || 0;
+                document.getElementById('totalRejected').textContent = data.totalrejected || 0;
+            })
+            .catch(error => {
+                console.error('Error loading KPI stats:', error);
+            });
+    }
+
+    function deleteFile(id) {
+        if (confirm('Are you sure you want to delete this file?')) {
+            alert('Delete functionality to be implemented for ID: ' + id);
+        }
+    }
+
+
+    // Modal utilities
+    function bytesToSize(bytes) {
+        if (!bytes && bytes !== 0) return '0 Bytes';
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        if (bytes === 0) return '0 Bytes';
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function formatDateTime(dt) {
+        if (!dt) return '-';
+        try {
+            const d = new Date(dt);
+            if (isNaN(d.getTime())) return dt;
+            return d.toLocaleString();
+        } catch (e) {
+            return dt;
+        }
+    }
+
+    function formatDateOnly(dt) {
+        if (!dt) return '-';
+        try {
+            const datePart = dt.split('T')[0];
+            const parts = datePart.split('-');
+
+            if (parts.length === 3 && parts[0].length === 4) {
+                const year = parts[0];
+                const month = parseInt(parts[1], 10);
+                const day = parseInt(parts[2], 10);
+
+                return `${day}/${month}/${year}`;
+            } else {
                 const d = new Date(dt);
                 if (isNaN(d.getTime())) return dt;
-                return d.toLocaleString();
-            } catch (e) { return dt; }
-        }
-
-        function formatDateOnly(dt) {
-            if (!dt) return '-';
-            try {
-                const datePart = dt.split('T')[0];
-                const parts = datePart.split('-');
-
-                if (parts.length === 3 && parts[0].length === 4) {
-                    const year = parts[0];
-                    const month = parseInt(parts[1], 10);
-                    const day = parseInt(parts[2], 10);
-
-                    return `${day}/${month}/${year}`;
-                } else {
-                    const d = new Date(dt);
-                    if (isNaN(d.getTime())) return dt;
-                    return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
-                }
-            } catch (e) { return dt; }
-        }
-
-        function closePackageDetails() {
-            const modal = document.getElementById('package-details-modal');
-            if (modal) {
-                if (modal._cleanup) try { modal._cleanup(); } catch(e) {}
-                modal.remove();
+                return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
             }
+        } catch (e) {
+            return dt;
+        }
+    }
+
+    function closePackageDetails() {
+        const modal = document.getElementById('package-details-modal');
+        if (modal) {
+            if (modal._cleanup) try {
+                modal._cleanup();
+            } catch (e) {}
+            modal.remove();
+        }
+    }
+
+    function detectTheme() {
+        const isDark = document.documentElement.classList.contains('dark');
+        return isDark ? {
+            mode: 'dark',
+            bg: 'rgba(30, 41, 59, 0.95)',
+            fg: '#E5E7EB',
+            border: 'rgba(71, 85, 105, 0.5)',
+            progress: 'rgba(255,255,255,.9)',
+            icon: {
+                success: '#22c55e',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            }
+        } : {
+            mode: 'light',
+            bg: 'rgba(255, 255, 255, 0.98)',
+            fg: '#0f172a',
+            border: 'rgba(226, 232, 240, 1)',
+            progress: 'rgba(15,23,42,.8)',
+            icon: {
+                success: '#16a34a',
+                error: '#dc2626',
+                warning: '#d97706',
+                info: '#2563eb'
+            }
+        };
+    }
+
+    function formatTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + "y ago";
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + "mo ago";
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + "d ago";
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + "h ago";
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + "m ago";
+        return Math.floor(seconds) + "s ago";
+    }
+
+    function renderActivityLogs(logs) {
+        const container = $('#activity-log-content');
+        container.empty();
+
+        if (!logs || !logs.length) {
+            container.html(
+                '<div class="flex flex-col items-center justify-center py-8 text-gray-400 dark:text-gray-500"><i class="fa-regular fa-calendar-xmark text-2xl mb-2"></i><p class="text-xs">No activity recorded yet.</p></div>'
+            );
+            return;
         }
 
-        function detectTheme() {
-            const isDark = document.documentElement.classList.contains('dark');
-            return isDark ? {
-                mode: 'dark',
-                bg: 'rgba(30, 41, 59, 0.95)',
-                fg: '#E5E7EB',
-                border: 'rgba(71, 85, 105, 0.5)',
-                progress: 'rgba(255,255,255,.9)',
-                icon: {
-                    success: '#22c55e',
-                    error: '#ef4444',
-                    warning: '#f59e0b',
-                    info: '#3b82f6'
-                }
-            } : {
-                mode: 'light',
-                bg: 'rgba(255, 255, 255, 0.98)',
-                fg: '#0f172a',
-                border: 'rgba(226, 232, 240, 1)',
-                progress: 'rgba(15,23,42,.8)',
-                icon: {
-                    success: '#16a34a',
-                    error: '#dc2626',
-                    warning: '#d97706',
-                    info: '#2563eb'
-                }
-            };
-        }
+        // Sort logs desc
+        logs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-        function formatTimeAgo(date) {
-            const seconds = Math.floor((new Date() - date) / 1000);
-            let interval = seconds / 31536000;
-            if (interval > 1) return Math.floor(interval) + "y ago";
-            interval = seconds / 2592000;
-            if (interval > 1) return Math.floor(interval) + "mo ago";
-            interval = seconds / 86400;
-            if (interval > 1) return Math.floor(interval) + "d ago";
-            interval = seconds / 3600;
-            if (interval > 1) return Math.floor(interval) + "h ago";
-            interval = seconds / 60;
-            if (interval > 1) return Math.floor(interval) + "m ago";
-            return Math.floor(seconds) + "s ago";
-        }
+        logs.forEach((l, index) => {
+            const m = l.meta || {};
+            const code = l.activity_code;
+            const isLast = index === logs.length - 1;
 
-        function renderActivityLogs(logs) {
-            const container = $('#activity-log-content');
-            container.empty();
+            let icon = 'fa-circle-info';
+            let colorClass = 'bg-gray-100 text-gray-600';
+            let title = code;
 
-            if (!logs || !logs.length) {
-                container.html(
-                    '<div class="flex flex-col items-center justify-center py-8 text-gray-400 dark:text-gray-500"><i class="fa-regular fa-calendar-xmark text-2xl mb-2"></i><p class="text-xs">No activity recorded yet.</p></div>'
-                );
-                return;
+            if (code === 'UPLOAD') {
+                icon = 'fa-cloud-arrow-up';
+                colorClass = 'bg-blue-100 text-blue-600';
+                title = 'Uploaded';
+            } else if (code === 'SUBMIT_APPROVAL') {
+                icon = 'fa-paper-plane';
+                colorClass = 'bg-yellow-100 text-yellow-600';
+                title = 'Approval Requested';
+            } else if (code === 'APPROVE') {
+                icon = 'fa-check';
+                colorClass = 'bg-green-100 text-green-600';
+                title = 'Approved';
+            } else if (code === 'REJECT') {
+                icon = 'fa-xmark';
+                colorClass = 'bg-red-100 text-red-600';
+                title = 'Rejected';
+            } else if (code === 'ROLLBACK') {
+                icon = 'fa-rotate-left';
+                colorClass = 'bg-amber-100 text-amber-600';
+                title = 'Rollback';
+            } else if (code === 'DOWNLOAD') {
+                icon = 'fa-download';
+                colorClass = 'bg-gray-100 text-gray-600';
+                title = 'Downloaded';
+            } else if (code.includes('SHARE')) {
+                icon = 'fa-share-nodes';
+                colorClass = 'bg-indigo-100 text-indigo-600';
+                title = 'Shared';
+            } else if (code === 'REVISE_CONFIRM') {
+                icon = 'fa-pen-to-square';
+                colorClass = 'bg-purple-100 text-purple-600';
+                title = 'Revision Confirmed';
             }
 
-            // Sort logs desc
-            logs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const timeStr = l.created_at ? formatDateTime(l.created_at) : '-';
+            const userStr = l.user_name || 'System';
 
-            logs.forEach((l, index) => {
-                const m = l.meta || {};
-                const code = l.activity_code;
-                const isLast = index === logs.length - 1;
-                
-                let icon = 'fa-circle-info';
-                let colorClass = 'bg-gray-100 text-gray-600';
-                let title = code;
+            // Content Logic
+            let contentHtml = '';
 
-                if (code === 'UPLOAD') {
-                    icon = 'fa-cloud-arrow-up';
-                    colorClass = 'bg-blue-100 text-blue-600';
-                    title = 'Uploaded';
-                } else if (code === 'SUBMIT_APPROVAL') {
-                    icon = 'fa-paper-plane';
-                    colorClass = 'bg-yellow-100 text-yellow-600';
-                    title = 'Approval Requested';
-                } else if (code === 'APPROVE') {
-                    icon = 'fa-check';
-                    colorClass = 'bg-green-100 text-green-600';
-                    title = 'Approved';
-                } else if (code === 'REJECT') {
-                    icon = 'fa-xmark';
-                    colorClass = 'bg-red-100 text-red-600';
-                    title = 'Rejected';
-                } else if (code === 'ROLLBACK') {
-                    icon = 'fa-rotate-left';
-                    colorClass = 'bg-amber-100 text-amber-600';
-                    title = 'Rollback';
-                } else if (code === 'DOWNLOAD') {
-                    icon = 'fa-download';
-                    colorClass = 'bg-gray-100 text-gray-600';
-                    title = 'Downloaded';
-                } else if (code.includes('SHARE')) {
-                    icon = 'fa-share-nodes';
-                    colorClass = 'bg-indigo-100 text-indigo-600';
-                    title = 'Shared';
-                } else if (code === 'REVISE_CONFIRM') {
-                    icon = 'fa-pen-to-square';
-                    colorClass = 'bg-purple-100 text-purple-600';
-                    title = 'Revision Confirmed';
-                }
-
-                const timeStr = l.created_at ? formatDateTime(l.created_at) : '-';
-                const userStr = l.user_name || 'System';
-
-                // Content Logic
-                let contentHtml = '';
-                
-                // Snapshot / Meta Details
-                if (m.part_no || m.ecn_no) {
-                     contentHtml += `
+            // Snapshot / Meta Details
+            if (m.part_no || m.ecn_no) {
+                contentHtml += `
                         <div class="mt-2 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-xs shadow-sm">
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="font-bold text-gray-800 dark:text-gray-200">${m.part_no || '-'}</span>
@@ -420,24 +477,24 @@
                             ` : ''}
                         </div>
                     `;
-                }
+            }
 
-                // Note
-                if (m.note) {
-                    contentHtml += `
+            // Note
+            if (m.note) {
+                contentHtml += `
                         <div class="mt-1.5 flex items-start gap-1.5">
                             <i class="fa-solid fa-quote-left text-gray-300 dark:text-gray-600 text-[10px] mt-0.5"></i>
                             <p class="text-xs text-gray-600 dark:text-gray-300 italic">${m.note}</p>
                         </div>
                     `;
-                }
-                
-                // Specific for Share
-                if (code.includes('SHARE')) {
-                     let target = m.shared_to_dept || m.shared_with || m.shared_to || '-';
-                     target = target.replace('[EXP] ', '');
-                     
-                     contentHtml += `
+            }
+
+            // Specific for Share
+            if (code.includes('SHARE')) {
+                let target = m.shared_to_dept || m.shared_with || m.shared_to || '-';
+                target = target.replace('[EXP] ', '');
+
+                contentHtml += `
                         <div class="mt-1.5 text-xs text-gray-600 dark:text-gray-400">
                             <div class="flex items-center gap-1">
                                 <i class="fa-solid fa-arrow-right-to-bracket text-[10px]"></i>
@@ -447,20 +504,20 @@
                             ${m.expired_at ? `<div class="mt-0.5 ml-3.5 text-[10px] text-red-500">Exp: ${m.expired_at}</div>` : ''}
                         </div>
                      `;
-                }
-                
-                // Specific for Download
-                if (code === 'DOWNLOAD' && m.downloaded_file) {
-                     contentHtml += `
+            }
+
+            // Specific for Download
+            if (code === 'DOWNLOAD' && m.downloaded_file) {
+                contentHtml += `
                         <div class="mt-1.5 text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
                             <i class="fa-solid fa-file text-[10px]"></i>
                             <span>${m.downloaded_file}</span>
                             ${m.file_size ? `<span class="text-gray-400">(${m.file_size})</span>` : ''}
                         </div>
                      `;
-                }
+            }
 
-                const el = $(`
+            const el = $(`
                     <div class="relative flex gap-3">
                         ${!isLast ? '<div class="absolute top-4 left-3 -ml-px h-full w-0.5 bg-gray-200 dark:bg-gray-700" aria-hidden="true"></div>' : ''}
                         
@@ -485,62 +542,65 @@
                         </div>
                     </div>
                 `);
-                
-                container.append(el);
-            });
-        }
 
-        window.openPackageDetails = function(id) {
-            const existing = document.getElementById('package-details-modal');
-            if (existing) existing.remove();
+            container.append(el);
+        });
+    }
 
-            const loaderOverlay = document.createElement('div');
-            loaderOverlay.id = 'package-details-modal';
-            loaderOverlay.className = 'fixed inset-0 bg-black bg-opacity-40 p-4 flex items-center justify-center z-50';
-            loaderOverlay.innerHTML = `<div class="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center gap-3"><div class="loader-border w-8 h-8 border-4 border-blue-400 rounded-full animate-spin"></div><div class="text-sm text-gray-700 dark:text-gray-300">Loading package details...</div></div>`;
-            document.body.appendChild(loaderOverlay);
+    window.openPackageDetails = function(id) {
+        const existing = document.getElementById('package-details-modal');
+        if (existing) existing.remove();
 
-            fetch(`{{ url('/files') }}` + '/' + encodeURIComponent(id))
-                .then(res => {
-                    if (!res.ok) throw new Error('Failed to load details');
-                    return res.json();
-                })
-                .then(json => {
-                    const pkg = json.package || {};
-                    const files = json.files || { count: 0, size_bytes: 0 };
+        const loaderOverlay = document.createElement('div');
+        loaderOverlay.id = 'package-details-modal';
+        loaderOverlay.className = 'fixed inset-0 bg-black bg-opacity-40 p-4 flex items-center justify-center z-50';
+        loaderOverlay.innerHTML = `<div class="bg-white dark:bg-gray-800 rounded-lg p-6 flex items-center gap-3"><div class="loader-border w-8 h-8 border-4 border-blue-400 rounded-full animate-spin"></div><div class="text-sm text-gray-700 dark:text-gray-300">Loading package details...</div></div>`;
+        document.body.appendChild(loaderOverlay);
 
-                    const loader = document.getElementById('package-details-modal');
-                    if (loader) loader.remove();
+        fetch(`{{ url('/files') }}` + '/' + encodeURIComponent(id))
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to load details');
+                return res.json();
+            })
+            .then(json => {
+                const pkg = json.package || {};
+                const files = json.files || {
+                    count: 0,
+                    size_bytes: 0
+                };
 
-                    const packageNo = pkg.package_no ?? pkg.packageNo ?? 'N/A';
-                    const revisionNo = pkg.revision_no ?? pkg.current_revision_no ?? pkg.revisionNo ?? 0;
-                    const customerCode = pkg.customer_code ?? pkg.customerCode ?? pkg.customer_code ?? '-';
-                    const modelName = pkg.model_name ?? pkg.modelName ?? '-';
-                    const partNo = pkg.part_no ?? pkg.partNo ?? '-';
-                    const docgroupName = pkg.docgroup_name ?? pkg.docgroupName ?? '-';
-                    const subcatName = pkg.subcategory_name ?? pkg.subcategoryName ?? '-';
-                    const partGroup = pkg.code_part_group ?? pkg.codePartGroup ?? '-';
-                    const createdAt = formatDateTime(pkg.created_at ?? pkg.revision_created_at ?? pkg.createdAt);
-                    const updatedAt = formatDateTime(pkg.updated_at ?? pkg.updatedAt);
-                    const receiptDate = formatDateOnly(pkg.receipt_date);
-                    const revisionStatus = pkg.revision_status ?? pkg.revisionStatus ?? pkg.status ?? '-';
-                    const revisionNote = pkg.revision_note ?? pkg.note ?? '';
-                    const isObsolete = (pkg.is_obsolete === 1 || pkg.is_obsolete === '1');
-                    const ecnNo = pkg.ecn_no ?? '-';
-                    const revisionLabel = pkg.revision_label_name ?? '-';
+                const loader = document.getElementById('package-details-modal');
+                if (loader) loader.remove();
 
-                    const overlay = document.createElement('div');
-                    overlay.id = 'package-details-modal';
-                    overlay.className = 'fixed inset-0 bg-black bg-opacity-40 p-4 flex items-center justify-center z-50';
-                    overlay.addEventListener('click', function (ev) {
-                        if (ev.target === overlay) closePackageDetails();
-                    });
+                const packageNo = pkg.package_no ?? pkg.packageNo ?? 'N/A';
+                const revisionNo = pkg.revision_no ?? pkg.current_revision_no ?? pkg.revisionNo ?? 0;
+                const customerCode = pkg.customer_code ?? pkg.customerCode ?? pkg.customer_code ?? '-';
+                const modelName = pkg.model_name ?? pkg.modelName ?? '-';
+                const partNo = pkg.part_no ?? pkg.partNo ?? '-';
+                const docgroupName = pkg.docgroup_name ?? pkg.docgroupName ?? '-';
+                const subcatName = pkg.subcategory_name ?? pkg.subcategoryName ?? '-';
+                const partGroup = pkg.code_part_group ?? pkg.codePartGroup ?? '-';
+                const createdAt = formatDateTime(pkg.created_at ?? pkg.revision_created_at ?? pkg.createdAt);
+                const updatedAt = formatDateTime(pkg.updated_at ?? pkg.updatedAt);
+                const receiptDate = formatDateOnly(pkg.receipt_date);
+                const revisionStatus = pkg.revision_status ?? pkg.revisionStatus ?? pkg.status ?? '-';
+                const revisionNote = pkg.revision_note ?? pkg.note ?? '';
+                const isObsolete = (pkg.is_obsolete === 1 || pkg.is_obsolete === '1');
+                const ecnNo = pkg.ecn_no ?? '-';
+                const revisionLabel = pkg.revision_label_name ?? '-';
 
-                    const dialog = document.createElement('div');
-                    dialog.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-4xl w-full overflow-hidden';
-                    dialog.setAttribute('role', 'dialog');
-                    dialog.setAttribute('aria-modal', 'true');
-                    dialog.innerHTML = `
+                const overlay = document.createElement('div');
+                overlay.id = 'package-details-modal';
+                overlay.className = 'fixed inset-0 bg-black bg-opacity-40 p-4 flex items-center justify-center z-50';
+                overlay.addEventListener('click', function(ev) {
+                    if (ev.target === overlay) closePackageDetails();
+                });
+
+                const dialog = document.createElement('div');
+                dialog.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-4xl w-full overflow-hidden';
+                dialog.setAttribute('role', 'dialog');
+                dialog.setAttribute('aria-modal', 'true');
+                dialog.innerHTML = `
                         <div class="p-5 border-b border-gray-200 dark:border-gray-700 flex items-start justify-between">
                             <div class="flex items-center gap-3">
                                 <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 text-blue-500 bg-blue-100 dark:bg-blue-900/50 rounded-full">
@@ -651,21 +711,25 @@
                         </div>
                     `;
 
-                    overlay.appendChild(dialog);
-                    document.body.appendChild(overlay);
+                overlay.appendChild(dialog);
+                document.body.appendChild(overlay);
 
-                    const closeBtn = document.getElementById('pkg-close-btn');
-                    const closeBtn2 = document.getElementById('pkg-close-btn-2');
-                    if (closeBtn) closeBtn.addEventListener('click', closePackageDetails);
-                    if (closeBtn2) closeBtn2.addEventListener('click', closePackageDetails);
-                    if (closeBtn) closeBtn.focus();
+                const closeBtn = document.getElementById('pkg-close-btn');
+                const closeBtn2 = document.getElementById('pkg-close-btn-2');
+                if (closeBtn) closeBtn.addEventListener('click', closePackageDetails);
+                if (closeBtn2) closeBtn2.addEventListener('click', closePackageDetails);
+                if (closeBtn) closeBtn.focus();
 
-                    function escHandler(e) { if (e.key === 'Escape') closePackageDetails(); }
-                    document.addEventListener('keydown', escHandler);
+                function escHandler(e) {
+                    if (e.key === 'Escape') closePackageDetails();
+                }
+                document.addEventListener('keydown', escHandler);
 
-                    overlay._cleanup = function() { document.removeEventListener('keydown', escHandler); };
+                overlay._cleanup = function() {
+                    document.removeEventListener('keydown', escHandler);
+                };
 
-                    fetch(`{{ route('upload.drawing.activity-logs') }}`, {
+                fetch(`{{ route('upload.drawing.activity-logs') }}`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -681,47 +745,52 @@
                             revision_no: pkg.revision_no
                         })
                     })
-                        .then(res => {
-                            if (!res.ok) throw new Error('Failed to load activity logs');
-                            return res.json();
-                        })
-                        .then(data => {
-                            renderActivityLogs(data.logs || []);
-                        })
-                        .catch(err => {
-                            console.error('Error fetching activity logs:', err);
-                            $('#activity-log-content').html('<p class="italic text-center text-gray-500 dark:text-gray-400">Failed to load activity logs.</p>');
-                        });
-                })
-                .catch(err => {
-                    const loader = document.getElementById('package-details-modal');
-                    if (loader) loader.remove();
-                    alert('Unable to load package details: ' + err.message);
-                });
-        }
-    </script>
+                    .then(res => {
+                        if (!res.ok) throw new Error('Failed to load activity logs');
+                        return res.json();
+                    })
+                    .then(data => {
+                        renderActivityLogs(data.logs || []);
+                    })
+                    .catch(err => {
+                        console.error('Error fetching activity logs:', err);
+                        $('#activity-log-content').html('<p class="italic text-center text-gray-500 dark:text-gray-400">Failed to load activity logs.</p>');
+                    });
+            })
+            .catch(err => {
+                const loader = document.getElementById('package-details-modal');
+                if (loader) loader.remove();
+                alert('Unable to load package details: ' + err.message);
+            });
+    }
+</script>
 @endpush
 
 @push('styles')
-    <style>
-        #activity-log-content::-webkit-scrollbar {
-            width: 6px;
-        }
-        #activity-log-content::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        #activity-log-content::-webkit-scrollbar-thumb {
-            background-color: #d1d5db;
-            border-radius: 20px;
-        }
-        .dark #activity-log-content::-webkit-scrollbar-thumb {
-            background-color: #4b5563;
-        }
-        #activity-log-content:hover::-webkit-scrollbar-thumb {
-            background-color: #93c5fd;
-        }
-        .dark #activity-log-content:hover::-webkit-scrollbar-thumb {
-            background-color: #60a5fa;
-        }
-    </style>
+<style>
+    #activity-log-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #activity-log-content::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #activity-log-content::-webkit-scrollbar-thumb {
+        background-color: #d1d5db;
+        border-radius: 20px;
+    }
+
+    .dark #activity-log-content::-webkit-scrollbar-thumb {
+        background-color: #4b5563;
+    }
+
+    #activity-log-content:hover::-webkit-scrollbar-thumb {
+        background-color: #93c5fd;
+    }
+
+    .dark #activity-log-content:hover::-webkit-scrollbar-thumb {
+        background-color: #60a5fa;
+    }
+</style>
 @endpush

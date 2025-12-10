@@ -75,6 +75,16 @@
                     </select>
                     <p id="add-parent_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
+                <div class="flex items-center space-x-6">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_active" value="1" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800" checked>
+                        <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Is Active</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_visible" value="1" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800" checked>
+                        <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Is Visible</span>
+                    </label>
+                </div>
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 w-full">Cancel</button>
                     <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full">Save</button>
@@ -122,6 +132,16 @@
                         <option value="">No Parent</option>
                     </select>
                     <p id="edit-parent_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_active" id="edit_is_active" value="1" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800">
+                        <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Is Active</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_visible" id="edit_is_visible" value="1" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800">
+                        <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Is Visible</span>
+                    </label>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 w-full">Cancel</button>
@@ -605,6 +625,8 @@ $(document).ready(function () {
                 $('#edit_sort_order').val(data.sort_order);
                 $('#edit_route').val(data.route || '');
                 $('#edit_icon').val(data.icon || '');
+                $('#edit_is_active').prop('checked', !!data.is_active);
+                $('#edit_is_visible').prop('checked', !!data.is_visible);
                 populateParentDropdown($('#edit_parent_id'), data.parent_id);
                 $('#editMenuForm').attr('action', `/master/menus/${id}`);
                 showModal(editModal);

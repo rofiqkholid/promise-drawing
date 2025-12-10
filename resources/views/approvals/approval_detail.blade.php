@@ -3,7 +3,35 @@
 @section('header-title', 'Approval Detail')
 
 @section('content')
+<nav class="flex px-5 py-3 mb-3 text-gray-700 bg-gray-50 shadow-sm" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
 
+    <li class="inline-flex items-center">
+      <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600">
+        Monitoring
+      </a>
+    </li>
+
+    <li aria-current="page">
+      <div class="flex items-center">
+        <span class="mx-1 text-gray-400">/</span>
+
+        <a href="{{ route('approval') }}" class="text-sm font-semibold text-gray-500 px-2.5 py-0.5 hover:text-blue-600 rounded">
+          Approval
+        </a>
+      </div>
+    </li>
+    <li aria-current="page">
+      <div class="flex items-center">
+        <span class="mx-1 text-gray-400">/</span>
+
+        <span class="text-sm font-semibold text-blue-800 px-2.5 py-0.5 rounded">
+          Approval Metadata
+        </span>
+      </div>
+    </li>
+  </ol>
+</nav>
 <div
   class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen"
   x-data="approvalDetail()"
@@ -50,55 +78,55 @@
 
         <!-- Footer (Approve / Reject / Rollback / Share) -->
         <!-- Footer (Approve / Reject / Rollback / Share) -->
-<div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center gap-2">
-  <!-- Badge is_finish -->
-  <div class="mr-auto">
-    <span
-      class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
-      :class="isFinished()
+        <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center gap-2">
+          <!-- Badge is_finish -->
+          <div class="mr-auto">
+            <span
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium"
+              :class="isFinished()
         ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200'
         : 'bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500'">
-      
-      <i class="fa-solid fa-circle-check"
-         :class="isFinished() ? 'text-blue-500' : 'text-gray-400'"></i>
 
-      <!-- Teks bisa Tuan ganti sesuka hati -->
-      <span x-text="isFinished() ? 'Finish / Good' : 'Not Finished'"></span>
-    </span>
-  </div>
+              <i class="fa-solid fa-circle-check"
+                :class="isFinished() ? 'text-blue-500' : 'text-gray-400'"></i>
 
-  <!-- Waiting: Reject + Approve -->
-  <template x-if="isWaiting()">
-    <div class="flex gap-2">
-      <button @click="rejectPackage()"
-        class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm">
-        <i class="fa-solid fa-circle-xmark mr-2"></i> Reject
-      </button>
-      <button @click="approvePackage()"
-        class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm">
-        <i class="fa-solid fa-circle-check mr-2"></i> Approve
-      </button>
-    </div>
-  </template>
+              <!-- Teks bisa Tuan ganti sesuka hati -->
+              <span x-text="isFinished() ? 'Finish / Good' : 'Not Finished'"></span>
+            </span>
+          </div>
 
-  <!-- Approved: Rollback + Share -->
-  <template x-if="isApproved()">
-    <div class="flex gap-2">
-      <button @click="rollbackPackage()"
-        class="inline-flex items-center px-3 py-1.5 bg-amber-600 text-white rounded-md hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 text-sm">
-        <i class="fa-solid fa-rotate-left mr-2"></i> Rollback
-      </button>
+          <!-- Waiting: Reject + Approve -->
+          <template x-if="isWaiting()">
+            <div class="flex gap-2">
+              <button @click="rejectPackage()"
+                class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm">
+                <i class="fa-solid fa-circle-xmark mr-2"></i> Reject
+              </button>
+              <button @click="approvePackage()"
+                class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm">
+                <i class="fa-solid fa-circle-check mr-2"></i> Approve
+              </button>
+            </div>
+          </template>
 
-      <button @click="openShareModal()"
-        class="inline-flex items-center px-3 py-1.5 text-sm rounded-md border border-blue-600
+          <!-- Approved: Rollback + Share -->
+          <template x-if="isApproved()">
+            <div class="flex gap-2">
+              <button @click="rollbackPackage()"
+                class="inline-flex items-center px-3 py-1.5 bg-amber-600 text-white rounded-md hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 text-sm">
+                <i class="fa-solid fa-rotate-left mr-2"></i> Rollback
+              </button>
+
+              <button @click="openShareModal()"
+                class="inline-flex items-center px-3 py-1.5 text-sm rounded-md border border-blue-600
                bg-blue-600 text-white hover:bg-blue-500 focus:outline-none focus:ring-2
                focus:ring-blue-500 focus:ring-offset-2">
-        <i class="fa-solid fa-share-nodes mr-2"></i>
-        Share
-      </button>
-    </div>
-  </template>
-</div>
+                <i class="fa-solid fa-share-nodes mr-2"></i>
+                Share
+              </button>
+            </div>
+          </template>
+        </div>
 
       </div>
 
@@ -169,24 +197,40 @@
             :class="(pkg.activityLogs?.length || 0) > 3 ? 'max-h-96 overflow-y-auto pr-1 pl-1 pt-1' : ''"
             role="log"
             aria-label="Activity Log">
-            
+
             <template x-for="(item, idx) in (pkg.activityLogs || [])" :key="idx">
               <div class="relative flex gap-3">
                 <!-- Line -->
                 <template x-if="idx !== (pkg.activityLogs || []).length - 1">
-                    <div class="absolute top-4 left-3 -ml-px h-full w-0.5 bg-gray-200 dark:bg-gray-700" aria-hidden="true"></div>
+                  <div class="absolute top-4 left-3 -ml-px h-full w-0.5 bg-gray-200 dark:bg-gray-700" aria-hidden="true"></div>
                 </template>
 
                 <div class="relative flex-shrink-0 mt-1">
-                  <template x-if="item.action === 'uploaded'"><div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-cloud-arrow-up text-blue-600 text-xs"></i></div></template>
-                  <template x-if="item.action === 'approved'"><div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-check text-green-600 text-xs"></i></div></template>
-                  <template x-if="item.action === 'rejected'"><div class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-xmark text-red-600 text-xs"></i></div></template>
-                  <template x-if="item.action === 'rollbacked'"><div class="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-rotate-left text-amber-600 text-xs"></i></div></template>
-                  <template x-if="item.action === 'downloaded'"><div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-download text-gray-600 text-xs"></i></div></template>
-                  <template x-if="item.action.includes('share')"><div class="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-share-nodes text-indigo-600 text-xs"></i></div></template>
-                  <template x-if="item.action === 'revise_confirm'"><div class="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-pen-to-square text-purple-600 text-xs"></i></div></template>
-                  <template x-if="item.action === 'submit_approval'"><div class="w-6 h-6 rounded-full bg-yellow-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-paper-plane text-yellow-600 text-xs"></i></div></template>
-                  
+                  <template x-if="item.action === 'uploaded'">
+                    <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-cloud-arrow-up text-blue-600 text-xs"></i></div>
+                  </template>
+                  <template x-if="item.action === 'approved'">
+                    <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-check text-green-600 text-xs"></i></div>
+                  </template>
+                  <template x-if="item.action === 'rejected'">
+                    <div class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-xmark text-red-600 text-xs"></i></div>
+                  </template>
+                  <template x-if="item.action === 'rollbacked'">
+                    <div class="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-rotate-left text-amber-600 text-xs"></i></div>
+                  </template>
+                  <template x-if="item.action === 'downloaded'">
+                    <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-download text-gray-600 text-xs"></i></div>
+                  </template>
+                  <template x-if="item.action.includes('share')">
+                    <div class="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-share-nodes text-indigo-600 text-xs"></i></div>
+                  </template>
+                  <template x-if="item.action === 'revise_confirm'">
+                    <div class="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-pen-to-square text-purple-600 text-xs"></i></div>
+                  </template>
+                  <template x-if="item.action === 'submit_approval'">
+                    <div class="w-6 h-6 rounded-full bg-yellow-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-paper-plane text-yellow-600 text-xs"></i></div>
+                  </template>
+
                   <template x-if="!['uploaded','approved','rejected','rollbacked','downloaded','revise_confirm','submit_approval'].includes(item.action) && !item.action.includes('share')">
                     <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-circle-info text-gray-500 text-xs"></i></div>
                   </template>
@@ -195,86 +239,86 @@
                 <div class="flex-1 min-w-0" :class="idx !== (pkg.activityLogs || []).length - 1 ? 'mb-6' : ''">
                   <div class="p-3 rounded-md bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                     <div class="flex justify-between items-start">
-                        <p class="text-sm text-gray-900 dark:text-gray-100">
+                      <p class="text-sm text-gray-900 dark:text-gray-100">
                         <span class="font-bold capitalize" x-text="item.action.replace('_', ' ')"></span>
                         <span class="text-xs text-gray-500 font-normal">by</span>
                         <span class="font-semibold text-blue-600 dark:text-blue-400" x-text="item.user"></span>
-                        </p>
-                        <span class="text-[10px] text-gray-400 whitespace-nowrap ml-2" x-text="item.time"></span>
+                      </p>
+                      <span class="text-[10px] text-gray-400 whitespace-nowrap ml-2" x-text="item.time"></span>
                     </div>
 
                     <!-- Snapshot / Meta -->
                     <template x-if="item.snapshot && (item.snapshot.part_no || item.snapshot.ecn_no)">
-                        <div class="mt-2 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-xs shadow-sm">
-                            
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="font-bold text-gray-800 dark:text-gray-200" x-text="item.snapshot.part_no || '-'"></span>
-                                <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded font-mono text-[10px] border border-gray-200 dark:border-gray-600">
-                                    Rev <span x-text="item.snapshot.revision_no ?? '-'"></span>
-                                </span>
-                                <template x-if="item.snapshot.ecn_no">
-                                    <span class="text-blue-600 dark:text-blue-400 font-mono text-[10px] bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800" 
-                                        x-text="item.snapshot.ecn_no"></span>
-                                </template>
-                            </div>
+                      <div class="mt-2 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-xs shadow-sm">
 
-                            <div class="text-gray-500 dark:text-gray-400 text-[10px] flex items-center gap-1">
-                                <i class="fa-solid fa-tag text-[9px]"></i>
-                                <span x-text="item.snapshot.customer || '-'"></span>
-                                <span class="mx-0.5">•</span>
-                                <span x-text="item.snapshot.model || '-'"></span>
-                                <template x-if="item.snapshot.doc_type">
-                                    <span>
-                                        <span class="mx-0.5">•</span>
-                                        <span x-text="item.snapshot.doc_type"></span>
-                                    </span>
-                                </template>
-                            </div>
-
-                            <template x-if="item.action === 'rollbacked' && item.snapshot.previous_status">
-                                <div class="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700 flex items-center text-amber-600 dark:text-amber-500 font-medium">
-                                    <i class="fa-solid fa-code-branch mr-1.5 text-[10px]"></i>
-                                    <span x-text="item.snapshot.previous_status" class="capitalize"></span>
-                                    <i class="fa-solid fa-arrow-right-long mx-1.5 text-[10px]"></i>
-                                    <span>Waiting</span>
-                                </div>
-                            </template>
+                        <div class="flex items-center gap-2 mb-1">
+                          <span class="font-bold text-gray-800 dark:text-gray-200" x-text="item.snapshot.part_no || '-'"></span>
+                          <span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-1.5 py-0.5 rounded font-mono text-[10px] border border-gray-200 dark:border-gray-600">
+                            Rev <span x-text="item.snapshot.revision_no ?? '-'"></span>
+                          </span>
+                          <template x-if="item.snapshot.ecn_no">
+                            <span class="text-blue-600 dark:text-blue-400 font-mono text-[10px] bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800"
+                              x-text="item.snapshot.ecn_no"></span>
+                          </template>
                         </div>
+
+                        <div class="text-gray-500 dark:text-gray-400 text-[10px] flex items-center gap-1">
+                          <i class="fa-solid fa-tag text-[9px]"></i>
+                          <span x-text="item.snapshot.customer || '-'"></span>
+                          <span class="mx-0.5">•</span>
+                          <span x-text="item.snapshot.model || '-'"></span>
+                          <template x-if="item.snapshot.doc_type">
+                            <span>
+                              <span class="mx-0.5">•</span>
+                              <span x-text="item.snapshot.doc_type"></span>
+                            </span>
+                          </template>
+                        </div>
+
+                        <template x-if="item.action === 'rollbacked' && item.snapshot.previous_status">
+                          <div class="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700 flex items-center text-amber-600 dark:text-amber-500 font-medium">
+                            <i class="fa-solid fa-code-branch mr-1.5 text-[10px]"></i>
+                            <span x-text="item.snapshot.previous_status" class="capitalize"></span>
+                            <i class="fa-solid fa-arrow-right-long mx-1.5 text-[10px]"></i>
+                            <span>Waiting</span>
+                          </div>
+                        </template>
+                      </div>
                     </template>
 
                     <!-- Note -->
                     <template x-if="item.note">
-                        <div class="mt-1.5 flex items-start gap-1.5">
-                            <i class="fa-solid fa-quote-left text-gray-300 dark:text-gray-600 text-[10px] mt-0.5"></i>
-                            <p class="text-xs text-gray-600 dark:text-gray-300 italic" x-text="item.note"></p>
-                        </div>
+                      <div class="mt-1.5 flex items-start gap-1.5">
+                        <i class="fa-solid fa-quote-left text-gray-300 dark:text-gray-600 text-[10px] mt-0.5"></i>
+                        <p class="text-xs text-gray-600 dark:text-gray-300 italic" x-text="item.note"></p>
+                      </div>
                     </template>
 
                     <!-- Share Details -->
                     <template x-if="item.action.includes('share') && item.snapshot">
-                        <div class="mt-1.5 text-xs text-gray-600 dark:text-gray-400">
-                            <div class="flex items-center gap-1">
-                                <i class="fa-solid fa-arrow-right-to-bracket text-[10px]"></i>
-                                <span>To: <strong x-text="(item.snapshot.shared_to_dept || item.snapshot.shared_with || item.snapshot.shared_to || '-').replace('[EXP] ', '')"></strong></span>
-                            </div>
-                            <template x-if="item.snapshot.recipients">
-                                <div class="mt-0.5 ml-3.5 text-[10px] text-gray-500">Recipients: <span x-text="item.snapshot.recipients"></span></div>
-                            </template>
-                            <template x-if="item.snapshot.expired_at">
-                                <div class="mt-0.5 ml-3.5 text-[10px] text-red-500">Exp: <span x-text="item.snapshot.expired_at"></span></div>
-                            </template>
+                      <div class="mt-1.5 text-xs text-gray-600 dark:text-gray-400">
+                        <div class="flex items-center gap-1">
+                          <i class="fa-solid fa-arrow-right-to-bracket text-[10px]"></i>
+                          <span>To: <strong x-text="(item.snapshot.shared_to_dept || item.snapshot.shared_with || item.snapshot.shared_to || '-').replace('[EXP] ', '')"></strong></span>
                         </div>
+                        <template x-if="item.snapshot.recipients">
+                          <div class="mt-0.5 ml-3.5 text-[10px] text-gray-500">Recipients: <span x-text="item.snapshot.recipients"></span></div>
+                        </template>
+                        <template x-if="item.snapshot.expired_at">
+                          <div class="mt-0.5 ml-3.5 text-[10px] text-red-500">Exp: <span x-text="item.snapshot.expired_at"></span></div>
+                        </template>
+                      </div>
                     </template>
 
                     <!-- Download Details -->
                     <template x-if="item.action === 'downloaded' && item.snapshot && item.snapshot.downloaded_file">
-                        <div class="mt-1.5 text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                            <i class="fa-solid fa-file text-[10px]"></i>
-                            <span x-text="item.snapshot.downloaded_file"></span>
-                            <template x-if="item.snapshot.file_size">
-                                <span class="text-gray-400" x-text="`(${item.snapshot.file_size})`"></span>
-                            </template>
-                        </div>
+                      <div class="mt-1.5 text-xs text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                        <i class="fa-solid fa-file text-[10px]"></i>
+                        <span x-text="item.snapshot.downloaded_file"></span>
+                        <template x-if="item.snapshot.file_size">
+                          <span class="text-gray-400" x-text="`(${item.snapshot.file_size})`"></span>
+                        </template>
+                      </div>
                     </template>
                   </div>
                 </div>
@@ -1251,7 +1295,7 @@
 
 
       // Apply stamp ke semua file
-applyToAllProcessing: false,
+      applyToAllProcessing: false,
 
       // TIFF state
       tifLoading: false,
@@ -1693,88 +1737,94 @@ applyToAllProcessing: false,
       },
 
       // ⬇⬇ TAMBAHKAN FUNGSI BARU INI ⬇⬇
-async applyStampToAll() {
-  if (!this.selectedFile) {
-    toastWarning('Warning', 'Please select one file first to define the positions.');
-    return;
-  }
+      async applyStampToAll() {
+        if (!this.selectedFile) {
+          toastWarning('Warning', 'Please select one file first to define the positions.');
+          return;
+        }
 
-  this.applyToAllProcessing = true;
+        this.applyToAllProcessing = true;
 
-  const currentConfig = { ...this.stampConfig };
-  const groups = this.pkg.files || {};
+        const currentConfig = {
+          ...this.stampConfig
+        };
+        const groups = this.pkg.files || {};
 
-  const payload = {
-    ori_position: this.positionKeyToInt(currentConfig.original),
-    copy_position: this.positionKeyToInt(currentConfig.copy),
-    obslt_position: this.positionKeyToInt(currentConfig.obsolete),
-  };
+        const payload = {
+          ori_position: this.positionKeyToInt(currentConfig.original),
+          copy_position: this.positionKeyToInt(currentConfig.copy),
+          obslt_position: this.positionKeyToInt(currentConfig.obsolete),
+        };
 
-  let successCount = 0;
-  let failCount = 0;
-
-  try {
-    for (const groupKey of Object.keys(groups)) {
-      const list = groups[groupKey] || [];
-      for (const file of list) {
-        const key = this.getFileKey(file);
-        if (!key) continue;
-
-        // update state front-end
-        this.stampPerFile[key] = { ...currentConfig };
-
-        // kalau fungsi preview baru dipanggil nanti, biar konsisten dengan DB
-        file.ori_position = payload.ori_position;
-        file.copy_position = payload.copy_position;
-        file.obslt_position = payload.obslt_position;
-
-        // kalau tidak ada id (misal file virtual), skip kirim ke server
-        if (!file.id) continue;
-
-        const url = this.updateStampUrlTemplate.replace('__FILE_ID__', file.id);
+        let successCount = 0;
+        let failCount = 0;
 
         try {
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify(payload),
-          });
+          for (const groupKey of Object.keys(groups)) {
+            const list = groups[groupKey] || [];
+            for (const file of list) {
+              const key = this.getFileKey(file);
+              if (!key) continue;
 
-          const text = await res.text();
-          let json = {};
-          try { json = JSON.parse(text); } catch {}
+              // update state front-end
+              this.stampPerFile[key] = {
+                ...currentConfig
+              };
 
-          if (!res.ok) {
-            failCount++;
-            console.error('Failed update for file', file.id, json);
-          } else {
-            successCount++;
+              // kalau fungsi preview baru dipanggil nanti, biar konsisten dengan DB
+              file.ori_position = payload.ori_position;
+              file.copy_position = payload.copy_position;
+              file.obslt_position = payload.obslt_position;
+
+              // kalau tidak ada id (misal file virtual), skip kirim ke server
+              if (!file.id) continue;
+
+              const url = this.updateStampUrlTemplate.replace('__FILE_ID__', file.id);
+
+              try {
+                const res = await fetch(url, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                  },
+                  body: JSON.stringify(payload),
+                });
+
+                const text = await res.text();
+                let json = {};
+                try {
+                  json = JSON.parse(text);
+                } catch {}
+
+                if (!res.ok) {
+                  failCount++;
+                  console.error('Failed update for file', file.id, json);
+                } else {
+                  successCount++;
+                }
+              } catch (err) {
+                failCount++;
+                console.error('Error update for file', file.id, err);
+              }
+            }
           }
-        } catch (err) {
-          failCount++;
-          console.error('Error update for file', file.id, err);
-        }
-      }
-    }
 
-    if (successCount > 0 && failCount === 0) {
-      toastSuccess('Saved', `Stamp positions applied to ${successCount} file(s).`);
-    } else if (successCount > 0 && failCount > 0) {
-      toastWarning(
-        'Partial Success',
-        `Applied to ${successCount} file(s), but failed on ${failCount} file(s).`
-      );
-    } else {
-      toastError('Error', 'Failed to apply stamp positions to files.');
-    }
-  } finally {
-    this.applyToAllProcessing = false;
-  }
-},
+          if (successCount > 0 && failCount === 0) {
+            toastSuccess('Saved', `Stamp positions applied to ${successCount} file(s).`);
+          } else if (successCount > 0 && failCount > 0) {
+            toastWarning(
+              'Partial Success',
+              `Applied to ${successCount} file(s), but failed on ${failCount} file(s).`
+            );
+          } else {
+            toastError('Error', 'Failed to apply stamp positions to files.');
+          }
+        } finally {
+          this.applyToAllProcessing = false;
+        }
+      },
 
       stampPositionClass(which = 'original') {
         const pos = (this.stampConfig && this.stampConfig[which]) || this.stampDefaults[which];
@@ -2504,10 +2554,10 @@ async applyStampToAll() {
         return (this.pkg.status || '').toLowerCase() === 'approved';
       },
       isFinished() {
-  // baca dari root detail: { status, is_finish, metadata, ... }
-  const flag = this.pkg?.is_finish ?? this.pkg?.metadata?.is_finish ?? 0;
-  return Number(flag) === 1 || flag === true;
-},
+        // baca dari root detail: { status, is_finish, metadata, ... }
+        const flag = this.pkg?.is_finish ?? this.pkg?.metadata?.is_finish ?? 0;
+        return Number(flag) === 1 || flag === true;
+      },
 
 
       /* ===== approve / reject / rollback ===== */
@@ -2595,7 +2645,7 @@ async applyStampToAll() {
             }
           }
 
-         
+
           this.pkg.status = 'Approved';
           this.addPkgActivity('approved', '{{ auth()->user()->name ?? "Reviewer" }}');
           this.showApproveModal = false;
@@ -2735,7 +2785,7 @@ async applyStampToAll() {
           } catch {}
 
           if (!res.ok) {
-            
+
             throw new Error(json.message || 'Failed to share revision.');
           }
 
@@ -2750,7 +2800,7 @@ async applyStampToAll() {
       },
 
 
-     
+
       async renderCadOcct(fileObj) {
         const url = fileObj?.url;
         if (!url) return;

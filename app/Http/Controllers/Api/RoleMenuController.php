@@ -41,6 +41,7 @@ class RoleMenuController extends Controller
                 DB::raw('COALESCE(rm.can_download,0) AS can_download'),
                 DB::raw('COALESCE(rm.can_delete,0)   AS can_delete'),
             ])
+            ->where('menus.is_active', true)
             // SQL Server: taruh NULL di bawah
             ->orderByRaw('CASE WHEN menus.sort_order IS NULL THEN 1 ELSE 0 END, menus.sort_order, menus.title')
             ->get();

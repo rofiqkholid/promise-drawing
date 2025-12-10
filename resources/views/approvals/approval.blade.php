@@ -3,7 +3,26 @@
 @section('header-title', 'Approval')
 
 @section('content')
+<nav class="flex px-5 py-3 mb-3 text-gray-700 bg-gray-50 shadow-sm" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
 
+    <li class="inline-flex items-center">
+      <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600">
+        Monitoring
+      </a>
+    </li>
+
+    <li aria-current="page">
+      <div class="flex items-center">
+        <span class="mx-1 text-gray-400">/</span>
+
+        <span class="text-sm font-semibold text-blue-800 px-2.5 py-0.5 rounded">
+          Approval
+        </span>
+      </div>
+    </li>
+  </ol>
+</nav>
 <div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900" x-data="{ modalOpen: false }">
   <div class="sm:flex sm:items-center sm:justify-between">
     <div>
@@ -98,72 +117,72 @@
     </div>
 
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-6">
-  {{-- Customer --}}
-  <div>
-    <label for="customer" class="text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
-    <div class="relative mt-1">
-      <select id="customer"
-        class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-        <option value="All" selected>All</option>
-      </select>
-    </div>
-  </div>
+      {{-- Customer --}}
+      <div>
+        <label for="customer" class="text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
+        <div class="relative mt-1">
+          <select id="customer"
+            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            <option value="All" selected>All</option>
+          </select>
+        </div>
+      </div>
 
-  {{-- Model --}}
-  <div>
-    <label for="model" class="text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
-    <div class="relative mt-1">
-      <select id="model"
-        class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-        <option value="All" selected>All</option>
-      </select>
-    </div>
-  </div>
+      {{-- Model --}}
+      <div>
+        <label for="model" class="text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
+        <div class="relative mt-1">
+          <select id="model"
+            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            <option value="All" selected>All</option>
+          </select>
+        </div>
+      </div>
 
-  {{-- Document Type --}}
-  <div>
-    <label for="document-type" class="text-sm font-medium text-gray-700 dark:text-gray-300">Document Type</label>
-    <div class="relative mt-1">
-      <select id="document-type"
-        class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-        <option value="All" selected>All</option>
-      </select>
-    </div>
-  </div>
+      {{-- Document Type --}}
+      <div>
+        <label for="document-type" class="text-sm font-medium text-gray-700 dark:text-gray-300">Document Type</label>
+        <div class="relative mt-1">
+          <select id="document-type"
+            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            <option value="All" selected>All</option>
+          </select>
+        </div>
+      </div>
 
-  {{-- Category --}}
-  <div>
-    <label for="category" class="text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
-    <div class="relative mt-1">
-      <select id="category"
-        class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-        <option value="All" selected>All</option>
-      </select>
-    </div>
-  </div>
+      {{-- Category --}}
+      <div>
+        <label for="category" class="text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+        <div class="relative mt-1">
+          <select id="category"
+            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            <option value="All" selected>All</option>
+          </select>
+        </div>
+      </div>
 
-  {{-- Revision Status (Waiting/Approved/Rejected) --}}
-  <div>
-    <label for="status" class="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-    <div class="relative mt-1">
-      <select id="status"
-        class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-        <option value="All" selected>All</option>
-      </select>
-    </div>
-  </div>
+      {{-- Revision Status (Waiting/Approved/Rejected) --}}
+      <div>
+        <label for="status" class="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+        <div class="relative mt-1">
+          <select id="status"
+            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            <option value="All" selected>All</option>
+          </select>
+        </div>
+      </div>
 
-  {{-- Project Status (BARU, sama konsep dengan dashboard #project_status) --}}
-  <div>
-    <label for="project-status" class="text-sm font-medium text-gray-700 dark:text-gray-300">Project Status</label>
-    <div class="relative mt-1">
-      <select id="project-status"
-        class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-        <option value="All" selected>All</option>
-      </select>
+      {{-- Project Status (BARU, sama konsep dengan dashboard #project_status) --}}
+      <div>
+        <label for="project-status" class="text-sm font-medium text-gray-700 dark:text-gray-300">Project Status</label>
+        <div class="relative mt-1">
+          <select id="project-status"
+            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            <option value="All" selected>All</option>
+          </select>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
   </div>
 
@@ -458,22 +477,22 @@
     });
 
     function getCurrentFilters() {
-  const valOrAll = v => (v && v.length ? v : 'All');
+      const valOrAll = v => (v && v.length ? v : 'All');
 
-  // ambil data select2 untuk Project Status, sama gaya dengan Dashboard
-  const psData = $('#project-status').select2('data');
-  const psText = (psData && psData.length > 0) ? (psData[0].text || '').trim() : '';
-  const projectStatus = psText && psText !== 'ALL' ? psText : 'ALL';  // 'ALL' artinya no filter
+      // ambil data select2 untuk Project Status, sama gaya dengan Dashboard
+      const psData = $('#project-status').select2('data');
+      const psText = (psData && psData.length > 0) ? (psData[0].text || '').trim() : '';
+      const projectStatus = psText && psText !== 'ALL' ? psText : 'ALL'; // 'ALL' artinya no filter
 
-  return {
-    customer:       valOrAll($('#customer').val()),
-    model:          valOrAll($('#model').val()),
-    doc_type:       valOrAll($('#document-type').val()),
-    category:       valOrAll($('#category').val()),
-    status:         valOrAll($('#status').val()),
-    project_status: valOrAll($('#project-status').val()),
-  };
-}
+      return {
+        customer: valOrAll($('#customer').val()),
+        model: valOrAll($('#model').val()),
+        doc_type: valOrAll($('#document-type').val()),
+        category: valOrAll($('#category').val()),
+        status: valOrAll($('#status').val()),
+        project_status: valOrAll($('#project-status').val()),
+      };
+    }
 
 
     function loadKPI() {
