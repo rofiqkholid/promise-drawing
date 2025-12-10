@@ -3,11 +3,11 @@
 @section('header-title', 'File Manager/Upload Drawing Package')
 
 @section('content')
-<nav class="flex px-5 py-3 mb-3 text-gray-700 bg-gray-50 shadow-sm" aria-label="Breadcrumb">
+<nav class="flex px-5 py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
 
         <li class="inline-flex items-center">
-            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600">
+            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium hover:text-blue-600">
                 Monitoring
             </a>
         </li>
@@ -16,7 +16,7 @@
             <div class="flex items-center">
                 <span class="mx-1 text-gray-400">/</span>
 
-                <a href="{{ route('file-manager.upload') }}" class="text-sm font-semibold text-gray-500 px-2.5 py-0.5 hover:text-blue-600 rounded">
+                <a href="{{ route('file-manager.upload') }}" class="text-sm font-semibold px-2.5 py-0.5 hover:text-blue-600 rounded">
                 Upload Files
             </a>
             </div>
@@ -25,7 +25,7 @@
             <div class="flex items-center">
                 <span class="mx-1 text-gray-400">/</span>
 
-                <span class="text-sm font-semibold text-blue-800 px-2.5 py-0.5 rounded">
+                <span class="text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded">
                     Drawing Package Details
                 </span>
             </div>
