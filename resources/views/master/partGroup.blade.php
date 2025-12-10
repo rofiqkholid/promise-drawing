@@ -10,7 +10,11 @@
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Part Group Master</h2>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage master data for the application.</p>
         </div>
-        <div class="mt-4 sm:mt-0">
+        <div class="mt-4 sm:mt-0 flex gap-2">
+            <button type="button" id="manage-master-btn" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-500 active:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+                <i class="fa-solid fa-list"></i>
+                Manage Codes
+            </button>
             <button type="button" id="add-button" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500 active:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
                 <i class="fa-solid fa-plus"></i>
                 Add New
@@ -66,8 +70,12 @@
                 </div>
                 <div class="mb-4">
                     <label for="code_part_group" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part Group Code <span class="text-red-600">*</span></label>
-                    <input type="text" name="code_part_group" id="code_part_group" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. PG001" required>
-                    <p id="add-code_part_group-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                    <div class="flex gap-2">
+                        <select name="code_part_group" id="code_part_group" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                            <option value="">Select Code from Library</option>
+                        </select>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 text-left">Select Standard Code from Library.</p>
                 </div>
                 <div class="mb-4">
                     <label for="planning" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Planning <span class="text-red-600">*</span></label>
@@ -116,8 +124,11 @@
                 </div>
                 <div class="mb-4">
                     <label for="edit_code_part_group" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part Group Code <span class="text-red-600">*</span></label>
-                    <input type="text" name="code_part_group" id="edit_code_part_group" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
-                    <p id="edit-code_part_group-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                    <div class="flex gap-2">
+                        <select name="code_part_group" id="edit_code_part_group" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                            <option value="">Select Code</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="mb-4">
                     <label for="edit_planning" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Planning <span class="text-red-600">*</span></label>
@@ -157,6 +168,53 @@
         </div>
     </div>
 </div>
+{{-- Manage Master Modal (Contains Table & Form) --}}
+<div id="manageMasterModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
+    <div class="relative p-4 w-full max-w-4xl h-full md:h-auto">
+        <div class="relative p-4 bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+            <button type="button" class="close-manage-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                <i class="fa-solid fa-xmark w-5 h-5"></i>
+                <span class="sr-only">Close modal</span>
+            </button>
+            <h3 class="mb-4 text-xl font-medium text-gray-900 dark:text-white">Manage Part Group Codes Library</h3>
+            
+            {{-- Inline Add Form --}}
+            <div class="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <h4 class="text-sm font-semibold mb-2 dark:text-gray-200">Add / Edit Code</h4>
+                <form id="masterForm" class="flex flex-col sm:flex-row gap-4 items-end">
+                    <input type="hidden" name="id" id="master_id_input">
+                    <div class="w-full sm:w-1/3">
+                        <label class="block mb-1 text-xs text-gray-600 dark:text-gray-300">Code <span class="text-red-600">*</span></label>
+                        <input type="text" name="code" id="master_code_input" class="bg-white border border-gray-300 text-gray-900 text-xs rounded-lg block w-full p-2 dark:bg-gray-600 dark:border-gray-500 dark:text-white" required>
+                    </div>
+                    <div class="w-full sm:w-1/2">
+                        <label class="block mb-1 text-xs text-gray-600 dark:text-gray-300">Description</label>
+                        <input type="text" name="description" id="master_desc_input" class="bg-white border border-gray-300 text-gray-900 text-xs rounded-lg block w-full p-2 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+                    </div>
+                    <div class="w-full sm:w-auto flex gap-2">
+                        <button type="submit" id="save-master-btn" class="px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700">Add</button>
+                        <button type="button" id="cancel-master-btn" class="hidden px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            {{-- Master Table --}}
+            <div class="overflow-x-auto">
+                <table id="masterTable" class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th scope="col" class="px-4 py-3">Code</th>
+                            <th scope="col" class="px-4 py-3">Description</th>
+                            <th scope="col" class="px-4 py-3 w-20 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('style')
@@ -305,8 +363,171 @@
         initModelSelect2($('#edit_model_id'), $('#editPartGroupModal'), '#edit_customer_id');
         $('#edit_customer_id').on('change', function() {
             $('#edit_model_id').val(null).trigger('change');
+            $('#edit_model_id').val(null).trigger('change');
             $('#edit_model_id').prop('disabled', !$(this).val());
         });
+
+        // ===== Part Group Master Logic =====
+        function initCodeSelect2($el, parentModal) {
+             $el.select2({
+                dropdownParent: parentModal,
+                width: '100%',
+                placeholder: 'Select Code',
+                ajax: {
+                    url: '{{ route("partGroups.master.select2") }}',
+                    dataType: 'json',
+                    delay: 250,
+                    cache: true,
+                    data: params => ({ q: params.term || '', page: params.page || 1 }),
+                    processResults: data => ({ results: data.results })
+                },
+                templateResult: it => it.loading ? it.text : $('<span class="text-sm">' + (it.text || it.id) + '</span>'),
+                templateSelection: it => it.text || it.id || ''
+            });
+        }
+
+        // Init Code Selects
+        initCodeSelect2($('#code_part_group'), $('#addPartGroupModal'));
+        initCodeSelect2($('#edit_code_part_group'), $('#editPartGroupModal'));
+
+        // ===== Manage Master (Button & Modal & Table) =====
+        const manageModal = $('#manageMasterModal');
+        let masterTable;
+
+        $('#manage-master-btn').on('click', function() {
+            showModal(manageModal);
+            if (!masterTable) {
+                masterTable = $('#masterTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    responsive: true,
+                    autoWidth: false,
+                    ajax: '{{ route("partGroups.master.data") }}',
+                    columns: [
+                        { data: 'code', name: 'code', className: 'font-medium text-gray-900 dark:text-white' },
+                        { data: 'description', name: 'description' },
+                        {
+                            data: null,
+                            className: 'text-center',
+                            orderable: false,
+                            searchable: false,
+                            render: function(data, type, row) {
+                                return `
+                                    <div class="flex justify-center gap-2">
+                                        <button class="edit-master text-blue-600 hover:text-blue-900 dark:text-blue-500 dark:hover:text-blue-400" data-id="${row.id}" data-code="${row.code}" data-desc="${row.description || ''}" title="Edit">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+                                        <button class="delete-master text-red-600 hover:text-red-900 dark:text-red-500 dark:hover:text-red-400" data-id="${row.id}" title="Delete">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                `;
+                            }
+                        }
+                    ],
+                    pageLength: 5,
+                    lengthMenu: [5, 10, 25],
+                    language: {
+                        emptyTable: '<div class="text-gray-500 dark:text-gray-400 py-4">No codes found in library.</div>',
+                        processing: '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>'
+                    },
+                    drawCallback: function() {
+                    }
+                });
+            } else {
+                masterTable.ajax.reload();
+            }
+            resetMasterForm();
+        });
+
+        $('.close-manage-modal-button').on('click', function() {
+            hideModal(manageModal);
+        });
+
+        // Master Form Logic (Add/Edit)
+        function resetMasterForm() {
+            $('#masterForm')[0].reset();
+            $('#master_id_input').val('');
+            $('#save-master-btn').text('Add');
+            $('#cancel-master-btn').addClass('hidden');
+        }
+
+        $('#cancel-master-btn').on('click', resetMasterForm);
+
+        $(document).on('click', '.edit-master', function() {
+            const id = $(this).data('id');
+            const code = $(this).data('code');
+            const desc = $(this).data('desc');
+
+            $('#master_id_input').val(id);
+            $('#master_code_input').val(code);
+            $('#master_desc_input').val(desc);
+            $('#save-master-btn').text('Update');
+            $('#cancel-master-btn').removeClass('hidden');
+        });
+
+        $('#masterForm').on('submit', function(e) {
+            e.preventDefault();
+            const id = $('#master_id_input').val();
+            const isEdit = !!id;
+            const url = isEdit ? `/partGroups/master/${id}` : `{{ route('partGroups.master.store') }}`;
+            const method = isEdit ? 'PUT' : 'POST';
+
+            $.ajax({
+                url: url,
+                method: method,
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                data: {
+                    code: $('#master_code_input').val(),
+                    description: $('#master_desc_input').val()
+                },
+                success: (data) => {
+                    if (data.success) {
+                        toastSuccess('Success', data.message);
+                        resetMasterForm();
+                        masterTable.ajax.reload();
+                    } else {
+                        toastError('Error', data.message);
+                    }
+                },
+                error: (xhr) => toastError('Error', xhr.responseJSON?.message || 'Failed to save code.')
+            });
+        });
+
+        $(document).on('click', '.delete-master', function() {
+            const id = $(this).data('id');
+            const $btn = $(this);
+            
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `/partGroups/master/${id}`,
+                        method: 'DELETE',
+                        headers: { 'X-CSRF-TOKEN': csrfToken },
+                        beforeSend: () => $btn.prop('disabled', true),
+                        success: (data) => {
+                            if (data.success) {
+                                toastSuccess('Success', data.message);
+                                masterTable.ajax.reload();
+                            } else {
+                                toastError('Error', data.message);
+                            }
+                        },
+                        error: (xhr) => toastError('Error', 'Failed to delete.'),
+                        complete: () => $btn.prop('disabled', false)
+                    });
+                }
+            });
+        });
+
 
         // ===== DataTable =====
         const table = $('#partGroupsTable').DataTable({
@@ -571,7 +792,7 @@
                     setButtonLoading($(`.edit-button[data-id="${id}"]`), true, '');
                 },
                 success: (data) => {
-                    $('#edit_code_part_group').val(data.code_part_group);
+                    setSelect2Value($('#edit_code_part_group'), data.code_part_group, data.code_part_group);
                     $('#edit_planning').val(data.planning);
                     $('#edit_code_part_group_desc').val(data.code_part_group_desc);
                     $('#editPartGroupForm').attr('action', `/master/partGroups/${id}`);

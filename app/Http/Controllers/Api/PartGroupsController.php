@@ -9,6 +9,7 @@ use App\Models\Models;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
+
 class PartGroupsController extends Controller
 {
     /**
@@ -20,7 +21,7 @@ class PartGroupsController extends Controller
             ->with([
                 'customer:id,code,name',
                 'model:id,name,status_id',
-                'model.status:id,name' // <-- kalau pakai relasi status di model
+                'model.status:id,name'
             ])
             ->select('part_groups.*');
 
@@ -237,5 +238,135 @@ class PartGroupsController extends Controller
             }),
             'pagination' => ['more' => ($skip + $per) < $total],
         ]);
+    }
+    /**
+     * Store Master Code (Library).
+     */
+    public function storeMaster(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string|unique:part_group_master,code|max:50',
+            'description' => 'nullable|string|max:50',
+        ]);
+
+        $master = \App\Models\PartGroupMaster::create([
+            'code' => $request->code,
+            'description' => $request->description,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'New Code added to Library successfully.',
+            'data' => $master
+        ]);
+    }
+
+    /**
+     * Select2 Master Code (Library).
+     */
+    public function select2Master(Request $request)
+    {
+        $search = $request->q;
+        $query = \App\Models\PartGroupMaster::query();
+
+        if ($search) {
+            $query->where('code', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+        }
+
+        $data = $query->limit(20)->get();
+
+        $results = $data->map(function ($item) {
+            return [
+                'id' => $item->code,
+                'text' => $item->code . ($item->description ? ' - ' . $item->description : '')
+            ];
+        });
+
+        return response()->json([
+            'results' => $results
+        ]);
+    }
+    /**
+     * DataTables for Master Library.
+     */
+    public function dataMaster(Request $request)
+    {
+        $query = \App\Models\PartGroupMaster::query();
+        
+        return \Illuminate\Support\Facades\DataTables::of($query)
+        ->make(true);
+    }
+    
+    public function dataMasterManual(Request $request) {
+        $query = \App\Models\PartGroupMaster::query();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search.value');
+            if (is_null($search) && is_string($request->input('search'))) {
+                 $search = $request->input('search');
+            }
+
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('code', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%");
+                });
+            }
+        }
+        
+        // Sorting
+        $cols = ['id', 'code', 'description']; 
+        $sortBy = $request->get('order')[0]['column'] ?? 1;
+        $sortDir = $request->get('order')[0]['dir'] ?? 'asc';
+        $colName = $cols[$sortBy] ?? 'code';
+        
+        $query->orderBy($colName, $sortDir);
+
+        $totalRecords = \App\Models\PartGroupMaster::count();
+        $filteredRecords = $query->count();
+        
+        $perPage = (int) $request->get('length', 10);
+        $start = (int) $request->get('start', 0);
+        
+        $data = $query->skip($start)->take($perPage)->get();
+
+        return response()->json([
+            'draw' => (int) $request->get('draw', 1),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Update Master Code.
+     */
+    public function updateMaster(Request $request, $id)
+    {
+        $master = \App\Models\PartGroupMaster::findOrFail($id);
+        
+        $request->validate([
+            'code' => 'required|string|max:50|unique:part_group_master,code,'.$id,
+            'description' => 'nullable|string|max:50',
+        ]);
+
+        $master->update([
+            'code' => $request->code,
+            'description' => $request->description,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Code updated successfully.']);
+    }
+
+    /**
+     * Destroy Master Code.
+     */
+    public function destroyMaster($id)
+    {
+        $master = \App\Models\PartGroupMaster::findOrFail($id);
+        $master->delete();
+        
+        return response()->json(['success' => true, 'message' => 'Code deleted successfully.']);
     }
 }

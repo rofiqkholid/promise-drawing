@@ -238,6 +238,14 @@ Route::middleware(['auth'])->group(function () {
         ->name('partGroups.select2.models');
     #End region
 
+    #Region Part Group Master
+    Route::post('/partGroups/master', [PartGroupsController::class, 'storeMaster'])->name('partGroups.master.store');
+    Route::get('/partGroups/master/select2', [PartGroupsController::class, 'select2Master'])->name('partGroups.master.select2');
+    Route::get('/partGroups/master/data', [PartGroupsController::class, 'dataMasterManual'])->name('partGroups.master.data');
+    Route::put('/partGroups/master/{id}', [PartGroupsController::class, 'updateMaster'])->name('partGroups.master.update');
+    Route::delete('/partGroups/master/{id}', [PartGroupsController::class, 'destroyMaster'])->name('partGroups.master.destroy');
+    #End region
+
     #Region User Maintenance
     Route::resource('master/userMaintenance', UserMaintenanceController::class)->only(['store', 'show', 'update', 'destroy'])->parameters(['userMaintenance' => 'user'])->names('userMaintenance');
     Route::get('userMaintenance/data', [UserMaintenanceController::class, 'data'])->name('userMaintenance.data');
