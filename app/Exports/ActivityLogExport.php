@@ -151,6 +151,12 @@ class ActivityLogExport implements FromQuery, WithHeadings, WithMapping, WithSty
             if (!empty($meta['expired_at'])) $desc .= " Exp: {$meta['expired_at']}.";
             if (!empty($meta['note'])) $desc .= " Note: \"{$meta['note']}\"";
         } 
+        elseif ($code === 'DELETE_PACKAGE' || $code === 'DELETE_DRAFT') {
+            $action = $code === 'DELETE_PACKAGE' ? 'Package Deleted' : 'Draft Deleted';
+            $status = $meta['revision_status'] ?? 'Draft';
+            $desc = "{$action}. Last Status: {$status}.";
+            if (!empty($meta['deleted_at'])) $desc .= " Deleted At: {$meta['deleted_at']}.";
+        } 
         else {
             // Fallback
             if (isset($meta['note'])) {

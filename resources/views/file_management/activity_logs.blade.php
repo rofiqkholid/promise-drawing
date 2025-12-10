@@ -289,18 +289,19 @@ $(function () {
                     'SHARE_INTERNAL': 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300',
                     'ROLLBACK': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
                     'REVISE_CONFIRM': 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300',
+                    'DELETE_PACKAGE': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
                 };
                 const colorClass = colors[data] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
                 return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colorClass}">${data}</span>`;
             }
         },
         { 
-            data: 'ecn_no', 
+            data: 'meta', 
             name: 'ecn_no', 
             orderable: true, 
             searchable: true,
             render: function(data) {
-                return data ? `<span class="font-mono text-sm">${data}</span>` : '-';
+                return (data && data.ecn_no) ? `<span class="font-mono text-sm">${data.ecn_no}</span>` : '-';
             }
         },
         {
@@ -467,6 +468,23 @@ $(function () {
                                 ${data.part_no || '-'} ${badgeRev(data.revision_no)}
                             </div>
                             ${data.note ? `<div class="text-xs italic text-gray-400 mt-0.5">"${data.note}"</div>` : ''}
+                        </div>`;
+                }
+
+                // 9. DELETE_PACKAGE
+                if (code === 'DELETE_PACKAGE') {
+                    return `
+                        <div class="flex flex-col">
+                            <span class="${mainTextClass} text-red-600 dark:text-red-400">
+                                <i class="fa-solid fa-trash-can mr-1"></i> Package Deleted
+                            </span>
+                             <div class="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">
+                                <span>Status: ${data.revision_status || 'Draft'}</span>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-0.5">
+                                ${data.part_no || '-'} ${badgeRev(data.revision_no)} ${badgeLabel(data.revision_label)}
+                            </div>
+                             ${data.ecn_no ? `<div class="text-[10px] text-gray-400 mt-0.5">ECN: ${data.ecn_no}</div>` : ''}
                         </div>`;
                 }
 
