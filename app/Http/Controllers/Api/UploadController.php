@@ -25,10 +25,7 @@ class UploadController extends Controller
             ->leftJoin('customer_revision_labels as crl', 'r.revision_label_id', '=', 'crl.id')
             ->leftJoin('doctype_groups as dg', 'p.doctype_group_id', '=', 'dg.id')
             ->leftJoin('doctype_subcategories as sc', 'p.doctype_subcategory_id', '=', 'sc.id')
-            ->leftJoin('part_groups as pg', 'p.part_group_id', '=', 'pg.id')
-            ->where('r.is_delete', 0)
-    ->where('p.is_delete', 0)
-    ->where('pr.is_delete', 0);
+            ->leftJoin('part_groups as pg', 'p.part_group_id', '=', 'pg.id');
 
         if (!empty($search)) {
             $query->where(function($q) use ($search) {
@@ -43,7 +40,6 @@ class UploadController extends Controller
                          ->whereNotNull('pp.group_id')
                          ->whereColumn('pp.group_id', 'pr.group_id')
                          ->whereColumn('pp.id', '!=', 'pr.id')
-                         ->where('pp.is_delete', 0)
                          ->where(function($subSq) use ($search) {
                              $subSq->where('pp.part_no', 'like', "%{$search}%")
                                    ->orWhere('pp.part_name', 'like', "%{$search}%");
@@ -60,13 +56,7 @@ class UploadController extends Controller
 
         $filteredRecords = $query->count();
 
-        $totalRecords = DB::table('doc_package_revisions as r')
-    ->join('doc_packages as p', 'r.package_id', '=', 'p.id')
-    ->join('products as pr', 'p.product_id', '=', 'pr.id')
-    ->where('r.is_delete', 0)
-    ->where('p.is_delete', 0)
-    ->where('pr.is_delete', 0)
-    ->count();
+        $totalRecords = DB::table('doc_package_revisions')->count();
 
         if ($order) {
             $sortBy = $order['column'];
@@ -124,7 +114,6 @@ class UploadController extends Controller
                  $partners = DB::table('products')
                      ->where('group_id', $row->group_id)
                      ->where('id', '!=', $row->product_id)
-                     ->where('is_delete', 0)
                      ->pluck('part_no')
                      ->toArray();
                  
@@ -199,9 +188,6 @@ class UploadController extends Controller
                 'pg.id as part_group_id','pg.code_part_group'
             )
             ->where('r.id', $revisionId)
-            ->where('r.is_delete', 0)
-    ->where('p.is_delete', 0)
-    ->where('pr.is_delete', 0)
             ->first();
 
         if (!$rev) {
@@ -231,7 +217,6 @@ class UploadController extends Controller
     public function getKpiStats(): JsonResponse
     {
         $kpiStats = DB::table('doc_package_revisions')
-        ->where('r.is_delete', 0)
             ->select(
                 DB::raw('COUNT(*) as totalupload'),
                 DB::raw("COUNT(CASE WHEN revision_status = 'draft' THEN 1 END) as totaldraft"),
@@ -276,9 +261,6 @@ class UploadController extends Controller
                 'pg.id as part_group_id','pg.code_part_group'
             )
             ->where('r.id', $revisionId)
-            ->where('r.is_delete', 0)
-    ->where('p.is_delete', 0)
-    ->where('pr.is_delete', 0)
             ->first();
 
         if (!$rev) {
