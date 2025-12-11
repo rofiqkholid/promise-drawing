@@ -43,7 +43,10 @@ class ApprovalController extends Controller
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
             ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
-            ->where('dpr.revision_status', '<>', 'draft');
+            ->where('dpr.revision_status', '<>', 'draft')
+            
+        ->where('dp.is_delete', 0)
+        ->where('p.is_delete', 0);
 
         if ($req->filled('customer') && $req->customer !== 'All') {
             $q->where('c.code', $req->customer);
@@ -285,7 +288,10 @@ class ApprovalController extends Controller
                 $join->on('pa.revision_id', '=', 'dpr.id')
                     ->where('pa.rn', '=', 1);
             })
-            ->where('dpr.revision_status', '<>', 'draft');
+            ->where('dpr.revision_status', '<>', 'draft')
+            
+    ->where('dp.is_delete', 0)
+    ->where('p.is_delete', 0);
 
         $recordsTotal = (clone $query)->count();
 
@@ -433,6 +439,7 @@ class ApprovalController extends Controller
             ->leftJoin('users as ou', 'ou.id', '=', 'dpr.obsolete_by')
             ->leftJoin('departments as od', 'od.id', '=', 'ou.id_dept')
             ->where('dpr.id', $revisionId)
+           
             ->first([
                 'dpr.*',
                 'ou.name as obsolete_name',
@@ -497,6 +504,8 @@ class ApprovalController extends Controller
             ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
             ->leftJoin('users as u', 'u.id', '=', 'dp.created_by')
             ->where('dp.id', $revision->package_id)
+            ->where('dp.is_delete', 0)  
+    ->where('p.is_delete', 0) 
             ->select(
                 'c.code as customer',
                 'm.name as model',
@@ -1454,7 +1463,10 @@ class ApprovalController extends Controller
                 $join->on('pa.revision_id', '=', 'dpr.id')
                     ->where('pa.rn', '=', 1);
             })
-            ->where('dpr.revision_status', '<>', 'draft');
+            ->where('dpr.revision_status', '<>', 'draft')
+            
+    ->where('dp.is_delete', 0)
+    ->where('p.is_delete', 0);
        
         if ($request->filled('customer') && $request->customer !== 'All') {
             $query->where('c.code', $request->customer);
