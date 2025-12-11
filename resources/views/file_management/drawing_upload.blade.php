@@ -3,11 +3,11 @@
 @section('header-title', 'File Manager/Upload Drawing Package')
 
 @section('content')
-<nav class="flex px-5 py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300" aria-label="Breadcrumb">
+<nav class="flex px-5 py-3 mb-3 text-gray-700 bg-gray-50 shadow-sm" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
 
         <li class="inline-flex items-center">
-            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium hover:text-blue-600">
+            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600">
                 Monitoring
             </a>
         </li>
@@ -16,7 +16,7 @@
             <div class="flex items-center">
                 <span class="mx-1 text-gray-400">/</span>
 
-                <a href="{{ route('file-manager.upload') }}" class="text-sm font-semibold px-2.5 py-0.5 hover:text-blue-600 rounded">
+                <a href="{{ route('file-manager.upload') }}" class="text-sm font-semibold text-gray-500 px-2.5 py-0.5 hover:text-blue-600 rounded">
                 Upload Files
             </a>
             </div>
@@ -25,7 +25,7 @@
             <div class="flex items-center">
                 <span class="mx-1 text-gray-400">/</span>
 
-                <span class="text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded">
+                <span class="text-sm font-semibold text-blue-800 px-2.5 py-0.5 rounded">
                     Drawing Package Details
                 </span>
             </div>
@@ -111,6 +111,16 @@
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400"
                                     x-text="validationErrors.partNo[0]"></p>
                             </template>
+                            
+                            <!-- Pairing Notification -->
+                            <div x-show="pairedPartnerName" x-transition class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/30 rounded border border-blue-100 dark:border-blue-800 flex items-start">
+                                <i class="fa-solid fa-link text-blue-500 mt-0.5 mr-2 text-sm"></i>
+                                <div class="text-xs text-blue-700 dark:text-blue-300">
+                                    <span class="font-semibold">Linked Product:</span>
+                                    <span x-text="pairedPartnerName"></span>.
+                                    <br>Uploads will be visible for both products.
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label for="docType"
@@ -734,6 +744,7 @@
             customer: null,
             model: null,
             partNo: null,
+            pairedPartnerName: null,
             docType: null,
             category: null,
             partGroup: null,
@@ -1040,6 +1051,8 @@
 
             initSelect2(propName, placeholder, url, additionalData = {}) {
                 const el = $(`#${propName}`);
+                el.off('change select2:select select2:unselect');
+
                 if (el.hasClass("select2-hidden-accessible")) {
                     el.select2('destroy');
                 }
@@ -1063,6 +1076,15 @@
                     }
                 }).on('change', (e) => {
                     this[propName] = e.target.value;
+                }).on('select2:select', (e) => {
+                    const data = e.params.data;
+                    if (propName === 'partNo') {
+                         this.pairedPartnerName = data.partner_names || null;
+                    }
+                }).on('select2:unselect', (e) => {
+                     if (propName === 'partNo') {
+                         this.pairedPartnerName = null;
+                    }
                 });
             },
 
@@ -1093,7 +1115,18 @@
                         })
                     }
                 }).on('change', (e) => {
-                    this[propName] = e.target.value;
+                     this[propName] = $(e.target).val();
+                }).on('select2:select', (e) => {
+                    const data = e.params.data;
+                    console.log('Select2 Select Event:', propName, data); // Debug log
+                    if (propName === 'partNo') {
+                         this.pairedPartnerName = data.partner_names || null;
+                         console.log('Paired Partner Name Set To:', this.pairedPartnerName); // Debug log
+                    }
+                }).on('select2:unselect', (e) => {
+                     if (propName === 'partNo') {
+                         this.pairedPartnerName = null;
+                    }
                 });
             },
 

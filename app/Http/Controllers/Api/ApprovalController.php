@@ -618,6 +618,7 @@ class ApprovalController extends Controller
 
              'is_finish'    => (int) ($revision->is_finish ?? 0),
 
+            'note'         => $revision->note ?? null,
             
             'stamp'        => [
                 'receipt_date' => $receiptDate?->toDateString(),

@@ -83,6 +83,36 @@
         };
     </script>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setInterval(function() {
+                fetch("{{ route('session.check') }}", {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Session expired');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data.active) {
+                            window.location.href = "{{ route('login') }}";
+                        }
+                    })
+                    .catch(error => {
+
+                        console.warn('Session check failed, redirecting to login...');
+                        window.location.href = "{{ route('login') }}";
+                    });
+            }, 28800000);
+        });
+    </script>
+
     @stack('scripts')
 </body>
 

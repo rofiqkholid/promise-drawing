@@ -3,72 +3,74 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model as EloquentModel; // Alias untuk menghindari konflik nama
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 
-class DocPackage extends EloquentModel
+class DocPackage extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that aren't mass assignable.
-     *
-     * @var array
-     */
     protected $guarded = [];
 
-    /**
-     * Mendapatkan semua revisi untuk paket dokumen ini.
-     */
+    protected static function booted()
+    {
+        // Semua query DocPackage::… hanya ambil yang is_delete = 0
+        static::addGlobalScope('not_deleted', function (Builder $builder) {
+            $builder->where('is_delete', 0);
+        });
+    }
+
+    // Soft delete: set is_delete = 1
+    public function delete()
+    {
+        if (! $this->exists) {
+            return false;
+        }
+
+        $this->is_delete = 1;
+        return $this->save();
+    }
+
+    // Hard delete beneran (kalau suatu saat butuh)
+    public function realDelete()
+    {
+        return static::withoutGlobalScope('not_deleted')
+            ->whereKey($this->getKey())
+            ->delete();
+    }
+
     public function revisions(): HasMany
     {
         return $this->hasMany(DocPackageRevision::class, 'package_id');
     }
 
-    /**
-     * Mendapatkan customer pemilik paket.
-     */
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
-    /**
-     * Mendapatkan model produk dari paket.
-     */
     public function model(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Model::class, 'model_id');
+        return $this->belongsTo(\App\Models\Models::class, 'model_id');
     }
 
-    /**
-     * Mendapatkan produk dari paket.
-     */
     public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Products::class);
     }
 
-    /**
-     * Mendapatkan grup dokumen dari paket.
-     */
     public function doctypeGroup(): BelongsTo
     {
-        return $this->belongsTo(DoctypeGroup::class);
+        return $this->belongsTo(DoctypeGroups::class);
     }
 
-    /**
-     * Mendapatkan grup part dari paket.
-     */
     public function partGroup(): BelongsTo
     {
-        return $this->belongsTo(PartGroup::class);
+        return $this->belongsTo(PartGroups::class);
     }
 
-    /**
-     * Mendapatkan status proyek dari paket.
-     */
     public function projectStatus(): BelongsTo
     {
         return $this->belongsTo(ProjectStatus::class);

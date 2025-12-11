@@ -3,11 +3,11 @@
 @section('header-title', 'File Manager - Download Detail')
 
 @section('content')
-<nav class="flex px-5 py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300" aria-label="Breadcrumb">
+<nav class="flex px-5 py-3 mb-3 text-gray-700 bg-gray-50 shadow-sm" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
 
         <li class="inline-flex items-center">
-            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium hover:text-blue-600">
+            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600">
                 Monitoring
             </a>
         </li>
@@ -16,7 +16,7 @@
             <div class="flex items-center">
                 <span class="mx-1 text-gray-400">/</span>
 
-                <a href="{{ route('file-manager.export') }}" class="text-sm font-semibold px-2.5 py-0.5 hover:text-blue-600 rounded">
+                <a href="{{ route('file-manager.export') }}" class="text-sm font-semibold text-gray-500 px-2.5 py-0.5 hover:text-blue-600 rounded">
                     Download Files
                 </a>
             </div>
@@ -25,7 +25,7 @@
             <div class="flex items-center">
                 <span class="mx-1 text-gray-400">/</span>
 
-                <span class="text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded">
+                <span class="text-sm font-semibold text-blue-800 px-2.5 py-0.5 rounded">
                     Download Detail Files
                 </span>
             </div>
@@ -91,6 +91,20 @@
                                 <p class="text-sm text-gray-900 dark:text-gray-100 w-full mt-1" x-text="metaLine()"
                                     :title="metaLine()">
                                 </p>
+                                
+                                <template x-if="pkg.metadata?.linked_partners && pkg.metadata.linked_partners.length > 0">
+                                    <div class="w-full mt-1 flex items-center gap-2">
+                                        <span class="text-xs text-gray-500 italic">Also applicable for:</span>
+                                        <div class="flex flex-wrap gap-1">
+                                            <template x-for="partner in pkg.metadata.linked_partners" :key="partner">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800">
+                                                    <i class="fa-solid fa-link mr-1 text-[9px]"></i>
+                                                    <span x-text="partner"></span>
+                                                </span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </div>

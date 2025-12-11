@@ -69,12 +69,32 @@
         </div>
 
         <!-- Body: single line with dashes -->
-        <div class="p-4">
-          <p class="text-xs md:text-sm text-gray-900 dark:text-gray-100 whitespace-normal break-words leading-snug"
-            x-text="metaLine()"
-            :title="metaLine()"></p>
+        <div class="px-4 pt-4 pb-2">
+  <!-- Meta line -->
+  <p class="text-xs md:text-sm text-gray-900 dark:text-gray-100 whitespace-normal break-words leading-snug"
+     x-text="metaLine()"
+     :title="metaLine()"></p>
 
-        </div>
+  <!-- REVISION NOTE / NO NOTE -->
+<template x-if="pkg.note && pkg.note.trim().length > 0">
+    <p
+        class="flex items-start gap-1 text-[11px] md:text-xs italic leading-snug
+               text-amber-700 dark:text-amber-300 mt-1 mb-0">
+        <i class="fa-solid fa-quote-left mt-[2px] text-amber-400"></i>
+        <span class="whitespace-pre-line break-words" x-text="pkg.note"></span>
+    </p>
+</template>
+
+<template x-if="!pkg.note || pkg.note.trim().length === 0">
+    <p
+        class="text-[11px] md:text-xs italic leading-snug
+               text-gray-400 dark:text-gray-500 mt-1 mb-0">
+       No note is available for this package.
+    </p>
+</template>
+
+</div>
+
 
         <!-- Footer (Approve / Reject / Rollback / Share) -->
         <!-- Footer (Approve / Reject / Rollback / Share) -->

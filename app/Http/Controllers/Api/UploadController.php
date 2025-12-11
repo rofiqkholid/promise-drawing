@@ -25,7 +25,10 @@ class UploadController extends Controller
             ->leftJoin('customer_revision_labels as crl', 'r.revision_label_id', '=', 'crl.id')
             ->leftJoin('doctype_groups as dg', 'p.doctype_group_id', '=', 'dg.id')
             ->leftJoin('doctype_subcategories as sc', 'p.doctype_subcategory_id', '=', 'sc.id')
-            ->leftJoin('part_groups as pg', 'p.part_group_id', '=', 'pg.id');
+            ->leftJoin('part_groups as pg', 'p.part_group_id', '=', 'pg.id')
+            ->where('r.is_delete', 0)
+    ->where('p.is_delete', 0)
+    ->where('pr.is_delete', 0);
 
         if (!empty($search)) {
             $query->where(function($q) use ($search) {
@@ -33,6 +36,19 @@ class UploadController extends Controller
                   ->orWhere('c.code', 'like', "%{$search}%")
                   ->orWhere('m.name', 'like', "%{$search}%")
                   ->orWhere('pr.part_no', 'like', "%{$search}%")
+                  // Search in Partners (Grouped Products)
+                  ->orWhereExists(function ($sq) use ($search) {
+                      $sq->select(DB::raw(1))
+                         ->from('products as pp')
+                         ->whereNotNull('pp.group_id')
+                         ->whereColumn('pp.group_id', 'pr.group_id')
+                         ->whereColumn('pp.id', '!=', 'pr.id')
+                         ->where('pp.is_delete', 0)
+                         ->where(function($subSq) use ($search) {
+                             $subSq->where('pp.part_no', 'like', "%{$search}%")
+                                   ->orWhere('pp.part_name', 'like', "%{$search}%");
+                         });
+                  })
                   ->orWhere('r.revision_no', 'like', "%{$search}%")
                   ->orWhere('r.ecn_no', 'like', "%{$search}%")
                   ->orWhere('crl.label', 'like', "%{$search}%")
@@ -44,7 +60,13 @@ class UploadController extends Controller
 
         $filteredRecords = $query->count();
 
-        $totalRecords = DB::table('doc_package_revisions')->count();
+        $totalRecords = DB::table('doc_package_revisions as r')
+    ->join('doc_packages as p', 'r.package_id', '=', 'p.id')
+    ->join('products as pr', 'p.product_id', '=', 'pr.id')
+    ->where('r.is_delete', 0)
+    ->where('p.is_delete', 0)
+    ->where('pr.is_delete', 0)
+    ->count();
 
         if ($order) {
             $sortBy = $order['column'];
@@ -80,6 +102,8 @@ class UploadController extends Controller
                 'c.code as customer',
                 'm.name as model',
                 'pr.part_no',
+                'pr.id as product_id', 
+                'pr.group_id',
                 'r.revision_no',
                 'r.created_at as uploaded_at',
                 'r.revision_status as status',
@@ -93,12 +117,35 @@ class UploadController extends Controller
 
         // Transform Data
         $rows = $data->map(function($row) {
+             $partNoDisplay = $row->part_no ?? '-';
+
+             // Check for partners if this product is part of a group
+             if (!empty($row->group_id)) {
+                 $partners = DB::table('products')
+                     ->where('group_id', $row->group_id)
+                     ->where('id', '!=', $row->product_id)
+                     ->where('is_delete', 0)
+                     ->pluck('part_no')
+                     ->toArray();
+                 
+                 if (!empty($partners)) {
+                     // Add badges for partners
+                     $badges = array_map(function($p) {
+                         return "<span class='inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 ml-1'>
+                             <i class='fa-solid fa-link mr-1'></i> {$p}
+                         </span>";
+                     }, $partners);
+                     
+                     $partNoDisplay .= '<br><div class="mt-1 flex flex-wrap gap-1">' . implode('', $badges) . '</div>';
+                 }
+             }
+
              return [
                 'id' => str_replace(['+', '/', '='], ['-', '_', '~'], encrypt($row->id)),
                 'package_no' => $row->package_no,
                 'customer' => $row->customer ?? '-',
                 'model' => $row->model ?? '-',
-                'part_no' => $row->part_no ?? '-',
+                'part_no' => $partNoDisplay,
                 'revision_no' => is_null($row->revision_no) ? '0' : (string)$row->revision_no,
                 'uploaded_at' => $row->uploaded_at ? date('Y-m-d H:i:s', strtotime($row->uploaded_at)) : null,
                 'status' => $row->status ?? 'draft',
@@ -152,6 +199,9 @@ class UploadController extends Controller
                 'pg.id as part_group_id','pg.code_part_group'
             )
             ->where('r.id', $revisionId)
+            ->where('r.is_delete', 0)
+    ->where('p.is_delete', 0)
+    ->where('pr.is_delete', 0)
             ->first();
 
         if (!$rev) {
@@ -181,6 +231,7 @@ class UploadController extends Controller
     public function getKpiStats(): JsonResponse
     {
         $kpiStats = DB::table('doc_package_revisions')
+        ->where('r.is_delete', 0)
             ->select(
                 DB::raw('COUNT(*) as totalupload'),
                 DB::raw("COUNT(CASE WHEN revision_status = 'draft' THEN 1 END) as totaldraft"),
@@ -225,6 +276,9 @@ class UploadController extends Controller
                 'pg.id as part_group_id','pg.code_part_group'
             )
             ->where('r.id', $revisionId)
+            ->where('r.is_delete', 0)
+    ->where('p.is_delete', 0)
+    ->where('pr.is_delete', 0)
             ->first();
 
         if (!$rev) {

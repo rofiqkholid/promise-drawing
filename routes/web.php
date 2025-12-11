@@ -36,6 +36,14 @@ Route::get('/infophp', function () {
     phpinfo();
 });
 
+// Check session status route for heartbeat
+Route::get('/check-session-status', function () {
+    return response()->json(['active' => Auth::check()]);
+})->name('session.check');
+// Route for displaying login page
+Route::get('/login', function () {
+    return view('authentication.login_page');
+})->name('login');
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -48,7 +56,6 @@ Route::get('/home', [AuthController::class, 'redirectToHomepage'])->middleware('
 
 Route::post('/login', [AuthController::class, 'login'])->name('login_post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
 
 Route::middleware(['auth'])->group(function () {
 
@@ -72,7 +79,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/file-manager.share', function () {
         return view('file_management.share');
     })->middleware(['auth', 'check.menu:29', 'log.seen:share'])->name('file-manager.share');
-    
+
     Route::get('/receipt', function () {
         return view('receipt.receipt');
     })->middleware(['auth', 'check.menu:30'])->name('receipt');
@@ -250,7 +257,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('master/userMaintenance', UserMaintenanceController::class)->only(['store', 'show', 'update', 'destroy'])->parameters(['userMaintenance' => 'user'])->names('userMaintenance');
     Route::get('userMaintenance/data', [UserMaintenanceController::class, 'data'])->name('userMaintenance.data');
     Route::get('/userMaintenance/departments/select2', [UserMaintenanceController::class, 'departmentsSelect2'])
-    ->name('userMaintenance.departments.select2');
+        ->name('userMaintenance.departments.select2');
 
     #End region
 
@@ -289,6 +296,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('master/products', ProductsController::class)->names('products')->except(['create', 'edit']);
     Route::get('/products/data', [ProductsController::class, 'data'])->name('products.data');
     Route::get('/products/get-models', [ProductsController::class, 'getModels'])->name('products.getModels');
+    Route::get('/products/get-pairable', [ProductsController::class, 'getPairableProducts'])->name('products.getPairable');
     Route::get('/products/get-customers', [ProductsController::class, 'getCustomers'])->name('products.getCustomers');
     #End region
 
@@ -389,7 +397,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/share/save', [ShareController::class, 'saveShare'])->name('share.save');
     Route::get('/share/{id}', [ShareController::class, 'showDetail'])->name('share.detail');
     Route::post('/share/files/{fileId}/blocks', [ShareController::class, 'updateBlocks'])
-    ->name('share.files.updateBlocks');
+        ->name('share.files.updateBlocks');
     #end region
 
 

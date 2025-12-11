@@ -38,6 +38,7 @@ class DrawingUploadController extends Controller
             ->first(['name']);
         $product = DB::table('products')
             ->where('id', $ids['product_id'])
+            ->where('is_delete', 0)
             ->first(['part_no']);
         $dg = DB::table('doctype_groups')
             ->where('id', $ids['doctype_group_id'])
@@ -578,7 +579,7 @@ class DrawingUploadController extends Controller
         $resultsPerPage = 10;
         $offset = ($page - 1) * $resultsPerPage;
 
-        $query = DB::table('products')->select('id', 'part_no')->where('model_id', $model_id);
+        $query = DB::table('products')->select('id', 'part_no', 'group_id', 'part_name')->where('model_id', $model_id)->where('is_delete', 0);
 
         if ($searchTerm) {
             $query->where('part_no', 'LIKE', '%' . $searchTerm . '%');
@@ -588,9 +589,21 @@ class DrawingUploadController extends Controller
         $groups = $query->orderBy('part_no', 'asc')->offset($offset)->limit($resultsPerPage)->get();
 
         $formattedGroups = $groups->map(function ($group) {
+            $partners = [];
+            if ($group->group_id) {
+                $partners = DB::table('products')
+                    ->where('group_id', $group->group_id)
+                    ->where('id', '!=', $group->id)
+                    ->where('is_delete', 0)
+                    ->pluck('part_no')
+                    ->toArray();
+            }
+
             return [
                 'id' => $group->id,
                 'text' => $group->part_no,
+                'is_paired' => !empty($partners),
+                'partner_names' => !empty($partners) ? implode(', ', $partners) : null
             ];
         });
 
@@ -718,7 +731,8 @@ class DrawingUploadController extends Controller
             ->where('model_id', $ids['model_id'])
             ->where('product_id', $ids['product_id'])
             ->where('doctype_group_id', $ids['doctype_group_id'])
-            ->where('part_group_id', $ids['part_group_id']);
+            ->where('part_group_id', $ids['part_group_id'])
+            ->where('is_delete', 0);
 
         if (!empty($ids['doctype_subcategory_id'])) {
             $q->where('doctype_subcategory_id', $ids['doctype_subcategory_id']);
@@ -761,6 +775,7 @@ class DrawingUploadController extends Controller
             'created_at' => $now,
             'updated_at' => $now,
             'is_active' => 1,
+            'is_delete' => 0,
         ];
 
         return DB::table('doc_packages')->insertGetId($insert);
@@ -887,7 +902,7 @@ class DrawingUploadController extends Controller
             'product_id' => $requestData['partNo'],
             'doctype_group_id' => $requestData['docType'],
             'part_group_id' => $requestData['partGroup'],
-        ]);
+        ])->where('is_delete', 0);
 
         if (!empty($requestData['category'])) {
             $q->where('doctype_subcategory_id', $requestData['category']);
@@ -971,6 +986,8 @@ class DrawingUploadController extends Controller
                 ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
                 ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
                 ->where('dp.id', $packageId)
+                ->where('dp.is_delete', 0)   // <---
+    ->where('p.is_delete', 0)
                 ->select(
                     'c.code as customer',
                     'm.name as model',
@@ -1041,7 +1058,7 @@ class DrawingUploadController extends Controller
         $revisionNo = $r->input('revision_no');
 
         if ($customer && $model && $partNo && $docType && $partGroup) {
-            $q = DB::table('doc_packages')->where('customer_id', (int) $customer)->where('model_id', (int) $model)->where('product_id', (int) $partNo)->where('doctype_group_id', (int) $docType)->where('part_group_id', (int) $partGroup);
+            $q = DB::table('doc_packages')->where('customer_id', (int) $customer)->where('model_id', (int) $model)->where('product_id', (int) $partNo)->where('doctype_group_id', (int) $docType)->where('part_group_id', (int) $partGroup)->where('is_delete', 0);
             if ($category) {
                 $q->where('doctype_subcategory_id', $category);
             } else {
@@ -1208,6 +1225,8 @@ class DrawingUploadController extends Controller
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
             ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
             ->where('dp.id', $dbPackage->package_id)
+            ->where('dp.is_delete', 0)   // <---
+    ->where('p.is_delete', 0)
             ->select(
                 'c.code as customer',
                 'm.name as model',
@@ -1302,6 +1321,8 @@ class DrawingUploadController extends Controller
                 ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
                 ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
                 ->where('dp.id', $revision->package_id)
+                ->where('dp.is_delete', 0)   // <---
+    ->where('p.is_delete', 0)
                 ->select(
                     'c.code as customer',
                     'm.name as model',
@@ -1345,9 +1366,18 @@ class DrawingUploadController extends Controller
                 ->count();
 
             if ($remainingRevisions === 0) {
-                DB::table('doc_packages')->where('id', $revision->package_id)->delete();
-                Log::info("Package deleted (last revision was draft)", ['package_id' => $revision->package_id]);
-            }
+    DB::table('doc_packages')
+        ->where('id', $revision->package_id)
+        ->update([
+            'is_delete' => 1,
+            'updated_at' => now(),
+        ]);
+
+    Log::info("Package soft-deleted (last revision was draft)", [
+        'package_id' => $revision->package_id
+    ]);
+}
+
 
             if (Storage::disk($this->disk)->exists($revisionPath)) {
                 Storage::disk($this->disk)->deleteDirectory($revisionPath);

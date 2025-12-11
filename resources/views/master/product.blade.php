@@ -28,6 +28,7 @@
                         <th scope="col" class="px-6 py-3 sorting" data-column="status">Status</th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="part_no">Part No</th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="part_name">Part Name</th>
+                        <th scope="col" class="px-6 py-3 text-center">Group</th>
                         <th scope="col" class="px-6 py-3 text-center">Action</th>
                     </tr>
                 </thead>
@@ -79,6 +80,22 @@
                     <p id="add-part_name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
                 </div>
 
+                <div class="mb-4">
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="add_has_pair" class="sr-only peer">
+                        <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                        <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Link to Partner Product</span>
+                    </label>
+                </div>
+
+                <div class="mb-4 hidden" id="add_partner_container">
+                    <label for="add_partner_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Select Partner</label>
+                    <select name="partner_id" id="add_partner_id" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">Search Product...</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Search by Part No or Name (must be same Customer/Model generally)</p>
+                </div>
+
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 w-full">Cancel</button>
                     <button type="submit" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center w-full">Save</button>
@@ -90,7 +107,7 @@
 
 {{-- Edit --}}
 <div id="editProductModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full bg-black bg-opacity-50">
-    <div class="relative p-4 w-full max-w-md h-full md:h-auto">
+    <div class="relative p-4 w-full max-w-2xl h-full md:h-auto">
         <div class="relative p-4 text-left bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
             <button type="button" class="close-modal-button text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
                 <i class="fa-solid fa-xmark w-5 h-5"></i><span class="sr-only">Close</span>
@@ -100,33 +117,98 @@
             <form id="editProductForm" method="POST">
                 @csrf @method('PUT')
 
-                <div class="mb-4">
-                    <label for="edit_customer_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Customer <span class="text-red-600">*</span></label>
-                    <select name="customer_id" id="edit_customer_id" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <option value="">Select Customer</option>
-                    </select>
-                    <p id="edit-customer_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
+                <div class="grid gap-6 mb-6 md:grid-cols-2">
+                    {{-- Left Column: Product Details --}}
+                    <div>
+                        <h4 class="text-base font-semibold text-gray-900 dark:text-white mb-4 border-b pb-2">Product Details</h4>
+                        
+                        <div class="mb-4">
+                            <label for="edit_customer_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Customer <span class="text-red-600">*</span></label>
+                            <select name="customer_id" id="edit_customer_id" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="">Select Customer</option>
+                            </select>
+                            <p id="edit-customer_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                        </div>
 
-                <div class="mb-4">
-                    <label for="edit_model_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model <span class="text-red-600">*</span></label>
-                    <select name="model_id" id="edit_model_id" required
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" disabled>
-                        <option value="">Select Model</option>
-                    </select>
-                    <p id="edit-model_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
+                        <div class="mb-4">
+                            <label for="edit_model_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Model <span class="text-red-600">*</span></label>
+                            <select name="model_id" id="edit_model_id" required
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" disabled>
+                                <option value="">Select Model</option>
+                            </select>
+                            <p id="edit-model_id-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                        </div>
 
-                <div class="mb-4">
-                    <label for="edit_part_no" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part No <span class="text-red-600">*</span></label>
-                    <input type="text" name="part_no" id="edit_part_no" maxlength="20" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
-                    <p id="edit-part_no-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
-                </div>
+                        <div class="mb-4">
+                            <label for="edit_part_no" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part No <span class="text-red-600">*</span></label>
+                            <input type="text" name="part_no" id="edit_part_no" maxlength="20" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                            <p id="edit-part_no-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                        </div>
 
-                <div class="mb-4">
-                    <label for="edit_part_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part Name <span class="text-red-600">*</span></label>
-                    <input type="text" name="part_name" id="edit_part_name" maxlength="50" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
-                    <p id="edit-part_name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                        <div class="mb-4">
+                            <label for="edit_part_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part Name <span class="text-red-600">*</span></label>
+                            <input type="text" name="part_name" id="edit_part_name" maxlength="50" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                            <p id="edit-part_name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                        </div>
+                    </div>
+
+                    {{-- Right Column: Pairing Info --}}
+                    <div>
+                        <h4 class="text-base font-semibold text-gray-900 dark:text-white mb-4 border-b pb-2">Pairing Configuration</h4>
+                        
+                        <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 h-auto">
+                            <div id="edit_current_partner_info" class="mb-6 hidden">
+                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Connection:</p>
+                                <div class="bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-600 shadow-sm">
+                                    <div class="flex items-start justify-between">
+                                        <div class="flex flex-wrap items-center" id="edit_partner_label_display">
+                                            {{-- Badges will be injected here --}}
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 flex justify-end">
+                                        <label class="inline-flex items-center cursor-pointer select-none">
+                                            <input type="checkbox" name="unlink_pair" value="1" class="sr-only peer">
+                                            <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
+                                            <span class="ml-2 text-xs font-medium text-gray-600 dark:text-gray-400 peer-checked:text-red-600 dark:peer-checked:text-red-400">Unlink Product</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+        
+                            <div id="edit_new_partner_section">
+                                <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Link to Partner</label>
+                                <select name="partner_id" id="edit_partner_id" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option value="">Search Product...</option>
+                                </select>
+                                <p class="mt-1 text-xs text-gray-500">Select an existing product to pair with.</p>
+                                
+                                <div class="relative flex py-4 items-center">
+                                    <div class="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
+                                    <span class="flex-shrink-0 mx-4 text-gray-400 text-xs uppercase">Or</span>
+                                    <div class="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
+                                </div>
+                                
+                                <div>
+                                    <label class="inline-flex items-center cursor-pointer mb-3">
+                                        <input type="checkbox" name="create_new_partner" id="edit_create_new_partner" value="1" class="sr-only peer">
+                                        <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                        <span class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Create New Partner</span>
+                                    </label>
+                                    
+                                    <div id="edit_create_partner_fields" class="hidden space-y-3 pt-2">
+                                         <div>
+                                            <input type="text" name="new_partner_part_no" id="new_partner_part_no" maxlength="20" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" placeholder="Part No">
+                                            <p id="edit-new_partner_part_no-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                                        </div>
+                                        <div>
+                                            <input type="text" name="new_partner_part_name" id="new_partner_part_name" maxlength="50" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" placeholder="Part Name">
+                                            <p id="edit-new_partner_part_name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex items-center space-x-4 mt-6">
@@ -306,10 +388,65 @@
         // Edit modal Select2
         initCustomerSelect2($('#edit_customer_id'), $('#editProductModal'));
         initModelSelect2($('#edit_model_id'), $('#editProductModal'), '#edit_customer_id');
-        $('#edit_customer_id').on('change', function() {
+        $('#edit_customer_id').off('change').on('change', function() {
             $('#edit_model_id').val(null).trigger('change');
             $('#edit_model_id').prop('disabled', !$(this).val());
         });
+
+        // Partner Select2 Helpers
+        function initPartnerSelect2($el, parentModal, customerSelector, excludeId = null) {
+            $el.select2({
+                dropdownParent: parentModal,
+                width: '100%',
+                placeholder: 'Search Product...',
+                minimumInputLength: 1,
+                ajax: {
+                    url: '{{ route("products.getPairable") }}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => ({
+                        q: params.term,
+                        customer_id: $(customerSelector).val(),
+                        exclude_id: excludeId
+                    }),
+                    processResults: data => ({
+                        results: data.results
+                    })
+                }
+            });
+        }
+
+        // Add Modal Partner Logic
+        initPartnerSelect2($('#add_partner_id'), $('#addProductModal'), '#customer_id');
+        
+        $('#add_has_pair').on('change', function() {
+            if ($(this).is(':checked')) {
+                $('#add_partner_container').removeClass('hidden');
+            } else {
+                $('#add_partner_container').addClass('hidden');
+                $('#add_partner_id').val(null).trigger('change');
+            }
+        });
+
+        // Edit Modal Partner Logic
+        $('#edit_create_new_partner').on('change', function() {
+            if ($(this).is(':checked')) {
+                // Disable the select2
+                $('#edit_partner_id').val(null).trigger('change').prop('disabled', true);
+                
+                // Show the new inputs
+                $('#edit_create_partner_fields').removeClass('hidden');
+            } else {
+                // Re-enable select2
+                $('#edit_partner_id').prop('disabled', false);
+                
+                // Hide new inputs and clear them
+                $('#edit_create_partner_fields').addClass('hidden');
+                $('#new_partner_part_no').val('');
+                $('#new_partner_part_name').val('');
+            }
+        });
+
 
         // ===== DataTable =====
         const table = $('#productsTable').DataTable({
@@ -351,6 +488,23 @@
                     orderable: false,
                     searchable: false,
                     className: 'text-center',
+                    render: (d) => {
+                        if (d.group_id) {
+                            return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                                        <i class="fa-solid fa-link mr-1"></i> Paired
+                                    </span>`;
+                        } else {
+                             return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                        Single
+                                    </span>`;
+                        }
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    className: 'text-center',
                     render: row => `
                 <button class="edit-button text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300" title="Edit" data-id="${row.id}">
                     <i class="fa-solid fa-pen-to-square fa-lg m-2"></i>
@@ -363,7 +517,7 @@
             pageLength: 10,
             lengthMenu: [10, 25, 50],
             order: [
-                [2, 'asc']
+                [0, 'desc']
             ],
             language: {
                 emptyTable: '<div class="text-gray-500 dark:text-gray-400">No products found.</div>'
@@ -423,6 +577,11 @@
                         this.reset();
                         $('#customer_id').val(null).trigger('change');
                         $('#model_id').val(null).trigger('change').prop('disabled', true);
+                        
+                        // Reset Partner fields
+                        $('#add_has_pair').prop('checked', false).trigger('change');
+                        $('#add_partner_id').val(null).trigger('change');
+
                         toast('success', 'Success', 'Product added');
                     } else {
                         toast('error', 'Failed', res.message || 'Failed to create');
@@ -461,6 +620,40 @@
                     setSelect2Value($('#edit_model_id'), data.model_id, data.model_label || '');
 
                     showModal(editModal);
+
+                    // Setup Partner Select2 with exclude ID
+                    // Destroy first to reset with new exclude_id
+                    if ($('#edit_partner_id').data('select2')) {
+                        $('#edit_partner_id').select2('destroy');
+                    }
+                    initPartnerSelect2($('#edit_partner_id'), $('#editProductModal'), '#edit_customer_id', id);
+
+                    // Handle display of current partner
+                    if (data.group_id && data.partner_label && Array.isArray(data.partner_label)) {
+                        $('#edit_current_partner_info').removeClass('hidden');
+                        
+                        let badgesHtml = '';
+                        data.partner_label.forEach(p => {
+                            badgesHtml += `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 mr-1 mb-1">
+                                <i class="fa-solid fa-cube mr-1"></i> ${p.text}
+                            </span>`;
+                        });
+                        
+                        $('#edit_partner_label_display').html(badgesHtml).removeClass('text-sm font-medium'); // clear old text styling and use html
+                        
+                        // Reset unlink checkbox
+                        $('input[name="unlink_pair"]').prop('checked', false);
+                    } else if (data.group_id && data.partner_label) {
+                         // Fallback for string (legacy)
+                         $('#edit_current_partner_info').removeClass('hidden');
+                         $('#edit_partner_label_display').text(data.partner_label);
+                    } else {
+                        $('#edit_current_partner_info').addClass('hidden');
+                        $('#edit_partner_label_display').empty();
+                    }
+                    
+                    // Clear new partner selection
+                    $('#edit_partner_id').val(null).trigger('change');
                 },
                 error: (xhr) => {
                     toast('error', 'Error', xhr.responseJSON?.message || 'Failed to load product');

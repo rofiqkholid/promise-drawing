@@ -354,6 +354,18 @@ class ExportController extends Controller
                 $q->where('c.code', 'like', "%{$searchValue}%")         // Customer
                     ->orWhere('m.name', 'like', "%{$searchValue}%")     // Model
                     ->orWhere('p.part_no', 'like', "%{$searchValue}%")  // Part No
+                    // Search in Partners (Grouped Products)
+                    ->orWhereExists(function ($sq) use ($searchValue) {
+                        $sq->select(DB::raw(1))
+                           ->from('products as pp')
+                           ->whereNotNull('pp.group_id')
+                           ->whereColumn('pp.group_id', 'p.group_id')
+                           ->whereColumn('pp.id', '!=', 'p.id')
+                           ->where(function($subSq) use ($searchValue) {
+                               $subSq->where('pp.part_no', 'like', "%{$searchValue}%")
+                                     ->orWhere('pp.part_name', 'like', "%{$searchValue}%");
+                           });
+                    })
                     ->orWhere('dsc.name', 'like', "%{$searchValue}%")   // Category
                     ->orWhere('pg.code_part_group', 'like', "%{$searchValue}%") // Part Group
                     ->orWhere('dpr.ecn_no', 'like', "%{$searchValue}%")
@@ -378,6 +390,8 @@ class ExportController extends Controller
             'c.code as customer',
             'm.name as model',
             'p.part_no',
+            'p.id as product_id',
+            'p.group_id',
             'dpr.revision_no',
             'crl.label as revision_label_name',
             'dpr.ecn_no',
@@ -393,6 +407,25 @@ class ExportController extends Controller
             ->get()
             ->map(function ($row) {
                 $row->id = str_replace('=', '-', encrypt($row->id));
+                
+                // Add partner info to part_no display
+                if (!empty($row->group_id)) {
+                     $partners = DB::table('products')
+                         ->where('group_id', $row->group_id)
+                         ->where('id', '!=', $row->product_id)
+                         ->pluck('part_no')
+                         ->toArray();
+                     
+                     if (!empty($partners)) {
+                         $badges = array_map(function($p) {
+                             return "<span class='badge badge-info ms-1' style='font-size: 0.7em;'><i class='fa-solid fa-link me-1'></i>{$p}</span>";
+                         }, $partners);
+                         
+                         // Note: Font Awesome classes might need adjustment based on frontend
+                         $row->part_no .= '<br><div class="mt-1">' . implode('', $badges) . '</div>';
+                     }
+                }
+                
                 return $row;
             });
 
@@ -552,6 +585,7 @@ class ExportController extends Controller
             ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
         $detail = [
+            'note' => $revision->note ?? null,
             'metadata' => [
                 'customer' => $package->customer,
                 'model'    => $package->model,
@@ -562,6 +596,7 @@ class ExportController extends Controller
                 'doc_type' => $package->doctype_group,
                 'category' => $package->doctype_subcategory,
                 'part_group' => $package->part_group,
+                'linked_partners' => $this->getLinkedPartners($package->part_no),
             ],
             'status'       => 'Approved',
             'files'        => $files,
@@ -730,6 +765,7 @@ class ExportController extends Controller
             ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
         $detail = [
+            'note' => $revision->note ?? null,
             'metadata' => [
                 'customer' => $package->customer,
                 'model'    => $package->model,
@@ -740,6 +776,7 @@ class ExportController extends Controller
                 'doc_type' => $package->doctype_group,
                 'category' => $package->doctype_subcategory,
                 'part_group' => $package->part_group,
+                'linked_partners' => $this->getLinkedPartners($package->part_no),
             ],
             'status'       => 'Approved',
             'files' => $files,
@@ -1614,5 +1651,19 @@ class ExportController extends Controller
         if (!$this->userHasAnyRole($user, ['ENG'])) {
             abort(403, 'Access denied to feasibility package.');
         }
+    }
+
+    private function getLinkedPartners($partNo)
+    {
+        $product = DB::table('products')->where('part_no', $partNo)->first();
+        if (!$product || !$product->group_id) {
+            return [];
+        }
+
+        return DB::table('products')
+            ->where('group_id', $product->group_id)
+            ->where('id', '!=', $product->id)
+            ->pluck('part_no')
+            ->toArray();
     }
 }

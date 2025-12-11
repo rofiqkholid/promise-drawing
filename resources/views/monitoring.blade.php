@@ -978,8 +978,8 @@
                                             return {
                                                 text: label,
                                                 fillStyle: bgColor,
-                                                strokeStyle: bgColor,  
-                                                lineWidth: 0, 
+                                                strokeStyle: bgColor,
+                                                lineWidth: 0,
                                                 hidden: !chart.getDataVisibility(i),
                                                 index: i,
                                                 fontColor: textColor,
@@ -999,7 +999,18 @@
                             bodyFont: {
                                 size: 14
                             },
+                            boxWidth: 14,
+                            boxHeight: 14,
                             callbacks: {
+                                labelColor: function(context) {
+                                    return {
+                                        borderColor: 'transparent',
+                                        backgroundColor: context.dataset.backgroundColor[context.dataIndex],
+                                        borderWidth: 0, 
+                                        borderRadius: 0,
+                                        pointStyle: 'rect' 
+                                    };
+                                },
                                 label: function(context) {
                                     let label = context.label || '';
                                     if (label) label += ': ';
