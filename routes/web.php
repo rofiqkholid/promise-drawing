@@ -60,7 +60,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth'])->group(function () {
 
 
-    Route::get('/monitoring', function () {
+    Route::get('/', function () {
         return view('monitoring');
     })->middleware(['auth', 'check.menu:1'])->name('monitoring');
 
