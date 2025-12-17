@@ -434,8 +434,7 @@ class DashboardController extends Controller
                 'model_name',
                 'part_group',
                 'project_status',
-                // 2. Gunakan RAW untuk menjumlahkan (SUM) data
-                DB::raw('SUM(CAST(plan_count AS FLOAT)) as plan_count'),
+                'plan_count',
                 DB::raw('SUM(CAST(actual_count AS FLOAT)) as actual_count')
             );
 
