@@ -426,7 +426,6 @@ class DashboardController extends Controller
 
     public function getUploadMonitoringData(Request $request)
     {
-        // 1. Mulai Query
         $query = DB::connection('sqlsrv')
             ->table('UploadActual')
             ->select(
@@ -434,12 +433,14 @@ class DashboardController extends Controller
                 'model_name',
                 'part_group',
                 'project_status',
-                'plan_count',
+                // PERUBAHAN DISINI:
+                // Gunakan MAX untuk plan_count (agar nilai tetap 30, tidak dijumlah 30+30+...)
+                DB::raw('MAX(CAST(plan_count AS FLOAT)) as plan_count'),
+                // Gunakan SUM untuk actual_count (agar nilai diakumulasi 1+2+...)
                 DB::raw('SUM(CAST(actual_count AS FLOAT)) as actual_count')
             );
 
-        // 3. Filter Tanggal (Range: Start - End)
-        // Agar bisa select tanggal 1/12 - 5/12 atau 1/12 - 31/12
+        // Filter Tanggal (Range)
         if ($request->filled('date_start')) {
             $query->whereDate('created_at', '>=', $request->date_start);
         }
@@ -465,8 +466,7 @@ class DashboardController extends Controller
             $query->whereIn('part_group', $request->part_group);
         }
 
-        // 4. GROUP BY (Wajib ada agar data tidak double)
-        // Semua kolom di SELECT yang bukan SUM wajib masuk sini
+        // GROUP BY Wajib (tanpa created_at)
         $query->groupBy(
             'customer_name',
             'model_name',
@@ -474,8 +474,7 @@ class DashboardController extends Controller
             'project_status'
         );
 
-        // 5. Sorting
-        // Karena kita sudah menjumlahkan, sort berdasarkan hasil sum
+        // Sorting
         $sortBy = $request->input('sort_by', 'plan');
         $orderColumn = $sortBy === 'actual' ? 'actual_count' : 'plan_count';
         $query->orderBy($orderColumn, 'desc');
@@ -484,16 +483,15 @@ class DashboardController extends Controller
 
         $results = $query->get();
 
-        // 6. Mapping Data (Persentase & Formatting)
+        // Mapping Data
         $results = $results->map(function ($item) {
             $plan = floatval($item->plan_count);
             $actual = floatval($item->actual_count);
 
-            // Menghindari division by zero
+            // Hitung persentase dari Total Actual dibagi Target Plan (MAX tadi)
             $percentage = $plan > 0 ? ($actual / $plan) * 100 : 0;
             $item->percentage = number_format($percentage, 1);
 
-            // Mapping Status
             if ($item->project_status === 'Feasibility Study') {
                 $item->project_status = 'FS';
             } elseif ($item->project_status === 'Project') {
