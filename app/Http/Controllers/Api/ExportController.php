@@ -284,6 +284,7 @@ class ExportController extends Controller
 
         $columnMap = [
             'Package Info' => 'c.code',
+            'Revision Note' => 'dpr.note',
             'Revision' => 'dpr.revision_no',
             'ecn_no' => 'dpr.ecn_no',
             'doctype_group' => 'dtg.name',
@@ -370,6 +371,9 @@ class ExportController extends Controller
                     ->orWhere('pg.code_part_group', 'like', "%{$searchValue}%") // Part Group
                     ->orWhere('dpr.ecn_no', 'like', "%{$searchValue}%")
                     ->orWhere('dpr.revision_no', 'like', "%{$searchValue}%")
+                    ->orWhere('dpr.note', 'like', "%{$searchValue}%")
+
+
 
                     ->orWhereExists(function ($subQuery) use ($searchValue) {
                         $subQuery->select(DB::raw(1))
@@ -392,6 +396,7 @@ class ExportController extends Controller
             'p.part_no',
             'p.id as product_id',
             'p.group_id',
+            'dpr.note',
             'dpr.revision_no',
             'crl.label as revision_label_name',
             'dpr.ecn_no',
@@ -493,6 +498,8 @@ class ExportController extends Controller
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
             ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+            ->leftJoin('users as u', 'dp.created_by', '=', 'u.id')
+            ->leftJoin('departments as dept', 'u.id_dept', '=', 'dept.id')
             ->where('dp.id', $revision->package_id)
             ->select(
                 'c.code as customer',
@@ -500,7 +507,8 @@ class ExportController extends Controller
                 'p.part_no',
                 'dtg.name as doctype_group',
                 'dsc.name as doctype_subcategory',
-                'pg.code_part_group as part_group'
+                'pg.code_part_group as part_group',
+                'dept.is_eng'
             )
             ->first();
 
@@ -613,17 +621,18 @@ class ExportController extends Controller
 
         // Mendapatkan kode departemen pengguna
         $userDeptCode = null;
+        $isEngineering = false;
+
         if (Auth::check() && Auth::user()->id_dept) {
             $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
             $userDeptCode = $dept->code ?? null;
+            $isEngineering = (bool) ($dept->is_eng ?? false);
         }
 
         $userName = null;
         if (Auth::check()) {
             $userName = Auth::user()->name ?? null;
         }
-
-        $isEngineering = ($userDeptCode === 'ENG');
 
         return view('file_management.file_export_detail', [
             'exportId' => $originalEncryptedId,
@@ -666,6 +675,7 @@ class ExportController extends Controller
         // CEK AKSES
         $this->abortIfNoAccessToPackage((int)$revision->package_id);
 
+        // Metadata Paket
         $package = DB::table('doc_packages as dp')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
@@ -673,6 +683,8 @@ class ExportController extends Controller
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
             ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+            ->leftJoin('users as u', 'dp.created_by', '=', 'u.id')
+            ->leftJoin('departments as dept', 'u.id_dept', '=', 'dept.id')
             ->where('dp.id', $revision->package_id)
             ->select(
                 'c.code as customer',
@@ -680,7 +692,8 @@ class ExportController extends Controller
                 'p.part_no',
                 'dtg.name as doctype_group',
                 'dsc.name as doctype_subcategory',
-                'pg.code_part_group as part_group'
+                'pg.code_part_group as part_group',
+                'dept.is_eng'
             )
             ->first();
 
@@ -797,11 +810,13 @@ class ExportController extends Controller
         }
 
         $userDeptCode = null;
+        $isEngineering = false;
+
         if (Auth::check() && Auth::user()->id_dept) {
             $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
             $userDeptCode = $dept->code ?? null;
+            $isEngineering = (bool) ($dept->is_eng ?? false);
         }
-        $isEngineering = ($userDeptCode === 'ENG');
 
         return response()->json([
             'success'  => true,
@@ -1372,8 +1387,11 @@ class ExportController extends Controller
             $userDeptCode = $dept->code ?? null;
         }
 
-        // Tentukan Warna: Jika ENG -> Blue, Selain itu -> Gray
-        $isEng = ($userDeptCode === 'ENG');
+        $isEng = false;
+        if ($userDeptCode) {
+            $isEng = (bool) DB::table('departments')->where('code', $userDeptCode)->value('is_eng');
+        }
+
         $originalStampColor = $isEng ? 'blue' : 'gray';
 
         try {

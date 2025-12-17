@@ -148,6 +148,7 @@
           <tr>
             <th class="py-3 px-4 text-left ...">No</th>
             <th class="py-3 px-4 text-left ...">Package Info</th>
+            <th class="py-3 px-4 text-left ...">Revision Note</th>
             <th class="py-3 px-4 text-left ...">Current Revision</th>
             <th class="py-3 px-4 text-left ...">ECN No</th>
             <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Doc Group</th>
@@ -299,7 +300,7 @@ $(function () {
                 $staticIcon.removeClass('opacity-0');
             }
       },
-      order: [[ 7, 'desc' ]],
+      order: [[ 8, 'desc' ]],
 
       createdRow: function(row, data, dataIndex) {
         $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer');
@@ -316,6 +317,22 @@ $(function () {
                 return `${row.customer} - ${row.model} - ${row.part_no}`;
             }
         },
+        {
+    data: 'note',
+    name: 'revision_note',
+    searchable: true,
+    orderable: false,
+    render: function (data) {
+        if (!data) {
+            return '<span class="italic text-gray-400">No note</span>';
+        }
+        return `
+            <div class="max-w-xs truncate text-gray-800 dark:text-gray-300" title="${data}">
+                ${data}
+            </div>
+        `;
+    }
+},
         {
             data: null,
             name: 'Revision',

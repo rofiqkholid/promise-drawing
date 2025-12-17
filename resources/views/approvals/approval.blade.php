@@ -280,6 +280,8 @@
 
 @push('scripts')
 <script>
+  const FILTER_STORAGE_KEY = 'approval_filters';
+
   function detectTheme() {
     const isDark = document.documentElement.classList.contains('dark');
     return isDark ? {
@@ -493,6 +495,39 @@
         project_status: valOrAll($('#project-status').val()),
       };
     }
+    function saveFilters() {
+  const filters = {
+    customer: $('#customer').val(),
+    model: $('#model').val(),
+    doc_type: $('#document-type').val(),
+    category: $('#category').val(),
+    status: $('#status').val(),
+    project_status: $('#project-status').val(),
+  };
+  sessionStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
+}
+
+function restoreFilters() {
+  const raw = sessionStorage.getItem(FILTER_STORAGE_KEY);
+  if (!raw) return;
+
+  const f = JSON.parse(raw);
+
+  function setSelect2($el, val) {
+    if (!val || val === 'All') return;
+    const opt = new Option(val, val, true, true);
+    $el.append(opt).trigger('change');
+  }
+
+  setSelect2($('#customer'), f.customer);
+  setSelect2($('#model'), f.model);
+  setSelect2($('#document-type'), f.doc_type);
+  setSelect2($('#category'), f.category);
+  setSelect2($('#status'), f.status);
+  setSelect2($('#project-status'), f.project_status);
+}
+
+
 
 
     function loadKPI() {
@@ -530,6 +565,20 @@
       const mm = pad(d.getMinutes());
       return `${dd}-${MM}-${yyyy} ${HH}:${mm}`;
     }
+
+    function fmtDateOnly(v) {
+  if (!v) return '';
+  const d = new Date(v);
+  if (isNaN(d)) return v;
+
+  const pad = n => n.toString().padStart(2, '0');
+  const dd = pad(d.getDate());
+  const MM = pad(d.getMonth() + 1);
+  const yyyy = d.getFullYear();
+
+  return `${dd}-${MM}-${yyyy}`;
+}
+
 
     function openShareModal(rowData) {
       shareRevisionId = rowData.id;
@@ -654,7 +703,7 @@
             data: 'receipt_date',
             name: 'dpr.receipt_date',
             render: function(v) {
-              const text = fmtDate(v);
+              const text = fmtDateOnly(v);
               return `<span title="${v || ''}">${text}</span>`;
             }
           },
@@ -753,22 +802,25 @@
     function bindHandlers() {
       // perubahan filter -> reload & refresh KPI
       $('#customer, #model, #document-type, #category, #status, #project-status').on('change', function() {
+        saveFilters();
         if (table) table.ajax.reload(null, true);
         loadKPI();
       });
 
       // tombol reset
       $('#btnResetFilters').on('click', function() {
-        resetSelect2ToAll($('#customer'));
-        resetSelect2ToAll($('#model'));
-        resetSelect2ToAll($('#document-type'));
-        resetSelect2ToAll($('#category'));
-        resetSelect2ToAll($('#status'));
-        resetSelect2ToAll($('#project-status'));
+  sessionStorage.removeItem(FILTER_STORAGE_KEY);
 
-        if (table) table.ajax.reload(null, true);
-        loadKPI();
-      });
+  resetSelect2ToAll($('#customer'));
+  resetSelect2ToAll($('#model'));
+  resetSelect2ToAll($('#document-type'));
+  resetSelect2ToAll($('#category'));
+  resetSelect2ToAll($('#status'));
+  resetSelect2ToAll($('#project-status'));
+
+  if (table) table.ajax.reload(null, true);
+  loadKPI();
+});
 
       $('#btnDownloadSummary').on('click', function() {
         const f = getCurrentFilters();
@@ -898,6 +950,7 @@
 
 
     // start
+    restoreFilters(); 
     initTable();
     loadKPI();
     bindHandlers();

@@ -164,33 +164,35 @@
           <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full" x-text="`${(pkg.files['{{$category}}']?.length || 0)} files`"></span>
           <i class="fa-solid fa-chevron-down text-gray-400 dark:text-gray-500 transition-transform" :class="{'rotate-180': openSections.includes('{{$category}}')}"></i>
         </button>
-        <div x-show="openSections.includes('{{$category}}')" x-collapse class="p-2 max-h-72 overflow-y-auto">
-          <template x-for="file in (pkg.files['{{$category}}'] || [])" :key="file.name">
-            <div
-              @click="selectFile(file)"
-              :class="{'bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-medium': selectedFile && selectedFile.name === file.name}"
-              class="flex items-center p-3 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-              role="button" tabindex="0" @keydown.enter="selectFile(file)">
+        <div x-show="openSections.includes('{{$category}}')" x-collapse>
+          <div class="p-2 max-h-72 overflow-y-auto">
+            <template x-for="file in (pkg.files['{{$category}}'] || [])" :key="file.name">
+              <div
+                @click="selectFile(file)"
+                :class="{'bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-medium': selectedFile && selectedFile.name === file.name}"
+                class="flex items-center p-3 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                role="button" tabindex="0" @keydown.enter="selectFile(file)">
 
-              <!-- ICON DARI MASTER FILE EXTENSION -->
-              <template x-if="file.icon_src">
-                <img :src="file.icon_src"
-                  alt=""
-                  class="w-5 h-5 mr-3 object-contain" />
-              </template>
+                <!-- ICON DARI MASTER FILE EXTENSION -->
+                <template x-if="file.icon_src">
+                  <img :src="file.icon_src"
+                    alt=""
+                    class="w-5 h-5 mr-3 object-contain" />
+                </template>
 
-              <!-- FALLBACK KALAU TIDAK ADA ICON DI MASTER -->
-              <template x-if="!file.icon_src">
-                <i class="fa-solid fa-file text-gray-500 dark:text-gray-400 mr-3 transition-colors group-hover:text-blue-500"></i>
-              </template>
+                <!-- FALLBACK KALAU TIDAK ADA ICON DI MASTER -->
+                <template x-if="!file.icon_src">
+                  <i class="fa-solid fa-file text-gray-500 dark:text-gray-400 mr-3 transition-colors group-hover:text-blue-500"></i>
+                </template>
 
-              <span class="text-sm text-gray-900 dark:text-gray-100 truncate" x-text="file.name"></span>
-            </div>
-          </template>
+                <span class="text-sm text-gray-900 dark:text-gray-100 truncate" x-text="file.name" :title="file.name"></span>
+              </div>
+            </template>
 
-          <template x-if="(pkg.files['{{$category}}'] || []).length === 0">
-            <p class="p-3 text-center text-xs text-gray-500 dark:text-gray-400">No files available.</p>
-          </template>
+            <template x-if="(pkg.files['{{$category}}'] || []).length === 0">
+              <p class="p-3 text-center text-xs text-gray-500 dark:text-gray-400">No files available.</p>
+            </template>
+          </div>
         </div>
       </div>
       @php } @endphp
@@ -525,20 +527,26 @@
                     <!-- STAMP ORIGINAL -->
                     <div x-show="pkg.stamp" class="absolute"
                       :class="stampPositionClass('original')">
-                      <div :class="stampOriginClass('original')"
-                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                      <div :class="[
+                          stampOriginClass('original'),
+                          isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
+                        ]"
+                        class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
                         <div
-                          class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
+                          class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
+                          :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
                           <span x-text="stampTopLine('original')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
                           <span
-                            class="text-xs font-extrabold uppercase text-blue-700 px-2"
+                            class="text-xs font-extrabold uppercase px-2"
+                            :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
                             x-text="stampCenterOriginal()"></span>
                         </div>
                         <div
-                          class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
+                          class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
+                          :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
                           <span x-text="stampBottomLine('original')"></span>
                         </div>
                       </div>
@@ -609,20 +617,26 @@
                     <!-- STAMP ORIGINAL -->
                     <div x-show="pkg.stamp" class="absolute"
                       :class="stampPositionClass('original')">
-                      <div :class="stampOriginClass('original')"
-                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                      <div :class="[
+                          stampOriginClass('original'),
+                          isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
+                        ]"
+                        class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
                         <div
-                          class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
+                          class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
+                          :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
                           <span x-text="stampTopLine('original')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
                           <span
-                            class="text-xs font-extrabold uppercase text-blue-700 px-2"
+                            class="text-xs font-extrabold uppercase px-2"
+                            :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
                             x-text="stampCenterOriginal()"></span>
                         </div>
                         <div
-                          class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
+                          class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
+                          :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
                           <span x-text="stampBottomLine('original')"></span>
                         </div>
                       </div>
@@ -701,20 +715,26 @@
                     <!-- STAMP ORIGINAL -->
                     <div x-show="pkg.stamp" class="absolute"
                       :class="stampPositionClass('original')">
-                      <div :class="stampOriginClass('original')"
-                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                      <div :class="[
+                          stampOriginClass('original'),
+                          isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
+                        ]"
+                        class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                         style="transform: scale(0.45);">
                         <div
-                          class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
+                          class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
+                          :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
                           <span x-text="stampTopLine('original')"></span>
                         </div>
                         <div class="flex-1 flex items-center justify-center">
                           <span
-                            class="text-xs font-extrabold uppercase text-blue-700 px-2"
+                            class="text-xs font-extrabold uppercase px-2"
+                            :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
                             x-text="stampCenterOriginal()"></span>
                         </div>
                         <div
-                          class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
+                          class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
+                          :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
                           <span x-text="stampBottomLine('original')"></span>
                         </div>
                       </div>
@@ -788,70 +808,88 @@
                 @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
                 <div class="relative w-full h-full flex items-center justify-center"
                   :style="imageTransformStyle()">
-                  <canvas x-ref="hpglCanvas" class="pointer-events-none select-none"></canvas>
+                  
+                  <!-- Wrapper with relative positioning for stamps -->
+                  <div class="relative inline-block">
+                    <canvas x-ref="hpglCanvas" class="pointer-events-none select-none"></canvas>
 
-                  <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
-                    <div :class="stampOriginClass('original')"
-                      class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                      style="transform: scale(0.45);">
-                      <div
-                        class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
-                        <span x-text="stampTopLine('original')"></span>
-                      </div>
-                      <div class="flex-1 flex items-center justify-center">
-                        <span
-                          class="text-xs font-extrabold uppercase text-blue-700 px-2"
-                          x-text="stampCenterOriginal()"></span>
-                      </div>
-                      <div
-                        class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
-                        <span x-text="stampBottomLine('original')"></span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
-                    <div :class="stampOriginClass('copy')"
-                      class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                      style="transform: scale(0.45);">
-                      <div
-                        class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
-                        <span x-text="stampTopLine('copy')"></span>
-                      </div>
-                      <div class="flex-1 flex items-center justify-center">
-                        <span
-                          class="text-xs font-extrabold uppercase text-blue-700 px-2"
-                          x-text="stampCenterCopy()"></span>
-                      </div>
-                      <div
-                        class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
-                        <span x-text="stampBottomLine('copy')"></span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div x-show="pkg.stamp?.is_obsolete"
-                    class="absolute"
-                    :class="stampPositionClass('obsolete')">
-                    <div
-                      :class="stampOriginClass('obsolete')"
-                      class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                      style="transform: scale(0.45);">
-                      <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
-                        <span x-text="stampTopLine('obsolete')"></span>
-                      </div>
-
-                      <div class="flex-1 flex items-center justify-center">
-                        <span class="text-xs font-extrabold text-red-700 uppercase px-2"
-                          x-text="stampCenterObsolete()"></span>
-                      </div>
-
-                      <div class="w-full border-t-2 border-red-600 flex font-semibold tracking-tight">
-                        <div class="flex-1 border-r-2 border-red-600 text-center py-0.5 px-2">
-                          Name : <span x-text="obsoleteName()"></span>
+                    <!-- Stamp overlay positioned exactly over the drawing area -->
+                    <div class="absolute pointer-events-none"
+                         :style="`left: ${hpglDrawingBounds.left}px; top: ${hpglDrawingBounds.top}px; width: ${hpglDrawingBounds.width}px; height: ${hpglDrawingBounds.height}px;`">
+                      
+                      <!-- STAMP ORIGINAL -->
+                      <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
+                        <div :class="[
+                            stampOriginClass('original'), 
+                            isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
+                          ]"
+                          class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                          style="transform: scale(0.45);">
+                          <div
+                            class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
+                            :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
+                            <span x-text="stampTopLine('original')"></span>
+                          </div>
+                          <div class="flex-1 flex items-center justify-center">
+                            <span
+                              class="text-xs font-extrabold uppercase px-2"
+                              :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
+                              x-text="stampCenterOriginal()"></span>
+                          </div>
+                          <div
+                            class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
+                            :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
+                            <span x-text="stampBottomLine('original')"></span>
+                          </div>
                         </div>
-                        <div class="flex-1 text-center py-0.5 px-2">
-                          Dept. : <span x-text="obsoleteDept()"></span>
+                      </div>
+
+                      <!-- STAMP COPY -->
+                      <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
+                        <div :class="stampOriginClass('copy')"
+                          class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                          style="transform: scale(0.45);">
+                          <div
+                            class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
+                            <span x-text="stampTopLine('copy')"></span>
+                          </div>
+                          <div class="flex-1 flex items-center justify-center">
+                            <span
+                              class="text-xs font-extrabold uppercase text-blue-700 px-2"
+                              x-text="stampCenterCopy()"></span>
+                          </div>
+                          <div
+                            class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
+                            <span x-text="stampBottomLine('copy')"></span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- STAMP OBSOLETE -->
+                      <div x-show="pkg.stamp?.is_obsolete"
+                        class="absolute"
+                        :class="stampPositionClass('obsolete')">
+                        <div
+                          :class="stampOriginClass('obsolete')"
+                          class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                          style="transform: scale(0.45);">
+                          <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
+                            <span x-text="stampTopLine('obsolete')"></span>
+                          </div>
+
+                          <div class="flex-1 flex items-center justify-center">
+                            <span class="text-xs font-extrabold text-red-700 uppercase px-2"
+                              x-text="stampCenterObsolete()"></span>
+                          </div>
+
+                          <div class="w-full border-t-2 border-red-600 flex font-semibold tracking-tight">
+                            <div class="flex-1 border-r-2 border-red-600 text-center py-0.5 px-2">
+                              Name : <span x-text="obsoleteName()"></span>
+                            </div>
+                            <div class="flex-1 text-center py-0.5 px-2">
+                              Dept. : <span x-text="obsoleteDept()"></span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1103,8 +1141,15 @@
 </div>
 
 <style>
+  /* Alpine collapse animation - smooth accordion */
   [x-collapse] {
-    @apply overflow-hidden transition-all duration-300 ease-in-out;
+    overflow: hidden !important;
+    transition: height 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+    will-change: height;
+  }
+  
+  [x-collapse].x-collapse-transitioning {
+    overflow: hidden !important;
   }
 
   .preview-area {
@@ -1126,9 +1171,6 @@
 @push('scripts')
 <!-- SweetAlert -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<!-- Alpine collapse (untuk x-collapse) -->
-<script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 
 <!-- UTIF.js untuk render TIFF (v2 classic API) -->
 <script src="https://unpkg.com/utif@2.0.1/UTIF.js"></script>
@@ -1281,6 +1323,7 @@
       stampFormats: JSON.parse(`@json($stampFormats)`),
       userDeptCode: JSON.parse(`@json($userDeptCode ?? null)`),
       userName: JSON.parse(`@json($userName ?? null)`),
+      isEngineering: JSON.parse(`@json($isEngineering ?? false)`),
 
       // URL template update posisi stamp per file
       updateStampUrlTemplate: `{{ route('approvals.files.updateStamp', ['fileId' => '__FILE_ID__']) }}`,
@@ -1328,6 +1371,8 @@
       // HPGL state
       hpglLoading: false,
       hpglError: '',
+      // HPGL drawing bounds in CSS pixels (for stamp positioning)
+      hpglDrawingBounds: { left: 0, top: 0, width: 0, height: 0 },
 
       // PDF state
       pdfLoading: false,
@@ -1341,7 +1386,7 @@
       // ZOOM + PAN untuk image / TIFF / HPGL / PDF
       imageZoom: 1,
       minZoom: 0.5,
-      maxZoom: 4,
+      maxZoom: 5,
       zoomStep: 0.25,
       panX: 0,
       panY: 0,
@@ -1409,7 +1454,7 @@
           case 5:
             return 'top-right';
           default:
-            return 'bottom-right';
+            return 'bottom-left'; // Default to bottom-left for original stamp
         }
       },
 
@@ -1847,7 +1892,9 @@
       },
 
       stampPositionClass(which = 'original') {
-        const pos = (this.stampConfig && this.stampConfig[which]) || this.stampDefaults[which];
+        // Use stampConfig if it has a valid (non-null) value, otherwise use stampDefaults
+        const configVal = this.stampConfig && this.stampConfig[which];
+        const pos = configVal || this.stampDefaults[which] || 'bottom-left';
 
         switch (pos) {
           case 'top-left':
@@ -1861,12 +1908,18 @@
           case 'bottom-center':
             return 'bottom-4 left-1/2 -translate-x-1/2';
           case 'bottom-right':
-          default:
             return 'bottom-4 right-4';
+          default:
+            // Fallback based on stamp type
+            if (which === 'original') return 'bottom-4 left-4';
+            if (which === 'copy') return 'bottom-4 left-1/2 -translate-x-1/2';
+            if (which === 'obsolete') return 'bottom-4 right-4';
+            return 'bottom-4 left-4';
         }
       },
       stampOriginClass(which = 'original') {
-        const pos = (this.stampConfig && this.stampConfig[which]) || this.stampDefaults[which];
+        const configVal = this.stampConfig && this.stampConfig[which];
+        const pos = configVal || this.stampDefaults[which] || 'bottom-left';
 
         switch (pos) {
           case 'top-left':
@@ -1880,8 +1933,13 @@
           case 'bottom-center':
             return 'origin-bottom';
           case 'bottom-right':
-          default:
             return 'origin-bottom-right';
+          default:
+            // Fallback based on stamp type
+            if (which === 'original') return 'origin-bottom-left';
+            if (which === 'copy') return 'origin-bottom';
+            if (which === 'obsolete') return 'origin-bottom-right';
+            return 'origin-bottom-left';
         }
       },
 
@@ -2057,7 +2115,6 @@
       },
 
 
-      /* ===== HPGL renderer ===== */
       async renderHpgl(url) {
         if (!url) return;
 
@@ -2072,115 +2129,293 @@
           if (!resp.ok) throw new Error('Failed to fetch HPGL file');
           const text = await resp.text();
 
-          const commands = text.replace(/\s+/g, '').split(';');
+          // Standardize separators: replace newlines with ';', then split by ';'
+          let commands = text.replace(/[\r\n]+/g, ';').split(';');
+          
+          // Many HPGL files concatenate commands without semicolons
+          // Use iterative parsing to avoid stack overflow on very long strings
+          const expandedCommands = [];
+          for (const cmd of commands) {
+              if (!cmd || !cmd.trim()) continue;
+              
+              // For very long commands, split manually
+              if (cmd.length > 10000) {
+                  let i = 0;
+                  while (i < cmd.length) {
+                      // Find next opcode (2 uppercase letters)
+                      if (i + 1 < cmd.length && /[A-Z]/.test(cmd[i]) && /[A-Z]/.test(cmd[i+1])) {
+                          const opcode = cmd.substring(i, i+2);
+                          i += 2;
+                          
+                          // Collect arguments until next opcode or end
+                          let args = '';
+                          while (i < cmd.length && !(/[A-Z]/.test(cmd[i]) && i+1 < cmd.length && /[A-Z]/.test(cmd[i+1]))) {
+                              args += cmd[i];
+                              i++;
+                          }
+                          
+                          expandedCommands.push(opcode + args);
+                      } else {
+                          i++;
+                      }
+                  }
+              } else {
+                  // For shorter commands, use regex (faster)
+                  const parts = cmd.match(/[A-Z]{2}[^A-Z]*/g);
+                  if (parts && parts.length > 1) {
+                      expandedCommands.push(...parts);
+                  } else {
+                      expandedCommands.push(cmd);
+                  }
+              }
+          }
+          
+          commands = expandedCommands;
 
           let penDown = false;
-          let x = 0,
-            y = 0;
+          let isRelative = false; 
+          let x = 0, y = 0;
           const segments = [];
-          let minX = Infinity,
-            minY = Infinity,
-            maxX = -Infinity,
-            maxY = -Infinity;
+          const unknownCommands = new Set();
 
-          const addPoint = (nx, ny) => {
-            if (penDown) {
-              segments.push({
-                x1: x,
-                y1: y,
-                x2: nx,
-                y2: ny
-              });
-              minX = Math.min(minX, x, nx);
-              minY = Math.min(minY, y, ny);
-              maxX = Math.max(maxX, x, nx);
-              maxY = Math.max(maxY, y, ny);
-            } else {
-              minX = Math.min(minX, nx);
-              minY = Math.min(minY, ny);
-              maxX = Math.max(maxX, nx);
-              maxY = Math.max(maxY, ny);
-            }
-            x = nx;
-            y = ny;
+          // Parse coordinates
+          const parseCoords = (str) => {
+              if (!str || !str.trim()) return [];
+              return str.replace(/,/g, ' ').trim().split(/\s+/).map(Number).filter(v => !isNaN(v));
+          };
+
+          const addSegment = (x1, y1, x2, y2) => {
+              segments.push({ x1, y1, x2, y2 });
+          };
+
+          // Helper to approximate arc/circle with line segments
+          const addArc = (cx, cy, radius, startAngle, endAngle, steps = 32) => {
+              const angleStep = (endAngle - startAngle) / steps;
+              let prevX = cx + radius * Math.cos(startAngle * Math.PI / 180);
+              let prevY = cy + radius * Math.sin(startAngle * Math.PI / 180);
+              
+              for (let i = 1; i <= steps; i++) {
+                  const angle = startAngle + angleStep * i;
+                  const nx = cx + radius * Math.cos(angle * Math.PI / 180);
+                  const ny = cy + radius * Math.sin(angle * Math.PI / 180);
+                  addSegment(prevX, prevY, nx, ny);
+                  prevX = nx;
+                  prevY = ny;
+              }
           };
 
           for (const raw of commands) {
-            if (!raw) continue;
-            const cmd = raw.toUpperCase();
+            if (!raw || !raw.trim()) continue;
+            
+            const cmd = raw.trim().toUpperCase();
             const op = cmd.slice(0, 2);
             const argsStr = cmd.slice(2);
+            const coords = parseCoords(argsStr);
 
-            const parseCoords = () => {
-              if (!argsStr) return [];
-              return argsStr.split(',').map(Number).filter(v => !isNaN(v));
+            const processMove = () => {
+                for (let i = 0; i < coords.length; i += 2) {
+                    if (i + 1 >= coords.length) break;
+                    let nx = coords[i];
+                    let ny = coords[i+1];
+
+                    if (isRelative) {
+                        nx = x + nx;
+                        ny = y + ny;
+                    }
+
+                    if (penDown) {
+                        addSegment(x, y, nx, ny);
+                    }
+                    
+                    x = nx;
+                    y = ny;
+                }
             };
 
             if (op === 'IN') {
-              penDown = false;
-              x = 0;
-              y = 0;
-            } else if (op === 'SP') {} else if (op === 'PU') {
-              penDown = false;
-              const coords = parseCoords();
-              for (let i = 0; i < coords.length; i += 2) {
-                addPoint(coords[i], coords[i + 1]);
-              }
+                penDown = false;
+                isRelative = false;
+                x = 0; y = 0;
+            } else if (op === 'SP') {
+                // Select Pen - ignore
+            } else if (op === 'PU') {
+                penDown = false;
+                if (coords.length > 0) processMove();
             } else if (op === 'PD') {
-              penDown = true;
-              const coords = parseCoords();
-              for (let i = 0; i < coords.length; i += 2) {
-                addPoint(coords[i], coords[i + 1]);
-              }
+                penDown = true;
+                if (coords.length > 0) processMove();
             } else if (op === 'PA') {
-              const coords = parseCoords();
-              for (let i = 0; i < coords.length; i += 2) {
-                addPoint(coords[i], coords[i + 1]);
-              }
+                isRelative = false;
+                if (coords.length > 0) processMove();
+            } else if (op === 'PR') {
+                isRelative = true;
+                if (coords.length > 0) processMove();
+            } else if (op === 'CI') {
+                // Circle: CI radius[,chord_angle]
+                if (coords.length >= 1) {
+                    const radius = Math.abs(coords[0]);
+                    addArc(x, y, radius, 0, 360, 64);
+                }
+            } else if (op === 'AA') {
+                // Arc Absolute: AA cx,cy,angle[,chord_angle]
+                if (coords.length >= 3) {
+                    const cx = coords[0];
+                    const cy = coords[1];
+                    const sweepAngle = coords[2];
+                    const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+                    const startAngle = Math.atan2(y - cy, x - cx) * 180 / Math.PI;
+                    const endAngle = startAngle + sweepAngle;
+                    
+                    addArc(cx, cy, radius, startAngle, endAngle, Math.max(16, Math.abs(sweepAngle) / 5));
+                    
+                    // Update position to end of arc
+                    x = cx + radius * Math.cos(endAngle * Math.PI / 180);
+                    y = cy + radius * Math.sin(endAngle * Math.PI / 180);
+                }
+            } else if (op === 'AR') {
+                // Arc Relative: AR dx,dy,angle[,chord_angle]
+                if (coords.length >= 3) {
+                    const cx = x + coords[0];
+                    const cy = y + coords[1];
+                    const sweepAngle = coords[2];
+                    const radius = Math.sqrt(coords[0] ** 2 + coords[1] ** 2);
+                    const startAngle = Math.atan2(-coords[1], -coords[0]) * 180 / Math.PI;
+                    const endAngle = startAngle + sweepAngle;
+                    
+                    addArc(cx, cy, radius, startAngle, endAngle, Math.max(16, Math.abs(sweepAngle) / 5));
+                    
+                    x = cx + radius * Math.cos(endAngle * Math.PI / 180);
+                    y = cy + radius * Math.sin(endAngle * Math.PI / 180);
+                }
+            } else if (op === 'LT') {
+                // Line Type - ignore for now (solid, dashed, dotted, etc.)
+                // We'll render everything as solid lines
+            } else if (op === 'PG') {
+                // Page Feed - ignore, continue rendering on same canvas
+                // Multi-page HPGL files will be rendered as one continuous drawing
+            } else {
+                // Track unknown commands
+                if (op && op.length === 2 && /^[A-Z]{2}$/.test(op)) {
+                    unknownCommands.add(op);
+                }
             }
           }
 
-          await this.$nextTick();
+          if (!segments.length) {
+              throw new Error('No drawable content found in HPGL file');
+          }
+
+          // Calculate bounds ONLY from drawn segments to ensure tight fit
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          for (const s of segments) {
+              if (s.x1 < minX) minX = s.x1;
+              if (s.x2 < minX) minX = s.x2;
+              if (s.x1 > maxX) maxX = s.x1;
+              if (s.x2 > maxX) maxX = s.x2;
+              
+              if (s.y1 < minY) minY = s.y1;
+              if (s.y2 < minY) minY = s.y2;
+              if (s.y1 > maxY) maxY = s.y1;
+              if (s.y2 > maxY) maxY = s.y2;
+          }
+
+          // Prevent race condition
+          const currentHpglName = this.findFileByNameInsensitive(this.extOf(url))?.name;
+          const selectedName = this.selectedFile?.name;
+          if (this.selectedFile && currentHpglName && selectedName && 
+              this.extOf(currentHpglName) === this.extOf(selectedName) && 
+              currentHpglName !== selectedName) {
+             return;
+          }
+
+          // Reset Render State
+          this.hpglError = '';
+          this.imageZoom = 1; // Always start at 100% (value)
+          this.panX = 0;
+          this.panY = 0;
+
+          await this.$nextTick(); 
+          await new Promise(r => setTimeout(r, 50));
+
           const canvas = this.$refs.hpglCanvas;
           if (!canvas) throw new Error('HPGL canvas not found');
 
-          const parent = canvas.parentElement;
-          const w = parent.clientWidth || 800;
-          const h = parent.clientHeight || 500;
+          // Find the correct viewport container (the one with h-[70vh])
+          // We need to traverse up from canvas to find a container with actual dimensions
+          let container = canvas.parentElement;
+          while (container && (container.clientWidth < 400 || container.clientHeight < 300)) {
+            container = container.parentElement;
+            if (!container || container === document.body) break;
+          }
+          
+          // Use the found container, or fallback to reasonable defaults based on viewport
+          const viewW = Math.max(container?.clientWidth || window.innerWidth * 0.6, 800);
+          const viewH = Math.max(container?.clientHeight || window.innerHeight * 0.7, 500);
 
+          // Setup Canvas with High Resolution for Zooming
           const dpr = window.devicePixelRatio || 1;
-          const logicalScale = 4 * dpr;
-          canvas.width = w * logicalScale;
-          canvas.height = h * logicalScale;
-          canvas.style.width = w + 'px';
-          canvas.style.height = h + 'px';
+          const zoomCapability = 5; // Support up to 5x zoom without blur
+          const totalScale = dpr * zoomCapability;
+          
+          canvas.width = viewW * totalScale;
+          canvas.height = viewH * totalScale;
+          canvas.style.width = viewW + 'px';
+          canvas.style.height = viewH + 'px';
 
           const ctx = canvas.getContext('2d');
-          ctx.setTransform(logicalScale, 0, 0, logicalScale, 0, 0);
-          ctx.clearRect(0, 0, w, h);
-          ctx.lineWidth = 1 / logicalScale;
-          ctx.lineCap = 'round';
-          ctx.lineJoin = 'round';
-          ctx.strokeStyle = '#000';
+          
+          // Reset and configure context
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          // Scale drawing context to match local coordinate system (CSS pixels)
+          ctx.scale(totalScale, totalScale);
 
-          if (!segments.length) return;
+          // Line thickness configuration
+          // 0.2 CSS pixels for thin crisp lines like real plotter output
+          ctx.lineWidth = 0.2; 
+          ctx.lineCap = 'butt';
+          ctx.lineJoin = 'miter';
+          ctx.strokeStyle = '#000'; 
 
           const dx = maxX - minX || 1;
           const dy = maxY - minY || 1;
-          const scale = 0.9 * Math.min(w / dx, h / dy);
-          const offX = w - dx * scale - minX * scale;
-          const offY = h + minY * scale;
+
+          // Calculate scale to fit viewport (98% fit)
+          const scale = 0.98 * Math.min(viewW / dx, viewH / dy);
+          
+          // Center the drawing
+          const transX = viewW / 2 - (minX + dx / 2) * scale;
+          const transY = viewH / 2 + (minY + dy / 2) * scale;
 
           ctx.beginPath();
+          // Render segments
           for (const s of segments) {
-            const sx = s.x1 * scale + offX;
-            const sy = -s.y1 * scale + offY;
-            const ex = s.x2 * scale + offX;
-            const ey = -s.y2 * scale + offY;
+            const sx = s.x1 * scale + transX;
+            const sy = -s.y1 * scale + transY;
+            const ex = s.x2 * scale + transX;
+            const ey = -s.y2 * scale + transY;
+            
             ctx.moveTo(sx, sy);
             ctx.lineTo(ex, ey);
           }
           ctx.stroke();
+          
+          // Calculate actual drawing bounds in CSS pixels for stamp positioning
+          // The drawing occupies a specific region within the canvas
+          const drawingLeft = minX * scale + transX;
+          const drawingTop = -maxY * scale + transY; // Y is inverted
+          const drawingWidth = dx * scale;
+          const drawingHeight = dy * scale;
+          
+          this.hpglDrawingBounds = {
+            left: drawingLeft,
+            top: drawingTop,
+            width: drawingWidth,
+            height: drawingHeight
+          };
+
+          this.viewportVersion++;
         } catch (e) {
           console.error(e);
           this.hpglError = e?.message || 'Failed to render HPGL';

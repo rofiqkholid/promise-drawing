@@ -17,5 +17,6 @@ class Departments extends Model
     protected $fillable = [
         'name',
         'code',
+        'is_eng',
     ];
 }

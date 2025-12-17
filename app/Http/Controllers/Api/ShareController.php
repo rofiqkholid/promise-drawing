@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\Models;
 use App\Models\DocTypeSubCategories;
@@ -674,6 +675,7 @@ class ShareController extends Controller
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
             ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
             ->leftJoin('users as u', 'u.id', '=', 'dp.created_by')
+            ->leftJoin('departments as dept', 'u.id_dept', '=', 'dept.id')
             ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
             ->where('dp.id', $revision->package_id)
             ->select(
@@ -685,7 +687,8 @@ class ShareController extends Controller
                 'pg.code_part_group as part_group',
                 'dp.created_at',
                 'u.name as uploader_name',
-                'ps.name as project_status'
+                'ps.name as project_status',
+                'dept.is_eng'
             )
             ->first();
 
@@ -842,11 +845,22 @@ class ShareController extends Controller
             ->orderBy('id')
             ->get();
 
+        $isEngineering = false;
+        
+        // Cek user login (jika ada) untuk menentukan warna stamp
+        if (Auth::check() && Auth::user()->id_dept) {
+            $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
+            if ($dept) {
+                $isEngineering = (bool) ($dept->is_eng ?? false);
+            }
+        }
+
         return view('file_management.share_detail', [
             'shareId'       => $hash,
             'revisionId'    => $revisionId,
             'detail'        => $detail,
             'stampFormats'  => $stampFormats,
+            'isEngineering' => $isEngineering,
         ]);
     }
 

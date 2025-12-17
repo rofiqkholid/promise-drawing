@@ -50,6 +50,7 @@ class DepartmentsController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:50',
             'code' => 'required|string|max:10|unique:departments,code',
+            'is_eng' => 'required|boolean',
         ], [
             'code.unique' => 'The code has already been taken.',
         ]);
@@ -74,6 +75,7 @@ class DepartmentsController extends Controller
                 'max:10',
                 Rule::unique('departments')->ignore($department->id),
             ],
+            'is_eng' => 'required|boolean',
         ], [
             'code.unique' => 'The code has already been taken.',
         ]);

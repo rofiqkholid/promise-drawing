@@ -503,9 +503,10 @@ class ApprovalController extends Controller
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
             ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
             ->leftJoin('users as u', 'u.id', '=', 'dp.created_by')
+            ->leftJoin('departments as dept', 'u.id_dept', '=', 'dept.id')
             ->where('dp.id', $revision->package_id)
             ->where('dp.is_delete', 0)  
-    ->where('p.is_delete', 0) 
+            ->where('p.is_delete', 0) 
             ->select(
                 'c.code as customer',
                 'm.name as model',
@@ -514,7 +515,8 @@ class ApprovalController extends Controller
                 'u.name as uploader_name',
                 'dtg.name as doc_type',
                 'dsc.name as category',
-                'pg.code_part_group as part_group'
+                'pg.code_part_group as part_group',
+                'dept.is_eng'
             )
             ->first();
 
@@ -648,9 +650,12 @@ class ApprovalController extends Controller
 
        
         $userDeptCode = null;
+        $isEngineering = false;
+
         if (Auth::check() && Auth::user()->id_dept) {
             $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
             $userDeptCode = $dept->code ?? null;
+            $isEngineering = (bool) ($dept->is_eng ?? false);
         }
 
         $userName = null;
@@ -664,6 +669,7 @@ class ApprovalController extends Controller
             'stampFormats'  => $stampFormats,
             'userDeptCode'  => $userDeptCode,
             'userName'      => $userName,
+            'isEngineering' => $isEngineering,
         ]);
     }
 

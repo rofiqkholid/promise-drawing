@@ -31,6 +31,9 @@
                         <th scope="col" class="px-6 py-3 sorting" data-column="code">
                             Department Code
                         </th>
+                        <th scope="col" class="px-6 py-3 sorting" data-column="is_eng">
+                            Is Engineering
+                        </th>
                         <th scope="col" class="px-6 py-3 text-center">Action</th>
                     </tr>
                 </thead>
@@ -60,6 +63,12 @@
                     <label for="code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Department Code <span class="text-red-600">*</span></label>
                     <input type="text" name="code" id="code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. ENG" required>
                     <p id="add-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div class="flex items-start mb-4">
+                    <div class="flex items-center h-5">
+                        <input id="is_eng" name="is_eng" type="checkbox" value="1" class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800">
+                    </div>
+                    <label for="is_eng" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Is Engineering</label>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 w-full">
@@ -95,6 +104,12 @@
                     <label for="edit_code" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Department Code <span class="text-red-600">*</span></label>
                     <input type="text" name="code" id="edit_code" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     <p id="edit-code-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+                <div class="flex items-start mb-4">
+                    <div class="flex items-center h-5">
+                        <input id="edit_is_eng" name="is_eng" type="checkbox" value="1" class="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800">
+                    </div>
+                    <label for="edit_is_eng" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Is Engineering</label>
                 </div>
                 <div class="flex items-center space-x-4 mt-6">
                     <button type="button" class="close-modal-button text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 w-full">
@@ -163,6 +178,15 @@
                 {
                     data: 'code',
                     name: 'code'
+                },
+                {
+                    data: 'is_eng',
+                    name: 'is_eng',
+                    render: function(data, type, row) {
+                        return parseInt(data) === 1 
+                            ? '<span class="px-2 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-full dark:bg-green-800 dark:text-green-100">Yes</span>' 
+                            : '<span class="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full dark:bg-gray-700 dark:text-gray-300">No</span>';
+                    }
                 },
                 {
                     data: null,
@@ -372,13 +396,16 @@
             nameError.addClass('hidden');
             codeError.addClass('hidden');
 
+            const formData = new FormData(this);
+            formData.set('is_eng', $('#is_eng').is(':checked') ? 1 : 0);
+
             $.ajax({
                 url: $form.attr('action'),
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken
                 },
-                data: new FormData(this),
+                data: formData,
                 processData: false,
                 contentType: false,
                 beforeSend: function() {
@@ -427,6 +454,7 @@
                 success: function(data) {
                     $('#edit_name').val(data.name);
                     $('#edit_code').val(data.code);
+                    $('#edit_is_eng').prop('checked', data.is_eng == 1);
                     $('#editDepartmentForm').attr('action', `/master/departments/${id}`);
                     showModal(editModal);
                 },
@@ -449,13 +477,16 @@
             nameError.addClass('hidden');
             codeError.addClass('hidden');
 
+            const formData = new FormData(this);
+            formData.set('is_eng', $('#edit_is_eng').is(':checked') ? 1 : 0);
+
             $.ajax({
                 url: $form.attr('action'),
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken
                 },
-                data: new FormData(this),
+                data: formData,
                 processData: false,
                 contentType: false,
                 beforeSend: function() {
