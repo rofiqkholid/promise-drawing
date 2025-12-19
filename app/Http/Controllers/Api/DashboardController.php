@@ -433,14 +433,10 @@ class DashboardController extends Controller
                 'model_name',
                 'part_group',
                 'project_status',
-                // PERUBAHAN DISINI:
-                // Gunakan MAX untuk plan_count (agar nilai tetap 30, tidak dijumlah 30+30+...)
                 DB::raw('MAX(CAST(plan_count AS FLOAT)) as plan_count'),
-                // Gunakan SUM untuk actual_count (agar nilai diakumulasi 1+2+...)
                 DB::raw('SUM(CAST(actual_count AS FLOAT)) as actual_count')
             );
 
-        // Filter Tanggal (Range)
         if ($request->filled('date_start')) {
             $query->whereDate('created_at', '>=', $request->date_start);
         }
@@ -449,7 +445,6 @@ class DashboardController extends Controller
             $query->whereDate('created_at', '<=', $request->date_end);
         }
 
-        // Filter Lainnya
         if ($request->filled('project_status') && $request->project_status !== 'ALL') {
             $query->where('project_status', $request->project_status);
         }
@@ -466,7 +461,6 @@ class DashboardController extends Controller
             $query->whereIn('part_group', $request->part_group);
         }
 
-        // GROUP BY Wajib (tanpa created_at)
         $query->groupBy(
             'customer_name',
             'model_name',
@@ -474,7 +468,6 @@ class DashboardController extends Controller
             'project_status'
         );
 
-        // Sorting
         $sortBy = $request->input('sort_by', 'plan');
         $orderColumn = $sortBy === 'actual' ? 'actual_count' : 'plan_count';
         $query->orderBy($orderColumn, 'desc');
@@ -483,12 +476,10 @@ class DashboardController extends Controller
 
         $results = $query->get();
 
-        // Mapping Data
         $results = $results->map(function ($item) {
             $plan = floatval($item->plan_count);
             $actual = floatval($item->actual_count);
 
-            // Hitung persentase dari Total Actual dibagi Target Plan (MAX tadi)
             $percentage = $plan > 0 ? ($actual / $plan) * 100 : 0;
             $item->percentage = number_format($percentage, 1);
 

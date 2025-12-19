@@ -40,7 +40,8 @@
     x-init="init()"
     @mousemove.window="onPan($event)"
     @mouseup.window="endPan()"
-    @mouseleave.window="endPan()">
+    @mouseleave.window="endPan()"
+    @keydown.window="handleShortcut($event)">
 
     <div x-show="isLoadingRevision" x-transition
         class="absolute inset-0 bg-gray-100/75 dark:bg-gray-900/75 z-10 flex items-center justify-center rounded-lg">
@@ -91,7 +92,7 @@
                                 <p class="text-sm text-gray-900 dark:text-gray-100 w-full mt-1" x-text="metaLine()"
                                     :title="metaLine()">
                                 </p>
-                                
+
                                 <template x-if="pkg.metadata?.linked_partners && pkg.metadata.linked_partners.length > 0">
                                     <div class="w-full mt-1 flex items-center gap-2">
                                         <span class="text-xs text-gray-500 italic">Also applicable for:</span>
@@ -279,7 +280,7 @@
                                                 class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
 
                                                 :class="[
-                                                    stampOriginClass('original'), 
+                                                    stampOriginClass('original'),
                                                     isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
                                                 ]"
 
@@ -355,7 +356,7 @@
                                 </div>
                                 <div x-show="imgLoading"
                                     x-transition.opacity
-                                    class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-gray-900/90 z-50 backdrop-blur-sm">
+                                    class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-gray-900/90 z-10 backdrop-blur-sm">
                                     <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600 mb-2"></i>
                                     <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Loading Image...</span>
                                 </div>
@@ -377,7 +378,7 @@
                                                 class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
 
                                                 :class="[
-                                                    stampOriginClass('original'), 
+                                                    stampOriginClass('original'),
                                                     isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
                                                 ]"
 
@@ -454,7 +455,7 @@
 
                                 <div x-show="pdfLoading"
                                     x-transition.opacity
-                                    class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-gray-900/90 z-20 backdrop-blur-sm">
+                                    class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-gray-900/90 z-10 backdrop-blur-sm">
                                     <i class="fa-solid fa-circle-notch fa-spin text-3xl text-red-600 mb-2"></i>
                                     <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Rendering PDF...</span>
                                 </div>
@@ -477,7 +478,7 @@
                                                 class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
 
                                                 :class="[
-                                                    stampOriginClass('original'), 
+                                                    stampOriginClass('original'),
                                                     isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
                                                 ]"
 
@@ -554,7 +555,7 @@
 
                                 <div x-show="tifLoading"
                                     x-transition.opacity
-                                    class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-gray-900/90 z-20 backdrop-blur-sm">
+                                    class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-gray-900/90 z-10 backdrop-blur-sm">
                                     <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600 mb-2"></i>
                                     <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Processing TIFF...</span>
                                 </div>
@@ -569,7 +570,7 @@
                                 @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
                                 <div class="relative w-full h-full flex items-center justify-center"
                                     :style="imageTransformStyle()">
-                                    
+
                                     <!-- Wrapper with relative positioning for stamps -->
                                     <div class="relative inline-block">
                                         <canvas x-ref="hpglCanvas" class="pointer-events-none select-none"></canvas>
@@ -577,11 +578,11 @@
                                         <!-- Stamp overlay positioned exactly over the drawing area -->
                                         <div class="absolute pointer-events-none"
                                              :style="`left: ${hpglDrawingBounds.left}px; top: ${hpglDrawingBounds.top}px; width: ${hpglDrawingBounds.width}px; height: ${hpglDrawingBounds.height}px;`">
-                                          
+
                                             <!-- STAMP ORIGINAL -->
                                             <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
                                                 <div :class="[
-                                                        stampOriginClass('original'), 
+                                                        stampOriginClass('original'),
                                                         isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
                                                     ]"
                                                     class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
@@ -660,7 +661,7 @@
 
                                 <div x-show="hpglLoading"
                                     x-transition.opacity
-                                    class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-gray-900/90 z-20 backdrop-blur-sm">
+                                    class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 dark:bg-gray-900/90 z-10 backdrop-blur-sm">
                                     <i class="fa-solid fa-circle-notch fa-spin text-3xl text-green-600 mb-2"></i>
                                     <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Rendering Plotter File...</span>
                                 </div>
@@ -678,7 +679,7 @@
                             <div class="flex-1 relative border border-gray-200 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-900 overflow-hidden group">
 
                                 <button @click="isPartListOpen = !isPartListOpen"
-                                    x-show="cadPartsList.length > 0"
+                                    x-show="cadPartsList.length > 0 && !iges.loading"
                                     class="absolute top-3 left-3 z-30 px-3 py-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-md border border-gray-200 dark:border-gray-700 rounded text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 transition flex items-center gap-2">
                                     <i class="fa-solid" :class="isPartListOpen ? 'fa-xmark' : 'fa-list-tree'"></i>
                                     <span x-text="isPartListOpen ? 'Close List' : 'Part List'"></span>
@@ -693,7 +694,7 @@
                                     x-transition:leave="transition ease-in duration-150"
                                     x-transition:leave-start="opacity-100 translate-x-0"
                                     x-transition:leave-end="opacity-0 -translate-x-2"
-                                    class="absolute top-12 left-3 bottom-3 z-20 w-64 flex flex-col bg-white/95 dark:bg-gray-800/95 backdrop-blur-md shadow-xl border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                                    class="absolute top-12 left-3 bottom-3 z-50 w-64 flex flex-col bg-white/95 dark:bg-gray-800/95 backdrop-blur-md shadow-xl border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
 
                                     <div class="px-3 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-700/50 flex justify-between items-center flex-shrink-0">
                                         <span class="text-sm font-bold text-gray-800 dark:text-gray-100">Assembly Tree</span>
@@ -707,8 +708,8 @@
                                             <template x-for="part in cadPartsList" :key="part.uuid">
                                                 <li @click="highlightPart(part.uuid)"
                                                     class="cursor-pointer px-3 py-2 rounded text-xs flex items-center gap-2 truncate select-none transition-colors border border-transparent"
-                                                    :class="selectedPartUuid === part.uuid ? 
-                                                            'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-medium' : 
+                                                    :class="selectedPartUuid === part.uuid ?
+                                                            'bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-medium' :
                                                             'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50'">
                                                     <i class="fa-solid fa-cube text-[10px]"
                                                         :class="selectedPartUuid === part.uuid ? 'text-blue-500' : 'text-gray-400'"></i>
@@ -756,8 +757,113 @@
                                         </div>
                                     </div>
                                 </div>
+                                
+                                <!-- Measurement Toggle -->
+                                <!-- Measurement Visibility Toggle (Only when Active) -->
+                                <button @click="isMeasureListOpen = !isMeasureListOpen"
+                                    x-show="isMeasureActive && !iges.loading"
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 scale-90"
+                                    x-transition:enter-end="opacity-100 scale-100"
+                                    :title="isMeasureListOpen ? 'Hide Measurements' : 'Show Measurements'"
+                                    class="absolute top-3 right-14 z-30 px-3 py-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-md border border-gray-200 dark:border-gray-700 rounded text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 transition flex items-center gap-2">
+                                    <i class="fa-solid" :class="isMeasureListOpen ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    <span x-text="isMeasureListOpen ? 'Hide Info' : 'Show Info'"></span>
+                                    <span class="bg-gray-200 dark:bg-gray-600 text-[10px] px-1.5 rounded-full ml-1"
+                                        x-text="iges.measure.results.length" x-show="iges.measure.results.length > 0"></span>
+                                </button>
+
+                                <!-- Measurement List Panel -->
+                                <div x-show="isMeasureListOpen"
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 translate-x-2"
+                                    x-transition:enter-end="opacity-100 translate-x-0"
+                                    x-transition:leave="transition ease-in duration-150"
+                                    x-transition:leave-start="opacity-100 translate-x-0"
+                                    x-transition:leave-end="opacity-0 translate-x-2"
+                                    class="absolute top-12 right-3 z-50 w-64 flex flex-col bg-white/95 dark:bg-gray-800/95 backdrop-blur-md shadow-xl border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden max-h-[60vh]">
+
+                                    <div class="px-3 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-700/50 flex justify-between items-center flex-shrink-0">
+                                        <span class="text-sm font-bold text-gray-800 dark:text-gray-100">Measurements</span>
+                                        <button @click="clearMeasurements()" class="text-[10px] text-red-500 hover:underline">Clear All</button>
+                                    </div>
+
+                                    <div class="flex-1 overflow-y-auto p-1 custom-scrollbar min-h-0">
+                                        <template x-if="iges.measure.results.length === 0">
+                                            <div class="p-4 text-center text-gray-400 dark:text-gray-500 text-xs italic">
+                                                No measurements yet.<br>Select points to measure.
+                                            </div>
+                                        </template>
+                                        <ul class="space-y-1 p-1">
+                                            <template x-for="(res, idx) in iges.measure.results" :key="idx">
+                                                <li class="bg-white dark:bg-gray-900 p-2 rounded border border-gray-200 dark:border-gray-600 shadow-sm relative group hover:border-blue-300 dark:hover:border-blue-700 transition-colors">
+                                                    <button @click="deleteMeasurement(idx)" class="absolute top-1 right-1 text-gray-300 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <i class="fa-solid fa-times-circle text-xs"></i>
+                                                    </button>
+
+                                                    <div class="flex items-center gap-2 mb-1.5">
+                                                        <div class="w-5 h-5 rounded bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                                                            <i class="fa-solid text-[10px]"
+                                                               :class="{
+                                                                   'fa-ruler-horizontal': res.type === 'point',
+                                                                   'fa-minus': res.type === 'edge',
+                                                                   'fa-angle-left': res.type === 'angle',
+                                                                   'fa-circle-notch': res.type === 'radius',
+                                                                   'fa-vector-square': res.type === 'face'
+                                                               }"></i>
+                                                        </div>
+                                                        <span class="text-xs font-bold text-gray-700 dark:text-gray-200 uppercase" x-text="res.type"></span>
+                                                    </div>
+
+                                                    <div class="space-y-1 pl-1">
+                                                        <template x-if="res.distance !== undefined">
+                                                            <div class="flex justify-between items-baseline text-xs">
+                                                                <span class="text-gray-500">Dist:</span>
+                                                                <span class="font-mono font-bold text-blue-600 dark:text-blue-400" x-text="Number(res.distance).toFixed(2) + ' mm'"></span>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="res.angle !== undefined">
+                                                            <div class="flex justify-between items-baseline text-xs">
+                                                                <span class="text-gray-500">Angle:</span>
+                                                                <span class="font-mono font-bold text-purple-600 dark:text-purple-400" x-text="Number(res.angle).toFixed(2) + '°'"></span>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="res.radius !== undefined">
+                                                            <div class="flex justify-between items-baseline text-xs">
+                                                                <span class="text-gray-500">Radius:</span>
+                                                                <span class="font-mono font-bold text-green-600 dark:text-green-400" x-text="Number(res.radius).toFixed(2) + ' mm'"></span>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="res.diameter !== undefined">
+                                                            <div class="flex justify-between items-baseline text-xs">
+                                                                <span class="text-gray-500">Diameter:</span>
+                                                                <span class="font-mono font-bold text-teal-600 dark:text-teal-400" x-text="Number(res.diameter).toFixed(2) + ' mm'"></span>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="res.area !== undefined">
+                                                            <div class="flex justify-between items-baseline text-xs">
+                                                                <span class="text-gray-500">Area:</span>
+                                                                <span class="font-mono font-bold text-orange-600 dark:text-orange-400" x-text="Number(res.area).toFixed(2) + ' mm²'"></span>
+                                                            </div>
+                                                        </template>
+                                                        <template x-if="res.deltaX !== undefined">
+                                                            <div class="flex gap-1 pt-1 mt-1 border-t border-gray-100 dark:border-gray-700 text-[9px] font-mono justify-between">
+                                                                <span class="text-red-500 bg-red-50 dark:bg-red-900/20 rounded px-1">ΔX: <span x-text="Number(res.deltaX).toFixed(1)"></span></span>
+                                                                <span class="text-green-500 bg-green-50 dark:bg-green-900/20 rounded px-1">ΔY: <span x-text="Number(res.deltaY).toFixed(1)"></span></span>
+                                                                <span class="text-blue-500 bg-blue-50 dark:bg-blue-900/20 rounded px-1">ΔZ: <span x-text="Number(res.deltaZ).toFixed(1)"></span></span>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+
 
                                 <button @click="toggleFullscreen()" title="Toggle Fullscreen"
+                                    x-show="!iges.loading"
                                     class="absolute top-3 right-3 z-30 w-8 h-8 flex items-center justify-center bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-md border border-gray-200 dark:border-gray-700 rounded text-gray-600 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 transition">
                                     <i class="fa-solid" :class="isFullscreen ? 'fa-compress' : 'fa-expand'"></i>
                                 </button>
@@ -765,39 +871,82 @@
                                 <div x-ref="igesWrap" class="w-full h-full bg-black/5 cursor-grab active:cursor-grabbing">
                                 </div>
 
-                                <div x-show="iges.loading" class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 dark:bg-gray-900/80 z-50 backdrop-blur-sm">
+                                <div x-show="iges.loading" class="absolute inset-0 flex flex-col items-center justify-center bg-white/80 dark:bg-gray-900/80 z-10 backdrop-blur-sm">
                                     <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600 mb-2"></i>
                                     <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Processing CAD Geometry...</span>
                                 </div>
 
                                 <div x-show="iges.error" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-red-100 border border-red-300 text-red-700 rounded-md shadow-lg text-xs" x-text="iges.error"></div>
+
+                                <!-- Floating 3D Navigation Controls -->
+                                <div x-show="isCad(selectedFile?.name) && !iges.loading"
+                                    x-transition:enter="transition ease-out duration-300"
+                                    x-transition:enter-start="opacity-0 translate-x-4"
+                                    x-transition:enter-end="opacity-100 translate-x-0"
+                                    class="absolute bottom-36 right-6 flex flex-col items-center bg-white/40 dark:bg-gray-900/50 backdrop-blur-xl rounded-2xl border border-white/40 dark:border-gray-700/50 shadow-lg p-1 z-40">
+                                    
+                                    <button @click="zoom3d(1.25)" 
+                                        class="w-9 h-9 flex items-center justify-center rounded-xl text-gray-700 dark:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-800/50 hover:text-blue-600 transition-all active:scale-75"
+                                        title="Zoom In (+)">
+                                        <i class="fa-solid fa-plus text-sm"></i>
+                                    </button>
+                                    
+                                    <div class="w-6 h-px bg-gray-400/20 dark:bg-gray-600/30 my-1"></div>
+
+                                    <button @click="zoom3d(0.8)"
+                                        class="w-9 h-9 flex items-center justify-center rounded-xl text-gray-700 dark:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-800/50 hover:text-blue-600 transition-all active:scale-75"
+                                        title="Zoom Out (-)">
+                                        <i class="fa-solid fa-minus text-sm"></i>
+                                    </button>
+
+                                    <div class="w-6 h-px bg-gray-400/20 dark:bg-gray-600/30 my-1"></div>
+
+                                    <button @click="resetCamera3d()"
+                                        class="w-9 h-9 flex items-center justify-center rounded-xl text-gray-700 dark:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-800/50 hover:text-blue-600 transition-all active:scale-75"
+                                        title="Reset View (Home)">
+                                        <i class="fa-solid fa-house-chimney text-xs"></i>
+                                    </button>
+                                </div>
                             </div>
 
-                            <div class="mt-3 flex flex-wrap items-center justify-between gap-2 select-none"
-                                x-data="{ isViewMenuOpen: false, isMatMenuOpen: false }">
-                                <div class="flex items-center gap-2">
+                            <div class="absolute left-1/2 -translate-x-1/2 z-40 bg-white/40 dark:bg-gray-900/50 backdrop-blur-xl p-2 lg:p-3 rounded-2xl border border-white/40 dark:border-gray-700/50 shadow-lg min-w-[300px] transition-all duration-500 flex flex-wrap items-center justify-center gap-2 lg:gap-3 select-none origin-bottom"
+                                :class="isFullscreen ? 'scale-100 bottom-8' : 'scale-90 bottom-6'"
+                                x-data="{ isViewMenuOpen: false, isMatMenuOpen: false }"
+                                x-show="!iges.loading"
+                                x-transition:enter="transition ease-out duration-300"
+                                x-transition:enter-start="opacity-0 translate-y-4"
+                                x-transition:enter-end="opacity-100 translate-y-0">
 
-                                    <div class="inline-flex bg-gray-100 dark:bg-gray-700 p-1 rounded-lg border border-gray-200 dark:border-gray-600">
-                                        <button @click="setDisplayStyle('shaded')" class="px-2 py-1.5 text-[10px] font-semibold rounded transition-all"
-                                            :class="currentStyle === 'shaded' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200 dark:text-gray-300'">
-                                            Shaded
-                                        </button>
-                                        <button @click="setDisplayStyle('shaded-edges')" class="px-2 py-1.5 text-[10px] font-semibold rounded transition-all"
-                                            :class="currentStyle === 'shaded-edges' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200 dark:text-gray-300'">
-                                            Edges
-                                        </button>
-                                        <button @click="setDisplayStyle('wireframe')" class="px-2 py-1.5 text-[10px] font-semibold rounded transition-all"
-                                            :class="currentStyle === 'wireframe' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200 dark:text-gray-300'">
-                                            Wire
-                                        </button>
-                                    </div>
+                                <!-- Unified Tool Group -->
+                                <div class="flex flex-wrap items-center justify-center gap-2 lg:gap-3">
 
-                                    <div class="relative">
-                                        <button @click="isMatMenuOpen = !isMatMenuOpen" @click.outside="isMatMenuOpen = false" title="Change Material"
-                                            class="w-[34px] h-[34px] flex items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition shadow-sm"
-                                            :class="activeMaterial !== 'default' ? 'text-purple-600 border-purple-200 bg-purple-50' : 'text-gray-600 dark:text-gray-200'">
-                                            <i class="fa-solid fa-fill-drip"></i>
-                                        </button>
+                                    <!-- GROUP 1: Display Settings -->
+                                    <div class="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-2.5 py-1 lg:py-1.5 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                                        <span class="hidden lg:inline text-[9px] font-bold text-gray-400 uppercase tracking-wider px-1">Display</span>
+
+                                        <div class="inline-flex bg-white dark:bg-gray-700 p-0.5 rounded border border-gray-200 dark:border-gray-600">
+                                            <button @click="setDisplayStyle('shaded')" class="px-2 lg:px-2.5 py-1 text-[10px] lg:text-xs font-semibold rounded transition-all"
+                                                :class="currentStyle === 'shaded' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300'">
+                                                Shaded
+                                            </button>
+                                            <button @click="setDisplayStyle('shaded-edges')" class="px-2 lg:px-2.5 py-1 text-[10px] lg:text-xs font-semibold rounded transition-all"
+                                                :class="currentStyle === 'shaded-edges' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300'">
+                                                Edges
+                                            </button>
+                                            <button @click="setDisplayStyle('wireframe')" class="px-2 lg:px-2.5 py-1 text-[10px] lg:text-xs font-semibold rounded transition-all"
+                                                :class="currentStyle === 'wireframe' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300'">
+                                                Wire
+                                            </button>
+                                        </div>
+
+                                        <div class="h-6 lg:h-7 w-px bg-gray-300 dark:bg-gray-600"></div>
+
+                                        <div class="relative">
+                                            <button @click="isMatMenuOpen = !isMatMenuOpen" @click.outside="isMatMenuOpen = false" title="Material"
+                                                class="w-7 h-7 lg:w-8 lg:h-8 flex items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition text-xs lg:text-sm"
+                                                :class="activeMaterial !== 'default' ? 'text-purple-600 border-purple-300 bg-purple-50' : 'text-gray-600 dark:text-gray-200'">
+                                                <i class="fa-solid fa-fill-drip"></i>
+                                            </button>
 
                                         <div x-show="isMatMenuOpen" x-transition
                                             class="absolute bottom-full left-0 mb-2 p-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 w-32 flex flex-col gap-1">
@@ -876,95 +1025,451 @@
 
                                         </div>
                                     </div>
+
+                                    <!-- GROUP 2: View Controls -->
+                                    <div class="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-2.5 py-1 lg:py-1.5 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                                        <span class="hidden lg:inline text-[9px] font-bold text-gray-400 uppercase tracking-wider px-1">View</span>
+
+                                        <button @click="toggleCameraMode()"
+                                            :title="cameraMode === 'perspective' ? 'View: Perspective (C)' : 'View: Orthographic (C)'"
+                                            class="w-7 h-7 lg:w-8 lg:h-8 rounded border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95">
+                                            <i class="fa-solid text-[10px] lg:text-xs" :class="cameraMode === 'perspective' ? 'fa-cube' : 'fa-border-none'"></i>
+                                            <span x-text="cameraMode === 'perspective' ? 'Persp' : 'Ortho'" class="text-[7px] lg:text-[8px] font-bold leading-none"></span>
+                                        </button>
+
+                                        <div class="relative">
+                                            <button @click="isViewMenuOpen = !isViewMenuOpen" @click.outside="isViewMenuOpen = false" title="Standard Views"
+                                                class="w-7 h-7 lg:w-8 lg:h-8 rounded border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 flex items-center justify-center transition text-xs lg:text-sm">
+                                                <i class="fa-solid fa-dice-d6"></i>
+                                            </button>
+
+                                            <div x-show="isViewMenuOpen" x-transition
+                                                class="absolute bottom-full left-0 mb-2 p-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 w-28 lg:w-32 flex flex-col gap-1">
+                                                <div class="text-[9px] font-bold text-gray-400 px-2 py-1 uppercase tracking-wider">Views</div>
+                                                <button @click="setStandardView('front'); isViewMenuOpen=false" class="text-left px-2 py-1.5 lg:py-2 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">Front (F)</button>
+                                                <button @click="setStandardView('back'); isViewMenuOpen=false" class="text-left px-2 py-1.5 lg:py-2 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">Back (B)</button>
+                                                <button @click="setStandardView('top'); isViewMenuOpen=false" class="text-left px-2 py-1.5 lg:py-2 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">Top (T)</button>
+                                                <button @click="setStandardView('bottom'); isViewMenuOpen=false" class="text-left px-2 py-1.5 lg:py-2 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">Bottom (D)</button>
+                                                <button @click="setStandardView('left'); isViewMenuOpen=false" class="text-left px-2 py-1.5 lg:py-2 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">Left (L)</button>
+                                                <button @click="setStandardView('right'); isViewMenuOpen=false" class="text-left px-2 py-1.5 lg:py-2 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">Right (R)</button>
+                                                <div class="h-px bg-gray-100 dark:bg-gray-700 my-0.5"></div>
+                                                <button @click="setStandardView('iso'); isViewMenuOpen=false" class="text-left px-2 py-1.5 lg:py-2 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200">Isometric (I)</button>
+                                            </div>
+                                        </div>
+
+                                        <button @click="toggleAutoRotate()" title="Auto Rotate (Space)"
+                                            class="w-7 h-7 lg:w-8 lg:h-8 rounded border transition flex items-center justify-center text-xs lg:text-sm"
+                                            :class="autoRotate ? 'bg-blue-600 text-white border-blue-600' : 'bg-white hover:bg-gray-50 text-gray-600 border-gray-200'">
+                                            <i class="fa-solid fa-rotate"></i>
+                                        </button>
+
+                                        <button @click="toggleHeadlight()" title="Headlight (H)"
+                                            class="w-7 h-7 lg:w-8 lg:h-8 rounded border transition flex items-center justify-center text-xs lg:text-sm"
+                                            :class="headlight.enabled ? 'bg-yellow-500 text-white border-yellow-500' : 'bg-white hover:bg-gray-50 text-gray-600 border-gray-200'">
+                                            <i class="fa-solid fa-lightbulb"></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- GROUP 3: Analysis Tools -->
+                                    <div class="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-2.5 py-1 lg:py-1.5 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                                        <span class="hidden lg:inline text-[9px] font-bold text-gray-400 uppercase tracking-wider px-1">Analysis</span>
+
+                                        <div class="relative">
+                                            <button @click="if(!explode.enabled) toggleExplode(); else explode.panelOpen = !explode.panelOpen"
+                                                :class="explode.enabled ? 'text-blue-600 bg-blue-50 border-blue-300 dark:bg-blue-900/30 dark:border-blue-700 shadow-sm' : 'text-gray-600 dark:text-gray-400'"
+                                                class="w-7 h-7 lg:w-8 lg:h-8 flex items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-xs lg:text-sm active:scale-95"
+                                                title="Exploded View (X)">
+                                                <i class="fa-solid fa-expand-arrows-alt" :class="explode.enabled ? 'scale-110' : ''"></i>
+                                            </button>
+
+                                            <!-- Professional Explode Panel -->
+                                            <div x-show="explode.panelOpen"
+                                                x-transition:enter="transition ease-out duration-200"
+                                                x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                                                x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                                @click.outside="explode.panelOpen = false"
+                                                class="absolute bottom-full mb-2 left-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 w-48 lg:w-56 overflow-hidden">
+                                                
+                                                <div class="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30">
+                                                    <div class="flex items-center gap-1.5">
+                                                        <i class="fa-solid fa-expand-arrows-alt text-blue-500 text-[10px]"></i>
+                                                        <span class="text-[10px] lg:text-xs font-bold text-gray-700 dark:text-gray-200">Exploded View</span>
+                                                    </div>
+                                                    <button @click="toggleExplode()" class="text-[9px] text-red-600 dark:text-red-400 hover:underline font-medium">Disable</button>
+                                                </div>
+
+                                                <div class="p-3">
+                                                     <div class="space-y-3">
+                                                         <div class="flex items-center justify-between">
+                                                             <span class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Explosion Factor</span>
+                                                             <div class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400">
+                                                                 <span x-text="explode.value"></span>%
+                                                             </div>
+                                                         </div>
+                                                         
+                                                         <input type="range" min="0" max="100" x-model.number="explode.value" @input="updateExplode()"
+                                                             class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                                                         
+                                                         <div class="flex items-center justify-between gap-2">
+                                                             <button @click="explode.value = 0; updateExplode()" 
+                                                                 class="flex-1 text-[9px] py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                                                                 Reset
+                                                             </button>
+                                                             <button @click="explode.value = 100; updateExplode()" 
+                                                                 class="flex-1 text-[9px] py-1 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-semibold">
+                                                                 Maximum
+                                                             </button>
+                                                         </div>
+                                                     </div>
+                                                 </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section Cut Multi-Axis Panel -->
+                                        <div class="relative">
+                                            <!-- Toggle Button -->
+                                            <button @click="clipping.panelOpen = !clipping.panelOpen"
+                                                :class="hasActiveClipping ? 'text-blue-600 bg-blue-50 border-blue-300 dark:bg-blue-900/30 dark:border-blue-700 shadow-sm' : 'text-gray-600 dark:text-gray-400'"
+                                                class="w-7 h-7 lg:w-8 lg:h-8 flex items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all text-xs lg:text-sm active:scale-95"
+                                                title="Section Cut (S)">
+                                                <i class="fa-solid fa-scissors rotate-90" :class="hasActiveClipping ? 'scale-110' : ''"></i>
+                                            </button>
+
+                                        <!-- Compact Panel -->
+                                        <div x-show="clipping.panelOpen"
+                                            x-transition:enter="transition ease-out duration-200"
+                                            x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                                            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                            @click.outside="clipping.panelOpen = false"
+                                            class="absolute bottom-full mb-2 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 w-64">
+
+                                            <!-- Header -->
+                                            <div class="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-600">
+                                                <span class="text-xs font-semibold text-gray-700 dark:text-gray-200">Section Cut</span>
+                                                <button @click="resetAllClipping()"
+                                                    class="text-[10px] text-red-600 dark:text-red-400 hover:underline font-medium"
+                                                    x-show="hasActiveClipping">
+                                                    Reset
+                                                </button>
+                                            </div>
+
+                                            <!-- Compact Axis Controls -->
+                                            <div class="p-2 space-y-1.5">
+                                                <!-- X Axis -->
+                                                <div>
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <input type="checkbox"
+                                                            :checked="clipping.x.enabled"
+                                                            @change="toggleAxisClipping('x')"
+                                                            class="rounded text-red-600 focus:ring-0 border-gray-300 dark:border-gray-600 w-3.5 h-3.5">
+                                                        <div class="w-5 h-5 rounded bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                                                            <span class="text-[10px] font-bold text-red-600 dark:text-red-400">X</span>
+                                                        </div>
+                                                        <span class="text-xs text-gray-700 dark:text-gray-300 flex-1">X-Axis</span>
+
+                                                        <!-- Helper Toggle -->
+                                                        <button @click="togglePlaneHelper('x')"
+                                                            x-show="clipping.x.enabled"
+                                                            :class="clipping.x.showHelper ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'"
+                                                            class="w-5 h-5 flex items-center justify-center rounded hover:scale-110 transition-all"
+                                                            title="Toggle Plane Helper">
+                                                            <i class="fa-solid fa-eye text-[9px]"></i>
+                                                        </button>
+
+                                                        <!-- Flip Button -->
+                                                        <button @click="flipAxis('x')"
+                                                            x-show="clipping.x.enabled"
+                                                            :class="clipping.x.flipped ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-400'"
+                                                            class="w-5 h-5 flex items-center justify-center rounded hover:scale-110 transition-all"
+                                                            title="Flip Direction">
+                                                            <i class="fa-solid fa-right-left text-[9px]"></i>
+                                                        </button>
+                                                    </div>
+
+                                                    <!-- Enhanced Controls -->
+                                                    <div x-show="clipping.x.enabled" x-transition class="pl-6 space-y-1.5">
+                                                        <!-- Value Display -->
+                                                        <div class="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400">
+                                                            <span>Position:</span>
+                                                            <span class="font-mono font-semibold text-red-600 dark:text-red-400" x-text="clipping.x.value.toFixed(2)"></span>
+                                                        </div>
+
+                                                        <!-- Slider -->
+                                                        <input type="range"
+                                                            :min="clipping.x.min !== undefined ? clipping.x.min : clipping.min"
+                                                            :max="clipping.x.max !== undefined ? clipping.x.max : clipping.max"
+                                                            x-model.number="clipping.x.value"
+                                                            @input="updateAxisClipping('x')"
+                                                            class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-600">
+
+                                                        <!-- Numeric Input + Step Controls -->
+                                                        <div class="flex items-center gap-1">
+                                                            <!-- Decrement -->
+                                                            <button @click="decrementAxisValue('x')"
+                                                                class="w-6 h-6 flex items-center justify-center rounded bg-gray-100 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-600 dark:text-gray-300 hover:text-red-600 transition"
+                                                                title="Decrease">
+                                                                <i class="fa-solid fa-minus text-[9px]"></i>
+                                                            </button>
+
+                                                            <!-- Numeric Input -->
+                                                            <input type="number"
+                                                                :min="clipping.x.min !== undefined ? clipping.x.min : clipping.min"
+                                                                :max="clipping.x.max !== undefined ? clipping.x.max : clipping.max"
+                                                                :step="clipping.step"
+                                                                x-model.number="clipping.x.value"
+                                                                @input="setAxisValueDirect('x', $event.target.value)"
+                                                                class="flex-1 px-2 py-1 text-[10px] text-center border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-red-500 focus:border-red-500">
+
+                                                            <!-- Increment -->
+                                                            <button @click="incrementAxisValue('x')"
+                                                                class="w-6 h-6 flex items-center justify-center rounded bg-gray-100 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-600 dark:text-gray-300 hover:text-red-600 transition"
+                                                                title="Increase">
+                                                                <i class="fa-solid fa-plus text-[9px]"></i>
+                                                            </button>
+                                                        </div>
+
+                                                        <!-- Additional Options -->
+                                                        <div class="flex items-center gap-2 pt-1">
+                                                            <label class="flex items-center gap-1 text-[10px] text-gray-600 dark:text-gray-400 cursor-pointer">
+                                                                <input type="checkbox"
+                                                                    x-model="clipping.x.showCap"
+                                                                    @change="toggleSectionCap('x')"
+                                                                    class="rounded text-red-600 focus:ring-0 border-gray-300 dark:border-gray-600 w-3 h-3">
+                                                                <span>Show Cap</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Y Axis -->
+                                                <div>
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <input type="checkbox"
+                                                            :checked="clipping.y.enabled"
+                                                            @change="toggleAxisClipping('y')"
+                                                            class="rounded text-green-600 focus:ring-0 border-gray-300 dark:border-gray-600 w-3.5 h-3.5">
+                                                        <div class="w-5 h-5 rounded bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                                                            <span class="text-[10px] font-bold text-green-600 dark:text-green-400">Y</span>
+                                                        </div>
+                                                        <span class="text-xs text-gray-700 dark:text-gray-300 flex-1">Y-Axis</span>
+
+                                                        <button @click="togglePlaneHelper('y')"
+                                                            x-show="clipping.y.enabled"
+                                                            :class="clipping.y.showHelper ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'"
+                                                            class="w-5 h-5 flex items-center justify-center rounded hover:scale-110 transition-all"
+                                                            title="Toggle Plane Helper">
+                                                            <i class="fa-solid fa-eye text-[9px]"></i>
+                                                        </button>
+
+                                                        <button @click="flipAxis('y')"
+                                                            x-show="clipping.y.enabled"
+                                                            :class="clipping.y.flipped ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'"
+                                                            class="w-5 h-5 flex items-center justify-center rounded hover:scale-110 transition-all"
+                                                            title="Flip Direction">
+                                                            <i class="fa-solid fa-right-left text-[9px]"></i>
+                                                        </button>
+                                                    </div>
+
+                                                    <div x-show="clipping.y.enabled" x-transition class="pl-6 space-y-1.5">
+                                                        <div class="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400">
+                                                            <span>Position:</span>
+                                                            <span class="font-mono font-semibold text-green-600 dark:text-green-400" x-text="clipping.y.value.toFixed(2)"></span>
+                                                        </div>
+
+                                                        <input type="range"
+                                                            :min="clipping.y.min !== undefined ? clipping.y.min : clipping.min"
+                                                            :max="clipping.y.max !== undefined ? clipping.y.max : clipping.max"
+                                                            x-model.number="clipping.y.value"
+                                                            @input="updateAxisClipping('y')"
+                                                            class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-600">
+
+                                                        <div class="flex items-center gap-1">
+                                                            <button @click="decrementAxisValue('y')"
+                                                                class="w-6 h-6 flex items-center justify-center rounded bg-gray-100 dark:bg-gray-700 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-600 dark:text-gray-300 hover:text-green-600 transition"
+                                                                title="Decrease">
+                                                                <i class="fa-solid fa-minus text-[9px]"></i>
+                                                            </button>
+
+                                                            <input type="number"
+                                                                :min="clipping.y.min !== undefined ? clipping.y.min : clipping.min"
+                                                                :max="clipping.y.max !== undefined ? clipping.y.max : clipping.max"
+                                                                :step="clipping.step"
+                                                                x-model.number="clipping.y.value"
+                                                                @input="setAxisValueDirect('y', $event.target.value)"
+                                                                class="flex-1 px-2 py-1 text-[10px] text-center border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-green-500 focus:border-green-500">
+
+                                                            <button @click="incrementAxisValue('y')"
+                                                                class="w-6 h-6 flex items-center justify-center rounded bg-gray-100 dark:bg-gray-700 hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-600 dark:text-gray-300 hover:text-green-600 transition"
+                                                                title="Increase">
+                                                                <i class="fa-solid fa-plus text-[9px]"></i>
+                                                            </button>
+                                                        </div>
+
+                                                        <div class="flex items-center gap-2 pt-1">
+                                                            <label class="flex items-center gap-1 text-[10px] text-gray-600 dark:text-gray-400 cursor-pointer">
+                                                                <input type="checkbox"
+                                                                    x-model="clipping.y.showCap"
+                                                                    @change="toggleSectionCap('y')"
+                                                                    class="rounded text-green-600 focus:ring-0 border-gray-300 dark:border-gray-600 w-3 h-3">
+                                                                <span>Show Cap</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Z Axis -->
+                                                <div>
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <input type="checkbox"
+                                                            :checked="clipping.z.enabled"
+                                                            @change="toggleAxisClipping('z')"
+                                                            class="rounded text-blue-600 focus:ring-0 border-gray-300 dark:border-gray-600 w-3.5 h-3.5">
+                                                        <div class="w-5 h-5 rounded bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                                            <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400">Z</span>
+                                                        </div>
+                                                        <span class="text-xs text-gray-700 dark:text-gray-300 flex-1">Z-Axis</span>
+
+                                                        <button @click="togglePlaneHelper('z')"
+                                                            x-show="clipping.z.enabled"
+                                                            :class="clipping.z.showHelper ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'"
+                                                            class="w-5 h-5 flex items-center justify-center rounded hover:scale-110 transition-all"
+                                                            title="Toggle Plane Helper">
+                                                            <i class="fa-solid fa-eye text-[9px]"></i>
+                                                        </button>
+
+                                                        <button @click="flipAxis('z')"
+                                                            x-show="clipping.z.enabled"
+                                                            :class="clipping.z.flipped ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400'"
+                                                            class="w-5 h-5 flex items-center justify-center rounded hover:scale-110 transition-all"
+                                                            title="Flip Direction">
+                                                            <i class="fa-solid fa-right-left text-[9px]"></i>
+                                                        </button>
+                                                    </div>
+
+                                                    <div x-show="clipping.z.enabled" x-transition class="pl-6 space-y-1.5">
+                                                        <div class="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400">
+                                                            <span>Position:</span>
+                                                            <span class="font-mono font-semibold text-blue-600 dark:text-blue-400" x-text="clipping.z.value.toFixed(2)"></span>
+                                                        </div>
+
+                                                        <input type="range"
+                                                            :min="clipping.z.min !== undefined ? clipping.z.min : clipping.min"
+                                                            :max="clipping.z.max !== undefined ? clipping.z.max : clipping.max"
+                                                            x-model.number="clipping.z.value"
+                                                            @input="updateAxisClipping('z')"
+                                                            class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600">
+
+                                                        <div class="flex items-center gap-1">
+                                                            <button @click="decrementAxisValue('z')"
+                                                                class="w-6 h-6 flex items-center justify-center rounded bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-gray-600 dark:text-gray-300 hover:text-blue-600 transition"
+                                                                title="Decrease">
+                                                                <i class="fa-solid fa-minus text-[9px]"></i>
+                                                            </button>
+
+                                                            <input type="number"
+                                                                :min="clipping.z.min !== undefined ? clipping.z.min : clipping.min"
+                                                                :max="clipping.z.max !== undefined ? clipping.z.max : clipping.max"
+                                                                :step="clipping.step"
+                                                                x-model.number="clipping.z.value"
+                                                                @input="setAxisValueDirect('z', $event.target.value)"
+                                                                class="flex-1 px-2 py-1 text-[10px] text-center border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+
+                                                            <button @click="incrementAxisValue('z')"
+                                                                class="w-6 h-6 flex items-center justify-center rounded bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-gray-600 dark:text-gray-300 hover:text-blue-600 transition"
+                                                                title="Increase">
+                                                                <i class="fa-solid fa-plus text-[9px]"></i>
+                                                            </button>
+                                                        </div>
+
+                                                        <div class="flex items-center gap-2 pt-1">
+                                                            <label class="flex items-center gap-1 text-[10px] text-gray-600 dark:text-gray-400 cursor-pointer">
+                                                                <input type="checkbox"
+                                                                    x-model="clipping.z.showCap"
+                                                                    @change="toggleSectionCap('z')"
+                                                                    class="rounded text-blue-600 focus:ring-0 border-gray-300 dark:border-gray-600 w-3 h-3">
+                                                                <span>Show Cap</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                        <button @click="toggleMeasure()" title="Measure Tool (M)"
+                                            class="w-7 h-7 lg:w-8 lg:h-8 rounded border transition flex items-center justify-center text-xs lg:text-sm active:scale-95"
+                                            :class="iges.measure.enabled ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white hover:bg-gray-50 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 dark:bg-gray-800'">
+                                            <i class="fa-solid fa-ruler-combined" :class="iges.measure.enabled ? 'scale-110' : ''"></i>
+                                        </button>
+                                        <!-- Utilities -->
+                                        <div class="h-6 lg:h-7 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                                        <button @click="takeScreenshot()" title="Screenshot"
+                                            class="w-7 h-7 lg:w-8 lg:h-8 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-200 flex items-center justify-center transition text-xs lg:text-sm active:scale-90 shadow-sm">
+                                            <i class="fa-solid fa-camera"></i>
+                                        </button>
+                                    </div>
                                 </div>
+                            </div>
 
-                                <div class="flex items-center gap-2">
+                            <!-- NEW MEASURE TOOLBAR (Floating at Top Center of Viewer) -->
+                                    <div x-show="iges.measure.enabled"
+                                        x-transition:enter="transition ease-out duration-200"
+                                        x-transition:enter-start="opacity-0 translate-y-4"
+                                        x-transition:enter-end="opacity-100 translate-y-0"
+                                        class="absolute bottom-24 left-1/2 -translate-x-1/2 z-40 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg flex items-center p-1 gap-1 transition-all duration-300">
 
-                                    <div class="flex items-center gap-2 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm h-[34px]">
-                                        <label class="flex items-center gap-1 cursor-pointer" title="Exploded View">
-                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-0 border-gray-300 w-3 h-3"
-                                                :checked="explode.enabled" @change="toggleExplode()">
-                                            <i class="fa-solid fa-expand-arrows-alt text-xs" :class="explode.enabled ? 'text-blue-500' : 'text-gray-400'"></i>
-                                        </label>
-                                        <div x-show="explode.enabled" x-transition class="flex items-center gap-1 pl-2 border-l border-gray-200">
-                                            <input type="range" min="0" max="100" x-model.number="explode.value" @input="updateExplode()"
-                                                class="w-16 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                                        <!-- Mode Buttons -->
+                                        <div class="flex items-center gap-0.5 border-r border-gray-200 dark:border-gray-600 pr-1 mr-1">
+                                            <button @click="setMeasureMode('point')" :class="iges.measure.mode === 'point' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'" class="p-2 rounded text-xs transition relative group" title="Point to Point">
+                                                <i class="fa-solid fa-ruler-horizontal"></i>
+                                                <span class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">Point to Point</span>
+                                            </button>
+
+                                            <button @click="setMeasureMode('edge')" :class="iges.measure.mode === 'edge' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'" class="p-2 rounded text-xs transition relative group" title="Edge Length">
+                                                <i class="fa-solid fa-minus"></i>
+                                                <span class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">Edge Length</span>
+                                            </button>
+
+                                            <button @click="setMeasureMode('angle')" :class="iges.measure.mode === 'angle' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'" class="p-2 rounded text-xs transition relative group" title="Angle (3 Points)">
+                                                <i class="fa-solid fa-angle-left"></i>
+                                                <span class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">Angle (3 Pts)</span>
+                                            </button>
+
+                                            <button @click="setMeasureMode('radius')" :class="iges.measure.mode === 'radius' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'" class="p-2 rounded text-xs transition relative group" title="Radius (3 Points)">
+                                                <i class="fa-regular fa-circle"></i>
+                                                <span class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">Radius (3 Pts)</span>
+                                            </button>
+
+                                            <!-- NEW: FACE AREA MODE -->
+                                            <button @click="setMeasureMode('face')" :class="iges.measure.mode === 'face' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'" class="p-2 rounded text-xs transition relative group" title="Face Area">
+                                                <i class="fa-solid fa-vector-square"></i>
+                                                <span class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-50">Face Area</span>
+                                            </button>
                                         </div>
-                                    </div>
 
-                                    <div class="flex items-center gap-2 px-2 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm h-[34px]">
-                                        <label class="flex items-center gap-1 cursor-pointer" title="Section Cut">
-                                            <input type="checkbox" class="rounded text-blue-600 focus:ring-0 border-gray-300 w-3 h-3"
-                                                :checked="clipping.enabled" @change="toggleClipping()">
-                                            <i class="fa-solid fa-scissors rotate-90 text-xs" :class="clipping.enabled ? 'text-blue-500' : 'text-gray-400'"></i>
-                                        </label>
-                                        <div x-show="clipping.enabled" x-transition class="flex items-center gap-1 pl-2 border-l border-gray-200">
-                                            <input type="range" :min="clipping.min" :max="clipping.max" x-model.number="clipping.value" @input="updateClippingVal()"
-                                                class="w-16 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                                        <!-- Actions -->
+                                        <div class="flex items-center gap-0.5">
+                                            <button @click="iges.measure.snap.enabled = !iges.measure.snap.enabled"
+                                                class="p-2 rounded text-xs transition relative group"
+                                                :class="iges.measure.snap.enabled ? 'text-green-600 hover:bg-green-50 dark:text-green-400' : 'text-gray-400 hover:bg-gray-100'"
+                                                title="Toggle Snap">
+                                                <i class="fa-solid fa-magnet"></i>
+                                            </button>
+
+                                            <button @click="clearMeasurements()" class="p-2 rounded text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition relative group" title="Clear All">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+
+                                            <button @click="toggleMeasure()" class="p-2 rounded text-xs text-gray-500 hover:bg-gray-100 transition relative group" title="Close Measure Tool">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
                                         </div>
-                                    </div>
 
-                                    <button @click="toggleAutoRotate()" title="Auto Rotate"
-                                        class="w-[34px] h-[34px] flex items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition shadow-sm"
-                                        :class="{'text-blue-600 border-blue-200 bg-blue-50': autoRotate, 'text-gray-600': !autoRotate}">
-                                        <i class="fa-solid fa-sync" :class="{'fa-spin': autoRotate}"></i>
-                                    </button>
-
-                                    <button @click="toggleHeadlight()" title="Flashlight (H)"
-                                        class="w-[34px] h-[34px] flex items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition shadow-sm"
-                                        :class="{'text-yellow-500 border-yellow-200 bg-yellow-50': headlight.enabled, 'text-gray-600': !headlight.enabled}">
-                                        <i class="fa-solid fa-lightbulb"></i>
-                                    </button>
-
-                                </div>
-
-                                <div class="flex items-center gap-2">
-
-                                    <button @click="toggleAxes()" title="Toggle Axes Helper"
-                                        class="w-[34px] h-[34px] flex items-center justify-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition shadow-sm"
-                                        :class="axesHelper.active ? 'text-red-500 border-red-200 bg-red-50' : 'text-gray-600 dark:text-gray-200'">
-                                        <i class="fa-solid fa-arrows-to-dot"></i>
-                                    </button>
-
-                                    <div class="relative">
-                                        <button @click="isViewMenuOpen = !isViewMenuOpen" @click.outside="isViewMenuOpen = false"
-                                            class="px-2 py-1.5 h-[34px] text-xs font-medium rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 transition shadow-sm flex items-center gap-1">
-                                            <i class="fa-solid fa-cube text-gray-500"></i> Views
-                                        </button>
-                                        <div x-show="isViewMenuOpen" x-transition class="absolute bottom-full right-0 mb-2 p-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-32 grid grid-cols-3 gap-1">
-                                            <button @click="setStandardView('iso'); isViewMenuOpen=false" class="col-span-3 p-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded">ISO HOME</button>
-                                            <button @click="setStandardView('top'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">T</button>
-                                            <button @click="setStandardView('front'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">F</button>
-                                            <button @click="setStandardView('right'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">R</button>
-                                            <button @click="setStandardView('left'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">L</button>
-                                            <button @click="setStandardView('back'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">B</button>
-                                            <button @click="setStandardView('bottom'); isViewMenuOpen=false" class="p-1 hover:bg-gray-100 text-[10px] rounded border">Bt</button>
+                                        <!-- Dynamic Instruction -->
+                                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-900/80 backdrop-blur text-white text-[10px] px-3 py-1.5 rounded-full shadow-sm whitespace-nowrap pointer-events-none transition-all duration-300"
+                                            x-text="iges.measure.hoverInstruction"
+                                            x-show="iges.measure.enabled">
                                         </div>
-                                    </div>
-
-                                    <button @click="toggleCameraMode()" title="Toggle Perspective/Orthographic"
-                                        class="w-[34px] h-[34px] rounded border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 text-[10px] font-bold shadow-sm flex items-center justify-center">
-                                        <span x-text="cameraMode === 'perspective' ? '3D' : '2D'"></span>
-                                    </button>
-
-                                    <button @click="takeScreenshot()" title="Take Screenshot"
-                                        class="w-[34px] h-[34px] rounded border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 shadow-sm flex items-center justify-center">
-                                        <i class="fa-solid fa-camera"></i>
-                                    </button>
-
-                                    <div class="flex items-center rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden h-[34px]">
-                                        <button @click="toggleMeasure()" title="Measure Tool"
-                                            class="w-[34px] h-full flex items-center justify-center transition"
-                                            :class="iges.measure.enabled ? 'bg-blue-600 text-white' : 'hover:bg-gray-50 text-gray-600'">
-                                            <i class="fa-solid fa-ruler-combined"></i>
-                                        </button>
-
-                                        <button @click="clearMeasurements()" x-show="iges.measure.enabled" title="Clear Measurements"
-                                            x-transition
-                                            class="w-[34px] h-full flex items-center justify-center border-l border-gray-200 dark:border-gray-700 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
-                                            <i class="fa-solid fa-trash-can text-xs"></i>
-                                        </button>
-                                    </div>
 
                                 </div>
                             </div>
@@ -998,7 +1503,7 @@
         transition: height 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
         will-change: height;
     }
-    
+
     [x-collapse].x-collapse-transitioning {
         overflow: hidden !important;
     }
@@ -1014,6 +1519,11 @@
     .measure-label {
         user-select: none;
         white-space: nowrap;
+    }
+
+    /* Smooth transition for side panels */
+    .transition-width {
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 </style>
 @endpush
@@ -1045,7 +1555,7 @@
     }
     }</script>
 
-<!-- OCCT: parser STEP/IGES (WASM) -->
+<!-- OCCT: parser STEP/IGES/BREP (WASM) + Three.js loaders for STL, OBJ, FBX, GLTF, GLB, 3DS -->
 <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
 
 <script>
@@ -1195,16 +1705,29 @@
             cadPartsList: [],
             selectedPartUuid: null,
             isPartListOpen: false,
+            isPartListOpen: false,
+            isMeasureListOpen: false,
+            isMeasureActive: false, // Reactive state for Measure Tool
             clipping: {
-                enabled: false,
-                value: 0,
-                plane: null,
+                x: { enabled: false, value: 0, flipped: false, plane: null, helper: null, showHelper: true, showCap: false },
+                y: { enabled: false, value: 0, flipped: false, plane: null, helper: null, showHelper: true, showCap: false },
+                z: { enabled: false, value: 0, flipped: false, plane: null, helper: null, showHelper: true, showCap: false },
                 min: -100,
-                max: 100
+                max: 100,
+                step: 1, // Step size for increment/decrement
+                panelOpen: false, // For UI toggle
+                animation: {
+                    playing: false,
+                    axis: null, // 'x', 'y', or 'z'
+                    speed: 1, // Units per frame
+                    direction: 1 // 1 for forward, -1 for reverse
+                }
             },
+
             explode: {
                 enabled: false,
-                value: 0
+                value: 0,
+                panelOpen: false
             },
             autoRotate: false,
             snapMarker: null,
@@ -1217,11 +1740,9 @@
                 volume: '-',
                 area: '-'
             },
-            axesHelper: {
-                active: false,
-                object: null
-            },
             activeMaterial: 'default',
+            currentStyle: 'shaded', // Display style: 'shaded', 'shaded-edges', 'wireframe'
+
 
             // ==== KONFIGURASI POSISI STAMP ====
             stampDefaults: {
@@ -1612,12 +2133,35 @@
                 loading: false,
                 error: '',
                 rootModel: null,
-                THREE: null,
+                THREE: null, // Three.js instance
+
+                // --- MEASURE STATE ---
                 measure: {
                     enabled: false,
-                    group: null,
+                    group: null, // THREE.Group for drawings
+
+                    // Interaction Points
                     p1: null,
-                    p2: null
+                    p2: null,
+                    p3: null, // For 3-point circle
+
+                    // Current Mode
+                    mode: 'point', // 'point', 'edge', 'radius', 'angle', 'face'
+
+                    // Snapping Data
+                    snap: {
+                        enabled: true,
+                        type: null,
+                        point: null,
+                        normal: null,
+                        edge: null
+                    },
+
+                    // Measurement Storage
+                    results: [], // Array of { id, type, value, ... }
+
+                    // UI State
+                    hoverInstruction: 'Select Start Point',
                 }
             },
             _onIgesResize: null,
@@ -1640,7 +2184,17 @@
                 return ['plt', 'hpgl', 'hpg', 'prn'].includes(this.extOf(name));
             },
             isCad(name) {
-                return ['igs', 'iges', 'stp', 'step'].includes(this.extOf(name));
+                // OCCT formats: igs, iges, stp, step, brep
+                // Three.js formats: stl, obj, fbx, gltf, glb, 3ds
+                return ['igs', 'iges', 'stp', 'step', 'brep', 'stl', 'obj', 'fbx', 'gltf', 'glb', '3ds'].includes(this.extOf(name));
+            },
+            // Helper to determine if format uses OCCT loader
+            isOcctFormat(name) {
+                return ['igs', 'iges', 'stp', 'step', 'brep'].includes(this.extOf(name));
+            },
+            // Helper to determine if format uses Three.js loader
+            isThreeFormat(name) {
+                return ['stl', 'obj', 'fbx', 'gltf', 'glb', '3ds'].includes(this.extOf(name));
             },
             // pdfSrc(u) { return u; },
 
@@ -1860,13 +2414,13 @@
 
                     // Standardize separators: replace newlines with ';', then split by ';'
                     let commands = text.replace(/[\r\n]+/g, ';').split(';');
-                    
+
                     // Many HPGL files concatenate commands without semicolons
                     // Use iterative parsing to avoid stack overflow on very long strings
                     const expandedCommands = [];
                     for (const cmd of commands) {
                         if (!cmd || !cmd.trim()) continue;
-                        
+
                         // For very long commands, split manually
                         if (cmd.length > 10000) {
                             let i = 0;
@@ -1875,14 +2429,14 @@
                                 if (i + 1 < cmd.length && /[A-Z]/.test(cmd[i]) && /[A-Z]/.test(cmd[i+1])) {
                                     const opcode = cmd.substring(i, i+2);
                                     i += 2;
-                                    
+
                                     // Collect arguments until next opcode or end
                                     let args = '';
                                     while (i < cmd.length && !(/[A-Z]/.test(cmd[i]) && i+1 < cmd.length && /[A-Z]/.test(cmd[i+1]))) {
                                         args += cmd[i];
                                         i++;
                                     }
-                                    
+
                                     expandedCommands.push(opcode + args);
                                 } else {
                                     i++;
@@ -1898,11 +2452,11 @@
                             }
                         }
                     }
-                    
+
                     commands = expandedCommands;
 
                     let penDown = false;
-                    let isRelative = false; 
+                    let isRelative = false;
                     let x = 0, y = 0;
                     const segments = [];
 
@@ -1921,7 +2475,7 @@
                         const angleStep = (endAngle - startAngle) / steps;
                         let prevX = cx + radius * Math.cos(startAngle * Math.PI / 180);
                         let prevY = cy + radius * Math.sin(startAngle * Math.PI / 180);
-                        
+
                         for (let i = 1; i <= steps; i++) {
                             const angle = startAngle + angleStep * i;
                             const nx = cx + radius * Math.cos(angle * Math.PI / 180);
@@ -1934,7 +2488,7 @@
 
                     for (const raw of commands) {
                         if (!raw || !raw.trim()) continue;
-                        
+
                         const cmd = raw.trim().toUpperCase();
                         const op = cmd.slice(0, 2);
                         const argsStr = cmd.slice(2);
@@ -1954,7 +2508,7 @@
                                 if (penDown) {
                                     addSegment(x, y, nx, ny);
                                 }
-                                
+
                                 x = nx;
                                 y = ny;
                             }
@@ -1993,9 +2547,9 @@
                                 const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
                                 const startAngle = Math.atan2(y - cy, x - cx) * 180 / Math.PI;
                                 const endAngle = startAngle + sweepAngle;
-                                
+
                                 addArc(cx, cy, radius, startAngle, endAngle, Math.max(16, Math.abs(sweepAngle) / 5));
-                                
+
                                 // Update position to end of arc
                                 x = cx + radius * Math.cos(endAngle * Math.PI / 180);
                                 y = cy + radius * Math.sin(endAngle * Math.PI / 180);
@@ -2009,9 +2563,9 @@
                                 const radius = Math.sqrt(coords[0] ** 2 + coords[1] ** 2);
                                 const startAngle = Math.atan2(-coords[1], -coords[0]) * 180 / Math.PI;
                                 const endAngle = startAngle + sweepAngle;
-                                
+
                                 addArc(cx, cy, radius, startAngle, endAngle, Math.max(16, Math.abs(sweepAngle) / 5));
-                                
+
                                 x = cx + radius * Math.cos(endAngle * Math.PI / 180);
                                 y = cy + radius * Math.sin(endAngle * Math.PI / 180);
                             }
@@ -2033,7 +2587,7 @@
                         if (s.x2 < minX) minX = s.x2;
                         if (s.x1 > maxX) maxX = s.x1;
                         if (s.x2 > maxX) maxX = s.x2;
-                        
+
                         if (s.y1 < minY) minY = s.y1;
                         if (s.y2 < minY) minY = s.y2;
                         if (s.y1 > maxY) maxY = s.y1;
@@ -2058,7 +2612,7 @@
                         container = container.parentElement;
                         if (!container || container === document.body) break;
                     }
-                    
+
                     // Use the found container, or fallback to reasonable defaults
                     const viewW = Math.max(container?.clientWidth || window.innerWidth * 0.6, 800);
                     const viewH = Math.max(container?.clientHeight || window.innerHeight * 0.7, 500);
@@ -2067,33 +2621,33 @@
                     const dpr = window.devicePixelRatio || 1;
                     const zoomCapability = 5; // Support up to 5x zoom without blur
                     const totalScale = dpr * zoomCapability;
-                    
+
                     canvas.width = viewW * totalScale;
                     canvas.height = viewH * totalScale;
                     canvas.style.width = viewW + 'px';
                     canvas.style.height = viewH + 'px';
 
                     const ctx = canvas.getContext('2d');
-                    
+
                     // Reset and configure context
                     ctx.setTransform(1, 0, 0, 1, 0, 0);
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    
+
                     // Scale drawing context
                     ctx.scale(totalScale, totalScale);
 
                     // Line thickness configuration
-                    ctx.lineWidth = 0.2; 
+                    ctx.lineWidth = 0.2;
                     ctx.lineCap = 'butt';
                     ctx.lineJoin = 'miter';
-                    ctx.strokeStyle = '#000'; 
+                    ctx.strokeStyle = '#000';
 
                     const dx = maxX - minX || 1;
                     const dy = maxY - minY || 1;
 
                     // Calculate scale to fit viewport (98% fit)
                     const scale = 0.98 * Math.min(viewW / dx, viewH / dy);
-                    
+
                     // Center the drawing
                     const transX = viewW / 2 - (minX + dx / 2) * scale;
                     const transY = viewH / 2 + (minY + dy / 2) * scale;
@@ -2105,18 +2659,18 @@
                         const sy = -s.y1 * scale + transY;
                         const ex = s.x2 * scale + transX;
                         const ey = -s.y2 * scale + transY;
-                        
+
                         ctx.moveTo(sx, sy);
                         ctx.lineTo(ex, ey);
                     }
                     ctx.stroke();
-                    
+
                     // Calculate actual drawing bounds in CSS pixels for stamp positioning
                     const drawingLeft = minX * scale + transX;
                     const drawingTop = -maxY * scale + transY;
                     const drawingWidth = dx * scale;
                     const drawingHeight = dy * scale;
-                    
+
                     this.hpglDrawingBounds = {
                         left: drawingLeft,
                         top: drawingTop,
@@ -2221,7 +2775,17 @@
                         enabled: false,
                         group: null,
                         p1: null,
-                        p2: null
+                        p2: null,
+                        mode: 'point',
+                        snap: {
+                            type: null,
+                            point: null,
+                            normal: null,
+                            edge: null
+                        },
+                        results: [],
+                        currentResult: null,
+                        showPanel: false
                     }
                 };
                 this._onIgesResize = null;
@@ -2347,26 +2911,200 @@
                 if (this.clipping.enabled) this._updateMaterialsWithClipping();
             },
 
-            /* ===== Measure (2-click) ===== */
+            /* ===== Measure (eDrawings-like) ===== */
+            setMeasureMode(mode) {
+                const M = this.iges.measure;
+                M.mode = mode;
+                M.p1 = null;
+                M.p2 = null;
+                M.p3 = null;
+
+                // Update instruction based on mode
+                switch(mode) {
+                    case 'point': M.hoverInstruction = 'Click 1st Point'; break;
+                    case 'edge': M.hoverInstruction = 'Click an Edge or 1st Point'; break;
+                    case 'angle': M.hoverInstruction = 'Click 1st Point (Start)'; break;
+                    case 'radius': M.hoverInstruction = 'Click 1st Point on Curve'; break;
+                    case 'face': M.hoverInstruction = 'Click a Planar Face'; break;
+                }
+                console.log('Measure mode set to:', mode);
+            },
+
             toggleMeasure() {
                 const M = this.iges.measure;
                 M.enabled = !M.enabled;
-                if (M.enabled && !M.group) {
-                    const THREE = this.iges.THREE;
-                    M.group = new THREE.Group();
-                    this.iges.scene.add(M.group);
+                
+                // Sync UI state
+                this.isMeasureActive = M.enabled;
+                this.isMeasureListOpen = M.enabled;
+
+                if (M.enabled) {
+                    if (!M.group) {
+                        const THREE = this.iges.THREE;
+                        M.group = new THREE.Group();
+                        // Ensure text labels always render on top
+                        M.group.renderOrder = 999;
+                        this.iges.scene.add(M.group);
+                    }
                     this._bindMeasureEvents(true);
-                }
-                if (!M.enabled) {
+                    this.setMeasureMode(M.mode); // Initialize instruction
+                } else {
                     this._bindMeasureEvents(false);
-                    M.p1 = M.p2 = null;
+                    this.snapMarker.visible = false;
+                    M.p1 = M.p2 = M.p3 = null;
                 }
             },
+
             clearMeasurements() {
-                const g = this.iges.measure.group;
+                const M = this.iges.measure;
+                const g = M.group;
                 if (!g) return;
-                (g.children || []).forEach(ch => ch.userData?.dispose?.());
+
+                // Dispose all children properly
+                (g.children || []).slice().forEach(ch => {
+                    if (ch.userData?.dispose) ch.userData.dispose();
+                    g.remove(ch);
+                });
+
                 g.clear();
+                M.results = [];
+                M.p1 = M.p2 = M.p3 = null;
+                M.hoverInstruction = 'Measurements Cleared';
+                setTimeout(() => this.setMeasureMode(M.mode), 1500);
+            },
+
+            deleteMeasurement(index) {
+                const M = this.iges.measure;
+                if (index < 0 || index >= M.results.length) return;
+
+                // Remove from scene
+                const res = M.results[index];
+                if (res.objectUuid && M.group) {
+                    const obj = M.group.getObjectByProperty('uuid', res.objectUuid);
+                    if (obj) {
+                        if (obj.userData?.dispose) obj.userData.dispose();
+                        M.group.remove(obj);
+                    }
+                }
+
+                // Remove from array
+                M.results.splice(index, 1);
+            },
+
+            // --- GEOMETRY HELPERS ---
+
+            _calculateCircleFrom3Points(p1, p2, p3) {
+                const THREE = this.iges.THREE;
+                // Create two chords: p1-p2 and p2-p3
+                // The center of the circle lies on the intersection of the perpendicular bisectors of these chords.
+
+                // Midpoints
+                const m1 = p1.clone().add(p2).multiplyScalar(0.5);
+                const m2 = p2.clone().add(p3).multiplyScalar(0.5);
+
+                // Vectors for chords
+                const v12 = p2.clone().sub(p1);
+                const v23 = p3.clone().sub(p2);
+
+                // Normal of the plane defined by 3 points
+                const normal = v12.clone().cross(v23).normalize();
+
+                // Directions of bisectors (perpendicular to chords and lying on the plane)
+                const dir1 = v12.clone().cross(normal).normalize();
+                const dir2 = v23.clone().cross(normal).normalize();
+
+                // Line 1: m1 + t * dir1
+                // Line 2: m2 + u * dir2
+                // Intersection: m1 + t * dir1 = m2 + u * dir2
+                // t * dir1 - u * dir2 = m2 - m1
+
+                // Solve minimal least squares/intersection
+                // Use standard formula for intersection of two lines in 3D (assuming coplanar)
+                const vMatch = m2.clone().sub(m1);
+                const cross12 = dir1.clone().cross(dir2);
+                const denom = cross12.lengthSq();
+
+                if (denom < 1e-6) return null; // Parallel or colinear
+
+                // t = (vMatch x dir2) . (dir1 x dir2) / |dir1 x dir2|^2
+                // But since they are coplanar, simpler vector math works
+
+                const t = vMatch.clone().cross(dir2).dot(cross12) / denom;
+                const center = m1.clone().add(dir1.multiplyScalar(t));
+                const radius = center.distanceTo(p1);
+
+                return { center, radius, normal };
+            },
+
+            _calculateFaceArea(mesh, faceIndex) {
+                 const THREE = this.iges.THREE;
+                 if (!mesh || !mesh.geometry) return 0;
+
+                 const geom = mesh.geometry;
+                 const pos = geom.attributes.position;
+                 const index = geom.index;
+                 const normal = geom.attributes.normal;
+
+                 // Strategy:
+                 // 1. Identify the normal of the clicked face.
+                 // 2. Flood fill or search for all connected triangles with same/similar normal (planar face).
+
+                 // Get normal of picked face
+                 const iA = index.getX(faceIndex * 3);
+                 const iB = index.getX(faceIndex * 3 + 1);
+                 const iC = index.getX(faceIndex * 3 + 2);
+
+                 const vA = new THREE.Vector3().fromBufferAttribute(pos, iA).applyMatrix4(mesh.matrixWorld);
+                 const vB = new THREE.Vector3().fromBufferAttribute(pos, iB).applyMatrix4(mesh.matrixWorld);
+                 const vC = new THREE.Vector3().fromBufferAttribute(pos, iC).applyMatrix4(mesh.matrixWorld);
+
+                 const triNormal = new THREE.Vector3().crossVectors(vB.clone().sub(vA), vC.clone().sub(vA)).normalize();
+
+
+                 let totalArea = 0;
+                 const threshold = 0.95; // Cosine similarity - lowered to capture slightly curved faces
+
+                 const p1 = new THREE.Vector3();
+                 const p2 = new THREE.Vector3();
+                 const p3 = new THREE.Vector3();
+
+                 // Pre-calculate target normal in Local Space to avoid matrix mul for every face
+                 const invMat = mesh.matrixWorld.clone().invert();
+                 const localTriNormal = triNormal.clone().transformDirection(invMat).normalize();
+
+                 // Respect drawRange (important for merged geometries or optimization)
+                 const start = geom.drawRange.start || 0;
+                 const drawCount = (geom.drawRange.count !== Infinity && geom.drawRange.count !== undefined)
+                                   ? geom.drawRange.count
+                                   : index.count;
+                 const end = start + drawCount;
+
+                 // Simple approach: iterate all triangles and sum areas of those with similar normals
+                 for(let i = start; i < end; i += 3) {
+                     const idx1 = index.getX(i);
+                     const idx2 = index.getX(i+1);
+                     const idx3 = index.getX(i+2);
+
+                     p1.fromBufferAttribute(pos, idx1);
+                     p2.fromBufferAttribute(pos, idx2);
+                     p3.fromBufferAttribute(pos, idx3);
+
+                     const fn = new THREE.Vector3().crossVectors(p2.clone().sub(p1), p3.clone().sub(p1)).normalize();
+
+                     if (fn.dot(localTriNormal) > threshold) {
+                         // Clone and transform points to world for accurate area
+                         const wp1 = p1.clone().applyMatrix4(mesh.matrixWorld);
+                         const wp2 = p2.clone().applyMatrix4(mesh.matrixWorld);
+                         const wp3 = p3.clone().applyMatrix4(mesh.matrixWorld);
+
+                         const edge1 = wp2.clone().sub(wp1);
+                         const edge2 = wp3.clone().sub(wp1);
+                         const area = edge1.cross(edge2).length() * 0.5;
+                         totalArea += area;
+                     }
+                 }
+
+                 return totalArea;
             },
 
             toggleCameraMode() {
@@ -2415,16 +3153,30 @@
                 newCamera.updateProjectionMatrix();
 
                 // Update controls & scene
+                if (camera.parent) camera.parent.remove(camera); // Remove old camera safely
+                scene.add(newCamera); // CRITICAL: Camera MUST be in scene for attached lights to work
+
                 this.iges.camera = newCamera;
+
+                const sunLight = new THREE.DirectionalLight(0xffffff, 1.2); // Intensity 1.2 biar terang
+                sunLight.name = 'CameraMainLight';
+                sunLight.position.set(0, 0, 0);
+                sunLight.target.position.set(0, 0, -1);
+                newCamera.add(sunLight);
+                newCamera.add(sunLight.target);
+
+                // 2024-Fix: Re-initialize Headlight (Reset & Recreate)
+                // Ini memastikan lampu & target dibuat ulang dengan benar dan menempel ke kamera baru
+                if (this.headlight.enabled) {
+                    this.headlight.enabled = false; // Reset state
+                    this.headlight.object = null;   // Buang object lama
+                    this.toggleHeadlight();         // Nyalakan ulang (Fresh Start)
+                }
                 controls.object = newCamera;
                 controls.update();
 
-                // Perbarui measure tool jika aktif (karena raycaster butuh kamera yg benar)
-                if (this.iges.measure.enabled) {
-                    this.toggleMeasure(); // matikan dulu
-                    this.toggleMeasure(); // nyalakan lagi dengan kamera baru
-                }
-
+                // Force render untuk update visual
+                this._forceRender();
             },
 
             highlightPart(uuid) {
@@ -2486,50 +3238,406 @@
                 }
             },
 
-            toggleClipping() {
-                this.clipping.enabled = !this.clipping.enabled;
-                const {
-                    THREE
-                } = this.iges; // Kita butuh THREE untuk bikin Plane
+            // Multi-axis clipping functions
+            toggleAxisClipping(axis) {
+                const axisData = this.clipping[axis];
+                axisData.enabled = !axisData.enabled;
+                const { THREE } = this.iges;
 
-                if (this.clipping.enabled) {
-                    // Reset slider ke 0
-                    this.clipping.value = 0;
+                if (axisData.enabled) {
+                    // Reset value to 0
+                    axisData.value = 0;
 
-                    // Buat Plane Baru
-                    this.clipping.plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
+                    // Create plane with correct normal vector
+                    const normals = {
+                        x: new THREE.Vector3(axisData.flipped ? -1 : 1, 0, 0),
+                        y: new THREE.Vector3(0, axisData.flipped ? -1 : 1, 0),
+                        z: new THREE.Vector3(0, 0, axisData.flipped ? -1 : 1)
+                    };
+
+                    axisData.plane = new THREE.Plane(normals[axis], 0);
+
+                    // Auto-create plane helper if showHelper is true
+                    if (axisData.showHelper) {
+                        this._createPlaneHelper(axis);
+                    }
                 } else {
-                    this.clipping.plane = null;
+                    axisData.plane = null;
+
+                    // Remove plane helper when axis is disabled
+                    if (axisData.helper) {
+                        this.iges.scene.remove(axisData.helper);
+                        axisData.helper = null;
+                    }
                 }
-                this.setDisplayStyle(this.currentStyle);
+
+                this._updateMaterialsWithClipping();
             },
 
-            updateClippingVal() {
-                if (this.clipping.plane) {
-                    // Update posisi irisan berdasarkan slider
-                    // Negatif agar arah gesernya intuitif (Kanan = Maju, Kiri = Mundur)
-                    this.clipping.plane.constant = -this.clipping.value;
+            updateAxisClipping(axis) {
+                const axisData = this.clipping[axis];
+                if (axisData.plane) {
+                    axisData.plane.constant = axisData.flipped ? axisData.value : -axisData.value;
+                    this._updatePlaneHelper(axis);
                 }
+            },
+
+            flipAxis(axis) {
+                const axisData = this.clipping[axis];
+                axisData.flipped = !axisData.flipped;
+
+                if (axisData.enabled && axisData.plane) {
+                    const { THREE } = this.iges;
+                    const normals = {
+                        x: new THREE.Vector3(axisData.flipped ? -1 : 1, 0, 0),
+                        y: new THREE.Vector3(0, axisData.flipped ? -1 : 1, 0),
+                        z: new THREE.Vector3(0, 0, axisData.flipped ? -1 : 1)
+                    };
+
+                    axisData.plane.normal.copy(normals[axis]);
+                    axisData.plane.constant = axisData.flipped ? axisData.value : -axisData.value;
+                    this._updateMaterialsWithClipping();
+
+                    if (axisData.helper && axisData.showHelper) {
+                        this._createPlaneHelper(axis);
+                    }
+                }
+            },
+
+            resetAllClipping() {
+                ['x', 'y', 'z'].forEach(axis => {
+                    const axisData = this.clipping[axis];
+                    axisData.enabled = false;
+                    axisData.value = 0;
+                    axisData.flipped = false;
+                    axisData.plane = null;
+                    if (axisData.helper) {
+                        this.iges.scene.remove(axisData.helper);
+                        axisData.helper = null;
+                    }
+                });
+                this._updateMaterialsWithClipping();
+            },
+
+            incrementAxisValue(axis) {
+                const axisData = this.clipping[axis];
+                const newValue = Math.min(axisData.value + this.clipping.step, this.clipping.max);
+                axisData.value = newValue;
+                this.updateAxisClipping(axis);
+                this._updatePlaneHelper(axis);
+            },
+
+            decrementAxisValue(axis) {
+                const axisData = this.clipping[axis];
+                const newValue = Math.max(axisData.value - this.clipping.step, this.clipping.min);
+                axisData.value = newValue;
+                this.updateAxisClipping(axis);
+                this._updatePlaneHelper(axis);
+            },
+
+            setAxisValueDirect(axis, value) {
+                const axisData = this.clipping[axis];
+                const numValue = parseFloat(value);
+
+                // Validate and clamp value
+                if (isNaN(numValue)) return;
+
+                // Round to 2 decimal places
+                const roundedValue = Math.round(numValue * 100) / 100;
+                axisData.value = Math.max(this.clipping.min, Math.min(this.clipping.max, roundedValue));
+
+                this.updateAxisClipping(axis);
+                this._updatePlaneHelper(axis);
+            },
+
+            togglePlaneHelper(axis) {
+                const axisData = this.clipping[axis];
+                axisData.showHelper = !axisData.showHelper;
+
+                if (axisData.showHelper && !axisData.helper) {
+                    this._createPlaneHelper(axis);
+                } else if (!axisData.showHelper && axisData.helper) {
+                    this.iges.scene.remove(axisData.helper);
+                    axisData.helper = null;
+                }
+            },
+
+            toggleSectionCap(axis) {
+                const axisData = this.clipping[axis];
+                console.log(`Section cap for ${axis}-axis:`, axisData.showCap);
+            },
+
+            _createPlaneHelper(axis) {
+                const { THREE, scene, rootModel, renderer, camera, controls } = this.iges;
+                if (!THREE || !scene || !rootModel) return;
+
+                const axisData = this.clipping[axis];
+
+                if (axisData.helper) {
+                    scene.remove(axisData.helper);
+                }
+
+                const box = new THREE.Box3().setFromObject(rootModel);
+                const size = new THREE.Vector3();
+                box.getSize(size);
+
+                let width, height;
+                if (axis === 'x') {
+                    // X-plane covers Y-Z plane
+                    width = size.z;
+                    height = size.y;
+                } else if (axis === 'y') {
+                    // Y-plane covers X-Z plane
+                    width = size.x;
+                    height = size.z;
+                } else {
+                    // Z-plane covers X-Y plane
+                    width = size.x;
+                    height = size.y;
+                }
+
+                // Add margins (10% buffer)
+                width *= 1.1;
+                height *= 1.1;
+
+                // Color mapping
+                const colors = {
+                    x: 0xff0000, // Red
+                    y: 0x00ff00, // Green
+                    z: 0x0000ff  // Blue
+                };
+
+                // Create plane geometry
+                const planeGeometry = new THREE.PlaneGeometry(width, height, 10, 10);
+                const planeMaterial = new THREE.MeshBasicMaterial({
+                    color: colors[axis],
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.2,
+                    wireframe: false,
+                    depthTest: true,
+                    depthWrite: false
+                });
+
+                const planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+
+                planeMesh.renderOrder = 999;
+                planeMesh.raycast = THREE.Mesh.prototype.raycast;
+
+                const wireframeGeometry = new THREE.EdgesGeometry(planeGeometry);
+                const wireframeMaterial = new THREE.LineBasicMaterial({
+                    color: colors[axis],
+                    opacity: 0.6,
+                    transparent: true
+                });
+                const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
+                planeMesh.add(wireframe);
+
+                // Orient plane based on axis
+                if (axis === 'x') {
+                    planeMesh.rotation.y = Math.PI / 2;
+                } else if (axis === 'y') {
+                    planeMesh.rotation.x = Math.PI / 2;
+                }
+
+                // Position plane
+                planeMesh.position.set(
+                    axis === 'x' ? axisData.value : 0,
+                    axis === 'y' ? axisData.value : 0,
+                    axis === 'z' ? axisData.value : 0
+                );
+
+                // Make plane interactive for dragging
+                planeMesh.userData.axis = axis;
+                planeMesh.userData.isDraggable = true;
+
+                axisData.helper = planeMesh;
+                scene.add(planeMesh);
+
+                this._setupPlaneHelperDrag(axis);
+            },
+
+            _setupPlaneHelperDrag(axis) {
+                if (this._planeHelperDragInitialized) return;
+                this._planeHelperDragInitialized = true;
+
+                const { renderer, camera, controls } = this.iges;
+                if (!renderer || !camera) return;
+
+                const canvas = renderer.domElement;
+
+                // Store drag state globally
+                this._planeDragState = {
+                    isDragging: false,
+                    axis: null,
+                    dragPlane: null,
+                    offset: 0
+                };
+
+                // Mouse down handler
+                const onMouseDown = (event) => {
+                    // Skip if measure tool is active
+                    if (this.iges.measure?.enabled) return;
+
+                    const rect = canvas.getBoundingClientRect();
+                    const mouse = new this.iges.THREE.Vector2(
+                        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+                        -((event.clientY - rect.top) / rect.height) * 2 + 1
+                    );
+
+                    const raycaster = new this.iges.THREE.Raycaster();
+                    raycaster.setFromCamera(mouse, camera);
+
+                    // Check all active plane helpers
+                    for (const axisName of ['x', 'y', 'z']) {
+                        const axisData = this.clipping[axisName];
+                        if (!axisData.helper || !axisData.showHelper || !axisData.enabled) continue;
+
+                        const intersects = raycaster.intersectObject(axisData.helper, true);
+
+                        if (intersects.length > 0) {
+                            this._planeDragState.isDragging = true;
+                            this._planeDragState.axis = axisName;
+
+                            const intersectionPoint = intersects[0].point;
+                            const normal = new this.iges.THREE.Vector3();
+                            camera.getWorldDirection(normal);
+
+                            const plane = new this.iges.THREE.Plane();
+                            plane.setFromNormalAndCoplanarPoint(normal, intersectionPoint);
+                            this._planeDragState.dragPlane = plane;
+
+                            let clickValue;
+                            if (axisName === 'x') clickValue = intersectionPoint.x;
+                            else if (axisName === 'y') clickValue = intersectionPoint.y;
+                            else clickValue = intersectionPoint.z;
+
+                            this._planeDragState.offset = clickValue - axisData.value;
+
+                            // Disable orbit controls while dragging
+                            if (controls) controls.enabled = false;
+
+                            // Change cursor
+                            canvas.style.cursor = 'move';
+                            event.preventDefault();
+                            event.stopPropagation();
+                            break;
+                        }
+                    }
+                };
+
+                // Mouse move handler - drag plane
+                const onMouseMove = (event) => {
+                    if (!this._planeDragState.isDragging) return;
+
+                    const axis = this._planeDragState.axis;
+                    const axisData = this.clipping[axis];
+
+                    const rect = canvas.getBoundingClientRect();
+                    const mouse = new this.iges.THREE.Vector2(
+                        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+                        -((event.clientY - rect.top) / rect.height) * 2 + 1
+                    );
+
+                    const raycaster = new this.iges.THREE.Raycaster();
+                    raycaster.setFromCamera(mouse, camera);
+
+                    // Intersect with the virtual drag plane
+                    const targetPoint = new this.iges.THREE.Vector3();
+                    raycaster.ray.intersectPlane(this._planeDragState.dragPlane, targetPoint);
+
+                    if (targetPoint) {
+                        // Project the target point onto our axis to get the raw value
+                        let rawValue;
+                        if (axis === 'x') rawValue = targetPoint.x;
+                        else if (axis === 'y') rawValue = targetPoint.y;
+                        else rawValue = targetPoint.z;
+
+                        // Apply the initial offset
+                        let newValue = rawValue - this._planeDragState.offset;
+
+                        // Clamp
+                        const min = axisData.min !== undefined ? axisData.min : this.clipping.min;
+                        const max = axisData.max !== undefined ? axisData.max : this.clipping.max;
+                        newValue = Math.max(min, Math.min(max, newValue));
+
+                        // Round to 2 decimal places for cleaner display
+                        newValue = Math.round(newValue * 100) / 100;
+
+                        // Update
+                        axisData.value = newValue;
+                        this.updateAxisClipping(axis);
+                    }
+
+                    event.preventDefault();
+                };
+
+                // Mouse up handler
+                const onMouseUp = (event) => {
+                    if (this._planeDragState.isDragging) {
+                        this._planeDragState.isDragging = false;
+                        this._planeDragState.axis = null;
+                        this._planeDragState.dragPlane = null;
+
+                        // Re-enable orbit controls
+                        if (controls) controls.enabled = true;
+
+                        // Reset cursor
+                        canvas.style.cursor = 'default';
+                    }
+                };
+
+                // Add event listeners once
+                canvas.addEventListener('mousedown', onMouseDown, false);
+                canvas.addEventListener('mousemove', onMouseMove, false);
+                canvas.addEventListener('mouseup', onMouseUp, false);
+                canvas.addEventListener('mouseleave', onMouseUp, false);
+
+                console.log('Plane helper drag interaction initialized (Ray-to-Plane v3)');
+            },
+
+            // NEW: Update plane helper position
+            _updatePlaneHelper(axis) {
+                const axisData = this.clipping[axis];
+                if (!axisData.helper || !axisData.showHelper) return;
+
+                // Update position based on current value
+                if (axis === 'x') {
+                    axisData.helper.position.x = axisData.value;
+                } else if (axis === 'y') {
+                    axisData.helper.position.y = axisData.value;
+                } else if (axis === 'z') {
+                    axisData.helper.position.z = axisData.value;
+                }
+            },
+
+            // Helper to check if any clipping is active
+            get hasActiveClipping() {
+                return this.clipping.x.enabled || this.clipping.y.enabled || this.clipping.z.enabled;
             },
 
             // Helper untuk menempelkan plane ke material
             _updateMaterialsWithClipping() {
-                const {
-                    rootModel
-                } = this.iges;
+                const { rootModel } = this.iges;
                 if (!rootModel) return;
 
-                const planes = this.clipping.enabled && this.clipping.plane ? [this.clipping.plane] : [];
+                // Collect all active clipping planes
+                const planes = [];
+                ['x', 'y', 'z'].forEach(axis => {
+                    const axisData = this.clipping[axis];
+                    if (axisData.enabled && axisData.plane) {
+                        planes.push(axisData.plane);
+                    }
+                });
 
                 rootModel.traverse((o) => {
                     if (o.isMesh && o.material) {
-                        // Kita handle jika materialnya Array atau Single
                         const mats = Array.isArray(o.material) ? o.material : [o.material];
 
                         mats.forEach(m => {
                             m.clippingPlanes = planes;
-                            m.clipShadows = true; // Agar bayangan ikut terpotong (opsional)
-                            m.needsUpdate = true; // Beri tahu Three.js ada perubahan
+                            m.clipShadows = true;
+                            m.needsUpdate = true;
                         });
                     }
                 });
@@ -2540,37 +3648,123 @@
                 if (!canvas) return;
 
                 if (on) {
-                    // Event Klik (Untuk ambil titik 1 dan 2)
+                    // Event Click - for picking measurement points
                     this._onMeasureClick = (ev) => {
                         if (!this.iges.measure.enabled) return;
-                        const p = this._pickPoint(ev); // Ini sudah pakai snapping baru
-                        if (!p) return;
 
                         const M = this.iges.measure;
-                        if (!M.p1) {
-                            M.p1 = p;
-                            // Opsional: Beri tanda visual di P1
-                        } else {
-                            M.p2 = p;
-                            this._drawMeasurement(M.p1, M.p2);
-                            M.p1 = null;
-                            M.p2 = null; // Reset setelah garis terbentuk
+                        const pickResult = this._pickPointAdvanced(ev);
+                        if (!pickResult) return;
+
+                        const p = pickResult.point;
+
+                        // --- POINT TO POINT & EDGE ---
+                        // --- POINT TO POINT ---
+                        if (M.mode === 'point') {
+                             if (!M.p1) {
+                                M.p1 = p;
+                                M.snap.type = pickResult.snapType;
+                                M.hoverInstruction = 'Click 2nd Point';
+                            } else {
+                                this._drawMeasurement(M.p1, p, 'point');
+                                M.p1 = null;
+                                M.hoverInstruction = 'Click 1st Point';
+                            }
+                        }
+                        // --- EDGE (Auto Length + Manual Fallback) ---
+                        else if (M.mode === 'edge') {
+                            // If user clicked an edge (detected via snap)
+                            if (pickResult.edge && (pickResult.snapType === 'edge' || pickResult.snapType === 'midpoint')) {
+                                this._drawMeasurement(pickResult.edge.start, pickResult.edge.end, 'edge');
+                                M.p1 = null;
+                                M.hoverInstruction = 'Click another Edge';
+                            } else {
+                                // Fallback to manual 2-point measurement
+                                if (!M.p1) {
+                                    M.p1 = p;
+                                    M.snap.type = pickResult.snapType;
+                                    M.hoverInstruction = 'Click 2nd Point (Manual)';
+                                } else {
+                                    this._drawMeasurement(M.p1, p, 'edge');
+                                    M.p1 = null;
+                                    M.hoverInstruction = 'Click 1st Point or Select Edge';
+                                }
+                            }
+                        }
+                        // --- ANGLE (3 Points) ---
+                        else if (M.mode === 'angle') {
+                            if (!M.p1) {
+                                M.p1 = p;
+                                M.hoverInstruction = 'Click Vertex (2nd Point)';
+                            } else if (!M.p2) {
+                                M.p2 = p; // Vertex
+                                M.hoverInstruction = 'Click End Point (3rd Point)';
+                            } else {
+                                this._drawAngleMeasurement(M.p1, M.p2, p);
+                                M.p1 = M.p2 = null;
+                                M.hoverInstruction = 'Click 1st Point (Start)';
+                            }
+                        }
+                        // --- RADIUS (3 Points) ---
+                        else if (M.mode === 'radius') {
+                            if (!M.p1) {
+                                M.p1 = p;
+                                M.hoverInstruction = 'Click 2nd Point on Curve';
+                            } else if (!M.p2) {
+                                M.p2 = p;
+                                M.hoverInstruction = 'Click 3rd Point on Curve';
+                            } else {
+                                M.p3 = p;
+                                const circle = this._calculateCircleFrom3Points(M.p1, M.p2, M.p3);
+                                if (circle) {
+                                    this._drawRadiusMeasurement(circle, M.p1, M.p2, M.p3);
+                                } else {
+                                    console.warn("Points are collinear, cannot calculate circle.");
+                                }
+                                M.p1 = M.p2 = M.p3 = null;
+                                M.hoverInstruction = 'Click 1st Point on Curve';
+                            }
+                        }
+                        // --- FACE AREA ---
+                        else if (M.mode === 'face') {
+                            if (pickResult.hit && pickResult.hit.face) {
+                                const area = this._calculateFaceArea(pickResult.hit.object, pickResult.hit.faceIndex);
+                                this._drawFaceAreaMeasurement(pickResult.point, area, pickResult.normal, pickResult.hit.object);
+                                M.hoverInstruction = 'Click another Face';
+                            }
                         }
                     };
 
-                    // Event Hover (Untuk efek magnet/preview)
+                    // Event Hover - for snap preview
                     this._onMeasureMove = (ev) => {
                         if (!this.iges.measure.enabled) return;
-                        this._pickPoint(ev); // Panggil ini cuma buat update posisi Marker merah
+                        this._pickPointAdvanced(ev);
                     };
 
-                    canvas.addEventListener('click', this._onMeasureClick); // Ganti dblclick jadi click biar lebih responsif
+                    // Right-click to cancel current interactions
+                    this._onMeasureRightClick = (ev) => {
+                        ev.preventDefault();
+                        const M = this.iges.measure;
+                        M.p1 = null;
+                        M.p2 = null;
+                        M.p3 = null;
+
+                        // Reset instruction
+                        this.setMeasureMode(M.mode);
+
+                        if (this.snapMarker) this.snapMarker.visible = false;
+                        console.log('Measurement cancelled');
+                    };
+
+                    canvas.addEventListener('click', this._onMeasureClick);
                     canvas.addEventListener('mousemove', this._onMeasureMove);
+                    canvas.addEventListener('contextmenu', this._onMeasureRightClick);
                 } else {
                     if (this._onMeasureClick) canvas.removeEventListener('click', this._onMeasureClick);
                     if (this._onMeasureMove) canvas.removeEventListener('mousemove', this._onMeasureMove);
+                    if (this._onMeasureRightClick) canvas.removeEventListener('contextmenu', this._onMeasureRightClick);
 
-                    // Sembunyikan marker saat mode measure mati
+                    // Hide marker when measure mode is off
                     if (this.snapMarker) this.snapMarker.visible = false;
                 }
             },
@@ -2592,7 +3786,6 @@
                 const raycaster = new THREE.Raycaster();
                 raycaster.setFromCamera(mouse, camera);
 
-                // Gunakan boundsTree untuk performa (karena Anda sudah fix BVH sebelumnya)
                 raycaster.firstHitOnly = true;
 
                 const hits = raycaster.intersectObjects(rootModel.children, true);
@@ -2602,28 +3795,21 @@
                 }
 
                 const hit = hits[0];
-                let finalPoint = hit.point.clone(); // Default: titik di permukaan
+                let finalPoint = hit.point.clone();
 
                 // === LOGIKA SNAPPING (MAGNET) ===
-                // Cek 3 titik sudut (vertex) dari segitiga yang kena raycast
                 if (hit.face) {
                     const mesh = hit.object;
                     const pos = mesh.geometry.attributes.position;
 
-                    // Ambil koordinat 3 sudut segitiga tersebut
                     const vA = new THREE.Vector3().fromBufferAttribute(pos, hit.face.a).applyMatrix4(mesh.matrixWorld);
                     const vB = new THREE.Vector3().fromBufferAttribute(pos, hit.face.b).applyMatrix4(mesh.matrixWorld);
                     const vC = new THREE.Vector3().fromBufferAttribute(pos, hit.face.c).applyMatrix4(mesh.matrixWorld);
-
-                    // Hitung jarak kursor ke masing-masing sudut
                     const distA = hit.point.distanceTo(vA);
                     const distB = hit.point.distanceTo(vB);
                     const distC = hit.point.distanceTo(vC);
 
-                    // Tentukan threshold (jarak toleransi). Misal: 5% dari ukuran layar atau angka fix
-                    // Disini kita pakai angka fix dulu agar gampang. Misal 2 unit world.
-                    // Untuk lebih canggih, hitung berdasarkan jarak kamera.
-                    const snapThreshold = hit.distance * 0.05; // 5% dari jarak mata ke objek
+                    const snapThreshold = hit.distance * 0.05;
 
                     let closest = null;
                     let minInfo = snapThreshold;
@@ -2641,7 +3827,6 @@
                         minInfo = distC;
                     }
 
-                    // Jika ada yang dekat, ganti titik akhir jadi vertex tersebut
                     if (closest) {
                         finalPoint = closest;
                     }
@@ -2658,14 +3843,13 @@
                     scene
                 } = this.iges;
 
-                // Jika marker belum ada, buat dulu
                 if (!this.snapMarker) {
-                    const geom = new THREE.SphereGeometry(2, 16, 16); // Ukuran bola sesuaikan skala
+                    const geom = new THREE.SphereGeometry(2, 16, 16);
                     const mat = new THREE.MeshBasicMaterial({
-                        color: 0xff0000, // Warna Merah
+                        color: 0xff0000,
                         transparent: true,
                         opacity: 0.8,
-                        depthTest: false // Agar terlihat di atas objek (always on top)
+                        depthTest: false
                     });
                     this.snapMarker = new THREE.Mesh(geom, mat);
                     this.snapMarker.renderOrder = 999;
@@ -2675,105 +3859,742 @@
                 this.snapMarker.visible = true;
                 this.snapMarker.position.copy(position);
 
-                // Skalakan marker agar ukurannya konsisten di layar (opsional tapi bagus)
                 const scale = this.iges.camera.position.distanceTo(position) * 0.01;
                 this.snapMarker.scale.set(scale, scale, scale);
             },
 
-            _drawMeasurement(a, b) {
+            _pickPointAdvanced(ev) {
+                const {
+                    THREE,
+                    camera,
+                    rootModel,
+                    renderer
+                } = this.iges;
+                if (!renderer) return null;
+
+                const rect = renderer.domElement.getBoundingClientRect();
+                const mouse = new THREE.Vector2(
+                    ((ev.clientX - rect.left) / rect.width) * 2 - 1,
+                    -((ev.clientY - rect.top) / rect.height) * 2 + 1
+                );
+
+                const raycaster = new THREE.Raycaster();
+                raycaster.setFromCamera(mouse, camera);
+                raycaster.firstHitOnly = true;
+
+                const hits = raycaster.intersectObjects(rootModel.children, true);
+                if (!hits.length) {
+                    if (this.snapMarker) this.snapMarker.visible = false;
+                    return null;
+                }
+
+                const hit = hits[0];
+                let finalPoint = hit.point.clone();
+                let snapType = 'surface';
+                let edgeInfo = null;
+                let faceNormal = null;
+
+                if (hit.face) {
+                    const mesh = hit.object;
+                    const pos = mesh.geometry.attributes.position;
+
+                    // Get triangle vertices
+                    const vA = new THREE.Vector3().fromBufferAttribute(pos, hit.face.a).applyMatrix4(mesh.matrixWorld);
+                    const vB = new THREE.Vector3().fromBufferAttribute(pos, hit.face.b).applyMatrix4(mesh.matrixWorld);
+                    const vC = new THREE.Vector3().fromBufferAttribute(pos, hit.face.c).applyMatrix4(mesh.matrixWorld);
+
+                    // Store face normal for angle calculations
+                    faceNormal = hit.face.normal.clone().transformDirection(mesh.matrixWorld);
+
+                    // Get edge midpoints
+                    const midAB = vA.clone().add(vB).multiplyScalar(0.5);
+                    const midBC = vB.clone().add(vC).multiplyScalar(0.5);
+                    const midCA = vC.clone().add(vA).multiplyScalar(0.5);
+
+                    const snapThreshold = hit.distance * 0.05;
+                    const edgeSnapThreshold = hit.distance * 0.03;
+
+                    // Check vertex snap
+                    const distA = hit.point.distanceTo(vA);
+                    const distB = hit.point.distanceTo(vB);
+                    const distC = hit.point.distanceTo(vC);
+
+                    let closest = null;
+                    let minDist = snapThreshold;
+
+                    if (distA < minDist) { closest = vA; minDist = distA; snapType = 'vertex'; }
+                    if (distB < minDist) { closest = vB; minDist = distB; snapType = 'vertex'; }
+                    if (distC < minDist) { closest = vC; minDist = distC; snapType = 'vertex'; }
+
+                    // Check midpoint snap (if no vertex snap)
+                    if (!closest) {
+                        const distMidAB = hit.point.distanceTo(midAB);
+                        const distMidBC = hit.point.distanceTo(midBC);
+                        const distMidCA = hit.point.distanceTo(midCA);
+
+                        if (distMidAB < edgeSnapThreshold) { closest = midAB; snapType = 'midpoint'; edgeInfo = { start: vA, end: vB }; }
+                        else if (distMidBC < edgeSnapThreshold) { closest = midBC; snapType = 'midpoint'; edgeInfo = { start: vB, end: vC }; }
+                        else if (distMidCA < edgeSnapThreshold) { closest = midCA; snapType = 'midpoint'; edgeInfo = { start: vC, end: vA }; }
+                    }
+
+                    // Check edge snap (project point to nearest edge)
+                    if (!closest) {
+                        const edges = [
+                            { start: vA, end: vB },
+                            { start: vB, end: vC },
+                            { start: vC, end: vA }
+                        ];
+
+                        for (const edge of edges) {
+                            const projected = this._projectPointOnLine(hit.point, edge.start, edge.end);
+                            if (projected && hit.point.distanceTo(projected) < edgeSnapThreshold) {
+                                closest = projected;
+                                snapType = 'edge';
+                                edgeInfo = edge;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (closest) {
+                        finalPoint = closest;
+                    }
+                }
+
+                if (!this.iges.measure.snap.enabled) {
+                    snapType = 'surface';
+                    finalPoint = hit.point.clone();
+                } else {
+                   this._updateSnapMarkerAdvanced(finalPoint, snapType);
+                }
+
+                return {
+                    point: finalPoint,
+                    snapType: snapType,
+                    edge: edgeInfo,
+                    normal: faceNormal,
+                    hit: hit
+                };
+            },
+
+            // Project point onto a line segment
+            _projectPointOnLine(point, lineStart, lineEnd) {
+                const THREE = this.iges.THREE;
+                const line = lineEnd.clone().sub(lineStart);
+                const lineLen = line.length();
+                if (lineLen === 0) return null;
+
+                const lineDir = line.normalize();
+                const pointVec = point.clone().sub(lineStart);
+                const t = pointVec.dot(lineDir);
+
+                // Check if projection is within line segment
+                if (t < 0 || t > lineLen) return null;
+
+                return lineStart.clone().add(lineDir.multiplyScalar(t));
+            },
+
+            // Update snap marker with color based on snap type
+            _updateSnapMarkerAdvanced(position, snapType) {
+                const { THREE, scene } = this.iges;
+
+                if (!this.snapMarker) {
+                    // Balanced size - visible but not too large
+                    const geom = new THREE.SphereGeometry(1.2, 16, 16); // Sweet spot between 0.8 and 2
+                    const mat = new THREE.MeshBasicMaterial({
+                        color: 0xff0000,
+                        transparent: true,
+                        opacity: 0.7, // More visible than 0.5, less solid than 0.9
+                        depthTest: false
+                    });
+                    this.snapMarker = new THREE.Mesh(geom, mat);
+                    this.snapMarker.renderOrder = 999;
+                    scene.add(this.snapMarker);
+                }
+
+                // Color based on snap type
+                const colors = {
+                    vertex: 0xff0000,    // Red for vertex
+                    edge: 0x00ff00,      // Green for edge
+                    midpoint: 0xffff00,  // Yellow for midpoint
+                    surface: 0x0088ff    // Blue for surface
+                };
+
+                this.snapMarker.material.color.setHex(colors[snapType] || 0xff0000);
+                this.snapMarker.visible = true;
+                this.snapMarker.position.copy(position);
+
+                // Balanced scale - visible but not overwhelming
+                const scale = this.iges.camera.position.distanceTo(position) * 0.007; // Between 0.005 and 0.01
+                this.snapMarker.scale.set(scale, scale, scale);
+            },
+
+            // Draw edge length measurement
+            _drawEdgeMeasurement(edge) {
+                if (!edge || !edge.start || !edge.end) return;
+                this._drawMeasurement(edge.start, edge.end, 'edge');
+            },
+
+            // Draw face area measurement
+            _drawFaceAreaMeasurement(centerPoint, area, normal, targetMesh) {
+                const THREE = this.iges.THREE;
+                const uId = THREE.MathUtils.generateUUID();
+
+                // 1. Save original material if not already saved
+                if (targetMesh && targetMesh.isMesh) {
+                    if (!this._oriMats.has(targetMesh)) {
+                        const m = targetMesh.material;
+                        this._oriMats.set(targetMesh, Array.isArray(m) ? m.map(mm => mm.clone()) : m.clone());
+                    }
+
+                    // Prepare clipping planes if active
+                    const currentPlanes = (this.clipping.enabled && this.clipping.plane) ? [this.clipping.plane] : [];
+
+                    // Create highlight material (Red) with clipping support
+                    const highlightMat = new THREE.MeshBasicMaterial({
+                        color: 0xff0000,
+                        opacity: 0.6,
+                        transparent: true,
+                        depthTest: false,
+                        side: THREE.DoubleSide, // Render both front and back faces
+                        clippingPlanes: currentPlanes,
+                        clipShadows: true
+                    });
+
+                    targetMesh.material = highlightMat;
+                }
+
+                // 2. Create label at center point
+                const wrap = this.$refs.igesWrap;
+                const lbl = document.createElement('div');
+                lbl.className = 'measure-label-detailed';
+                Object.assign(lbl.style, {
+                    position: 'absolute',
+                    left: '0',
+                    top: '0',
+                    padding: '6px 10px',
+                    background: 'rgba(0, 0, 0, 0.85)',
+                    color: '#fff',
+                    borderRadius: '6px',
+                    fontSize: '10px',
+                    fontFamily: 'monospace',
+                    pointerEvents: 'none',
+                    zIndex: '10',
+                    border: '1px solid rgba(255, 0, 0, 0.5)',
+                    backdropFilter: 'blur(4px)'
+                });
+                wrap.appendChild(lbl);
+
+                // 3. Store result
+                const measureResult = {
+                    id: uId,
+                    type: 'face',
+                    area: area,
+                    meshUuid: targetMesh ? targetMesh.uuid : null,
+                    objectUuid: uId
+                };
+                this.iges.measure.results.push(measureResult);
+
+                // 4. Update & Dispose
+                const updateLabel = () => {
+                   if (!this.iges.camera) return;
+                   const pos = centerPoint.clone();
+                   pos.project(this.iges.camera);
+
+                   const x = (pos.x * 0.5 + 0.5) * wrap.clientWidth;
+                   const y = (-pos.y * 0.5 + 0.5) * wrap.clientHeight;
+
+                   lbl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+                   lbl.innerHTML = `<i class="fa-solid fa-vector-square text-red-500 mr-1"></i> Area: ${area.toFixed(2)} mm²`;
+                };
+
+                // Create a dummy group to hold the label update function
+                const group = new THREE.Group();
+                group.uuid = uId;
+                group.userData.meshUuid = targetMesh ? targetMesh.uuid : null; // Store for disposal
+                group.userData.update = updateLabel;
+                group.userData.dispose = () => {
+                    if (lbl.parentNode) lbl.parentNode.removeChild(lbl);
+                    // Restore original material using stored meshUuid
+                    if (group.userData.meshUuid) {
+                        const mesh = this.iges.rootModel.getObjectByProperty('uuid', group.userData.meshUuid);
+                        if (mesh && this._oriMats.has(mesh)) {
+                            const originalMat = this._oriMats.get(mesh);
+                            mesh.material = Array.isArray(originalMat)
+                                ? originalMat.map(m => m.clone())
+                                : originalMat.clone();
+                        }
+                    }
+                };
+
+                updateLabel();
+                this.iges.measure.group.add(group);
+            },
+
+            // Draw radius measurement
+            _drawRadiusMeasurement(circle, p1, p2, p3) {
+                 const { center, radius, normal } = circle;
+                 const THREE = this.iges.THREE;
+                 const group = new THREE.Group();
+                 const uId = THREE.MathUtils.generateUUID();
+                 group.name = uId;
+
+                 const curve = new THREE.EllipseCurve(
+                     0, 0,            // ax, aY
+                     radius, radius,  // xRadius, yRadius
+                     0, 2 * Math.PI,  // aStartAngle, aEndAngle
+                     false,           // aClockwise
+                     0                // aRotation
+                 );
+
+                 const points = curve.getPoints(64);
+                 const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                 const material = new THREE.LineBasicMaterial({ color: 0x00ff00, depthTest: false });
+                 const circleMesh = new THREE.Line(geometry, material);
+
+                 circleMesh.lookAt(normal);
+
+                 const defaultNormal = new THREE.Vector3(0, 0, 1);
+                 const quaternion = new THREE.Quaternion().setFromUnitVectors(defaultNormal, normal);
+                 circleMesh.setRotationFromQuaternion(quaternion);
+                 circleMesh.position.copy(center);
+                 group.add(circleMesh);
+
+                 // 2. Draw Center Point
+                 const centerGeom = new THREE.SphereGeometry(radius * 0.05, 16, 16);
+                 const centerMesh = new THREE.Mesh(centerGeom, new THREE.MeshBasicMaterial({ color: 0x00ff00, depthTest: false }));
+                 centerMesh.position.copy(center);
+                 group.add(centerMesh);
+
+                 // 3. Draw lines to the 3 points
+                 const linesGeom = new THREE.BufferGeometry().setFromPoints([p1, center, p2, center, p3]);
+                 const lines = new THREE.LineSegments(linesGeom, new THREE.LineDashedMaterial({ color: 0x00ff00, dashSize: 0.5, gapSize: 0.5 }));
+                 lines.computeLineDistances();
+                 group.add(lines);
+
+                 // 4. HTML Label
+                 const wrap = this.$refs.igesWrap;
+                 const lbl = document.createElement('div');
+                 lbl.className = 'measure-label-detailed';
+
+                 Object.assign(lbl.style, {
+                    position: 'absolute',
+                    left: '0',
+                    top: '0',
+                    padding: '6px 10px',
+                    background: 'rgba(0, 0, 0, 0.85)',
+                    color: '#fff',
+                    borderRadius: '6px',
+                    fontSize: '10px',
+                    fontFamily: 'monospace',
+                    pointerEvents: 'none',
+                    zIndex: '10',
+                    border: '1px solid rgba(0, 255, 0, 0.5)',
+                    backdropFilter: 'blur(4px)'
+                 });
+                 wrap.appendChild(lbl);
+
+                 const diameter = radius * 2;
+
+                  // 5. Store result
+                const measureResult = {
+                    id: uId,
+                    type: 'radius',
+                    radius: radius,
+                    diameter: diameter,
+                    center: center,
+                    objectUuid: uId
+                };
+                this.iges.measure.results.push(measureResult);
+
+                 const updateLabel = () => {
+                    if (!this.iges.camera) return;
+                    const pos = center.clone();
+                    pos.project(this.iges.camera);
+
+                    const x = (pos.x * 0.5 + 0.5) * wrap.clientWidth;
+                    const y = (-pos.y * 0.5 + 0.5) * wrap.clientHeight;
+
+                    lbl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+                    lbl.innerHTML = `
+                        <div class="text-green-400 font-bold mb-1"><i class="fa-regular fa-circle mr-1"></i>Radius: ${radius.toFixed(2)} mm</div>
+                        <div class="text-teal-400">Ø Diameter: ${diameter.toFixed(2)} mm</div>
+                    `;
+                 };
+
+                 group.userData.update = updateLabel;
+                 group.userData.dispose = () => {
+                     if (lbl.parentNode) lbl.parentNode.removeChild(lbl);
+                     geometry.dispose();
+                     material.dispose();
+                     centerGeom.dispose();
+                     linesGeom.dispose();
+                 };
+
+                 // CRITICAL: Set group.uuid for deletion to work
+                 group.uuid = uId;
+
+                 updateLabel();
+                 this.iges.measure.group.add(group);
+            },
+
+            // Draw angle measurement between three points
+            _drawAngleMeasurement(p1, vertex, p3) {
                 const THREE = this.iges.THREE;
                 const group = new THREE.Group();
 
-                // 1. Gambar Garis (Line)
-                const geom = new THREE.BufferGeometry().setFromPoints([a, b]);
-                const line = new THREE.Line(geom, new THREE.LineBasicMaterial({
-                    color: 0xffffff
-                })); // Putih biar kontras
-                group.add(line);
+                // Calculate vectors from vertex to other points
+                const v1 = p1.clone().sub(vertex).normalize();
+                const v2 = p3.clone().sub(vertex).normalize();
 
-                // 2. Gambar Titik Ujung (Sphere)
-                const s = Math.max(0.4, a.distanceTo(b) / 160); // Ukuran dinamis
-                const sg = new THREE.SphereGeometry(s, 16, 16);
-                const sm = new THREE.MeshBasicMaterial({
-                    color: 0xff0000
-                }); // Merah
-                const s1 = new THREE.Mesh(sg, sm);
-                s1.position.copy(a);
-                group.add(s1);
-                const s2 = new THREE.Mesh(sg, sm);
-                s2.position.copy(b);
-                group.add(s2);
+                // Calculate angle in degrees
+                const dotProduct = v1.dot(v2);
+                const angleRad = Math.acos(Math.max(-1, Math.min(1, dotProduct)));
+                const angleDeg = angleRad * (180 / Math.PI);
 
-                // 3. Label (HTML DOM Overlay)
+                // Calculate distances
+                const dist1 = vertex.distanceTo(p1);
+                const dist2 = vertex.distanceTo(p3);
+                const dist3 = p1.distanceTo(p3);
+
+                const uId = THREE.MathUtils.generateUUID();
+                group.name = uId;
+
+                // Store measurement result
+                const measureResult = {
+                    id: uId,
+                    angle: angleDeg,
+                    distance: dist3,
+                    deltaX: Math.abs(p3.x - p1.x),
+                    deltaY: Math.abs(p3.y - p1.y),
+                    deltaZ: Math.abs(p3.z - p1.z),
+                    vertex: vertex.clone(),
+                    pointA: p1.clone(),
+                    pointB: p3.clone(),
+                    type: 'angle',
+                    objectUuid: uId
+                };
+
+                this.iges.measure.currentResult = measureResult;
+                this.iges.measure.results.push(measureResult);
+
+                // Draw lines from vertex to both points
+                const arcRadius = Math.min(dist1, dist2) * 0.3;
+
+                // Line 1 (vertex to p1)
+                const line1Geom = new THREE.BufferGeometry().setFromPoints([vertex, p1]);
+                const line1 = new THREE.Line(line1Geom, new THREE.LineBasicMaterial({
+                    color: 0xffff00,
+                    depthTest: false
+                }));
+                line1.renderOrder = 999;
+                group.add(line1);
+
+                // Line 2 (vertex to p3)
+                const line2Geom = new THREE.BufferGeometry().setFromPoints([vertex, p3]);
+                const line2 = new THREE.Line(line2Geom, new THREE.LineBasicMaterial({
+                    color: 0xffff00,
+                    depthTest: false
+                }));
+                line2.renderOrder = 999;
+                group.add(line2);
+
+                // Draw arc between the two lines
+                const arcPoints = [];
+                const arcSegments = 32;
+                for (let i = 0; i <= arcSegments; i++) {
+                    const t = i / arcSegments;
+                    const currentAngle = t * angleRad;
+
+                    // Interpolate direction
+                    const dir = v1.clone().applyAxisAngle(
+                        v1.clone().cross(v2).normalize(),
+                        currentAngle
+                    );
+                    arcPoints.push(vertex.clone().add(dir.multiplyScalar(arcRadius)));
+                }
+                const arcGeom = new THREE.BufferGeometry().setFromPoints(arcPoints);
+                const arcLine = new THREE.Line(arcGeom, new THREE.LineBasicMaterial({
+                    color: 0xff00ff,
+                    depthTest: false
+                }));
+                arcLine.renderOrder = 999;
+                group.add(arcLine);
+
+                // Draw spheres at all three points
+                const sphereSize = arcRadius * 0.15;
+                const sphereGeom = new THREE.SphereGeometry(sphereSize, 16, 16);
+
+                const sphere1 = new THREE.Mesh(sphereGeom, new THREE.MeshBasicMaterial({ color: 0xff0000, depthTest: false }));
+                sphere1.position.copy(p1);
+                sphere1.renderOrder = 1000;
+                group.add(sphere1);
+
+                const sphereVertex = new THREE.Mesh(sphereGeom, new THREE.MeshBasicMaterial({ color: 0xffff00, depthTest: false }));
+                sphereVertex.position.copy(vertex);
+                sphereVertex.renderOrder = 1000;
+                group.add(sphereVertex);
+
+                const sphere3 = new THREE.Mesh(sphereGeom, new THREE.MeshBasicMaterial({ color: 0xff0000, depthTest: false }));
+                sphere3.position.copy(p3);
+                sphere3.renderOrder = 1000;
+                group.add(sphere3);
+
+                // Create HTML label for angle
                 const wrap = this.$refs.igesWrap;
                 const lbl = document.createElement('div');
-                lbl.className = 'measure-label';
+                lbl.className = 'measure-angle-label';
 
-                // === PERBAIKAN CSS DI SINI ===
                 Object.assign(lbl.style, {
                     position: 'absolute',
-                    top: '0px', // <--- WAJIB: Paksa mulai dari atas
-                    left: '0px', // <--- WAJIB: Paksa mulai dari kiri
-                    padding: '4px 8px',
-                    background: 'rgba(0, 0, 0, 0.8)',
+                    left: '0',
+                    top: '0',
+                    padding: '6px 10px',
+                    background: 'rgba(0, 0, 0, 0.85)',
                     color: '#fff',
-                    borderRadius: '4px',
-                    fontSize: '11px',
+                    borderRadius: '6px',
+                    fontSize: '10px',
                     fontFamily: 'monospace',
-                    pointerEvents: 'none', // Agar klik tembus ke canvas
-                    zIndex: '50', // Pastikan di atas canvas
-                    whiteSpace: 'nowrap',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                    pointerEvents: 'none',
+                    zIndex: '50',
+                    border: '1px solid rgba(255, 0, 255, 0.5)',
+                    backdropFilter: 'blur(4px)'
                 });
-                // =============================
 
                 wrap.appendChild(lbl);
 
-                // Fungsi Update Posisi (Dipanggil setiap frame di animate loop)
                 const updateLabel = () => {
                     if (!this.iges.camera) return;
 
-                    // Ambil titik tengah antara A dan B
-                    const mid = a.clone().add(b).multiplyScalar(0.5);
+                    const labelPos = vertex.clone().add(v1.clone().add(v2).normalize().multiplyScalar(arcRadius * 1.5));
+                    labelPos.project(this.iges.camera);
 
-                    // Proyeksikan titik 3D ke Layar 2D
-                    // Hasil project() adalah range -1 s/d 1 (NDC)
+                    const w = wrap.clientWidth;
+                    const h = wrap.clientHeight;
+                    const x = (labelPos.x * 0.5 + 0.5) * w;
+                    const y = (-labelPos.y * 0.5 + 0.5) * h;
+
+                    lbl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+
+                    lbl.innerHTML = `
+                        <div class="text-purple-400 font-bold mb-1"><i class="fa-solid fa-angle-left mr-1"></i>Angle: ${angleDeg.toFixed(2)}°</div>
+                        <div class="text-blue-300 mb-1">Dist: ${dist3.toFixed(2)} mm</div>
+                        <div class="grid grid-cols-3 gap-1 text-[9px] opacity-80">
+                            <span class="text-red-400">ΔX: ${measureResult.deltaX.toFixed(2)}</span>
+                            <span class="text-green-400">ΔY: ${measureResult.deltaY.toFixed(2)}</span>
+                            <span class="text-blue-400">ΔZ: ${measureResult.deltaZ.toFixed(2)}</span>
+                        </div>
+                    `;
+                };
+
+                group.userData.update = updateLabel;
+                group.userData.measureResult = measureResult;
+
+                group.userData.dispose = () => {
+                    if (lbl.parentNode) lbl.parentNode.removeChild(lbl);
+                    group.traverse(child => {
+                        if (child.geometry) child.geometry.dispose();
+                        if (child.material) child.material.dispose();
+                    });
+                };
+
+                // CRITICAL: Set group.uuid for deletion to work
+                group.uuid = uId;
+
+                updateLabel();
+                this.iges.measure.group.add(group);
+
+                console.log('Angle measurement created:', angleDeg.toFixed(3) + '°');
+            },
+
+            _drawMeasurement(a, b, measureType = 'point') {
+                const THREE = this.iges.THREE;
+                const group = new THREE.Group();
+
+                // Calculate measurement data
+                const distance = a.distanceTo(b);
+                const deltaX = Math.abs(b.x - a.x);
+                const deltaY = Math.abs(b.y - a.y);
+                const deltaZ = Math.abs(b.z - a.z);
+
+                // Calculate angle from horizontal (XY plane)
+                const horizontalDist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                const angle = Math.atan2(deltaZ, horizontalDist) * (180 / Math.PI);
+
+                const uId = THREE.MathUtils.generateUUID();
+                group.name = uId;
+
+                // Store measurement result for panel display
+                const measureResult = {
+                    id: uId,
+                    distance: distance,
+                    deltaX: deltaX,
+                    deltaY: deltaY,
+                    deltaZ: deltaZ,
+                    angle: Math.abs(angle),
+                    pointA: a.clone(),
+                    pointB: b.clone(),
+                    type: measureType,
+                    objectUuid: uId,
+                    totalLength: (measureType === 'edge' || measureType === 'point') ? distance : undefined
+                };
+
+                this.iges.measure.currentResult = measureResult;
+                this.iges.measure.results.push(measureResult);
+
+                // 1. Draw main measurement line (White)
+                const mainLineGeom = new THREE.BufferGeometry().setFromPoints([a, b]);
+                const mainLine = new THREE.Line(mainLineGeom, new THREE.LineBasicMaterial({
+                    color: 0xffffff,
+                    linewidth: 2,
+                    depthTest: false
+                }));
+                mainLine.renderOrder = 999;
+                group.add(mainLine);
+
+                // 2. Draw Delta Lines (X=Red, Y=Green, Z=Blue) - eDrawings style
+                const cornerXY = new THREE.Vector3(b.x, b.y, a.z);
+                const cornerX = new THREE.Vector3(b.x, a.y, a.z);
+
+                // Delta X line (Red) - from A to corner along X
+                if (deltaX > 0.01) {
+                    const xLineGeom = new THREE.BufferGeometry().setFromPoints([a, new THREE.Vector3(b.x, a.y, a.z)]);
+                    const xLine = new THREE.Line(xLineGeom, new THREE.LineDashedMaterial({
+                        color: 0xff4444,
+                        dashSize: 3,
+                        gapSize: 2,
+                        depthTest: false
+                    }));
+                    xLine.computeLineDistances();
+                    xLine.renderOrder = 998;
+                    group.add(xLine);
+                }
+
+                // Delta Y line (Green)
+                if (deltaY > 0.01) {
+                    const yStart = new THREE.Vector3(b.x, a.y, a.z);
+                    const yEnd = new THREE.Vector3(b.x, b.y, a.z);
+                    const yLineGeom = new THREE.BufferGeometry().setFromPoints([yStart, yEnd]);
+                    const yLine = new THREE.Line(yLineGeom, new THREE.LineDashedMaterial({
+                        color: 0x44ff44,
+                        dashSize: 3,
+                        gapSize: 2,
+                        depthTest: false
+                    }));
+                    yLine.computeLineDistances();
+                    yLine.renderOrder = 998;
+                    group.add(yLine);
+                }
+
+                // Delta Z line (Blue)
+                if (deltaZ > 0.01) {
+                    const zStart = cornerXY;
+                    const zEnd = b;
+                    const zLineGeom = new THREE.BufferGeometry().setFromPoints([zStart, zEnd]);
+                    const zLine = new THREE.Line(zLineGeom, new THREE.LineDashedMaterial({
+                        color: 0x4444ff,
+                        dashSize: 3,
+                        gapSize: 2,
+                        depthTest: false
+                    }));
+                    zLine.computeLineDistances();
+                    zLine.renderOrder = 998;
+                    group.add(zLine);
+                }
+
+                // 3. Draw endpoint spheres (Red)
+                const sphereSize = Math.max(0.5, distance / 100);
+                const sphereGeom = new THREE.SphereGeometry(sphereSize, 16, 16);
+                const sphereMat = new THREE.MeshBasicMaterial({
+                    color: 0xff0000,
+                    depthTest: false
+                });
+
+                const sphere1 = new THREE.Mesh(sphereGeom, sphereMat);
+                sphere1.position.copy(a);
+                sphere1.renderOrder = 1000;
+                group.add(sphere1);
+
+                const sphere2 = new THREE.Mesh(sphereGeom, sphereMat);
+                sphere2.position.copy(b);
+                sphere2.renderOrder = 1000;
+                group.add(sphere2);
+
+                // 4. Create HTML label with detailed info
+                const wrap = this.$refs.igesWrap;
+                const lbl = document.createElement('div');
+                lbl.className = 'measure-label-detailed';
+
+                Object.assign(lbl.style, {
+                    position: 'absolute',
+                    left: '0',
+                    top: '0',
+                    padding: '6px 10px',
+                    background: 'rgba(0, 0, 0, 0.85)',
+                    color: '#fff',
+                    borderRadius: '6px',
+                    fontSize: '10px',
+                    fontFamily: 'monospace',
+                    pointerEvents: 'none',
+                    zIndex: '10',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    backdropFilter: 'blur(4px)'
+                });
+
+                wrap.appendChild(lbl);
+
+                // Update function for label position and content
+                const updateLabel = () => {
+                    if (!this.iges.camera) return;
+
+                    const mid = a.clone().add(b).multiplyScalar(0.5);
                     mid.project(this.iges.camera);
 
                     const w = wrap.clientWidth;
                     const h = wrap.clientHeight;
-
-                    // Konversi NDC (-1 s/d 1) ke Pixel Layar
                     const x = (mid.x * 0.5 + 0.5) * w;
                     const y = (-mid.y * 0.5 + 0.5) * h;
 
-                    // Terapkan posisi. Translate -50% agar titik tengah label pas di titik ukur
-                    lbl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -150%)`; // -150% biar label agak naik dikit di atas garis
+                    lbl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
 
-                    // Update teks jarak
-                    const dist = a.distanceTo(b);
-                    lbl.textContent = `${dist.toFixed(2)} mm`;
+                    // Rich label content
+                    lbl.innerHTML = `
+                        <div class="text-blue-400 font-bold mb-1"><i class="fa-solid fa-ruler mr-1"></i>${distance.toFixed(2)} mm</div>
+                        <div class="grid grid-cols-3 gap-1 text-[9px] opacity-80">
+                            <span class="text-red-400">ΔX: ${deltaX.toFixed(2)}</span>
+                            <span class="text-green-400">ΔY: ${deltaY.toFixed(2)}</span>
+                            <span class="text-blue-400">ΔZ: ${deltaZ.toFixed(2)}</span>
+                        </div>
+                    `;
                 };
 
                 group.userData.update = updateLabel;
+                group.userData.measureResult = measureResult;
 
-                // Fungsi pembersihan saat tombol Clear ditekan
+                // Dispose function
                 group.userData.dispose = () => {
                     if (lbl.parentNode) lbl.parentNode.removeChild(lbl);
-                    // Dispose geometry three.js
-                    geom.dispose();
-                    line.material.dispose();
-                    sg.dispose();
-                    sm.dispose();
+                    mainLineGeom.dispose();
+                    mainLine.material.dispose();
+                    sphereGeom.dispose();
+                    sphereMat.dispose();
+                    // Dispose delta lines
+                    group.traverse(child => {
+                        if (child.geometry) child.geometry.dispose();
+                        if (child.material) child.material.dispose();
+                    });
                 };
 
-                // Jalankan update sekali di awal biar gak nge-blink
-                updateLabel();
+                // CRITICAL: Set group.uuid for deletion to work
+                group.uuid = uId;
 
+                updateLabel();
                 this.iges.measure.group.add(group);
+
+                console.log('Measurement created:', measureResult);
             },
 
-            setStandardView(view) {
+            setStandardView(view, duration = 800) {
                 const {
                     camera,
                     controls,
@@ -2804,10 +4625,10 @@
                         newPos.set(0, 0, -fitDist);
                         break;
                     case 'top':
-                        newPos.set(0, fitDist, 0);
+                        newPos.set(0, fitDist, -0.01); // Offset -Z to avoid singularity with Y-Up logic
                         break;
                     case 'bottom':
-                        newPos.set(0, -fitDist, 0);
+                        newPos.set(0, -fitDist, 0.01); // Offset +Z to avoid singularity
                         break;
                     case 'right':
                         newPos.set(fitDist, 0, 0);
@@ -2822,22 +4643,86 @@
                         break;
                 }
 
-                // 3. Pindahkan Kamera (Bisa pakai animasi tweening kalau mau halus, tapi langsung set juga oke)
-                camera.position.copy(newPos);
-                camera.lookAt(center);
-
-                // Reset rotasi kamera (PENTING untuk mode Orthographic/2D)
-                camera.up.set(0, 1, 0);
-                if (view === 'top' || view === 'bottom') {
-                    // Khusus pandangan atas/bawah, sumbu UP harus diubah agar tidak pusing
-                    camera.up.set(0, 0, -1);
+                // 3. Tentukan Target Up Vector
+                const newUp = new THREE.Vector3(0, 1, 0);
+                if (view === 'top') {
+                    newUp.set(0, 0, -1);
+                } else if (view === 'bottom') {
+                    newUp.set(0, 0, 1);
                 }
 
-                controls.target.copy(center);
-                controls.update();
+                // 4. Animate Camera Transition
+                this._animateCamera(newPos, center, newUp, () => {
+                    // This callback runs when animation finishes
+                    
+                    // FIX: Auto-restore Turntable Orbit (Y-Up) on interaction
+                    // Only attach this listener if NOT in auto-rotate mode (to prevent conflict)
+                    if (!this.autoRotate) {
+                        if (controls._resetUpListener) {
+                            controls.removeEventListener('start', controls._resetUpListener);
+                            controls._resetUpListener = null;
+                        }
 
-                // Refresh clipping agar tidak glitch
-                if (this.clipping.enabled) this._updateMaterialsWithClipping();
+                        if (view === 'top' || view === 'bottom') {
+                            controls._resetUpListener = () => {
+                                camera.up.set(0, 1, 0);
+                                controls.update();
+                                controls.removeEventListener('start', controls._resetUpListener);
+                                controls._resetUpListener = null;
+                            };
+                            controls.addEventListener('start', controls._resetUpListener);
+                        }
+                    }
+                }, duration);
+            },
+
+            _animateCamera(targetPos, targetTarget, targetUp, onComplete, duration = 800) {
+                // Use Raw objects to avoid Alpine proxy overhead during animation
+                let { camera, controls } = this.iges;
+                if (typeof Alpine !== 'undefined' && Alpine.raw) {
+                    camera = Alpine.raw(camera);
+                    controls = Alpine.raw(controls);
+                }
+
+                // Use a separate ID for transition, DO NOT touch this.iges.animId (Main Loop)
+                if (this.iges.transitionAnimId) cancelAnimationFrame(this.iges.transitionAnimId);
+
+                const startPos = camera.position.clone();
+                const startTarget = controls.target.clone();
+                const startUp = camera.up.clone();
+                const startTime = performance.now();
+
+                const animate = (time) => {
+                    let elapsed = time - startTime;
+                    let t = elapsed / duration;
+                    if (t > 1) t = 1;
+
+                    // Ease In Out Cubic (Smoother start and end)
+                    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+                    camera.position.lerpVectors(startPos, targetPos, ease);
+                    controls.target.lerpVectors(startTarget, targetTarget, ease);
+                    
+                    // Lerp Up vector
+                    camera.up.lerpVectors(startUp, targetUp, ease).normalize();
+
+                    controls.update();
+
+                    if (t < 1) {
+                        this.iges.transitionAnimId = requestAnimationFrame(animate);
+                    } else {
+                        // Ensure final values
+                        camera.position.copy(targetPos);
+                        controls.target.copy(targetTarget);
+                        camera.up.copy(targetUp);
+                        controls.update();
+                        
+                        this.iges.transitionAnimId = null;
+                        if (this.clipping.enabled) this._updateMaterialsWithClipping();
+                        if (onComplete) onComplete();
+                    }
+                };
+                this.iges.transitionAnimId = requestAnimationFrame(animate);
             },
 
             updatePartOpacity() {
@@ -2877,21 +4762,13 @@
 
                     rootModel.traverse(child => {
                         if (child.isMesh) {
-                            // Simpan posisi asli (Pivot)
                             this.iges.originalPositions.set(child.uuid, child.position.clone());
 
-                            // 2. HITUNG PUSAT FISIK PART (PENTING!)
-                            // Kita hitung di mana geometri benda ini sebenarnya berada
-                            // Karena pivotnya mungkin 'ngaco' di 0,0,0
                             if (!child.geometry.boundingBox) child.geometry.computeBoundingBox();
                             const meshCenter = new THREE.Vector3();
                             child.geometry.boundingBox.getCenter(meshCenter);
-
-                            // Konversi titik tengah lokal ke World Space
                             meshCenter.applyMatrix4(child.matrixWorld);
 
-                            // Simpan "Arah Ledakan" yang spesifik untuk part ini
-                            // Arah = (Titik Tengah Part) - (Titik Tengah Assembly)
                             const direction = new THREE.Vector3().subVectors(meshCenter, this.iges.center).normalize();
 
                             // Simpan di userData agar tidak perlu hitung ulang terus
@@ -2929,9 +4806,10 @@
             toggleExplode() {
                 this.explode.enabled = !this.explode.enabled;
                 if (this.explode.enabled) {
-                    this.explode.value = 50; // Default langsung meledak setengah
+                    if (this.explode.value === 0) this.explode.value = 50;
+                    this.explode.panelOpen = true;
                 } else {
-                    this.explode.value = 0; // Reset rapat
+                    this.explode.panelOpen = false;
                 }
                 this.updateExplode();
             },
@@ -2944,8 +4822,6 @@
                     camera
                 } = this.iges;
 
-                // 2. CEK KEAMANAN & KUPAS PROXY (SOLUSI ERROR)
-                // Kita gunakan Alpine.raw() untuk mengambil objek asli yang belum dibungkus
                 if (typeof Alpine !== 'undefined' && Alpine.raw) {
                     renderer = Alpine.raw(renderer);
                     scene = Alpine.raw(scene);
@@ -2990,10 +4866,36 @@
 
             toggleAutoRotate() {
                 this.autoRotate = !this.autoRotate;
-                if (this.iges.controls) {
-                    this.iges.controls.autoRotate = this.autoRotate;
-                    this.iges.controls.autoRotateSpeed = 2.0; // Kecepatan putar
+                
+                if (this.autoRotate) {
+                    // Start sequential view animation like E-Drawings
+                    this.iges.autoViewIndex = 0;
+                    this.iges.viewSequence = ['front', 'right', 'back', 'left', 'top', 'bottom', 'iso'];
+                    this._playNextView();
+                } else {
+                    // Stop animation
+                    if (this.iges.autoViewTimer) clearTimeout(this.iges.autoViewTimer);
+                    if (this.iges.transitionAnimId) cancelAnimationFrame(this.iges.transitionAnimId);
+                    this.iges.transitionAnimId = null;
                 }
+            },
+
+            _playNextView() {
+                if (!this.autoRotate) return;
+                
+                const views = this.iges.viewSequence;
+                const view = views[this.iges.autoViewIndex];
+                
+                // Advance index for next turn
+                this.iges.autoViewIndex = (this.iges.autoViewIndex + 1) % views.length;
+
+                // Use slower duration (2500ms) for smoother auto-play
+                this.setStandardView(view, 2500);
+                
+                // Wait for animation (2500ms) + Pause (1000ms) before next view
+                this.iges.autoViewTimer = setTimeout(() => {
+                    this._playNextView();
+                }, 3500); 
             },
 
             toggleHeadlight() {
@@ -3008,24 +4910,34 @@
 
                 if (this.headlight.enabled) {
                     if (!this.headlight.object) {
+                        // Revert to SpotLight (User Preference) but with UNLIMITED distance fix
                         const spot = new THREE.SpotLight(0xffffee, 2.5);
 
                         spot.position.set(0, 0, 0);
-                        spot.target.position.set(0, 0, -1);
-                        spot.angle = 0.6;
-                        spot.penumbra = 1.0;
-                        spot.decay = 0; // Tetap 0 agar jangkauan jauh
-                        spot.distance = 5000;
+                        spot.target.position.set(0, 0, -1); // Face forward
+                        spot.angle = 0.6; // Original angle
+                        spot.penumbra = 1.0; // Original softness
+                        spot.decay = 0;
+                        spot.distance = 0; // CRITICAL FIX: Unlimited distance
 
-                        rawCamera.add(spot.target);
                         this.headlight.object = spot;
                     }
+
+                    // Attach Light dan Target ke Kamera
                     rawCamera.add(this.headlight.object);
+                    if (this.headlight.object.target) {
+                        rawCamera.add(this.headlight.object.target);
+                    }
                 } else {
                     if (this.headlight.object) {
                         rawCamera.remove(this.headlight.object);
+                        if (this.headlight.object.target) {
+                            rawCamera.remove(this.headlight.object.target);
+                        }
                     }
                 }
+
+                this._forceRender();
             },
 
             toggleFullscreen() {
@@ -3090,92 +5002,61 @@
                 this.partInfo.area = area.toFixed(2) + ' mm²';
             },
 
-            setupKeyboardShortcuts() {
-                window.addEventListener('keydown', (e) => {
-                    // Jangan jalan jika user sedang mengetik di input text (jika ada)
-                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-                    // Hanya jalan jika mode CAD aktif
-                    if (!this.isCad(this.selectedFile?.name)) return;
 
-                    switch (e.key.toLowerCase()) {
-                        case 'f':
-                            this.setStandardView('front');
-                            break;
-                        case 't':
-                            this.setStandardView('top');
-                            break;
-                        case 'r':
-                            this.setStandardView('right');
-                            break;
-                        case 'i':
-                            this.setStandardView('iso');
-                            break;
-                        case ' ': // Spasi untuk Auto Rotate
-                            e.preventDefault(); // Cegah scroll halaman
-                            this.toggleAutoRotate();
-                            break;
-                        case 'h': // H untuk Headlight/Flashlight
-                            this.toggleHeadlight();
-                            break;
-                    }
-                });
-            },
+            handleShortcut(e) {
+                // 1. Ignore if typing in Input/Textarea
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
 
-            toggleAxes() {
-                this.axesHelper.active = !this.axesHelper.active;
-                const {
-                    scene,
-                    rootModel,
-                    THREE
-                } = this.iges;
+                // 2. Ignore if no 3D model is loaded
+                if (!this.iges || !this.iges.rootModel) return;
 
-                // 1. Ambil Scene ASLI (Raw)
-                const rawScene = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(scene) : scene;
+                switch (e.key.toLowerCase()) {
+                    // --- Standard Views ---
+                    case 'f': this.setStandardView('front'); break;
+                    case 't': this.setStandardView('top'); break;
+                    case 'r': this.setStandardView('right'); break;
+                    case 'l': this.setStandardView('left'); break;
+                    case 'b': this.setStandardView('back'); break;
+                    case 'd': this.setStandardView('bottom'); break;
+                    case 'i': this.setStandardView('iso'); break;
 
-                if (this.axesHelper.active) {
-                    if (!this.axesHelper.object) {
-                        // Hitung ukuran helper
-                        // Gunakan Alpine.raw pada rootModel juga untuk keamanan
-                        const rawRoot = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(rootModel) : rootModel;
-
-                        const box = new THREE.Box3().setFromObject(rawRoot);
-                        const size = new THREE.Vector3();
-                        box.getSize(size);
-                        const maxDim = Math.max(size.x, size.y, size.z);
-
-                        const axes = new THREE.AxesHelper(maxDim * 0.8);
-
-                        axes.material.depthTest = false;
-                        axes.renderOrder = 999;
-
-                        this.axesHelper.object = axes;
-                    }
-
-                    // 2. PENTING: Kupas object AxesHelper sebelum dimasukkan ke Scene
-                    // Ini kuncinya agar tidak freeze!
-                    const rawAxes = (typeof Alpine !== 'undefined' && Alpine.raw) ?
-                        Alpine.raw(this.axesHelper.object) :
-                        this.axesHelper.object;
-
-                    rawScene.add(rawAxes);
-
-                } else {
-                    if (this.axesHelper.object) {
-                        // Saat menghapus pun, gunakan object raw
-                        const rawAxes = (typeof Alpine !== 'undefined' && Alpine.raw) ?
-                            Alpine.raw(this.axesHelper.object) :
-                            this.axesHelper.object;
-
-                        rawScene.remove(rawAxes);
-                    }
-                }
-
-                // Paksa render ulang frame baru agar langsung muncul
-                const rawRenderer = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(this.iges.renderer) : this.iges.renderer;
-                const rawCamera = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(this.iges.camera) : this.iges.camera;
-                if (rawRenderer && rawCamera) {
-                    rawRenderer.render(rawScene, rawCamera);
+                    // --- Tools ---
+                    case ' ': // Auto Rotate
+                        e.preventDefault();
+                        this.toggleAutoRotate();
+                        break;
+                    case 'h': // Headlight
+                        this.toggleHeadlight();
+                        break;
+                    case 'c': // Camera Mode
+                        this.toggleCameraMode();
+                        break;
+                    case 'x': // Explode
+                        this.toggleExplode();
+                        break;
+                    case 'm': // Measure
+                        this.toggleMeasure();
+                        break;
+                    case 's': // Section Cut
+                        this.clipping.panelOpen = !this.clipping.panelOpen;
+                        break;
+                    
+                    // --- Navigation ---
+                    case 'home':
+                        e.preventDefault();
+                        this.resetCamera3d();
+                        break;
+                    case '=':
+                    case '+':
+                        e.preventDefault();
+                        this.zoom3d(1.1);
+                        break;
+                    case '-':
+                    case '_':
+                        e.preventDefault();
+                        this.zoom3d(0.9);
+                        break;
                 }
             },
 
@@ -3194,7 +5075,7 @@
                 // 2. Jika mode 'default', berhenti di sini (sudah di-reset)
                 if (mode === 'default') {
                     // Jangan lupa update clipping agar tidak hilang saat reset
-                    if (this.clipping.enabled) this._updateMaterialsWithClipping();
+                    if (this.hasActiveClipping) this._updateMaterialsWithClipping();
                     return;
                 }
 
@@ -3224,7 +5105,6 @@
                     });
                 } else if (mode === 'normal') {
                     // Tampilan Normal (Warna-warni berdasarkan arah)
-                    // Sangat bagus untuk cek orientasi permukaan
                     newMat = new THREE.MeshNormalMaterial({
                         ...commonProps
                         // MeshNormalMaterial tidak butuh color/roughness
@@ -3307,6 +5187,197 @@
                         o.material = newMat;
                     }
                 });
+
+                // 5. UPDATE: Terapkan clipping planes ke material baru
+                if (this.hasActiveClipping) {
+                    this._updateMaterialsWithClipping();
+                }
+
+                // Force render to prevent freeze
+                this._forceRender();
+            },
+
+            // NEW: Set display style (Shaded / Edges / Wireframe)
+            setDisplayStyle(style) {
+                const { rootModel, THREE } = this.iges;
+                if (!rootModel) return;
+
+                this.currentStyle = style;
+
+                rootModel.traverse(o => {
+                    if (o.isMesh && o.material) {
+                        const materials = Array.isArray(o.material) ? o.material : [o.material];
+
+                        materials.forEach(mat => {
+                            if (style === 'wireframe') {
+                                // Wireframe only
+                                mat.wireframe = true;
+                            } else if (style === 'shaded-edges') {
+                                // Shaded with edges - need to add EdgesGeometry
+                                mat.wireframe = false;
+
+                                // Remove existing edges if any
+                                const existingEdges = o.children.find(child => child.userData.isEdgesHelper);
+                                if (existingEdges) {
+                                    o.remove(existingEdges);
+                                }
+
+                                // Add new edges
+                                const edges = new THREE.EdgesGeometry(o.geometry, 30); // 30 degree threshold
+                                const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({
+                                    color: 0x000000,
+                                    linewidth: 1
+                                }));
+                                line.userData.isEdgesHelper = true;
+                                o.add(line);
+                            } else {
+                                // Shaded only (default)
+                                mat.wireframe = false;
+
+                                // Remove edges if any
+                                const existingEdges = o.children.find(child => child.userData.isEdgesHelper);
+                                if (existingEdges) {
+                                    o.remove(existingEdges);
+                                }
+                            }
+
+                            mat.needsUpdate = true;
+                        });
+                    }
+                });
+
+                // CRITICAL: Re-apply clipping planes after style change
+                if (this.hasActiveClipping) {
+                    this._updateMaterialsWithClipping();
+                }
+
+                // Force render to prevent freeze
+                this._forceRender();
+            },
+
+            // Helper: Force a single render frame (useful after view changes)
+            _forceRender() {
+                try {
+                    const { renderer, scene, camera } = this.iges;
+                    if (!renderer || !scene || !camera) return;
+
+                    const rawRenderer = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(renderer) : renderer;
+                    const rawScene = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(scene) : scene;
+                    const rawCamera = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(camera) : camera;
+
+                    if (rawRenderer && rawScene && rawCamera) {
+                        rawRenderer.render(rawScene, rawCamera);
+                    }
+                } catch (error) {
+                    console.error('Force render error:', error);
+                }
+            },
+
+            // Helper: Create professional snap marker (small cursor for measurement picking)
+            _createSnapMarker(position, color = 0xffff00, size = 1.2) {
+                const { THREE } = this.iges;
+                if (!THREE) return null;
+
+                const group = new THREE.Group();
+
+                // 1. Thin outer ring - hollow and small
+                const outerRingGeometry = new THREE.RingGeometry(size * 0.85, size, 20);
+                const outerRingMaterial = new THREE.MeshBasicMaterial({
+                    color: color,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.7,
+                    depthTest: false
+                });
+                const outerRing = new THREE.Mesh(outerRingGeometry, outerRingMaterial);
+                outerRing.renderOrder = 1001;
+                group.add(outerRing);
+
+                // 2. Tiny center dot - for precision
+                const dotGeometry = new THREE.CircleGeometry(size * 0.12, 8);
+                const dotMaterial = new THREE.MeshBasicMaterial({
+                    color: color,
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.9,
+                    depthTest: false
+                });
+                const dot = new THREE.Mesh(dotGeometry, dotMaterial);
+                dot.renderOrder = 1002;
+                group.add(dot);
+
+                // 3. Crosshair - thin lines for precision
+                const crosshairMaterial = new THREE.LineBasicMaterial({
+                    color: color,
+                    transparent: true,
+                    opacity: 0.8,
+                    depthTest: false
+                });
+
+                // Horizontal line
+                const hLineGeometry = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(-size * 1.4, 0, 0),
+                    new THREE.Vector3(size * 1.4, 0, 0)
+                ]);
+                const hLine = new THREE.Line(hLineGeometry, crosshairMaterial);
+                hLine.renderOrder = 1001;
+                group.add(hLine);
+
+                // Vertical line
+                const vLineGeometry = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(0, -size * 1.4, 0),
+                    new THREE.Vector3(0, size * 1.4, 0)
+                ]);
+                const vLine = new THREE.Line(vLineGeometry, crosshairMaterial);
+                vLine.renderOrder = 1001;
+                group.add(vLine);
+
+                // Position the marker
+                group.position.copy(position);
+
+                // Make it always face camera
+                group.userData.update = () => {
+                    const camera = this.iges.camera;
+                    if (camera) {
+                        const rawCamera = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(camera) : camera;
+                        group.quaternion.copy(rawCamera.quaternion);
+                    }
+                };
+
+                return group;
+            },
+
+            // Helper: Update snap marker position
+            _updateSnapMarker(position, color = 0xffff00) {
+                const { scene } = this.iges;
+                if (!scene) return;
+
+                // Remove old marker
+                if (this.snapMarker) {
+                    const rawScene = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(scene) : scene;
+                    const rawMarker = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(this.snapMarker) : this.snapMarker;
+                    rawScene.remove(rawMarker);
+                }
+
+                // Create new marker at position
+                if (position) {
+                    this.snapMarker = this._createSnapMarker(position, color, 1.2);
+                    const rawScene = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(scene) : scene;
+                    rawScene.add(this.snapMarker);
+                }
+            },
+
+            // Helper: Hide snap marker
+            _hideSnapMarker() {
+                if (this.snapMarker) {
+                    const { scene } = this.iges;
+                    if (scene) {
+                        const rawScene = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(scene) : scene;
+                        const rawMarker = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(this.snapMarker) : this.snapMarker;
+                        rawScene.remove(rawMarker);
+                    }
+                    this.snapMarker = null;
+                }
             },
 
             formatRevisionForSelect2(revision) {
@@ -3363,11 +5434,18 @@
                     }
                 });
 
-                const {
-                    THREE,
-                    scene
-                } = this.iges;
-                this.setupKeyboardShortcuts();
+                // Auto-enable snap when measurement mode is activated
+                this.$watch('iges.measure.enabled', (isEnabled) => {
+                    if (isEnabled && this.iges.measure.snap) {
+                        this.iges.measure.snap.enabled = true;
+                    }
+                });
+
+                this.$watch('iges.measure.enabled', (isEnabled) => {
+                    if (isEnabled && this.iges.measure.snap) {
+                        this.iges.measure.snap.enabled = true;
+                    }
+                });
             },
 
             /* ===== UI ===== */
@@ -3445,7 +5523,12 @@
                         this.tifLoading = true;
                         this.renderTiff(file.url, currentId);
                     } else if (this.isCad(file?.name)) {
-                        this.renderCadOcct(file);
+                        // Route to appropriate renderer based on format
+                        if (this.isOcctFormat(file?.name)) {
+                            this.renderCadOcct(file);
+                        } else if (this.isThreeFormat(file?.name)) {
+                            this.renderCadThree(file);
+                        }
                     } else if (this.isHpgl(file?.name)) {
                         this.hpglLoading = true;
                         this.renderHpgl(file.url, currentId);
@@ -3758,7 +5841,11 @@
                     console.log('CAD size (bytes):', mainBuf.byteLength);
 
                     const occt = await window.occtimportjs();
-                    const ext = (url.split('?')[0].split('#')[0].split('.').pop() || '').toLowerCase();
+                    // Use fileObj.name for extension detection (more reliable than URL which may be encoded)
+                    const fileName = fileObj?.name || '';
+                    const ext = this.extOf(fileName);
+                    console.log('CAD file name:', fileName, '| Detected extension:', ext);
+
                     const params = {
                         linearUnit: 'millimeter',
                         linearDeflectionType: 'bounding_box_ratio',
@@ -3769,6 +5856,7 @@
                     let res = null;
 
                     if (ext === 'stp' || ext === 'step') {
+                        console.log('Attempting to parse as STEP file...');
                         res = occt.ReadStepFile(mainBuf, params);
                         console.log('OCCT STEP result:', res);
 
@@ -3787,13 +5875,18 @@
                                 console.log('OCCT IGES fallback result:', res);
                             }
                         }
+                    } else if (ext === 'brep') {
+                        // BREP format - native OpenCASCADE format
+                        res = occt.ReadBrepFile(mainBuf, params);
+                        console.log('OCCT BREP result:', res);
                     } else {
+                        // Default to IGES for .igs, .iges files
                         res = occt.ReadIgesFile(mainBuf, params);
                         console.log('OCCT IGES result:', res);
                     }
 
                     if (!res || !res.success) {
-                        const msg = res?.error || res?.message || 'File is not a valid STEP/IGES or is not supported by OCCT.';
+                        const msg = res?.error || res?.message || 'File is not a valid STEP/IGES/BREP or is not supported by OCCT.';
                         throw new Error('OCCT failed to parse file: ' + msg);
                     }
 
@@ -3822,13 +5915,21 @@
                     // 2. GESER BENDA KE TITIK NOL (0,0,0) - PENTING UNTUK CLIPPING
                     group.position.sub(center);
 
-                    // 3. ATUR RANGE SLIDER CLIPPING (Berdasarkan ukuran benda)
+                    // 3. ATUR RANGE SLIDER CLIPPING (Berdasarkan ukuran benda PER AXIS)
                     const maxDim = Math.max(size.x, size.y, size.z) || 100;
-                    const rangeLimit = Math.ceil((maxDim / 2) * 1.2); // Setengah ukuran + 20% buffer
 
-                    this.clipping.min = -rangeLimit;
-                    this.clipping.max = rangeLimit;
-                    this.clipping.value = 0; // Reset slider ke tengah
+                    // Set range per-axis untuk kontrol yang lebih presisi
+                    const buffer = 1.1; // 10% buffer
+                    this.clipping.min = -Math.ceil(maxDim * buffer / 2);
+                    this.clipping.max = Math.ceil(maxDim * buffer / 2);
+
+                    // Store individual axis ranges for better control
+                    this.clipping.x.min = -Math.ceil(size.x * buffer / 2);
+                    this.clipping.x.max = Math.ceil(size.x * buffer / 2);
+                    this.clipping.y.min = -Math.ceil(size.y * buffer / 2);
+                    this.clipping.y.max = Math.ceil(size.y * buffer / 2);
+                    this.clipping.z.min = -Math.ceil(size.z * buffer / 2);
+                    this.clipping.z.max = Math.ceil(size.z * buffer / 2);
 
                     // 4. ATUR KAMERA (AUTO-FIT)
                     // Karena benda sudah digeser ke (0,0,0), target kontrol sekarang adalah (0,0,0)
@@ -3849,22 +5950,35 @@
                     this._updateMaterialsWithClipping();
 
                     const animate = () => {
-                        controls.update();
-                        const rawRenderer = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(renderer) : renderer;
-                        const rawScene = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(scene) : scene;
+                        try {
+                            controls.update();
+                            const rawRenderer = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(renderer) : renderer;
+                            const rawScene = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(scene) : scene;
 
-                        let activeCam = this.iges.camera;
-                        if (typeof Alpine !== 'undefined' && Alpine.raw) {
-                            activeCam = Alpine.raw(activeCam);
+                            let activeCam = this.iges.camera;
+                            if (typeof Alpine !== 'undefined' && Alpine.raw) {
+                                activeCam = Alpine.raw(activeCam);
+                            }
+
+                            if (activeCam && rawRenderer && rawScene) {
+                                rawRenderer.render(rawScene, activeCam);
+                            }
+
+                            // Update measurement labels
+                            const g = this.iges.measure.group;
+                            if (g) {
+                                const rawGroup = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(g) : g;
+                                if (rawGroup && rawGroup.children) {
+                                    rawGroup.children.forEach(ch => ch.userData?.update?.());
+                                }
+                            }
+
+                            this.iges.animId = requestAnimationFrame(animate);
+                        } catch (error) {
+                            console.error('Animation loop error:', error);
+                            // Try to restart animation loop after error
+                            this.iges.animId = requestAnimationFrame(animate);
                         }
-
-                        if (activeCam) {
-                            rawRenderer.render(rawScene, activeCam);
-                        }
-                        const g = this.iges.measure.group;
-                        if (g) g.children.forEach(ch => ch.userData?.update?.());
-
-                        this.iges.animId = requestAnimationFrame(animate);
                     };
                     animate();
 
@@ -3926,6 +6040,366 @@
                 } finally {
                     this.iges.loading = false;
                 }
+            },
+
+            /* ===== render CAD via Three.js loaders (STL, OBJ, FBX, GLTF, 3DS) ===== */
+            async renderCadThree(fileObj) {
+                const url = fileObj?.url;
+                if (!url) return;
+                this.disposeCad();
+                this.iges.loading = true;
+                this.iges.error = '';
+
+                try {
+                    const THREE = await import('three');
+                    const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+                    const bvh = await import('three-mesh-bvh');
+                    THREE.Mesh.prototype.raycast = bvh.acceleratedRaycast;
+                    THREE.BufferGeometry.prototype.computeBoundsTree = bvh.computeBoundsTree;
+                    THREE.BufferGeometry.prototype.disposeBoundsTree = bvh.disposeBoundsTree;
+
+                    // scene & camera
+                    const scene = new THREE.Scene();
+                    scene.background = null;
+                    const wrap = this.$refs.igesWrap;
+                    const width = wrap?.clientWidth || 800,
+                        height = wrap?.clientHeight || 500;
+
+                    const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 10000);
+                    camera.position.set(250, 200, 250);
+
+                    const renderer = new THREE.WebGLRenderer({
+                        antialias: true,
+                        alpha: true,
+                        preserveDrawingBuffer: true
+                    });
+                    renderer.setPixelRatio(window.devicePixelRatio || 1);
+                    renderer.setSize(width, height);
+                    renderer.localClippingEnabled = true;
+                    wrap.appendChild(renderer.domElement);
+                    wrap.style.position = 'relative';
+                    wrap.style.overflow = 'hidden';
+
+                    // lights
+                    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+                    scene.add(ambientLight);
+                    scene.add(camera);
+
+                    const keyLight = new THREE.DirectionalLight(0xffffff, 0.7);
+                    keyLight.position.set(50, 50, 100);
+                    camera.add(keyLight);
+
+                    const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+                    fillLight.position.set(-50, -50, 100);
+                    camera.add(fillLight);
+
+                    // controls
+                    const controls = new OrbitControls(camera, renderer.domElement);
+                    controls.enableDamping = true;
+
+                    // Determine file extension and load accordingly
+                    const ext = (url.split('?')[0].split('#')[0].split('.').pop() || '').toLowerCase();
+                    let group = new THREE.Group();
+
+                    console.log('Loading Three.js format:', ext, 'from:', url);
+
+                    if (ext === 'stl') {
+                        // STL Loader
+                        const { STLLoader } = await import('three/addons/loaders/STLLoader.js');
+                        const loader = new STLLoader();
+                        const geometry = await new Promise((resolve, reject) => {
+                            loader.load(url, resolve, undefined, reject);
+                        });
+                        const material = new THREE.MeshStandardMaterial({
+                            color: 0xcccccc,
+                            metalness: 0,
+                            roughness: 1,
+                            side: THREE.DoubleSide
+                        });
+                        const mesh = new THREE.Mesh(geometry, material);
+                        mesh.name = fileObj.name || 'STL Model';
+                        if (geometry.attributes.position.count > 0) geometry.computeBoundsTree();
+                        group.add(mesh);
+                        this.cadPartsList = [{ uuid: mesh.uuid, name: mesh.name }];
+                        console.log('STL loaded successfully');
+
+                    } else if (ext === 'obj') {
+                        // OBJ Loader
+                        const { OBJLoader } = await import('three/addons/loaders/OBJLoader.js');
+                        const loader = new OBJLoader();
+                        const obj = await new Promise((resolve, reject) => {
+                            loader.load(url, resolve, undefined, reject);
+                        });
+                        this.cadPartsList = [];
+                        obj.traverse(child => {
+                            if (child.isMesh) {
+                                child.material = new THREE.MeshStandardMaterial({
+                                    color: 0xcccccc,
+                                    metalness: 0,
+                                    roughness: 1,
+                                    side: THREE.DoubleSide
+                                });
+                                if (child.geometry && child.geometry.attributes.position.count > 0) {
+                                    child.geometry.computeBoundsTree();
+                                }
+                                this.cadPartsList.push({ uuid: child.uuid, name: child.name || 'OBJ Part' });
+                            }
+                        });
+                        group = obj;
+                        console.log('OBJ loaded successfully');
+
+                    } else if (ext === 'fbx') {
+                        // FBX Loader
+                        const { FBXLoader } = await import('three/addons/loaders/FBXLoader.js');
+                        const loader = new FBXLoader();
+                        const fbx = await new Promise((resolve, reject) => {
+                            loader.load(url, resolve, undefined, reject);
+                        });
+                        this.cadPartsList = [];
+                        fbx.traverse(child => {
+                            if (child.isMesh) {
+                                // Keep original material if available, otherwise create default
+                                if (!child.material) {
+                                    child.material = new THREE.MeshStandardMaterial({
+                                        color: 0xcccccc,
+                                        metalness: 0,
+                                        roughness: 1,
+                                        side: THREE.DoubleSide
+                                    });
+                                }
+                                if (child.geometry && child.geometry.attributes.position.count > 0) {
+                                    child.geometry.computeBoundsTree();
+                                }
+                                this.cadPartsList.push({ uuid: child.uuid, name: child.name || 'FBX Part' });
+                            }
+                        });
+                        group = fbx;
+                        console.log('FBX loaded successfully');
+
+                    } else if (ext === 'gltf' || ext === 'glb') {
+                        // GLTF/GLB Loader
+                        const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+                        const { DRACOLoader } = await import('three/addons/loaders/DRACOLoader.js');
+                        const loader = new GLTFLoader();
+
+                        // Setup DRACO decoder for compressed GLTF
+                        const dracoLoader = new DRACOLoader();
+                        dracoLoader.setDecoderPath('https://unpkg.com/three@0.160.0/examples/jsm/libs/draco/');
+                        loader.setDRACOLoader(dracoLoader);
+
+                        const gltf = await new Promise((resolve, reject) => {
+                            loader.load(url, resolve, undefined, reject);
+                        });
+                        this.cadPartsList = [];
+                        gltf.scene.traverse(child => {
+                            if (child.isMesh) {
+                                if (child.geometry && child.geometry.attributes.position.count > 0) {
+                                    child.geometry.computeBoundsTree();
+                                }
+                                this.cadPartsList.push({ uuid: child.uuid, name: child.name || 'GLTF Part' });
+                            }
+                        });
+                        group = gltf.scene;
+                        console.log('GLTF/GLB loaded successfully');
+
+                    } else if (ext === '3ds') {
+                        // 3DS Loader
+                        const { TDSLoader } = await import('three/addons/loaders/TDSLoader.js');
+                        const loader = new TDSLoader();
+                        const tds = await new Promise((resolve, reject) => {
+                            loader.load(url, resolve, undefined, reject);
+                        });
+                        this.cadPartsList = [];
+                        tds.traverse(child => {
+                            if (child.isMesh) {
+                                if (!child.material) {
+                                    child.material = new THREE.MeshStandardMaterial({
+                                        color: 0xcccccc,
+                                        metalness: 0,
+                                        roughness: 1,
+                                        side: THREE.DoubleSide
+                                    });
+                                }
+                                if (child.geometry && child.geometry.attributes.position.count > 0) {
+                                    child.geometry.computeBoundsTree();
+                                }
+                                this.cadPartsList.push({ uuid: child.uuid, name: child.name || '3DS Part' });
+                            }
+                        });
+                        group = tds;
+                        console.log('3DS loaded successfully');
+
+                    } else {
+                        throw new Error(`Unsupported Three.js format: ${ext}`);
+                    }
+
+                    scene.add(group);
+
+                    // simpan refs
+                    this.iges.rootModel = group;
+                    this.iges.scene = scene;
+                    this.iges.camera = camera;
+                    this.iges.renderer = renderer;
+                    this.iges.controls = controls;
+                    this.iges.THREE = THREE;
+
+                    // cache material asli
+                    this._cacheOriginalMaterials(group, THREE);
+
+                    // 1. HITUNG BOUNDING BOX AWAL
+                    const box = new THREE.Box3().setFromObject(group);
+                    const size = new THREE.Vector3();
+                    box.getSize(size);
+                    const center = new THREE.Vector3();
+                    box.getCenter(center);
+
+                    // 2. GESER BENDA KE TITIK NOL (0,0,0) - PENTING UNTUK CLIPPING
+                    group.position.sub(center);
+
+                    // 3. ATUR RANGE SLIDER CLIPPING (Berdasarkan ukuran benda PER AXIS)
+                    const maxDim = Math.max(size.x, size.y, size.z) || 100;
+
+                    // Set range per-axis untuk kontrol yang lebih presisi
+                    const buffer = 1.1; // 10% buffer
+                    this.clipping.min = -Math.ceil(maxDim * buffer / 2);
+                    this.clipping.max = Math.ceil(maxDim * buffer / 2);
+
+                    // Store individual axis ranges for better control
+                    this.clipping.x.min = -Math.ceil(size.x * buffer / 2);
+                    this.clipping.x.max = Math.ceil(size.x * buffer / 2);
+                    this.clipping.y.min = -Math.ceil(size.y * buffer / 2);
+                    this.clipping.y.max = Math.ceil(size.y * buffer / 2);
+                    this.clipping.z.min = -Math.ceil(size.z * buffer / 2);
+                    this.clipping.z.max = Math.ceil(size.z * buffer / 2);
+
+                    // 4. ATUR KAMERA (AUTO-FIT)
+                    const fitDist = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360));
+                    const viewDirection = new THREE.Vector3(1, 1, 1).normalize();
+
+                    camera.position.copy(viewDirection.multiplyScalar(fitDist * 1.6));
+                    camera.near = 0.1;
+                    camera.far = 100000;
+                    camera.updateProjectionMatrix();
+
+                    controls.target.set(0, 0, 0);
+                    controls.update();
+
+                    // default style
+                    this.setDisplayStyle('shaded-edges');
+
+                    this._updateMaterialsWithClipping();
+
+                    const animate = () => {
+                        controls.update();
+                        const rawRenderer = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(renderer) : renderer;
+                        const rawScene = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(scene) : scene;
+
+                        let activeCam = this.iges.camera;
+                        if (typeof Alpine !== 'undefined' && Alpine.raw) {
+                            activeCam = Alpine.raw(activeCam);
+                        }
+
+                        if (activeCam) {
+                            rawRenderer.render(rawScene, activeCam);
+                        }
+                        const g = this.iges.measure.group;
+                        if (g) g.children.forEach(ch => ch.userData?.update?.());
+
+                        this.iges.animId = requestAnimationFrame(animate);
+                    };
+                    animate();
+
+                    // resize
+                    const resizeObserver = new ResizeObserver(() => {
+                        const w = wrap.clientWidth;
+                        const h = wrap.clientHeight;
+
+                        if (w === 0 || h === 0) return;
+
+                        if (camera && camera.updateProjectionMatrix) {
+                            if (camera.isOrthographicCamera) {
+                                const aspect = w / h;
+                                const frustumHeight = (camera.top - camera.bottom);
+                                const frustumWidth = frustumHeight * aspect;
+
+                                camera.left = -frustumWidth / 2;
+                                camera.right = frustumWidth / 2;
+                                camera.top = frustumHeight / 2;
+                                camera.bottom = -frustumHeight / 2;
+                            } else {
+                                camera.aspect = w / h;
+                            }
+                            camera.updateProjectionMatrix();
+                        }
+
+                        if (renderer) {
+                            renderer.setSize(w, h);
+                            const rawRenderer = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(renderer) : renderer;
+                            const rawScene = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(scene) : scene;
+                            const rawCam = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(camera) : camera;
+                            rawRenderer.render(rawScene, rawCam);
+                        }
+                    });
+
+                    resizeObserver.observe(wrap);
+                    this._resizeObserver = resizeObserver;
+
+                } catch (e) {
+                    console.error(e);
+                    this.iges.error = e?.message || 'Failed to render 3D file';
+                } finally {
+                    this.iges.loading = false;
+                }
+            },
+
+            /* ===== Navigation Helpers ===== */
+            zoom3d(factor) {
+                if (!this.iges.controls || !this.iges.camera) return;
+                const controls = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(this.iges.controls) : this.iges.controls;
+                const camera = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(this.iges.camera) : this.iges.camera;
+                const THREE = this.iges.THREE;
+
+                if (camera.isOrthographicCamera) {
+                    camera.zoom *= factor;
+                    camera.updateProjectionMatrix();
+                } else {
+                    // Perspective: Move camera relative to target
+                    const offset = new THREE.Vector3().subVectors(camera.position, controls.target);
+                    // factor > 1 (zoom in) -> offset gets smaller (1/factor)
+                    // factor < 1 (zoom out) -> offset gets larger (1/factor)
+                    offset.multiplyScalar(1 / factor);
+                    camera.position.addVectors(controls.target, offset);
+                }
+                controls.update();
+            },
+
+            resetCamera3d() {
+                if (!this.iges.rootModel || !this.iges.camera || !this.iges.controls) return;
+                const THREE = this.iges.THREE;
+                const camera = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(this.iges.camera) : this.iges.camera;
+                const controls = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(this.iges.controls) : this.iges.controls;
+                const group = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(this.iges.rootModel) : this.iges.rootModel;
+
+                // Hitung ulang bounding box untuk auto-fit
+                const box = new THREE.Box3().setFromObject(group);
+                const size = new THREE.Vector3();
+                box.getSize(size);
+                const maxDim = Math.max(size.x, size.y, size.z) || 100;
+
+                // Jika kamera orthographic, reset zoom level
+                if (camera.isOrthographicCamera) {
+                    camera.zoom = 1;
+                    camera.updateProjectionMatrix();
+                }
+
+                const fitDist = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360));
+                const viewDirection = new THREE.Vector3(1, 1, 1).normalize();
+
+                camera.position.copy(viewDirection.multiplyScalar(fitDist * 1.6));
+                camera.updateProjectionMatrix();
+                
+                controls.target.set(0, 0, 0);
+                controls.update();
             },
         }
     }

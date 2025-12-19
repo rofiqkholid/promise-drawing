@@ -1340,6 +1340,7 @@
         copy: 'bottom-center',
         obsolete: 'bottom-right',
       },
+      
 
       selectedFile: null,
       openSections: [],
@@ -1436,7 +1437,7 @@
       },
       imageTransformStyle() {
         return `transform: translate(${this.panX}px, ${this.panY}px) scale(${this.imageZoom}); transform-origin: center center;`;
-      },
+      },   
       // mapping dari integer DB -> key string
       // mapping dari integer DB -> key string (0-5)
       positionIntToKey(pos) {
