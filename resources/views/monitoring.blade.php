@@ -845,7 +845,7 @@
                                 pinch: {
                                     enabled: true // Zoom dicubit (untuk layar sentuh)
                                 },
-                                mode: 'x', 
+                                mode: 'x',
                             }
                         },
                         legend: {
@@ -881,6 +881,9 @@
                         }
                     },
                     scales: {
+                        // Agar zoom bekerja lebih baik, disarankan membatasi jumlah data awal yang tampil
+                        min: 0, 
+                        max: 5,
                         x: {
                             ticks: {
                                 color: textColor,
