@@ -832,6 +832,22 @@
                         intersect: false
                     },
                     plugins: {
+                        zoom: {
+                            pan: {
+                                enabled: true,
+                                mode: 'x', // Geser hanya horizontal
+                                threshold: 10
+                            },
+                            zoom: {
+                                wheel: {
+                                    enabled: true, // Zoom pakai scroll mouse
+                                },
+                                pinch: {
+                                    enabled: true // Zoom dicubit (untuk layar sentuh)
+                                },
+                                mode: 'x', 
+                            }
+                        },
                         legend: {
                             position: 'bottom',
                             labels: {
@@ -1006,9 +1022,9 @@
                                     return {
                                         borderColor: 'transparent',
                                         backgroundColor: context.dataset.backgroundColor[context.dataIndex],
-                                        borderWidth: 0, 
+                                        borderWidth: 0,
                                         borderRadius: 0,
-                                        pointStyle: 'rect' 
+                                        pointStyle: 'rect'
                                     };
                                 },
                                 label: function(context) {
