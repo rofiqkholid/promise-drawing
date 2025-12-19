@@ -3,7 +3,7 @@
 @section('header-title', 'File Manager - Download Detail')
 
 @section('content')
-<nav class="flex px-5 py-3 mb-3 text-gray-700 bg-gray-50 shadow-sm" aria-label="Breadcrumb">
+<nav class="flex px-5 py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
 
         <li class="inline-flex items-center">
@@ -124,11 +124,20 @@
                 </div>
 
 
-                <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
+                <div class="px-5 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
+                    <div class="flex flex-col gap-0.5">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Content</span>
+                        <div class="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-gray-200">
+                            <span x-text="getTotalPackageStats().count + ' Files'"></span>
+                            <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
+                            <span x-text="formatBytes(getTotalPackageStats().size)"></span>
+                        </div>
+                    </div>
+
                     <button @click="downloadPackage()"
-                        class="inline-flex items-center text-sm px-3 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
-                        <i class="fa-solid fa-download mr-2"></i>
-                        Download All Files
+                        class="group flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs lg:text-sm font-semibold rounded-md shadow-sm transition-all active:scale-95 focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 dark:ring-offset-gray-800">
+                        <i class="fa-solid fa-cloud-arrow-down transition-transform group-hover:-translate-y-0.5"></i>
+                        <span>Download All</span>
                     </button>
                 </div>
             </div>
@@ -1032,14 +1041,14 @@
 
                                         <button @click="toggleCameraMode()"
                                             :title="cameraMode === 'perspective' ? 'View: Perspective (C)' : 'View: Orthographic (C)'"
-                                            class="w-7 h-7 lg:w-8 lg:h-8 rounded border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95">
+                                            class="w-7 h-7 lg:w-8 lg:h-8 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-200 flex flex-col items-center justify-center gap-0.5 transition-all active:scale-95">
                                             <i class="fa-solid text-[10px] lg:text-xs" :class="cameraMode === 'perspective' ? 'fa-cube' : 'fa-border-none'"></i>
                                             <span x-text="cameraMode === 'perspective' ? 'Persp' : 'Ortho'" class="text-[7px] lg:text-[8px] font-bold leading-none"></span>
                                         </button>
 
                                         <div class="relative">
                                             <button @click="isViewMenuOpen = !isViewMenuOpen" @click.outside="isViewMenuOpen = false" title="Standard Views"
-                                                class="w-7 h-7 lg:w-8 lg:h-8 rounded border border-gray-200 bg-white hover:bg-gray-50 text-gray-600 flex items-center justify-center transition text-xs lg:text-sm">
+                                                class="w-7 h-7 lg:w-8 lg:h-8 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-200 flex items-center justify-center transition text-xs lg:text-sm">
                                                 <i class="fa-solid fa-dice-d6"></i>
                                             </button>
 
@@ -1059,13 +1068,13 @@
 
                                         <button @click="toggleAutoRotate()" title="Auto Rotate (Space)"
                                             class="w-7 h-7 lg:w-8 lg:h-8 rounded border transition flex items-center justify-center text-xs lg:text-sm"
-                                            :class="autoRotate ? 'bg-blue-600 text-white border-blue-600' : 'bg-white hover:bg-gray-50 text-gray-600 border-gray-200'">
-                                            <i class="fa-solid fa-rotate"></i>
+                                            :class="autoRotate ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-200 border-gray-200 dark:border-gray-700'">
+                                            <i class="fa-solid fa-rotate" :class="autoRotate ? 'fa-spin' : ''"></i>
                                         </button>
 
                                         <button @click="toggleHeadlight()" title="Headlight (H)"
                                             class="w-7 h-7 lg:w-8 lg:h-8 rounded border transition flex items-center justify-center text-xs lg:text-sm"
-                                            :class="headlight.enabled ? 'bg-yellow-500 text-white border-yellow-500' : 'bg-white hover:bg-gray-50 text-gray-600 border-gray-200'">
+                                            :class="headlight.enabled ? 'bg-yellow-500 text-white border-yellow-500' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-200 border-gray-200 dark:border-gray-700'">
                                             <i class="fa-solid fa-lightbulb"></i>
                                         </button>
                                     </div>
@@ -2095,6 +2104,23 @@
                 }
             },
 
+            getTotalPackageStats() {
+                if (!this.pkg || !this.pkg.files) return { size: 0, count: 0 };
+                
+                let totalSize = 0;
+                let totalCount = 0;
+                
+                ['2d', '3d', 'ecn'].forEach(cat => {
+                    const files = this.pkg.files[cat] || [];
+                    totalCount += files.length;
+                    files.forEach(f => {
+                         // Asumsikan 'size' dalam bytes jika ada, atau 0
+                        totalSize += Number(f.size || 0);
+                    });
+                });
+                return { size: totalSize, count: totalCount };
+            },
+
             // ===== helper posisi stamp per file =====
             getFileKey(file) {
                 return (file?.id ?? file?.name ?? '').toString();
@@ -2736,6 +2762,41 @@
 
             /* ===== Cleanup CAD ===== */
             disposeCad() {
+                // Reset Tool States to ensure clean slate for next file
+                this.cameraMode = 'perspective';
+                this.autoRotate = false;
+                this.activeMaterial = 'default';
+                this.selectedPartUuid = null;
+                this.partOpacity = 1.0;
+
+                if (this.headlight) {
+                    this.headlight.enabled = false;
+                    this.headlight.object = null;
+                }
+
+                if (this.explode) {
+                    this.explode.enabled = false;
+                    this.explode.value = 0;
+                }
+
+                if (this.clipping) {
+                    this.clipping.enabled = false;
+                    this.clipping.panelOpen = false;
+                    ['x', 'y', 'z'].forEach(axis => {
+                        if (this.clipping[axis]) {
+                            this.clipping[axis].enabled = false;
+                            this.clipping[axis].value = 0;
+                            this.clipping[axis].flipped = false;
+                            this.clipping[axis].showHelper = false;
+                            this.clipping[axis].helper = null;
+                            this.clipping[axis].plane = null;
+                        }
+                    });
+                }
+                
+                // Reset Interaction Flags
+                this._planeHelperDragInitialized = false;
+
                 try {
                     cancelAnimationFrame(this.iges.animId || 0);
                     if (this._onIgesResize) window.removeEventListener('resize', this._onIgesResize);
@@ -3248,6 +3309,9 @@
                     // Reset value to 0
                     axisData.value = 0;
 
+                    // Auto-enable helper when activating cut
+                    axisData.showHelper = true;
+
                     // Create plane with correct normal vector
                     const normals = {
                         x: new THREE.Vector3(axisData.flipped ? -1 : 1, 0, 0),
@@ -3257,10 +3321,7 @@
 
                     axisData.plane = new THREE.Plane(normals[axis], 0);
 
-                    // Auto-create plane helper if showHelper is true
-                    if (axisData.showHelper) {
-                        this._createPlaneHelper(axis);
-                    }
+                    this._createPlaneHelper(axis);
                 } else {
                     axisData.plane = null;
 
@@ -4025,7 +4086,13 @@
                 this.snapMarker.position.copy(position);
 
                 // Balanced scale - visible but not overwhelming
-                const scale = this.iges.camera.position.distanceTo(position) * 0.007; // Between 0.005 and 0.01
+                let scale;
+                if (this.iges.camera.isOrthographicCamera) {
+                    const height = (this.iges.camera.top - this.iges.camera.bottom) / this.iges.camera.zoom;
+                    scale = height * 0.008;
+                } else {
+                    scale = this.iges.camera.position.distanceTo(position) * 0.007;
+                }
                 this.snapMarker.scale.set(scale, scale, scale);
             },
 
@@ -5608,12 +5675,24 @@
             },
 
             /* ===== Download ===== */
+            _safeDownload(url) {
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', ''); // Hint to browser to download
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                }, 100);
+            },
+
             downloadFile(file) {
                 if (!file || !file.file_id) {
                     toastError('Error', 'File ID not found.');
                     return;
                 }
-                window.location.href = `/download/file/${file.file_id}`;
+                this._safeDownload(`/download/file/${file.file_id}`);
             },
 
             downloadPackage() {
@@ -5731,7 +5810,7 @@
                                     cancelButtonColor: '#6b7280',
                                 }).then((dlResult) => {
                                     if (dlResult.isConfirmed) {
-                                        window.location.href = data.download_url;
+                                        this._safeDownload(data.download_url);
                                     }
                                 });
                             } else {
@@ -5805,9 +5884,10 @@
                     const renderer = new THREE.WebGLRenderer({
                         antialias: true,
                         alpha: true,
-                        preserveDrawingBuffer: true
+                        preserveDrawingBuffer: true,
+                        powerPreference: 'high-performance'
                     });
-                    renderer.setPixelRatio(window.devicePixelRatio || 1);
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
                     renderer.setSize(width, height);
                     renderer.localClippingEnabled = true;
                     wrap.appendChild(renderer.domElement);
@@ -6071,9 +6151,10 @@
                     const renderer = new THREE.WebGLRenderer({
                         antialias: true,
                         alpha: true,
-                        preserveDrawingBuffer: true
+                        preserveDrawingBuffer: true,
+                        powerPreference: 'high-performance'
                     });
-                    renderer.setPixelRatio(window.devicePixelRatio || 1);
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
                     renderer.setSize(width, height);
                     renderer.localClippingEnabled = true;
                     wrap.appendChild(renderer.domElement);
