@@ -472,6 +472,8 @@ class DashboardController extends Controller
         $orderColumn = $sortBy === 'actual' ? 'actual_count' : 'plan_count';
         $query->orderBy($orderColumn, 'desc');
 
+        $query->limit(5);
+
         $results = $query->get();
 
         $results = $results->map(function ($item) {
