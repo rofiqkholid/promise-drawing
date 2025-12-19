@@ -278,7 +278,14 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Register DataLabels
         Chart.register(ChartDataLabels);
+
+        // Register Zoom Plugin jika library sudah dimuat
+        if (typeof ChartZoom !== 'undefined') {
+            Chart.register(ChartZoom);
+        }
+
         const dashboard = new DashboardManager();
         Chart.defaults.font.family = "'Outfit', sans-serif";
         dashboard.init();
@@ -316,6 +323,7 @@
             this.loadPhaseStatusChart();
             this.loadCards();
 
+            // Auto refresh setiap 60 detik
             setInterval(() => this.loadCards(), 60000);
             setInterval(() => this.loadMonitoringChart(), 60000);
             setInterval(() => this.loadTrendChart(), 60000);
@@ -409,13 +417,11 @@
             const fetchText = async (url, elemId) => {
                 const el = document.getElementById(elemId);
                 if (!el) return;
-
                 try {
                     const res = await fetch(url);
                     const data = await res.json();
                     let countVal = (data && data.status === 'success') ? parseFloat(data.count) : 0;
                     if (isNaN(countVal)) countVal = 0;
-
                     this.animateCount(el, countVal);
                 } catch (e) {
                     el.textContent = '0';
@@ -434,11 +440,9 @@
                 try {
                     const res = await fetch('/api/disk-space');
                     const data = await res.json();
-
                     if (data.status === 'success') {
                         const usedData = this.parseStorageString(data.used);
                         const totalData = this.parseStorageString(data.total);
-
                         this.animateCount(u, usedData.value, usedData.unit);
                         this.animateCount(t, totalData.value, totalData.unit);
                     } else {
@@ -446,7 +450,6 @@
                         t.textContent = '0 B';
                     }
                 } catch (e) {
-                    console.error("Error loading disk space", e);
                     u.textContent = '0 B';
                     t.textContent = '0 B';
                 }
@@ -466,9 +469,7 @@
                 };
 
                 const elPaper = document.getElementById('ecoPaper');
-                if (elPaper) {
-                    this.animateCount(elPaper, getVal(data.paper), '', 0);
-                }
+                if (elPaper) this.animateCount(elPaper, getVal(data.paper), '', 0);
 
                 const elCost = document.getElementById('ecoCost');
                 if (elCost) {
@@ -476,7 +477,6 @@
                     let displayVal = harga;
                     let suffix = '';
                     let dec = 0;
-
                     if (harga >= 1000000) {
                         displayVal = harga / 1000000;
                         suffix = 'Jt';
@@ -486,19 +486,14 @@
                         suffix = 'K';
                         dec = 1;
                     }
-
                     this.animateCount(elCost, displayVal, suffix, dec);
                 }
 
                 const elTrees = document.getElementById('ecoTrees');
-                if (elTrees) {
-                    this.animateCount(elTrees, getVal(data.save_tree), '', 5);
-                }
+                if (elTrees) this.animateCount(elTrees, getVal(data.save_tree), '', 5);
 
                 const elCO2 = document.getElementById('ecoCO2');
-                if (elCO2) {
-                    this.animateCount(elCO2, getVal(data.co2_reduced), '', 3);
-                }
+                if (elCO2) this.animateCount(elCO2, getVal(data.co2_reduced), '', 3);
 
             } catch (error) {
                 console.error("Failed to load environment stats", error);
@@ -508,9 +503,7 @@
         async loadMonitoringChart() {
             const ctx = document.getElementById('monitoringChart');
             if (!ctx) return;
-
             const params = this.getFilterParams();
-
             try {
                 const url = `{{ route('api.upload-monitoring-data') }}?${params.toString()}`;
                 const response = await fetch(url);
@@ -532,10 +525,12 @@
             const ctx = document.getElementById('monitoringChart').getContext('2d');
             if (this.monitoringChart) this.monitoringChart.destroy();
 
+            // Membuat Label Unik (agar tidak tertumpuk jika nama sama)
             const labels = data.map(item => `${item.customer_name}-${item.model_name}-${item.project_status}-${item.part_group}`);
             const planData = data.map(item => parseFloat(item.plan_count));
             const actualData = data.map(item => parseFloat(item.actual_count));
             const percentageData = data.map(item => parseFloat(item.percentage));
+
             const maxDataValue = Math.max(...planData, ...actualData, 0);
             const suggestedMaxCount = maxDataValue > 0 ? Math.ceil(maxDataValue * 1.3) : 10;
             const gridColor = this.isDarkMode ? '#374151' : '#E5E7EB';
@@ -612,6 +607,23 @@
                         intersect: false
                     },
                     plugins: {
+                        // KONFIGURASI GESER (ZOOM/PAN)
+                        zoom: {
+                            pan: {
+                                enabled: true, // Bisa digeser
+                                mode: 'x', // Hanya sumbu X
+                                modifierKey: null,
+                            },
+                            zoom: {
+                                enabled: false // Zoom in/out dimatikan agar layout bar tidak rusak
+                            },
+                            limits: {
+                                x: {
+                                    min: 'original',
+                                    max: 'original'
+                                } // Batas geser agar tidak lewat
+                            }
+                        },
                         legend: {
                             position: 'bottom',
                             labels: {
@@ -656,6 +668,9 @@
                     },
                     scales: {
                         x: {
+                            // TAMPILKAN HANYA 5 DATA AWAL (0-4)
+                            min: 0,
+                            max: 4,
                             ticks: {
                                 color: textColor,
                                 font: {
@@ -665,12 +680,19 @@
                                 minRotation: 0,
                                 autoSkip: false,
                                 callback: function(value) {
+                                    // Custom label agar bisa multi-line kalau ada '-'
                                     const label = this.getLabelForValue(value);
-                                    const parts = label.split('-');
-                                    if (parts.length > 2) {
-                                        const line1 = parts.slice(0, 2).join('-');
-                                        const line2 = parts.slice(2).join('-');
-                                        return [line1, line2];
+                                    // Jika label panjang, potong sedikit agar tidak berantakan
+                                    if (typeof label === 'string') {
+                                        if (label.length > 20) {
+                                            return label.substring(0, 18) + '...';
+                                        }
+                                        const parts = label.split('-');
+                                        if (parts.length > 2) {
+                                            const line1 = parts.slice(0, 2).join('-');
+                                            const line2 = parts.slice(2).join('-');
+                                            return [line1, line2];
+                                        }
                                     }
                                     return label;
                                 }
@@ -901,9 +923,7 @@
         async loadPhaseStatusChart() {
             const ctx = document.getElementById('phaseStatusChart');
             if (!ctx) return;
-
             const params = this.getFilterParams();
-
             try {
                 const url = `{{ route('api.upload-phase-status') }}?${params.toString()}`;
                 const response = await fetch(url);
@@ -948,7 +968,7 @@
                         borderWidth: 5,
                         animation: {
                             duration: 2000,
-                            easing: 'easeOutQuad',
+                            easing: 'easeOutQuad'
                         }
                     }]
                 },
@@ -974,7 +994,6 @@
                                         return data.labels.map((label, i) => {
                                             const dataset = data.datasets[0];
                                             const bgColor = dataset.backgroundColor[i];
-
                                             return {
                                                 text: label,
                                                 fillStyle: bgColor,
@@ -1006,9 +1025,9 @@
                                     return {
                                         borderColor: 'transparent',
                                         backgroundColor: context.dataset.backgroundColor[context.dataIndex],
-                                        borderWidth: 0, 
+                                        borderWidth: 0,
                                         borderRadius: 0,
-                                        pointStyle: 'rect' 
+                                        pointStyle: 'rect'
                                     };
                                 },
                                 label: function(context) {
@@ -1041,28 +1060,21 @@
         async loadActivityLog() {
             const container = document.getElementById('activityLogContainer');
             if (!container) return;
-
             container.innerHTML = `
                 <div class="flex flex-col items-center justify-center h-full w-full min-h-[200px]">
                     <i class="fa-solid fa-circle-notch fa-spin text-blue-500 dark:text-blue-400 text-3xl mb-3"></i>
                     <span class="text-sm font-medium text-gray-500 dark:text-gray-400 animate-pulse">Loading activities...</span>
-                </div>
-            `;
-
+                </div>`;
             const params = this.getFilterParams();
-
             try {
                 const response = await fetch(`{{ route('api.getDataActivityLog') }}?${params.toString()}`);
                 const result = await response.json();
-
                 if (result.status === 'success') {
                     container.innerHTML = '';
-
                     if (result.data && result.data.length > 0) {
                         result.data.forEach(log => {
                             container.insertAdjacentHTML('beforeend', this.formatLogEntry(log));
                         });
-
                         requestAnimationFrame(() => {
                             const items = container.querySelectorAll('.log-item');
                             items.forEach((item, index) => {
@@ -1071,7 +1083,6 @@
                                 }, index * 50);
                             });
                         });
-
                     } else {
                         container.innerHTML = `<div class="p-4 text-center text-gray-500 dark:text-gray-400 opacity-0 transition-opacity duration-500 ease-in" id="emptyMsg">No activity found for this filter.</div>`;
                         setTimeout(() => {
@@ -1098,11 +1109,9 @@
                 }
             };
             const logInfo = iconMap[log.activity_code] || iconMap['DEFAULT'];
-
             let message = log.activity_code === 'UPLOAD' ?
                 `<strong>${log.user_name || 'System'}</strong> upload new document.` :
                 `<strong>${log.user_name || 'System'}</strong> performed action: <strong>${log.activity_code}</strong>.`;
-
             const date = log.created_at ? new Date(log.created_at.replace(' ', 'T')) : new Date();
             const dateStr = date.toLocaleString('id-ID', {
                 day: 'numeric',
@@ -1111,19 +1120,15 @@
                 hour: '2-digit',
                 minute: '2-digit'
             });
-
             let metaDetails = '';
             if (log.meta && log.activity_code === 'UPLOAD') {
                 const details = [log.meta.customer_code, log.meta.model_name, log.meta.part_no, log.meta.doctype_group, log.meta.part_group_code].filter(Boolean);
                 if (details.length) metaDetails = `<p class="mt-1 text-[12px] text-gray-600 dark:text-gray-400 font-mono">${details.join(' - ')}</p>`;
             }
-
             return `<div class="log-item py-2 px-1 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-all duration-500 ease-out opacity-0 translate-y-4" data-id="${log.id}">
                 <div class="flex-shrink-0 pt-1"><i class="fa-solid ${logInfo.icon} ${logInfo.color} w-5 text-center"></i></div>
                 <div class="flex-1 min-w-0">
-                    <div class="flex justify-between items-start">
-                        <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
-                    </div>
+                    <div class="flex justify-between items-start"><p class="text-sm text-gray-800 dark:text-gray-200">${message}</p></div>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${dateStr}</p>
                     ${metaDetails}
                 </div>
@@ -1280,14 +1285,10 @@
         renderFilterPills() {
             const container = document.getElementById('filterPillContainer');
             container.innerHTML = '';
-
             const createPill = (type, item, stateKey) => {
                 const span = document.createElement('span');
-
                 span.className = 'filter-pill mr-2 inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium';
-
                 span.innerHTML = `<span class="font-normal mr-1">${type}:</span><span>${item.text}</span><button type="button" class="filter-pill-remove ml-2 hover:text-blue-600 focus:outline-none" data-id="${item.id}"><i class="fa-solid fa-times fa-xs"></i></button>`;
-
                 span.querySelector('button').addEventListener('click', () => {
                     const arr = this[stateKey];
                     const idx = arr.findIndex(x => x.id === item.id);
@@ -1310,7 +1311,6 @@
                 });
                 return span;
             };
-
             this.selectedCustomers.forEach(i => container.appendChild(createPill('Cust', i, 'selectedCustomers')));
             this.selectedModels.forEach(i => container.appendChild(createPill('Model', i, 'selectedModels')));
             this.selectedPartGroup.forEach(i => container.appendChild(createPill('Group', i, 'selectedPartGroup')));
@@ -1354,10 +1354,8 @@
                             }
                             if (this.currentChartData && this.currentChartData.length > 0) this.renderChart(this.currentChartData);
                             else if (this.monitoringChart) this.renderChart([]);
-
                             if (this.currentTrendData && this.currentTrendData.length > 0) this.renderTrendChart(this.currentTrendData);
                             else if (this.trendChart) this.renderTrendChart([]);
-
                             this.loadPhaseStatusChart();
                         }
                     }
