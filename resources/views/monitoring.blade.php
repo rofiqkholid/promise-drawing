@@ -275,13 +275,14 @@
         </div>
     </div>
 </div>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Register DataLabels
-        Chart.register(ChartDataLabels);
+        // 1. Register Plugin DataLabels
+        if (typeof ChartDataLabels !== 'undefined') {
+            Chart.register(ChartDataLabels);
+        }
 
-        // Register Zoom Plugin jika library sudah dimuat
+        // 2. Register Plugin Zoom (Wajib didaftarkan manual)
         if (typeof ChartZoom !== 'undefined') {
             Chart.register(ChartZoom);
         }
@@ -317,6 +318,8 @@
             this.initSelect2();
             this.loadSaveEnv();
             this.attachButtonEvents();
+
+            // Load Awal
             this.loadMonitoringChart();
             this.loadTrendChart();
             this.loadActivityLog();
@@ -332,6 +335,7 @@
             setInterval(() => this.loadSaveEnv(), 60000);
         }
 
+        // --- HELPER FUNCTIONS ---
         getFilterParams() {
             const statusData = $('#project_status').select2('data');
             const statusVal = (statusData && statusData.length > 0) ? statusData[0].text.trim() : '';
@@ -382,37 +386,29 @@
                 }) + suffix;
                 return;
             }
-
             const target = parseFloat(to);
             let from = 0;
             const duration = 1500;
             const startTime = performance.now();
-
             const update = (currentTime) => {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
                 const ease = 1 - Math.pow(1 - progress, 4);
-
                 let current = from + (target - from) * ease;
-
                 el.textContent = current.toLocaleString('id-ID', {
                     minimumFractionDigits: decimals,
                     maximumFractionDigits: decimals
                 }) + suffix;
-
-                if (progress < 1) {
-                    requestAnimationFrame(update);
-                } else {
-                    el.textContent = target.toLocaleString('id-ID', {
-                        minimumFractionDigits: decimals,
-                        maximumFractionDigits: decimals
-                    }) + suffix;
-                }
+                if (progress < 1) requestAnimationFrame(update);
+                else el.textContent = target.toLocaleString('id-ID', {
+                    minimumFractionDigits: decimals,
+                    maximumFractionDigits: decimals
+                }) + suffix;
             };
-
             requestAnimationFrame(update);
         }
 
+        // --- DATA LOADING ---
         async loadCards() {
             const fetchText = async (url, elemId) => {
                 const el = document.getElementById(elemId);
@@ -427,7 +423,6 @@
                     el.textContent = '0';
                 }
             };
-
             fetchText('/api/active-users-count', 'activeUserCount');
             fetchText('/api/upload-count', 'uploadCount');
             fetchText('/api/download-count', 'downloadCount');
@@ -435,7 +430,6 @@
 
             const u = document.getElementById('usedSpace');
             const t = document.getElementById('totalSpace');
-
             if (u && t) {
                 try {
                     const res = await fetch('/api/disk-space');
@@ -461,13 +455,11 @@
                 const params = this.getFilterParams();
                 const response = await fetch(`{{ route('api.get-save-env') }}?${params.toString()}`);
                 const data = await response.json();
-
                 const getVal = (val) => {
                     if (typeof val === 'number') return val;
                     if (typeof val === 'string' && val.trim() !== '') return parseFloat(val);
                     return 0;
                 };
-
                 const elPaper = document.getElementById('ecoPaper');
                 if (elPaper) this.animateCount(elPaper, getVal(data.paper), '', 0);
 
@@ -488,18 +480,16 @@
                     }
                     this.animateCount(elCost, displayVal, suffix, dec);
                 }
-
                 const elTrees = document.getElementById('ecoTrees');
                 if (elTrees) this.animateCount(elTrees, getVal(data.save_tree), '', 5);
-
                 const elCO2 = document.getElementById('ecoCO2');
                 if (elCO2) this.animateCount(elCO2, getVal(data.co2_reduced), '', 3);
-
             } catch (error) {
                 console.error("Failed to load environment stats", error);
             }
         }
 
+        // --- MONITORING CHART (THE ONE WITH ZOOM) ---
         async loadMonitoringChart() {
             const ctx = document.getElementById('monitoringChart');
             if (!ctx) return;
@@ -525,7 +515,6 @@
             const ctx = document.getElementById('monitoringChart').getContext('2d');
             if (this.monitoringChart) this.monitoringChart.destroy();
 
-            // Membuat Label Unik (agar tidak tertumpuk jika nama sama)
             const labels = data.map(item => `${item.customer_name}-${item.model_name}-${item.project_status}-${item.part_group}`);
             const planData = data.map(item => parseFloat(item.plan_count));
             const actualData = data.map(item => parseFloat(item.actual_count));
@@ -554,10 +543,6 @@
                         barPercentage: 0.5,
                         order: 2,
                         yAxisID: 'y',
-                        animation: {
-                            duration: 500,
-                            easing: 'easeOutQuad'
-                        }
                     }, {
                         label: 'Actual Count',
                         data: actualData,
@@ -570,11 +555,6 @@
                         barPercentage: 0.5,
                         order: 3,
                         yAxisID: 'y',
-                        animation: {
-                            duration: 500,
-                            easing: 'easeOutQuad',
-                            delay: 200
-                        }
                     }, {
                         label: 'Percentage',
                         data: percentageData,
@@ -591,11 +571,6 @@
                             anchor: 'end',
                             formatter: (value) => value + '%',
                             color: textColor
-                        },
-                        animation: {
-                            duration: 500,
-                            easing: 'easeOutQuad',
-                            delay: 200
                         }
                     }]
                 },
@@ -607,21 +582,22 @@
                         intersect: false
                     },
                     plugins: {
-                        // KONFIGURASI GESER (ZOOM/PAN)
+                        // SETTING ZOOM / PAN
                         zoom: {
                             pan: {
-                                enabled: true, // Bisa digeser
-                                mode: 'x', // Hanya sumbu X
-                                modifierKey: null,
+                                enabled: true, // Aktifkan geser
+                                mode: 'x', // Hanya geser horizontal
+                                modifierKey: null, // Langsung geser tanpa tombol
+                                threshold: 10 // Sensitivitas
                             },
                             zoom: {
-                                enabled: false // Zoom in/out dimatikan agar layout bar tidak rusak
+                                enabled: false // Matikan zoom agar bar tidak mengecil
                             },
                             limits: {
                                 x: {
                                     min: 'original',
                                     max: 'original'
-                                } // Batas geser agar tidak lewat
+                                } // Cegah geser ke area kosong
                             }
                         },
                         legend: {
@@ -644,15 +620,7 @@
                             bodyColor: textColor,
                             borderColor: borderColor,
                             borderWidth: 1,
-                            padding: 12,
-                            boxPadding: 6,
-                            usePointStyle: true,
-                            titleFont: {
-                                size: 14
-                            },
-                            bodyFont: {
-                                size: 14
-                            }
+                            usePointStyle: true
                         },
                         datalabels: {
                             color: textColor,
@@ -668,25 +636,18 @@
                     },
                     scales: {
                         x: {
-                            // TAMPILKAN HANYA 5 DATA AWAL (0-4)
+                            // TAMPILKAN 5 DATA (Index 0 s/d 4)
                             min: 0,
                             max: 4,
                             ticks: {
                                 color: textColor,
-                                font: {
-                                    size: 14
-                                },
-                                maxRotation: 0,
-                                minRotation: 0,
-                                autoSkip: false,
                                 callback: function(value) {
-                                    // Custom label agar bisa multi-line kalau ada '-'
                                     const label = this.getLabelForValue(value);
-                                    // Jika label panjang, potong sedikit agar tidak berantakan
                                     if (typeof label === 'string') {
-                                        if (label.length > 20) {
-                                            return label.substring(0, 18) + '...';
-                                        }
+                                        // Potong text panjang
+                                        if (label.length > 25) return label.substring(0, 23) + '...';
+
+                                        // Split baris jika ada tanda '-'
                                         const parts = label.split('-');
                                         if (parts.length > 2) {
                                             const line1 = parts.slice(0, 2).join('-');
@@ -706,27 +667,20 @@
                             type: 'linear',
                             display: true,
                             position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Count',
-                                color: textColor,
-                                font: {
-                                    size: 12,
-                                    weight: 'bold'
-                                }
-                            },
                             suggestedMax: suggestedMaxCount,
                             ticks: {
                                 color: textColor,
                                 maxTicksLimit: 3,
-                                font: {
-                                    size: 12
-                                },
                                 precision: 0
                             },
                             grid: {
                                 color: gridColor,
                                 drawBorder: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Count',
+                                color: textColor
                             }
                         },
                         y1: {
@@ -735,29 +689,19 @@
                             position: 'right',
                             min: 0,
                             max: 120,
-                            title: {
-                                display: true,
-                                text: 'Percentage',
-                                color: textColor,
-                                font: {
-                                    size: 12,
-                                    weight: 'bold'
-                                }
-                            },
                             grid: {
                                 drawOnChartArea: false,
                                 drawBorder: false
                             },
                             ticks: {
                                 color: textColor,
-                                font: {
-                                    size: 12
-                                },
                                 stepSize: 50,
-                                callback: function(value) {
-                                    if (value > 100) return null;
-                                    return value;
-                                }
+                                callback: (v) => v > 100 ? null : v
+                            },
+                            title: {
+                                display: true,
+                                text: 'Percentage',
+                                color: textColor
                             }
                         }
                     }
@@ -765,6 +709,7 @@
             });
         }
 
+        // --- TREND CHART ---
         async loadTrendChart() {
             const ctx = document.getElementById('trendChart');
             if (!ctx) return;
@@ -787,11 +732,9 @@
         renderTrendChart(data) {
             const ctx = document.getElementById('trendChart').getContext('2d');
             if (this.trendChart) this.trendChart.destroy();
-
             const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
             const uploadData = new Array(12).fill(0);
             const downloadData = new Array(12).fill(0);
-
             if (data && Array.isArray(data)) {
                 data.forEach(item => {
                     const monthIndex = item.month - 1;
@@ -801,7 +744,6 @@
                     }
                 });
             }
-
             const gridColor = this.isDarkMode ? '#374151' : '#E5E7EB';
             const textColor = this.isDarkMode ? '#D1D5DB' : '#4B5563';
             const bgColor = this.isDarkMode ? '#1F2937' : '#FFFFFF';
@@ -823,10 +765,6 @@
                         pointHoverRadius: 6,
                         pointBackgroundColor: 'rgba(34, 197, 94, 1)',
                         pointBorderWidth: 0,
-                        animation: {
-                            duration: 1000,
-                            easing: 'easeOutQuad'
-                        }
                     }, {
                         label: 'Downloads',
                         data: downloadData,
@@ -839,11 +777,6 @@
                         pointHoverRadius: 6,
                         pointBackgroundColor: 'rgba(234, 179, 8, 1)',
                         pointBorderWidth: 0,
-                        animation: {
-                            duration: 1000,
-                            easing: 'easeOutQuad',
-                            delay: 100
-                        }
                     }]
                 },
                 options: {
@@ -874,13 +807,7 @@
                             bodyColor: textColor,
                             borderColor: borderColor,
                             borderWidth: 1,
-                            usePointStyle: true,
-                            titleFont: {
-                                size: 14
-                            },
-                            bodyFont: {
-                                size: 14
-                            }
+                            usePointStyle: true
                         },
                         datalabels: {
                             display: false
@@ -889,10 +816,7 @@
                     scales: {
                         x: {
                             ticks: {
-                                color: textColor,
-                                font: {
-                                    size: 14
-                                }
+                                color: textColor
                             },
                             grid: {
                                 color: gridColor,
@@ -903,10 +827,7 @@
                             ticks: {
                                 color: textColor,
                                 maxTicksLimit: 3,
-                                precision: 0,
-                                font: {
-                                    size: 14
-                                }
+                                precision: 0
                             },
                             grid: {
                                 color: gridColor,
@@ -920,6 +841,7 @@
             });
         }
 
+        // --- PHASE CHART ---
         async loadPhaseStatusChart() {
             const ctx = document.getElementById('phaseStatusChart');
             if (!ctx) return;
@@ -941,7 +863,6 @@
         renderPhaseChart(data) {
             const ctx = document.getElementById('phaseStatusChart').getContext('2d');
             if (this.phaseChart) this.phaseChart.destroy();
-
             const aggregated = {};
             if (Array.isArray(data)) {
                 data.forEach(item => {
@@ -950,7 +871,6 @@
                     aggregated[status] = (aggregated[status] || 0) + count;
                 });
             }
-
             const labels = Object.keys(aggregated);
             const values = Object.values(aggregated);
             const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#6366F1'];
@@ -965,11 +885,7 @@
                         data: values.length ? values : [1],
                         backgroundColor: values.length ? colors.slice(0, values.length) : ['#9CA3AF'],
                         borderColor: borderColor,
-                        borderWidth: 5,
-                        animation: {
-                            duration: 2000,
-                            easing: 'easeOutQuad'
-                        }
+                        borderWidth: 5
                     }]
                 },
                 options: {
@@ -983,9 +899,6 @@
                                 pointStyle: 'rect',
                                 color: textColor,
                                 padding: 15,
-                                font: {
-                                    size: 14
-                                },
                                 boxWidth: 14,
                                 boxHeight: 14,
                                 generateLabels: function(chart) {
@@ -1012,14 +925,6 @@
                             }
                         },
                         tooltip: {
-                            titleFont: {
-                                size: 14
-                            },
-                            bodyFont: {
-                                size: 14
-                            },
-                            boxWidth: 14,
-                            boxHeight: 14,
                             callbacks: {
                                 labelColor: function(context) {
                                     return {
@@ -1057,6 +962,7 @@
             });
         }
 
+        // --- ACTIVITY LOG ---
         async loadActivityLog() {
             const container = document.getElementById('activityLogContainer');
             if (!container) return;
@@ -1296,9 +1202,7 @@
                         const removedItem = arr[idx];
                         arr.splice(idx, 1);
                         if (stateKey === 'selectedCustomers') {
-                            if (this.selectedModels.length > 0) {
-                                this.selectedModels = this.selectedModels.filter(model => String(model.customer_id) !== String(removedItem.id));
-                            }
+                            if (this.selectedModels.length > 0) this.selectedModels = this.selectedModels.filter(model => String(model.customer_id) !== String(removedItem.id));
                             if (this.selectedCustomers.length === 0) {
                                 $('#model_input').prop('disabled', true).val(null).trigger('change');
                                 this.selectedModels = [];
@@ -1393,7 +1297,6 @@
                         wrapper.classList.remove('h-[calc(100vh-70px)]', 'overflow-hidden');
                         wrapper.classList.add('min-h-[calc(100vh-70px)]', 'h-auto', 'pb-4');
                     }
-
                     $card.stop(true, true).slideToggle(300, 'swing', function() {
                         $(this).css('overflow', 'visible');
                         if (!isOpening) {
@@ -1401,7 +1304,6 @@
                             wrapper.classList.add('h-[calc(100vh-70px)]', 'overflow-hidden');
                         }
                     });
-
                     if (isOpening) {
                         $icon.css({
                             'transform': 'rotate(0deg)',
@@ -1424,14 +1326,7 @@
                 btnApply.disabled = true;
                 btnText.style.display = 'none';
                 btnLoader.style.display = 'inline-block';
-
-                await Promise.all([
-                    this.loadMonitoringChart(),
-                    this.loadActivityLog(),
-                    this.loadSaveEnv(),
-                    this.loadPhaseStatusChart()
-                ]);
-
+                await Promise.all([this.loadMonitoringChart(), this.loadActivityLog(), this.loadSaveEnv(), this.loadPhaseStatusChart()]);
                 this.isLoading = false;
                 btnApply.disabled = false;
                 btnText.style.display = 'inline-block';
