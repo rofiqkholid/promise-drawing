@@ -691,10 +691,8 @@
                     },
                     scales: {
                         x: {
-                            // --- PENGATURAN TAMPILAN 5 DATA ---
                             min: 0,
-                            max: 4, // 0 s/d 4 = 5 Item. Jika datanya < 5, kode aman karena ChartJS handle auto.
-                            // ----------------------------------
+                            max: 4, 
                             ticks: {
                                 color: textColor,
                                 font: {
@@ -705,7 +703,6 @@
                                 autoSkip: false,
                                 callback: function(value) {
                                     const label = this.getLabelForValue(value);
-                                    // Mencegah error jika label undefined saat digeser cepat
                                     if (!label) return '';
                                     const parts = label.split('-');
                                     if (parts.length > 2) {
@@ -869,7 +866,7 @@
                         x: {
 
                             min: 0,
-                            max: 5,
+                            max: 11,
                             ticks: {
                                 color: textColor,
                                 font: {
