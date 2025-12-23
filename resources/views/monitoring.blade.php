@@ -683,7 +683,7 @@
                     scales: {
                         x: {
                             min: 0,
-                            max: 5,
+                            max: 3,
                             ticks: {
                                 color: textColor,
                                 font: {
