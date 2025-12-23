@@ -612,6 +612,22 @@
                         intersect: false
                     },
                     plugins: {
+                        zoom: {
+                            pan: {
+                                enabled: true,
+                                mode: 'x', // Geser hanya horizontal
+                                threshold: 10
+                            },
+                            zoom: {
+                                wheel: {
+                                    enabled: true, // Zoom pakai scroll mouse
+                                },
+                                pinch: {
+                                    enabled: true // Zoom dicubit (untuk layar sentuh)
+                                },
+                                mode: 'x',
+                            }
+                        },
                         legend: {
                             position: 'bottom',
                             labels: {
@@ -881,8 +897,7 @@
                         }
                     },
                     scales: {
-                        // Agar zoom bekerja lebih baik, disarankan membatasi jumlah data awal yang tampil
-                        min: 0, 
+                        min: 0,
                         max: 5,
                         x: {
                             ticks: {
