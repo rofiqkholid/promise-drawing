@@ -620,8 +620,8 @@
                             },
                             limits: {
                                 x: {
-                                    min: 0,
-                                    max: 11
+                                    min: 'original',
+                                    max: 'original'
                                 },
                                 y: {
                                     min: 'original',
@@ -682,6 +682,8 @@
                     },
                     scales: {
                         x: {
+                            min: 0,
+                            max: 5,
                             ticks: {
                                 color: textColor,
                                 font: {
