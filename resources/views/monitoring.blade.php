@@ -615,15 +615,25 @@
                         zoom: {
                             pan: {
                                 enabled: true,
-                                mode: 'x', // Geser hanya horizontal
-                                threshold: 10
+                                mode: 'x',
+                                threshold: 0,
+                            },
+                            limits: {
+                                x: {
+                                    min: 0,
+                                    max: 11
+                                },
+                                y: {
+                                    min: 'original',
+                                    max: 'original'
+                                }
                             },
                             zoom: {
                                 wheel: {
-                                    enabled: true, // Zoom pakai scroll mouse
+                                    enabled: true
                                 },
                                 pinch: {
-                                    enabled: true // Zoom dicubit (untuk layar sentuh)
+                                    enabled: true
                                 },
                                 mode: 'x',
                             }
@@ -780,6 +790,7 @@
 
         renderTrendChart(data) {
             const ctx = document.getElementById('trendChart').getContext('2d');
+
             if (this.trendChart) this.trendChart.destroy();
 
             const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -817,10 +828,6 @@
                         pointHoverRadius: 6,
                         pointBackgroundColor: 'rgba(34, 197, 94, 1)',
                         pointBorderWidth: 0,
-                        animation: {
-                            duration: 1000,
-                            easing: 'easeOutQuad'
-                        }
                     }, {
                         label: 'Downloads',
                         data: downloadData,
@@ -833,11 +840,6 @@
                         pointHoverRadius: 6,
                         pointBackgroundColor: 'rgba(234, 179, 8, 1)',
                         pointBorderWidth: 0,
-                        animation: {
-                            duration: 1000,
-                            easing: 'easeOutQuad',
-                            delay: 100
-                        }
                     }]
                 },
                 options: {
@@ -847,19 +849,64 @@
                         mode: 'index',
                         intersect: false
                     },
+
+                    scales: {
+                        x: {
+
+                            min: 0,
+                            max: 12,
+                            ticks: {
+                                color: textColor,
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            grid: {
+                                color: gridColor,
+                                drawBorder: false
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                color: textColor,
+                                maxTicksLimit: 3,
+                                precision: 0,
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            grid: {
+                                color: gridColor,
+                                borderDash: [5, 5],
+                                drawBorder: false
+                            },
+                            beginAtZero: true
+                        }
+                    },
                     plugins: {
+
                         zoom: {
                             pan: {
                                 enabled: true,
-                                mode: 'x', // Geser hanya horizontal
-                                threshold: 10
+                                mode: 'x',
+                                threshold: 0,
+                            },
+                            limits: {
+                                x: {
+                                    min: 0,
+                                    max: 11
+                                },
+                                y: {
+                                    min: 'original',
+                                    max: 'original'
+                                }
                             },
                             zoom: {
                                 wheel: {
-                                    enabled: true, // Zoom pakai scroll mouse
+                                    enabled: true
                                 },
                                 pinch: {
-                                    enabled: true // Zoom dicubit (untuk layar sentuh)
+                                    enabled: true
                                 },
                                 mode: 'x',
                             }
@@ -894,38 +941,6 @@
                         },
                         datalabels: {
                             display: false
-                        }
-                    },
-                    scales: {
-                        min: 0,
-                        max: 5,
-                        x: {
-                            ticks: {
-                                color: textColor,
-                                font: {
-                                    size: 14
-                                }
-                            },
-                            grid: {
-                                color: gridColor,
-                                drawBorder: false
-                            }
-                        },
-                        y: {
-                            ticks: {
-                                color: textColor,
-                                maxTicksLimit: 3,
-                                precision: 0,
-                                font: {
-                                    size: 14
-                                }
-                            },
-                            grid: {
-                                color: gridColor,
-                                borderDash: [5, 5],
-                                drawBorder: false
-                            },
-                            beginAtZero: true
                         }
                     }
                 }
