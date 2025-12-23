@@ -532,16 +532,24 @@
             const ctx = document.getElementById('monitoringChart').getContext('2d');
             if (this.monitoringChart) this.monitoringChart.destroy();
 
+            // Mapping Data
             const labels = data.map(item => `${item.customer_name}-${item.model_name}-${item.project_status}-${item.part_group}`);
             const planData = data.map(item => parseFloat(item.plan_count));
             const actualData = data.map(item => parseFloat(item.actual_count));
             const percentageData = data.map(item => parseFloat(item.percentage));
+
+            // Perhitungan Max Value untuk Y-Axis
             const maxDataValue = Math.max(...planData, ...actualData, 0);
             const suggestedMaxCount = maxDataValue > 0 ? Math.ceil(maxDataValue * 1.3) : 10;
+
+            // Style Variables
             const gridColor = this.isDarkMode ? '#374151' : '#E5E7EB';
             const textColor = this.isDarkMode ? '#D1D5DB' : '#4B5563';
             const bgColor = this.isDarkMode ? '#1F2937' : '#FFFFFF';
             const borderColor = this.isDarkMode ? '#4B5563' : '#E5E7EB';
+
+            // Hitung total data untuk batas limit zoom
+            const totalDataCount = labels.length;
 
             this.monitoringChart = new Chart(ctx, {
                 type: 'bar',
@@ -616,12 +624,13 @@
                             pan: {
                                 enabled: true,
                                 mode: 'x',
-                                threshold: 0,
+                                threshold: 0, // Agar responsif saat disentuh/digeser
                             },
                             limits: {
                                 x: {
-                                    min: 'original',
-                                    max: 'original'
+                                    // PENTING: Batasi geseran dari index 0 sampai index terakhir data
+                                    min: 0,
+                                    max: totalDataCount - 1
                                 },
                                 y: {
                                     min: 'original',
@@ -682,8 +691,10 @@
                     },
                     scales: {
                         x: {
+                            // --- PENGATURAN TAMPILAN 5 DATA ---
                             min: 0,
-                            max: 3,
+                            max: 4, // 0 s/d 4 = 5 Item. Jika datanya < 5, kode aman karena ChartJS handle auto.
+                            // ----------------------------------
                             ticks: {
                                 color: textColor,
                                 font: {
@@ -694,6 +705,8 @@
                                 autoSkip: false,
                                 callback: function(value) {
                                     const label = this.getLabelForValue(value);
+                                    // Mencegah error jika label undefined saat digeser cepat
+                                    if (!label) return '';
                                     const parts = label.split('-');
                                     if (parts.length > 2) {
                                         const line1 = parts.slice(0, 2).join('-');
@@ -856,7 +869,7 @@
                         x: {
 
                             min: 0,
-                            max: 12,
+                            max: 5,
                             ticks: {
                                 color: textColor,
                                 font: {
