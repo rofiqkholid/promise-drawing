@@ -864,9 +864,6 @@
 
                     scales: {
                         x: {
-
-                            min: 0,
-                            max: 11,
                             ticks: {
                                 color: textColor,
                                 font: {
@@ -896,33 +893,6 @@
                         }
                     },
                     plugins: {
-
-                        zoom: {
-                            pan: {
-                                enabled: true,
-                                mode: 'x',
-                                threshold: 0,
-                            },
-                            limits: {
-                                x: {
-                                    min: 0,
-                                    max: 11
-                                },
-                                y: {
-                                    min: 'original',
-                                    max: 'original'
-                                }
-                            },
-                            zoom: {
-                                wheel: {
-                                    enabled: true
-                                },
-                                pinch: {
-                                    enabled: true
-                                },
-                                mode: 'x',
-                            }
-                        },
                         legend: {
                             position: 'bottom',
                             labels: {
