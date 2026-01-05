@@ -33,6 +33,21 @@ use Illuminate\Support\Facades\Log;
 
 class ApprovalController extends Controller
 {
+    /**
+     * Membersihkan karakter kontrol non-printable (ASCII 0-31) 
+     * yang dapat merusak struktur string JSON di JavaScript.
+     */
+    private function sanitizeForJson(array $data): array
+    {
+        array_walk_recursive($data, function (&$item) {
+            if (is_string($item)) {
+                // Menghapus karakter kontrol ASCII 0-31 dan 127
+                // Karakter standar seperti spasi, _, -, . TETAP AMAN
+                $item = preg_replace('/[\x00-\x1F\x7F]/', '', $item);
+            }
+        });
+        return $data;
+    }
     public function kpi(Request $req)
     {
         $q = DB::table('doc_package_revisions as dpr')
@@ -640,7 +655,7 @@ class ApprovalController extends Controller
             ],
         ];
 
-        
+        $detail = $this->sanitizeForJson($detail);
         $hash = encrypt($revisionId);
 
        
