@@ -437,10 +437,7 @@ class DashboardController extends Controller
                 DB::raw('SUM(CAST(actual_count AS FLOAT)) as actual_count')
             );
 
-        if ($request->filled('date_start')) {
-            $query->whereDate('created_at', '>=', $request->date_start);
-        }
-
+        
         if ($request->filled('date_end')) {
             $query->whereDate('created_at', '<=', $request->date_end);
         }
