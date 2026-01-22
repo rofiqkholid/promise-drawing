@@ -150,9 +150,20 @@
                 <button @click="toggleSection('{{$category}}')"
                     class="w-full p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between focus:outline-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                     :aria-expanded="openSections.includes('{{$category}}')">
-                    <div class="flex items-center">
-                        <i class="fa-solid {{$icon}} mr-3 text-gray-500 dark:text-gray-400"></i>
-                        <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $title }}</span>
+                    <div class="flex flex-col gap-0.5">
+                        <div class="flex items-center">
+                            <i class="fa-solid {{$icon}} mr-3 w-4 text-center text-gray-500 dark:text-gray-400"></i>
+                            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {{ $title }}
+                            </span>
+                        </div>
+
+                        @if ($category === '3d')
+                        <div class="ml-7 flex items-center text-[10px] text-gray-500 dark:text-gray-400">
+                            <i class="fa-solid fa-circle-info text-blue-500 mr-1.5 opacity-75"></i>
+                            <span>Preview available for .igs/.iges, .stp/.step files only</span>
+                        </div>
+                    @endif
                     </div>
                     <span
                         class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full"
