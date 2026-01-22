@@ -1293,6 +1293,7 @@ class ExportController extends Controller
             $stamp->newImage($canvasWidth, $canvasHeight, new \ImagickPixel('transparent'));
             $stamp->setImageFormat('png');
 
+            // Gunakan warna dengan opacity untuk semua format
             $opacity = 0.4;
             if ($colorMode === 'red') {
                 $borderColor = new \ImagickPixel("rgba(220, 38, 38, $opacity)"); // Merah
@@ -1452,7 +1453,6 @@ class ExportController extends Controller
             $posObsolete = $this->positionIntToKey($file->obslt_position ?? 2, 'bottom-right');
 
             // --- GENERATE MASTER GAMBAR ---
-            // Original & Copy (Default Blue)
             $stampOriginal = $this->_createStampImage('SAI-DRAWING ORIGINAL', $topLine, $bottomLine, $originalStampColor);
             $stampCopy     = $this->_createStampImage('SAI-DRAWING CONTROLLED COPY', $topLineCopy, $bottomLineCopy, 'blue');
             $stampObsolete = null;
@@ -1504,6 +1504,7 @@ class ExportController extends Controller
             $imagick = new \Imagick();
             $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
             $isPdf = ($ext === 'pdf');
+            $isTiff = in_array($ext, ['tif', 'tiff']);
 
             if ($isPdf) {
                 $imagick->setResolution(150, 150);
@@ -1529,6 +1530,7 @@ class ExportController extends Controller
                 $posOriginal,
                 $posCopy,
                 $posObsolete,
+                $isTiff
             ) {
                 $imagick->setIteratorIndex($iteratorIndex);
                 $imgWidth = $imagick->getImageWidth();
@@ -1551,6 +1553,27 @@ class ExportController extends Controller
                     $stampObsResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
                 }
 
+                if ($isTiff) {
+                    if ($imgWidth > 2500) {
+                        $imagick->scaleImage(2500, 0);
+                        $imgWidth = $imagick->getImageWidth();
+                        $imgHeight = $imagick->getImageHeight();
+                        
+                        $newStampWidth = max($minStampWidth, (int) ($imgWidth * $stampWidthPercent));
+                        $newStampHeight = (int) ($newStampWidth / $stampAspectRatio);
+                        
+                        $stampOrigResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
+                        $stampCopyResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
+                        if ($stampObsResized) {
+                            $stampObsResized->resizeImage($newStampWidth, $newStampHeight, \Imagick::FILTER_LANCZOS, 1);
+                        }
+                    }
+
+                    // Convert ke RGB untuk support warna
+                    $imagick->transformImageColorspace(\Imagick::COLORSPACE_SRGB);
+                    $imagick->setImageType(\Imagick::IMGTYPE_TRUECOLOR);
+                }
+
                 // Composite Stamps
                 list($x, $y) = $this->calculateStampCoordinates($posOriginal, $imgWidth, $imgHeight, $newStampWidth, $newStampHeight, $margin);
                 $imagick->compositeImage($stampOrigResized, \Imagick::COMPOSITE_OVER, (int)$x, (int)$y);
@@ -1563,13 +1586,69 @@ class ExportController extends Controller
                     $imagick->compositeImage($stampObsResized, \Imagick::COMPOSITE_OVER, (int)$xObs, (int)$yObs);
                     $stampObsResized->destroy();
                 }
+                
+                // OPTIMASI FINAL: Smart Palette 16 Warna
+                if ($isTiff) {
+                    $imagick->setImageFormat('tiff');
+                    
+                    try {
+                        // Palette 16 Warna (4-bit)
+                        $palette = new \Imagick();
+                        $palette->newImage(1, 16, new \ImagickPixel('white')); 
+                        $palette->setImageFormat('png');
+                        
+                        $pixelIter = $palette->getPixelIterator();
+                        $colors = [
+                            '#FFFFFF', // Putih (Background)
+                            '#000000', // Hitam (Lines)
+                            
+                            // Blue Spectrum
+                            '#A8C1F7', // Light Blue
+                            '#608AF5', // Medium Blue (Jembtan antara Light & Dark)
+                            '#2563EB', // Blue Solid
+                            '#0F285E', // Dark Blue
+                            
+                            // Red Spectrum
+                            '#F1A8A8', // Light Red
+                            '#E06060', // Medium Red
+                            '#DC2626', // Red Solid
+                            '#580F0F', // Dark Red
+
+                            // Gray Spectrum
+                            '#C4C7CC', // Light Gray
+                            '#9CA3AF', // Medium Gray
+                            '#6B7280', // Gray Solid
+                            '#2B2D33', // Dark Gray
+                            
+                            // Extra Shades for smoothness
+                            '#E5E7EB', // Very Light Gray (Background noise)
+                            '#111827', // Very Dark Gray (Line antialias)
+                        ];
+                        
+                        $index = 0;
+                        foreach ($pixelIter as $row => $pixels) {
+                            foreach ($pixels as $column => $pixel) {
+                                if (isset($colors[$index])) $pixel->setColor($colors[$index]);
+                                $index++;
+                            }
+                            $pixelIter->syncIterator();
+                        }
+                        
+                        // Remap Image ke 16 warna
+                        $imagick->remapImage($palette, false);
+                        $palette->clear();
+                        
+                        $imagick->setImageDepth(4); // 4-bit fits 16 colors
+                    } catch (\Exception $e) {
+                         $imagick->quantizeImage(16, \Imagick::COLORSPACE_RGB, 0, false, false);
+                    }
+                }
 
                 $stampOrigResized->destroy();
                 $stampCopyResized->destroy();
             };
 
-            // Jalankan Proses
-            if ($isPdf) {
+            if ($isPdf || $isTiff) {
                 $totalPages = $imagick->getNumberImages();
                 for ($i = 0; $i < $totalPages; $i++) {
                     $processPage($i);
@@ -1596,7 +1675,16 @@ class ExportController extends Controller
             $outputExt = $isPdf ? 'pdf' : strtolower($imagick->getImageFormat());
             $tempPath = $tempDir . '/' . Str::uuid()->toString() . '.' . $outputExt;
 
-            if ($isPdf) {
+            // TIFF: Gunakan kompresi ZIP (Deflate) secara global
+            if ($isTiff) {
+                $imagick->resetIterator();
+                foreach ($imagick as $frame) {
+                    $frame->setImageCompression(\Imagick::COMPRESSION_ZIP);
+                    $frame->setImageCompressionQuality(90);
+                }
+            }
+
+            if ($isPdf || $isTiff) {
                 $imagick->writeImages($tempPath, true);
             } else {
                 $imagick->writeImage($tempPath);
@@ -1624,7 +1712,7 @@ class ExportController extends Controller
     private function getFeasibilityStatusId(): ?int
     {
         return DB::table('project_status')
-            ->where('name', 'Feasibility Study') // ganti kalau nama status di DB beda
+            ->where('name', 'Feasibility Study') 
             ->value('id');
     }
 
@@ -1637,7 +1725,7 @@ class ExportController extends Controller
         return DB::table('user_roles as ur')
             ->join('roles as r', 'ur.role_id', '=', 'r.id')
             ->where('ur.user_id', $user->id)
-            ->whereIn('r.role_name', $roleNames)   // kalau pakai kolom 'code', ganti ke r.code
+            ->whereIn('r.role_name', $roleNames) 
             ->exists();
     }
 
