@@ -31,16 +31,40 @@ class ExportController extends Controller
 {
     public function kpi(Request $req)
     {
-        $latestRevisionsSubquery = DB::table('doc_package_revisions')
-            ->select('package_id', DB::raw('MAX(revision_no) as max_revision_no'))
-            ->where('revision_status', '=', 'approved')
-            ->groupBy('package_id');
+        // === PREPARE FILTERS (Avoid Code Duplication) ===
+        $excludeFeasId = null;
+        $feasId = $this->getFeasibilityStatusId();
+        if ($feasId) {
+            $user = Auth::user();
+            if (!$user || !$this->userHasAnyRole($user, ['ENG'])) {
+                $excludeFeasId = $feasId;
+            }
+        }
 
-        $q = DB::table('doc_package_revisions as dpr')
-            ->joinSub($latestRevisionsSubquery, 'latest_revs', function ($join) {
-                $join->on('dpr.package_id', '=', 'latest_revs.package_id')
-                    ->on('dpr.revision_no', '=', 'latest_revs.max_revision_no');
-            })
+        $applyFilters = function ($query) use ($req, $excludeFeasId) {
+            if ($req->filled('customer') && $req->customer !== 'All') {
+                $query->where('c.code', $req->customer);
+            }
+            if ($req->filled('model') && $req->model !== 'All') {
+                $query->where('m.name', $req->model);
+            }
+            if ($req->filled('doc_type') && $req->doc_type !== 'All') {
+                $query->where('dtg.name', $req->doc_type);
+            }
+            if ($req->filled('category') && $req->category !== 'All') {
+                $query->where('dsc.name', $req->category);
+            }
+            if ($req->filled('project_status') && $req->project_status !== 'All') {
+                $query->where('m.status_id', $req->project_status);
+            }
+            if ($excludeFeasId) {
+                $query->where('m.status_id', '!=', $excludeFeasId);
+            }
+        };
+
+        // QUERY Stats (Total Packages & Total Revisions)
+
+        $baseQuery = DB::table('doc_package_revisions as dpr')
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
@@ -49,6 +73,12 @@ class ExportController extends Controller
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
             ->where('dpr.revision_status', '=', 'approved');
 
+        $applyFilters($baseQuery);
+
+        $stats = $baseQuery->selectRaw('count(*) as total_revisions, count(distinct dpr.package_id) as total_packages')
+            ->first();
+
+        // QUERY Downloads
         $downloadQuery = DB::table('activity_logs as al')
             ->join('doc_package_revisions as dpr', 'al.revision_id', '=', 'dpr.id')
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
@@ -58,71 +88,15 @@ class ExportController extends Controller
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
             ->where('al.activity_code', '=', 'DOWNLOAD');
 
-        $totalRevisionsQuery = DB::table('doc_package_revisions as dpr')
-            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
-            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-            ->join('models as m', 'dp.model_id', '=', 'm.id')
-            ->join('products as p', 'dp.product_id', '=', 'p.id')
-            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-            ->where('dpr.revision_status', '=', 'approved');
+        $applyFilters($downloadQuery);
 
-        if ($req->filled('customer') && $req->customer !== 'All') {
-            $q->where('c.code', $req->customer);
-            $downloadQuery->where('c.code', $req->customer);
-            $totalRevisionsQuery->where('c.code', $req->customer);
-        }
-        if ($req->filled('model') && $req->model !== 'All') {
-            $q->where('m.name', $req->model);
-            $downloadQuery->where('m.name', $req->model);
-            $totalRevisionsQuery->where('m.name', $req->model);
-        }
-        if ($req->filled('doc_type') && $req->doc_type !== 'All') {
-            $q->where('dtg.name', $req->doc_type);
-            $downloadQuery->where('dtg.name', $req->doc_type);
-            $totalRevisionsQuery->where('dtg.name', $req->doc_type);
-        }
-        if ($req->filled('category') && $req->category !== 'All') {
-            $q->where('dsc.name', $req->category);
-            $downloadQuery->where('dsc.name', $req->category);
-            $totalRevisionsQuery->where('dsc.name', $req->category);
-        }
-        if ($req->filled('project_status') && $req->project_status !== 'All') {
-            $q->where('m.status_id', $req->project_status);
-            $downloadQuery->where('m.status_id', $req->project_status);
-            $totalRevisionsQuery->where('m.status_id', $req->project_status);
-        }
-
-        // === BATASIN FEASIBILITY UNTUK KPI ===
-        $user   = Auth::user();
-        $feasId = $this->getFeasibilityStatusId();
-
-        if ($feasId) {
-            // kalau user belum login -> jangan hitung Feasibility
-            if (!$user) {
-                $q->where('m.status_id', '!=', $feasId);
-                $downloadQuery->where('m.status_id', '!=', $feasId);
-                $totalRevisionsQuery->where('m.status_id', '!=', $feasId);
-            } else {
-                // kalau user TIDAK punya role yang diizinkan -> juga jangan hitung Feasibility
-                if (!$this->userHasAnyRole($user, ['ENG'])) {
-                    $q->where('m.status_id', '!=', $feasId);
-                    $downloadQuery->where('m.status_id', '!=', $feasId);
-                    $totalRevisionsQuery->where('m.status_id', '!=', $feasId);
-                }
-            }
-        }
-        // === END BATASAN KPI ===
-
-        $totalApprovedPackages = $q->count();
         $totalDownloads = $downloadQuery->count();
-        $totalApprovedRevisions = $totalRevisionsQuery->count();
 
         return response()->json([
             'cards' => [
-                'total' => $totalApprovedPackages,
+                'total' => $stats->total_packages ?? 0,
                 'total_download' => $totalDownloads,
-                'total_revisions' => $totalApprovedRevisions
+                'total_revisions' => $stats->total_revisions ?? 0
             ],
             'metrics' => [
                 'approval_rate'  => 100.0,
@@ -163,15 +137,19 @@ class ExportController extends Controller
                     break;
 
                 case 'model':
-                    $builder = DB::table('models as m')
+                case 'model':
+                    $base = DB::table('models as m')
                         ->join('customers as c', 'm.customer_id', '=', 'c.id')
-                        ->selectRaw('m.name AS id, m.name AS text')
                         ->when($customerCode && $customerCode !== 'All', fn($x) => $x->where('c.code', $customerCode))
-                        ->when($q, fn($x) => $x->where('m.name', 'like', "%{$q}%"))
-                        ->orderBy('m.name');
+                        ->when($q, fn($x) => $x->where('m.name', 'like', "%{$q}%"));
 
-                    $total = (clone $builder)->count();
-                    $items = $builder->forPage($page, $perPage)->get();
+                    $total = $base->distinct()->count('m.name');
+                    
+                    $items = $base->select('m.name as id', 'm.name as text')
+                        ->groupBy('m.name')
+                        ->orderBy('m.name')
+                        ->forPage($page, $perPage)
+                        ->get();
                     break;
 
                 case 'doc_type':
@@ -217,7 +195,6 @@ class ExportController extends Controller
                             }
                         }
                     }
-                    // === END BATASAN ===
 
                     $total = (clone $builder)->count();
                     $items = $builder->forPage($page, $perPage)->get();
@@ -291,21 +268,19 @@ class ExportController extends Controller
             'doctype_subcategory' => 'dsc.name',
             'part_group' => 'pg.code_part_group',
             'uploaded_at' => 'dpr.created_at',
-            'size' => 'total_size'
+            'size' => 'total_size' 
         ];
 
-        $orderColumnName = $columnMap[$request->get('columns')[$orderColumnIndex]['name']] ?? 'dpr.created_at';
+        // Fallback or mapped sort column
+        $colName = $request->get('columns')[$orderColumnIndex]['name'] ?? 'uploaded_at';
+        $orderColumnName = $columnMap[$colName] ?? 'dpr.created_at';
 
-        $latestRevisionsSubquery = DB::table('doc_package_revisions')
-            ->select('package_id', DB::raw('MAX(revision_no) as max_revision_no'))
-            ->where('revision_status', '=', 'approved')
-            ->groupBy('package_id');
 
+        if ($colName === 'size') {
+            $orderColumnName = 'dpr.created_at'; 
+        }
+    
         $query = DB::table('doc_package_revisions as dpr')
-            ->joinSub($latestRevisionsSubquery, 'latest_revs', function ($join) {
-                $join->on('dpr.package_id', '=', 'latest_revs.package_id')
-                    ->on('dpr.revision_no', '=', 'latest_revs.max_revision_no');
-            })
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
@@ -314,25 +289,24 @@ class ExportController extends Controller
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
             ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
             ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
-            ->where('dpr.revision_status', '=', 'approved');
+            ->where('dpr.revision_status', '=', 'approved')
+            ->whereNotExists(function ($sub) {
+                $sub->select(DB::raw(1))
+                    ->from('doc_package_revisions as next_ver')
+                    ->whereColumn('next_ver.package_id', 'dpr.package_id')
+                    ->where('next_ver.revision_status', '=', 'approved')
+                    ->whereColumn('next_ver.revision_no', '>', 'dpr.revision_no');
+            });
 
+        // Access Control / Feasibility
         $user   = Auth::user();
         $feasId = $this->getFeasibilityStatusId();
 
         if ($feasId) {
-            if (!$user) {
-                // user tidak login -> jangan tampilkan Feasibility
+            if (!$user || !$this->userHasAnyRole($user, ['ENG'])) {
                 $query->where('m.status_id', '!=', $feasId);
-            } else {
-                // kalau user TIDAK punya salah satu role berikut -> buang Feasibility
-                if (!$this->userHasAnyRole($user, ['ENG'])) {
-                    $query->where('m.status_id', '!=', $feasId);
-                }
             }
         }
-        // === END BATASAN ===
-
-        $recordsTotal = $query->count();
 
         if ($request->filled('customer') && $request->customer !== 'All') {
             $query->where('c.code', $request->customer);
@@ -352,93 +326,105 @@ class ExportController extends Controller
 
         if (!empty($searchValue)) {
             $query->where(function ($q) use ($searchValue) {
-                $q->where('c.code', 'like', "%{$searchValue}%")         // Customer
-                    ->orWhere('m.name', 'like', "%{$searchValue}%")     // Model
-                    ->orWhere('p.part_no', 'like', "%{$searchValue}%")  // Part No
-                    // Search in Partners (Grouped Products)
-                    ->orWhereExists(function ($sq) use ($searchValue) {
-                        $sq->select(DB::raw(1))
-                           ->from('products as pp')
-                           ->whereNotNull('pp.group_id')
-                           ->whereColumn('pp.group_id', 'p.group_id')
-                           ->whereColumn('pp.id', '!=', 'p.id')
-                           ->where(function($subSq) use ($searchValue) {
-                               $subSq->where('pp.part_no', 'like', "%{$searchValue}%")
-                                     ->orWhere('pp.part_name', 'like', "%{$searchValue}%");
-                           });
-                    })
-                    ->orWhere('dsc.name', 'like', "%{$searchValue}%")   // Category
-                    ->orWhere('pg.code_part_group', 'like', "%{$searchValue}%") // Part Group
-                    ->orWhere('dpr.ecn_no', 'like', "%{$searchValue}%")
-                    ->orWhere('dpr.revision_no', 'like', "%{$searchValue}%")
-                    ->orWhere('dpr.note', 'like', "%{$searchValue}%")
-
-
-
-                    ->orWhereExists(function ($subQuery) use ($searchValue) {
-                        $subQuery->select(DB::raw(1))
-                            ->from('doc_package_revisions as history_rev')
-                            ->whereColumn('history_rev.package_id', 'dpr.package_id')
-                            ->where(function ($deepGroup) use ($searchValue) {
-                                $deepGroup->where('history_rev.ecn_no', 'like', "%{$searchValue}%")
-                                    ->orWhere('history_rev.revision_no', 'like', "%{$searchValue}%");
-                            });
-                    });
+                // Direct Matches
+                $q->where('c.code', 'like', "%{$searchValue}%")
+                  ->orWhere('m.name', 'like', "%{$searchValue}%")
+                  ->orWhere('p.part_no', 'like', "%{$searchValue}%")
+                  ->orWhere('dpr.ecn_no', 'like', "%{$searchValue}%")
+                  ->orWhere('dpr.note', 'like', "%{$searchValue}%")
+                  ->orWhere('dpr.revision_no', 'like', "%{$searchValue}%") 
+                  
+                  ->orWhereIn('p.group_id', function($sub) use ($searchValue) {
+                      $sub->select('group_id')
+                          ->from('products')
+                          ->whereNotNull('group_id')
+                          ->where(function($w) use ($searchValue) {
+                              $w->where('part_no', 'like', "%{$searchValue}%")
+                                ->orWhere('part_name', 'like', "%{$searchValue}%");
+                          });
+                  });
             });
         }
 
         $recordsFiltered = $query->count();
+        $recordsTotal = $recordsFiltered; 
 
-        $data = $query->select(
+        $rawData = $query->select(
             'dpr.id',
+            'dpr.revision_no',
+            'dpr.note',
+            'dpr.ecn_no',
+            'dpr.created_at',
             'c.code as customer',
             'm.name as model',
             'p.part_no',
             'p.id as product_id',
             'p.group_id',
-            'dpr.note',
-            'dpr.revision_no',
             'crl.label as revision_label_name',
-            'dpr.ecn_no',
             'dtg.name as doctype_group',
             'dsc.name as doctype_subcategory',
-            'pg.code_part_group as part_group',
-            DB::raw("FORMAT(dpr.created_at, 'yyyy-MM-dd HH:mm:ss') as uploaded_at"),
-            DB::raw("(SELECT SUM(file_size) FROM doc_package_revision_files WHERE revision_id = dpr.id) as total_size")
+            'pg.code_part_group as part_group'
         )
             ->orderBy($orderColumnName, $orderDir)
             ->skip($start)
             ->take($length)
-            ->get()
-            ->map(function ($row) {
-                $row->id = str_replace('=', '-', encrypt($row->id));
-                
-                // Add partner info to part_no display
-                if (!empty($row->group_id)) {
-                     $partners = DB::table('products')
-                         ->where('group_id', $row->group_id)
-                         ->where('id', '!=', $row->product_id)
-                         ->pluck('part_no')
-                         ->toArray();
-                     
-                     if (!empty($partners)) {
-                         $badges = array_map(function($p) {
-                             return "<span class='badge badge-info ms-1' style='font-size: 0.7em;'><i class='fa-solid fa-link me-1'></i>{$p}</span>";
-                         }, $partners);
-                         
-                         // Note: Font Awesome classes might need adjustment based on frontend
-                         $row->part_no .= '<br><div class="mt-1">' . implode('', $badges) . '</div>';
-                     }
+            ->get();
+
+        $revisionIds = $rawData->pluck('id');
+        $groupIds    = $rawData->pluck('group_id')->filter()->unique();
+
+        //Batch Calculate Sizes
+        $sizesMap = collect();
+        if ($revisionIds->isNotEmpty()) {
+            $sizesMap = DB::table('doc_package_revision_files')
+                ->whereIn('revision_id', $revisionIds)
+                ->select('revision_id', DB::raw('SUM(file_size) as total_size'))
+                ->groupBy('revision_id')
+                ->pluck('total_size', 'revision_id');
+        }
+
+        //Batch Fetch Partners
+        $partnersMap = collect();
+        if ($groupIds->isNotEmpty()) {
+            $partnersMap = DB::table('products')
+                ->whereIn('group_id', $groupIds)
+                ->select('group_id', 'id', 'part_no')
+                ->get()
+                ->groupBy('group_id');
+        }
+
+        $formattedData = $rawData->map(function ($row) use ($partnersMap, $sizesMap) {
+            // Attach Size from memory (Must use raw ID before encryption)
+            $sizeVal = $sizesMap[$row->id] ?? 0;
+            $row->total_size = $sizeVal; 
+
+            $row->id = str_replace('=', '-', encrypt($row->id));
+            
+            // Format Date
+            $row->uploaded_at = $row->created_at ? date('Y-m-d H:i:s', strtotime($row->created_at)) : '-';
+
+            // Attach Partners
+            $row->partners = '';
+            if (!empty($row->group_id) && isset($partnersMap[$row->group_id])) {
+                $partnerParts = $partnersMap[$row->group_id]
+                    ->where('id', '!=', $row->product_id)
+                    ->pluck('part_no')
+                    ->toArray();
+
+                if (!empty($partnerParts)) {
+                    // PURE DATA ONLY. No HTML here.
+                    $row->partners = implode(', ', $partnerParts);
                 }
-                
-                return $row;
-            });
+            }
+
+            return $row;
+        });
 
         return response()->json([
             "draw" => intval($request->get('draw')),
             "recordsTotal" => $recordsTotal,
             "recordsFiltered" => $recordsFiltered,
-            "data" => $data
+            "data" => $formattedData
         ]);
     }
 

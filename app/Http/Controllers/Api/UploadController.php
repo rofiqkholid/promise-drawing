@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class UploadController extends Controller
 {
@@ -17,6 +18,12 @@ class UploadController extends Controller
         $search = $request->get('search')['value'] ?? '';
         $order = $request->get('order')[0] ?? null;
 
+        $filterCustomer = $request->get('customer');
+        $filterModel = $request->get('model');
+        $filterDocType = $request->get('doc_type');
+        $filterCategory = $request->get('category');
+        $filterStatus = $request->get('status');
+
         $query = DB::table('doc_package_revisions as r')
             ->join('doc_packages as p', 'r.package_id', '=', 'p.id')
             ->leftJoin('customers as c', 'p.customer_id', '=', 'c.id')
@@ -26,8 +33,25 @@ class UploadController extends Controller
             ->leftJoin('doctype_groups as dg', 'p.doctype_group_id', '=', 'dg.id')
             ->leftJoin('doctype_subcategories as sc', 'p.doctype_subcategory_id', '=', 'sc.id')
             ->leftJoin('part_groups as pg', 'p.part_group_id', '=', 'pg.id')
-    ->where('p.is_delete', 0)
-    ->where('pr.is_delete', 0);
+            ->where('p.is_delete', 0)
+            ->where('pr.is_delete', 0);
+
+        // Apply Filters
+        if ($filterCustomer && $filterCustomer !== 'All') {
+            $query->where('c.code', $filterCustomer);
+        }
+        if ($filterModel && $filterModel !== 'All') {
+            $query->where('m.name', $filterModel);
+        }
+        if ($filterDocType && $filterDocType !== 'All') {
+            $query->where('dg.name', $filterDocType);
+        }
+        if ($filterCategory && $filterCategory !== 'All') {
+            $query->where('sc.name', $filterCategory);
+        }
+        if ($filterStatus && $filterStatus !== 'All') {
+            $query->where('r.revision_status', $filterStatus);
+        }
 
         if (!empty($search)) {
             $query->where(function($q) use ($search) {
@@ -92,9 +116,17 @@ class UploadController extends Controller
             $query->orderBy('r.created_at', 'desc');
         }
 
-        // Retrieve Data
+        $partnersSub = DB::table('products as p2')
+            ->select('group_id', DB::raw("STRING_AGG(CAST(part_no AS VARCHAR(MAX)), ',') WITHIN GROUP (ORDER BY part_no) as partners"))
+            ->whereNotNull('group_id')
+            ->where('is_delete', 0)
+            ->groupBy('group_id');
+
         $data = $query->skip($start)
             ->take($length)
+            ->leftJoinSub($partnersSub, 'p_extra', function ($join) {
+                $join->on('pr.group_id', '=', 'p_extra.group_id');
+            })
             ->select([
                 'r.id',
                 'p.package_no',
@@ -103,6 +135,7 @@ class UploadController extends Controller
                 'pr.part_no',
                 'pr.id as product_id', 
                 'pr.group_id',
+                'p_extra.partners as partners_raw',
                 'r.revision_no',
                 'r.created_at as uploaded_at',
                 'r.revision_status as status',
@@ -114,28 +147,31 @@ class UploadController extends Controller
             ])
             ->get();
 
+        // Include KPIs with 60-second cache to maximize performance
+        $kpiStats = Cache::remember('drawing_kpi_stats_global', 60, function () {
+            return DB::table('doc_package_revisions as r')
+                ->join('doc_packages as p', 'r.package_id', '=', 'p.id')
+                ->join('products as pr', 'p.product_id', '=', 'pr.id')
+                ->where('p.is_delete', 0)
+                ->where('pr.is_delete', 0)
+                ->select(
+                    DB::raw('COUNT(*) as totalupload'),
+                    DB::raw("COUNT(CASE WHEN r.revision_status = 'draft' THEN 1 END) as totaldraft"),
+                    DB::raw("COUNT(CASE WHEN r.revision_status = 'pending' THEN 1 END) as totalpending"),
+                    DB::raw("COUNT(CASE WHEN r.revision_status = 'rejected' THEN 1 END) as totalrejected")
+                )
+                ->first();
+        });
+
         // Transform Data
         $rows = $data->map(function($row) {
-             $partNoDisplay = $row->part_no ?? '-';
-
-             // Check for partners if this product is part of a group
-             if (!empty($row->group_id)) {
-                 $partners = DB::table('products')
-                     ->where('group_id', $row->group_id)
-                     ->where('id', '!=', $row->product_id)
-                     ->where('is_delete', 0)
-                     ->pluck('part_no')
-                     ->toArray();
-                 
-                 if (!empty($partners)) {
-                     // Add badges for partners
-                     $badges = array_map(function($p) {
-                         return "<span class='inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300 ml-1'>
-                             <i class='fa-solid fa-link mr-1'></i> {$p}
-                         </span>";
-                     }, $partners);
-                     
-                     $partNoDisplay .= '<br><div class="mt-1 flex flex-wrap gap-1">' . implode('', $badges) . '</div>';
+             // Handle STRING_AGG logic: exclude the current part_no from the comma-separated list
+             $partnersStr = null;
+             if ($row->partners_raw) {
+                 $parts = explode(',', $row->partners_raw);
+                 $others = array_filter($parts, fn($p) => trim($p) !== trim($row->part_no));
+                 if (!empty($others)) {
+                     $partnersStr = implode(',', $others);
                  }
              }
 
@@ -144,7 +180,8 @@ class UploadController extends Controller
                 'package_no' => $row->package_no,
                 'customer' => $row->customer ?? '-',
                 'model' => $row->model ?? '-',
-                'part_no' => $partNoDisplay,
+                'part_no' => $row->part_no ?? '-',
+                'partners' => $partnersStr,
                 'revision_no' => is_null($row->revision_no) ? '0' : (string)$row->revision_no,
                 'uploaded_at' => $row->uploaded_at ? date('Y-m-d H:i:s', strtotime($row->uploaded_at)) : null,
                 'status' => $row->status ?? 'draft',
@@ -160,7 +197,8 @@ class UploadController extends Controller
             'draw' => (int) $draw,
             'recordsTotal' => $totalRecords,
             'recordsFiltered' => $filteredRecords,
-            'data' => $rows
+            'data' => $rows,
+            'kpis' => $kpiStats // New: optimized KPI retrieval
         ]);
     }
 
