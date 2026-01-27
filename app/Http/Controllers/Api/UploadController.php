@@ -55,41 +55,34 @@ class UploadController extends Controller
 
         if (!empty($search)) {
             $query->where(function($q) use ($search) {
-                $q->where('p.package_no', 'like', "%{$search}%")
-                  ->orWhere('c.code', 'like', "%{$search}%")
+                $isDeep = strlen($search) >= 3;
+
+                $q->where('pr.part_no', 'like', "%{$search}%")
+                  ->orWhere('c.code', 'like', "{$search}%")
                   ->orWhere('m.name', 'like', "%{$search}%")
-                  ->orWhere('pr.part_no', 'like', "%{$search}%")
-                  // Search in Partners (Grouped Products)
                   ->orWhereExists(function ($sq) use ($search) {
                       $sq->select(DB::raw(1))
                          ->from('products as pp')
-                         ->whereNotNull('pp.group_id')
                          ->whereColumn('pp.group_id', 'pr.group_id')
                          ->whereColumn('pp.id', '!=', 'pr.id')
                          ->where('pp.is_delete', 0)
-                         ->where(function($subSq) use ($search) {
-                             $subSq->where('pp.part_no', 'like', "%{$search}%")
-                                   ->orWhere('pp.part_name', 'like', "%{$search}%");
-                         });
-                  })
-                  ->orWhere('r.revision_no', 'like', "%{$search}%")
-                  ->orWhere('r.ecn_no', 'like', "%{$search}%")
-                  ->orWhere('crl.label', 'like', "%{$search}%")
-                  ->orWhere('dg.name', 'like', "%{$search}%")
-                  ->orWhere('sc.name', 'like', "%{$search}%")
-                  ->orWhere('pg.code_part_group', 'like', "%{$search}%");
+                         ->where('pp.part_no', 'like', "%{$search}%");
+                  });
+
+                if ($isDeep) {
+                    $q->orWhere('r.ecn_no', 'like', "%{$search}%")
+                      ->orWhere('dg.name', 'like', "%{$search}%")
+                      ->orWhere('sc.name', 'like', "%{$search}%")
+                      ->orWhere('pg.code_part_group', 'like', "%{$search}%");
+                }
             });
         }
 
-        $filteredRecords = $query->count();
+        $totalRecords = Cache::remember('upload_list_total_count', 600, function() {
+            return DB::table('doc_package_revisions')->count();
+        });
 
-        $totalRecords = DB::table('doc_package_revisions as r')
-    ->join('doc_packages as p', 'r.package_id', '=', 'p.id')
-    ->join('products as pr', 'p.product_id', '=', 'pr.id')
-    
-    ->where('p.is_delete', 0)
-    ->where('pr.is_delete', 0)
-    ->count();
+        $filteredRecords = $query->count();
 
         if ($order) {
             $sortBy = $order['column'];
@@ -147,25 +140,27 @@ class UploadController extends Controller
             ])
             ->get();
 
-        // Include KPIs with 60-second cache to maximize performance
-        $kpiStats = Cache::remember('drawing_kpi_stats_global', 60, function () {
-            return DB::table('doc_package_revisions as r')
-                ->join('doc_packages as p', 'r.package_id', '=', 'p.id')
-                ->join('products as pr', 'p.product_id', '=', 'pr.id')
-                ->where('p.is_delete', 0)
-                ->where('pr.is_delete', 0)
-                ->select(
-                    DB::raw('COUNT(*) as totalupload'),
-                    DB::raw("COUNT(CASE WHEN r.revision_status = 'draft' THEN 1 END) as totaldraft"),
-                    DB::raw("COUNT(CASE WHEN r.revision_status = 'pending' THEN 1 END) as totalpending"),
-                    DB::raw("COUNT(CASE WHEN r.revision_status = 'rejected' THEN 1 END) as totalrejected")
-                )
+        // Include KPIs with a cache to minimize heavy count queries
+        $kpiStats = Cache::remember('drawing_upload_kpis_global', 60, function() {
+             $stats = DB::table('doc_package_revisions')
+                ->selectRaw("
+                    COUNT(*) as totalupload,
+                    SUM(CASE WHEN revision_status = 'draft' THEN 1 ELSE 0 END) as totaldraft,
+                    SUM(CASE WHEN revision_status = 'pending' THEN 1 ELSE 0 END) as totalpending,
+                    SUM(CASE WHEN revision_status = 'rejected' THEN 1 ELSE 0 END) as totalrejected
+                ")
                 ->first();
+
+             return (object) [
+                 'totalupload' => $stats->totalupload ?? 0,
+                 'totaldraft' => $stats->totaldraft ?? 0,
+                 'totalpending' => $stats->totalpending ?? 0,
+                 'totalrejected' => $stats->totalrejected ?? 0
+             ];
         });
 
         // Transform Data
         $rows = $data->map(function($row) {
-             // Handle STRING_AGG logic: exclude the current part_no from the comma-separated list
              $partnersStr = null;
              if ($row->partners_raw) {
                  $parts = explode(',', $row->partners_raw);
@@ -198,7 +193,7 @@ class UploadController extends Controller
             'recordsTotal' => $totalRecords,
             'recordsFiltered' => $filteredRecords,
             'data' => $rows,
-            'kpis' => $kpiStats // New: optimized KPI retrieval
+            'kpis' => $kpiStats
         ]);
     }
 

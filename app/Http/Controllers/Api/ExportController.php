@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use App\Models\Customers;
 use App\Models\Models;
 use App\Models\DoctypeGroups;
@@ -326,29 +327,41 @@ class ExportController extends Controller
 
         if (!empty($searchValue)) {
             $query->where(function ($q) use ($searchValue) {
-                // Direct Matches
-                $q->where('c.code', 'like', "%{$searchValue}%")
+                $isDeep = strlen($searchValue) >= 3;
+
+                // Priority Search: Part No, Partners, Customer & Model
+                $q->where('p.part_no', 'like', "%{$searchValue}%")
+                  ->orWhere('c.code', 'like', "{$searchValue}%")
                   ->orWhere('m.name', 'like', "%{$searchValue}%")
-                  ->orWhere('p.part_no', 'like', "%{$searchValue}%")
-                  ->orWhere('dpr.ecn_no', 'like', "%{$searchValue}%")
-                  ->orWhere('dpr.note', 'like', "%{$searchValue}%")
-                  ->orWhere('dpr.revision_no', 'like', "%{$searchValue}%") 
-                  
                   ->orWhereIn('p.group_id', function($sub) use ($searchValue) {
                       $sub->select('group_id')
                           ->from('products')
                           ->whereNotNull('group_id')
-                          ->where(function($w) use ($searchValue) {
-                              $w->where('part_no', 'like', "%{$searchValue}%")
-                                ->orWhere('part_name', 'like', "%{$searchValue}%");
-                          });
+                          ->where('is_delete', 0)
+                          ->where('part_no', 'like', "%{$searchValue}%");
                   });
+
+                // Extended Metadata - Only for 3+ characters
+                if ($isDeep) {
+                    $q->orWhere('dpr.ecn_no', 'like', "%{$searchValue}%")
+                      ->orWhere('dpr.note', 'like', "%{$searchValue}%")
+                      ->orWhere('dtg.name', 'like', "%{$searchValue}%")
+                      ->orWhere('dsc.name', 'like', "%{$searchValue}%")
+                      ->orWhere('pg.code_part_group', 'like', "%{$searchValue}%");
+                }
             });
         }
 
-        $recordsFiltered = $query->count();
-        $recordsTotal = $recordsFiltered; 
+        // 1. FAST BASELINE COUNT (Cached for 10 mins)
+        // Only count unique packages that have at least one approved revision
+        $recordsTotal = Cache::remember('export_list_total_count', 600, function() {
+            return DB::table('doc_package_revisions')
+                ->where('revision_status', 'approved')
+                ->distinct('package_id')
+                ->count('package_id');
+        });
 
+        $recordsFiltered = $query->count();
         $rawData = $query->select(
             'dpr.id',
             'dpr.revision_no',
@@ -420,11 +433,31 @@ class ExportController extends Controller
             return $row;
         });
 
+        // Include KPIs with a cache to minimize heavy count queries
+        $kpiData = Cache::remember('drawing_download_kpis_global', 60, function() {
+             $stats = DB::table('doc_package_revisions as dpr')
+                ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+                ->where('dpr.revision_status', '=', 'approved')
+                ->selectRaw('count(*) as total_revisions, count(distinct dpr.package_id) as total_packages')
+                ->first();
+
+             $downloads = DB::table('activity_logs')
+                ->where('activity_code', '=', 'DOWNLOAD')
+                ->count();
+
+             return [
+                 'total' => $stats->total_packages ?? 0,
+                 'total_revisions' => $stats->total_revisions ?? 0,
+                 'total_download' => $downloads ?? 0
+             ];
+        });
+
         return response()->json([
             "draw" => intval($request->get('draw')),
             "recordsTotal" => $recordsTotal,
             "recordsFiltered" => $recordsFiltered,
-            "data" => $formattedData
+            "data" => $formattedData,
+            "kpis" => $kpiData
         ]);
     }
 

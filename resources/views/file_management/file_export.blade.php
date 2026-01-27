@@ -4,7 +4,7 @@
 @section('header-title', 'File Manager - Download')
 
 @section('content')
-<nav class="flex px-5 py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300 rounded-lg" aria-label="Breadcrumb">
+<nav class="flex px-5 py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300 rounded-md" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
 
         <li class="inline-flex items-center">
@@ -15,7 +15,7 @@
 
         <li aria-current="page">
             <div class="flex items-center">
-                <span class="mx-1 text-gray-400">/</span>
+                <span class="text-gray-400 mx-1">/</span>
 
                 <span class="text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20">
                     Download Files
@@ -34,37 +34,37 @@
 
     {{-- Original KPI Cards Style --}}
     <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4 sm:mt-0">
-      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
         <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-md">
           <i class="fa-solid fa-box-archive fa-lg"></i>
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Packages</p>
-          <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Packages</p>
+          <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
             <span id="cardTotal">0</span>
           </p>
         </div>
       </div>
 
-      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
         <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-yellow-500 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/50 rounded-md">
           <i class="fa-solid fa-layer-group fa-lg"></i>
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Revisions</p>
-          <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revisions</p>
+          <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
             <span id="cardTotalRevisions">0</span>
           </p>
         </div>
       </div>
 
-      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
         <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-md">
           <i class="fa-solid fa-cloud-arrow-down fa-lg"></i>
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Download</p>
-          <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Download</p>
+          <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
             <span id="cardDownload">0</span>
           </p>
         </div>
@@ -72,82 +72,65 @@
     </div>
   </div>
 
-  {{-- Original Exposed Filter Section --}}
-  <div class="mt-8 bg-white dark:bg-gray-800 p-7 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-    <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
-      <div class="relative w-full md:w-[600px]"> 
-          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <i id="search-icon-static" class="fa-solid fa-magnifying-glass text-gray-400 text-lg transition-opacity duration-200"></i>
-              <i id="search-icon-loading" class="fa-solid fa-spinner fa-spin text-blue-500 text-lg opacity-0 transition-opacity duration-200 absolute left-4"></i>
-          </div>
+  {{-- Clean & Unified Search Center --}}
+  <div class="mt-6 bg-white dark:bg-gray-800 px-6 py-6 rounded-md border border-gray-200 dark:border-gray-700 transition-all duration-300">
+    
+    {{-- Slim Hero Search Bar --}}
+    <div class="flex flex-col items-center mb-6">
+        <div class="relative w-full max-w-3xl group"> 
+            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                <i id="search-icon-static" class="fa-solid fa-magnifying-glass text-blue-500 text-lg transition-all duration-300"></i>
+                <i id="search-icon-loading" class="fa-solid fa-spinner fa-spin text-blue-500 text-lg opacity-0 transition-opacity duration-200 absolute left-5"></i>
+            </div>
 
-          <input type="text" 
-              id="custom-export-search" 
-              class="block w-full pl-12 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-full leading-5 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-base transition-all duration-200 shadow-sm hover:shadow-md" 
-              placeholder="Search Customer, Model, ECN, or Part Number..."
-              autocomplete="off">
+            <input type="text" 
+                id="custom-export-search" 
+                class="block w-full pl-14 pr-20 py-3.5 border border-gray-300 dark:border-gray-600 rounded-full leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-base transition-all duration-300 group" 
+                placeholder="Search drawings by ECN, Part No, etc..."
+                autocomplete="off">
 
-          <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <button id="btn-clear-search" 
-                      type="button"
-                      class="hidden text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none transition-colors p-1.5">
-                  <i class="fa-solid fa-circle-xmark text-lg"></i>
-              </button>
-          </div>
-      </div>
-      <div class="flex items-center gap-2">
+            <div class="absolute inset-y-0 right-0 pr-4 flex items-center gap-3">
+                <div class="hidden sm:flex items-center pointer-events-none text-gray-400 text-[10px] font-bold border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5 shadow-sm group-focus-within:hidden">/</div>
+                <button id="btn-clear-search" type="button" class="hidden text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full"><i class="fa-solid fa-circle-xmark text-lg"></i></button>
+            </div>
+        </div>
 
-        <button id="btnDownloadSummary"
-          type="button"
-          class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-green-500
-     bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200
-     hover:bg-green-100 dark:hover:bg-green-900/60 shadow-sm transition-all hover:shadow-md">
-          {{-- normal state --}}
-          <span class="btn-label inline-flex items-center gap-2">
-            <i class="fa-solid fa-file-excel"></i>
-            <span>Download Summary</span>
-          </span>
-
-          {{-- loading state --}}
-          <span class="btn-spinner hidden inline-flex items-center gap-2">
-            <i class="fa-solid fa-circle-notch fa-spin"></i>
-            <span>Preparing...</span>
-          </span>
-        </button>
-
-
-        <button id="btnResetFilters"
-          type="button"
-          class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600
-             bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm transition-all hover:shadow-md">
-          <i class="fa-solid fa-rotate-left"></i>
-          Reset Filters
-        </button>
-      </div>
+        {{-- Recent Searches Pills - Centered & Collapsable --}}
+        <div id="recent-searches-wrapper" class="hidden w-full transition-all duration-300 overflow-hidden">
+            <div id="recent-searches-container" class="flex flex-wrap justify-center items-center gap-2 mt-4 min-h-[24px]">
+                {{-- Tags injected by JS --}}
+            </div>
+        </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-5">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
       @foreach(['Customer', 'Model', 'Document Type', 'Category', 'Project Status'] as $label)
-      <div>
-        <label for="{{ Str::slug($label) }}" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $label }}</label>
-        <div class="relative mt-1">
-          <select id="{{ Str::slug($label) }}"
-            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm shadow-sm">
-            <option value="All" selected>All</option>
-          </select>
-        </div>
+      <div class="md:col-span-2">
+        <label for="{{ Str::slug($label) }}" class="text-[10px] uppercase font-bold text-gray-600 dark:text-gray-400 tracking-wider mb-2 block">{{ $label }}</label>
+        <select id="{{ Str::slug($label) }}" class="js-filter appearance-none block w-full pl-3 pr-10 py-2.5 text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"></select>
       </div>
       @endforeach
+
+      <div class="md:col-span-2 flex items-center gap-2">
+            <button id="btnResetFilters" type="button" class="w-10 h-[38px] inline-flex items-center justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 transition-all" title="Reset Filters">
+                <i class="fa-solid fa-rotate-left text-xs"></i>
+            </button>
+
+            <button id="btnDownloadSummary" type="button" class="flex-1 h-[38px] inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-md bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 transition-all shadow-sm">
+                <span class="btn-label flex items-center gap-2"><i class="fa-solid fa-file-excel text-base"></i><span>Export</span></span>
+                <span class="btn-spinner hidden"><i class="fa-solid fa-circle-notch fa-spin text-base"></i></span>
+            </button>
+      </div>
     </div>
   </div>
 
   {{-- Tabel section --}}
-  <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+  <div class="mt-8 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div class="p-4 overflow-x-auto w-full">
           <table id="exportTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500 font-semibold">
+                <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-600 dark:text-gray-400 font-bold tracking-tight">
                     <tr>
-                        <th class="px-4 py-3 w-12 text-center">No</th>
+                        <th class="px-4 py-3 w-8 text-center">No</th>
                         <th class="px-4 py-3 min-w-[200px]">Package Info</th>
                         <th class="px-4 py-3 w-28">Current Rev</th>
                         <th class="px-4 py-3">ECN</th>
@@ -174,6 +157,26 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(function () {
+  let currentStatus = 'All';
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if(urlParams.get('q')) $('#custom-export-search').val(urlParams.get('q'));
+
+  // Power User Feature: Keyboard Shortcut "/"
+  $(document).on('keyup', function(e) {
+      if (e.key === '/' && !$(e.target).is('input, textarea, select')) {
+          $('#custom-export-search').focus();
+      }
+  });
+
+  function syncUrlWithFilters() {
+      const params = new URLSearchParams(window.location.search);
+      const q = $('#custom-export-search').val();
+      if (q) params.set('q', q); else params.delete('q');
+      const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+      window.history.replaceState({path: newUrl}, '', newUrl);
+  }
+
   let table;
   const ENDPOINT = '{{ route("api.export.filters") }}';
 
@@ -254,26 +257,7 @@ $(function () {
     };
   }
 
-  function loadKPI() {
-    const params = getCurrentFilters();
-    $('#cardTotal, #cardDownload, #cardTotalRevisions').text('…');
 
-    $.ajax({
-      url: '{{ route("api.export.kpi") }}',
-      data: params,
-      dataType: 'json',
-      success: function (res) {
-        const c = res.cards || {};
-        $('#cardTotal').text(c.total ?? 0);
-        $('#cardDownload').text(c.total_download ?? 0);
-        $('#cardTotalRevisions').text(c.total_revisions ?? 0);
-      },
-      error: function (xhr) {
-        console.error('KPI error', xhr.responseText);
-        $('#cardTotal, #cardDownload, #cardTotalRevisions').text('0');
-      }
-    });
-  }
     function highlightText(data, searchVal) {
         if (!searchVal || !data) return data;
         // Escape regex characters to prevent crashes if user types special chars
@@ -293,11 +277,9 @@ $(function () {
       
       responsive: false, 
       scrollX: false, 
-      autoWidth: false,
+      deferRender: true,
+      stateSave: false,
 
-      // Hide default search & length, use custom. Keep pagination & info.
-      dom: 't<"flex flex-col sm:flex-row justify-between items-center p-4 border-t border-gray-100 dark:border-gray-700 gap-4"<"text-gray-600 dark:text-gray-400 text-sm"i><"flex justify-end"p>>',
-      pageLength: 10,
       ajax: {
         url: '{{ route("api.export.list") }}',
         type: 'GET',
@@ -316,6 +298,20 @@ $(function () {
         }
       },
       order: [[ 8, 'desc' ]],
+      language: {
+          info: `<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100/50 dark:border-indigo-800/50 shadow-sm transition-all hover:bg-indigo-50 dark:hover:bg-indigo-900/40">
+                    <i class="fa-solid fa-database text-indigo-500 text-[10px]"></i>
+                    <span class="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase tracking-tight">Records</span>
+                    <span class="text-gray-900 dark:text-gray-100 text-[11px] font-black font-mono">_START_-_END_</span>
+                    <span class="text-gray-300 dark:text-gray-600">/</span>
+                    <span class="text-indigo-600 dark:text-indigo-400 text-[11px] font-black font-mono">_TOTAL_</span>
+                 </div>`,
+          infoEmpty: "No Records Found",
+          infoFiltered: "",
+          zeroRecords: '<div class="flex flex-col items-center justify-center p-12 text-gray-400"><i class="fa-solid fa-folder-open text-4xl mb-3 opacity-20"></i><span class="text-xs italic">No matching files in your data center</span></div>'
+      },
+      dom: 't<"flex flex-col sm:flex-row justify-between items-center p-6 border-t border-gray-50 dark:border-gray-800 gap-4" <"flex-1"i> <"flex justify-end"p>>',
+      pageLength: 10,
 
       createdRow: function(row, data, dataIndex) {
         $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0 text-gray-900 dark:text-gray-100');
@@ -347,15 +343,15 @@ $(function () {
                 // Highlight Line 1
                 mainText = highlightText(mainText, searchVal);
 
-                // Line 2: Customer - Model (Gray)
+                // Line 2: Customer - Model
                 let subText = `${row.customer} - ${row.model}`;
                 // Highlight Line 2
                 subText = highlightText(subText, searchVal);
 
                 return `
-                    <div class="flex flex-col min-w-[200px]">
-                        <span class="text-sm font-bold text-gray-900 dark:text-gray-100">${mainText}</span>
-                        <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5 whitespace-nowrap">
+                    <div class="flex flex-col max-w-[350px]" title="${row.part_no} ${row.partners ? '/ ' + row.partners : ''}">
+                        <span class="text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-1">${mainText}</span>
+                        <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5 truncate">
                             ${subText}
                         </div>
                     </div>
@@ -371,13 +367,13 @@ $(function () {
                
                 let labelBadges = '';
                 if(row.revision_label_name) {
-                    labelBadges = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 mr-1 whitespace-nowrap">${row.revision_label_name}</span>`;
+                    labelBadges = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 mr-1 whitespace-nowrap">${row.revision_label_name}</span>`;
                 }
                 
                 return `
                     <div class="flex items-center min-w-[100px]">
                         ${labelBadges}
-                        <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 whitespace-nowrap">
                             Rev ${row.revision_no}
                         </span>
                     </div>
@@ -474,53 +470,59 @@ $(function () {
             }
         }
       ],
-    });
+    }); 
 
-    // Skeleton Loader Logic
-    function showSkeleton() {
-        const $tbody = $('#exportTable tbody');
-        $tbody.empty();
+    function getSkeletonHtml() {
         let rows = '';
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 8; i++) {
             rows += `
-                <tr class="animate-pulse border-b border-gray-100 dark:border-gray-700">
-                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-8 mx-auto"></div></td>
+                <tr class="animate-pulse border-b border-gray-50 dark:border-gray-800">
+                    <td class="px-4 py-4"><div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-6 mx-auto"></div></td>
                     <td class="px-4 py-4">
-                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-2"></div>
-                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-2"></div>
+                        <div class="h-3 bg-gray-100 dark:bg-gray-800 rounded w-32"></div>
                     </td>
-                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div></td>
-                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div></td>
-                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12"></div></td>
-                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div></td>
-                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div></td>
-                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div></td>
-                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16 ml-auto"></div></td>
-                    <td class="px-4 py-4"><div class="flex justify-center gap-2"><div class="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded-md"></div><div class="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded-md"></div></div></td>
+                    <td class="px-4 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded-full w-20"></div></td>
+                    <td class="px-4 py-4"><div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16"></div></td>
+                    <td class="px-4 py-4">
+                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-1"></div>
+                        <div class="h-2 bg-gray-100 dark:bg-gray-800 rounded w-16"></div>
+                    </td>
+                    <td class="px-4 py-4"><div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-12"></div></td>
+                    <td class="px-4 py-4"><div class="h-3 bg-gray-100 dark:bg-gray-800 rounded w-full line-clamp-2"></div></td>
+                    <td class="px-4 py-4"><div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16"></div></td>
+                    <td class="px-4 py-4"><div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-12 ml-auto"></div></td>
+                    <td class="px-4 py-4"><div class="flex justify-center gap-2"><div class="h-8 w-8 bg-gray-100 dark:bg-gray-700 rounded-md"></div><div class="h-8 w-8 bg-gray-100 dark:bg-gray-700 rounded-md"></div></div></td>
                 </tr>
             `;
         }
-        $tbody.html(rows);
+        return rows;
     }
 
-    table.on('processing.dt', function (e, settings, processing) {
-        if (processing) {
-            $staticIcon.addClass('opacity-0');
-            $loadingIcon.removeClass('opacity-0').addClass('opacity-100');
-            if(settings.json) showSkeleton();
-        } else {
-            $loadingIcon.removeClass('opacity-100').addClass('opacity-0');
-            $staticIcon.removeClass('opacity-0');
-        }
+    // Skeleton Trigger
+    table.on('preXhr.dt', function() {
+        $('#exportTable tbody').html(getSkeletonHtml());
     });
 
-    // Show initial skeleton before first draw
-    showSkeleton();
-    
+    // Inject initial skeleton
+    $('#exportTable tbody').html(getSkeletonHtml());
+
+    // Consolidated Draw Handler
     table.on('draw.dt', function () {
+      $loadingIcon.removeClass('opacity-100').addClass('opacity-0');
+      $staticIcon.removeClass('opacity-0');
+
+      const json = table.ajax.json();
+      if (json && json.kpis) {
+         $('#cardTotal').text(json.kpis.total || 0);
+         $('#cardTotalRevisions').text(json.kpis.total_revisions || 0);
+         $('#cardDownload').text(json.kpis.total_download || 0);
+      }
+
       const info = table.page.info();
       table.column(0, { page: 'current' }).nodes().each(function (cell, i) {
-        cell.innerHTML = i + 1 + info.start;
+        const num = i + 1 + info.start;
+        cell.innerHTML = `<span class="text-[12px] font-black text-gray-500 dark:text-gray-400 tracking-tighter">${num}</span>`;
       });
     });
 
@@ -535,20 +537,29 @@ $(function () {
   function bindHandlers() {
     $('#customer, #model, #document-type, #category, #project-status').on('change', function () {
       if (table) table.ajax.reload(null, true);
-      loadKPI();
     });
 
     $('#btnResetFilters').on('click', function () {
+      // SILENT RESET: Temporarily disable the change listener to prevent 5-6 redundant AJAX calls
+      const $filters = $('#customer, #model, #document-type, #category, #project-status');
+      $filters.off('change'); 
+
       resetSelect2ToAll($('#customer'));
       resetSelect2ToAll($('#model'));
       resetSelect2ToAll($('#document-type'));
       resetSelect2ToAll($('#category'));
       resetSelect2ToAll($('#project-status'));
       $('#custom-export-search').val('');
-      if (table) {
-          table.search('').draw();
-      }
-      loadKPI();
+      
+      // Sync State
+      syncUrlWithFilters();
+
+      // Re-enable change listener and do ONE draw
+      $filters.on('change', function () {
+          if (table) table.ajax.reload(null, true);
+      });
+
+      if (table) table.search('').draw();
     });
 
     $('#btnDownloadSummary').on('click', function() {
@@ -575,19 +586,92 @@ $(function () {
         setTimeout(() => { setLoading(false); $iframe.remove(); }, 5000);
     });
 
-    // Consolidated Search Logic
+    // --- Search & Recent Searches Logic ---
     const $inputSearch = $('#custom-export-search');
     const $btnClear    = $('#btn-clear-search');
     let searchTimeout  = null;
+    const RECENT_KEY   = 'recent_dwg_searches';
+    
+    function getRecent() {
+        try {
+            return JSON.parse(localStorage.getItem(RECENT_KEY)) || [];
+        } catch(e) { return []; }
+    }
+
+    function saveSearch(term) {
+        if (!term || term.length < 2) return;
+        let recent = getRecent();
+        recent = [term, ...recent.filter(t => t !== term)].slice(0, 5);
+        localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
+        renderRecent();
+    }
+
+    function renderRecent() {
+        const recent = getRecent();
+        const $wrapper = $('#recent-searches-wrapper');
+        const $container = $('#recent-searches-container');
+        
+        if (recent.length === 0) {
+            $wrapper.addClass('hidden');
+            $container.html('');
+            return;
+        }
+
+        $wrapper.removeClass('hidden');
+
+        let html = recent.map(t => `
+            <button type="button" class="recent-tag px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-[10px] font-bold text-gray-500 dark:text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-all whitespace-nowrap" data-term="${t}">
+                <i class="fa-solid fa-history mr-1 opacity-50"></i> ${t}
+            </button>
+        `).join('');
+
+        html += `
+            <button type="button" id="btn-clear-recent" class="w-6 h-6 inline-flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 hover:text-red-500 transition-all ml-1" title="Clear History">
+                <i class="fa-solid fa-xmark text-[10px]"></i>
+            </button>
+        `;
+        $container.html(html);
+    }
+
+    $(document).on('click', '.recent-tag', function() {
+        const term = $(this).data('term');
+        $inputSearch.val(term).trigger('input');
+        // Instantly trigger search for tags
+        clearTimeout(searchTimeout);
+        syncUrlWithFilters();
+        if (table) table.search(term).draw();
+    });
+
+    $(document).on('click', '#btn-clear-recent', function() {
+        localStorage.removeItem(RECENT_KEY);
+        renderRecent();
+    });
+
+    renderRecent();
 
     $inputSearch.on('keyup input', function () {
         const val = this.value;
+        const $iconStatic = $('#search-icon-static');
+        const $iconLoading = $('#search-icon-loading');
+        
         $btnClear.toggleClass('hidden', val.length === 0);
+
+        // Show Loading Icon
+        $iconStatic.addClass('opacity-0');
+        $iconLoading.removeClass('opacity-0').addClass('opacity-100');
 
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(function() {
+            syncUrlWithFilters();
+            if (val && val.length > 2) saveSearch(val);
             if (table) table.search(val).draw();
-        }, 500); 
+            
+            // Revert to Static Icon
+            setTimeout(() => {
+                $iconLoading.removeClass('opacity-100').addClass('opacity-0');
+                $iconStatic.removeClass('opacity-0');
+            }, 300);
+        }, 800); 
     });
 
     $btnClear.on('click', function () {
@@ -598,7 +682,6 @@ $(function () {
   }
 
   initTable();
-  loadKPI();
   bindHandlers();
 
 

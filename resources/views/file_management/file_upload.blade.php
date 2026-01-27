@@ -235,7 +235,19 @@
                 }
             },
             order: [[6, "desc"]], 
-            dom: 't<"flex flex-col sm:flex-row justify-between items-center p-6 border-t border-gray-100 dark:border-gray-700 gap-4" <"text-gray-500 dark:text-gray-400 text-xs font-mono"i> <"flex justify-end"p>>',
+            language: {
+                info: `<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100/50 dark:border-indigo-800/50 shadow-sm transition-all hover:bg-indigo-50 dark:hover:bg-indigo-900/40">
+                          <i class="fa-solid fa-database text-indigo-500 text-[10px]"></i>
+                          <span class="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase tracking-tight">Records</span>
+                          <span class="text-gray-900 dark:text-gray-100 text-[11px] font-black font-mono">_START_-_END_</span>
+                          <span class="text-gray-300 dark:text-gray-600">/</span>
+                          <span class="text-indigo-600 dark:text-indigo-400 text-[11px] font-black font-mono">_TOTAL_</span>
+                       </div>`,
+                infoEmpty: "No Records Found",
+                infoFiltered: "",
+                zeroRecords: '<div class="flex flex-col items-center justify-center p-12 text-gray-400"><i class="fa-solid fa-folder-open text-4xl mb-3 opacity-20"></i><span class="text-xs italic">No matching files found</span></div>'
+            },
+            dom: 't<"flex flex-col sm:flex-row justify-between items-center p-6 border-t border-gray-50 dark:border-gray-800 gap-4" <"flex-1"i> <"flex justify-end"p>>',
             
             createdRow: function(row, data, dataIndex) {
                  $(row).addClass('hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-colors cursor-pointer border-b border-gray-50 dark:border-gray-800 last:border-0 text-gray-900 dark:text-gray-100');
@@ -270,9 +282,9 @@
                         let subText = highlightText(`${row.customer} - ${row.model}`, searchVal);
 
                         return `
-                            <div class="flex flex-col min-w-[200px]">
-                                <span class="text-sm font-bold text-gray-900 dark:text-gray-100">${mainText}</span>
-                                <div class="text-[11px] text-gray-600 dark:text-gray-400 mt-0.5 whitespace-nowrap">
+                            <div class="flex flex-col max-w-[350px]" title="${row.part_no} ${row.partners ? '/ ' + row.partners : ''}">
+                                <span class="text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-1">${mainText}</span>
+                                <div class="text-[11px] text-gray-600 dark:text-gray-400 mt-0.5 truncate">
                                     ${subText}
                                 </div>
                             </div>
@@ -421,13 +433,23 @@
                 $loadingIcon.removeClass('opacity-0').addClass('opacity-100');
                 syncUrlWithFilters();
                 table.draw();
-            }, 500);
+            }, 700);
         });
 
         $('#btnResetUploadFilters').on('click', function() {
-            $('.js-upload-filter').val('All').trigger('change');
-            $('#custom-upload-search').val('').trigger('keyup');
+            // SILENT RESET: Prevent multiple redundant draws
+            const $filters = $('.js-upload-filter');
+            $filters.off('change');
+
+            $filters.val('All').trigger('change');
+            $('#custom-upload-search').val('');
             $('.status-tab[data-status="All"]').trigger('click');
+
+            syncUrlWithFilters();
+
+            // Re-bind and draw once
+            $filters.on('change', function() { table.draw(); });
+            table.draw();
         });
 
         $('.js-upload-filter').on('change', function() { table.draw(); });
@@ -444,9 +466,10 @@
                 $('#totalRejected').text(json.kpis.totalrejected || 0);
             }
 
-            var PageInfo = $('#fileTable').DataTable().page.info();
-            table.column(0, { page: 'current' }).nodes().each(function(cell, i) {
-                cell.innerHTML = i + 1 + PageInfo.start;
+            const info = table.page.info();
+            table.column(0, { page: 'current' }).nodes().each(function (cell, i) {
+                const num = i + 1 + info.start;
+                cell.innerHTML = `<span class="text-[12px] font-black text-gray-500 dark:text-gray-400 tracking-tighter">${num}</span>`;
             });
         });
 
