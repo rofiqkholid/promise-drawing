@@ -4,12 +4,12 @@
 @section('header-title', 'File Manager - Download')
 
 @section('content')
-<nav class="flex px-5 py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300" aria-label="Breadcrumb">
+<nav class="flex px-5 py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300 rounded-lg" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
 
         <li class="inline-flex items-center">
-            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium hover:text-blue-600">
-                Monitoring
+            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium hover:text-blue-600 transition-colors">
+                <i class="fa-solid fa-chart-line mr-2"></i> Monitoring
             </a>
         </li>
 
@@ -17,13 +17,14 @@
             <div class="flex items-center">
                 <span class="mx-1 text-gray-400">/</span>
 
-                <span class="text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded">
+                <span class="text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20">
                     Download Files
                 </span>
             </div>
         </li>
     </ol>
 </nav>
+
 <div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900" x-data="{ modalOpen: false }">
   <div class="sm:flex sm:items-center sm:justify-between">
     <div>
@@ -31,9 +32,10 @@
       <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Find and download your files from the Data Center.</p>
     </div>
 
+    {{-- Original KPI Cards Style --}}
     <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4 sm:mt-0">
       <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-full">
+        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-md">
           <i class="fa-solid fa-box-archive fa-lg"></i>
         </div>
         <div class="ml-4">
@@ -45,7 +47,7 @@
       </div>
 
       <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-yellow-500 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/50 rounded-full">
+        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-yellow-500 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/50 rounded-md">
           <i class="fa-solid fa-layer-group fa-lg"></i>
         </div>
         <div class="ml-4">
@@ -57,7 +59,7 @@
       </div>
 
       <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-full">
+        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-md">
           <i class="fa-solid fa-cloud-arrow-down fa-lg"></i>
         </div>
         <div class="ml-4">
@@ -70,27 +72,26 @@
     </div>
   </div>
 
-  {{-- Filter section --}}
+  {{-- Original Exposed Filter Section --}}
   <div class="mt-8 bg-white dark:bg-gray-800 p-7 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-    <div class="flex items-center justify-between mb-4">
-      {{-- <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">Filters</h3> --}}
-      <div class="relative w-full sm:w-72"> <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <i id="search-icon-static" class="fa-solid fa-magnifying-glass text-gray-400 transition-opacity duration-200"></i>
-              
-              <i id="search-icon-loading" class="fa-solid fa-spinner fa-spin text-blue-500 opacity-0 transition-opacity duration-200 absolute left-3"></i>
+    <div class="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+      <div class="relative w-full md:w-[600px]"> 
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <i id="search-icon-static" class="fa-solid fa-magnifying-glass text-gray-400 text-lg transition-opacity duration-200"></i>
+              <i id="search-icon-loading" class="fa-solid fa-spinner fa-spin text-blue-500 text-lg opacity-0 transition-opacity duration-200 absolute left-4"></i>
           </div>
 
           <input type="text" 
               id="custom-export-search" 
-              class="block w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-full leading-5 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out shadow-sm" 
-              placeholder="Search ECN, Model, Etc..."
+              class="block w-full pl-12 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-full leading-5 bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-base transition-all duration-200 shadow-sm hover:shadow-md" 
+              placeholder="Search Customer, Model, ECN, or Part Number..."
               autocomplete="off">
 
-          <div class="absolute inset-y-0 right-0 pr-2 flex items-center">
+          <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
               <button id="btn-clear-search" 
                       type="button"
-                      class="hidden text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none transition-colors p-1">
-                  <i class="fa-solid fa-circle-xmark"></i>
+                      class="hidden text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none transition-colors p-1.5">
+                  <i class="fa-solid fa-circle-xmark text-lg"></i>
               </button>
           </div>
       </div>
@@ -100,7 +101,7 @@
           type="button"
           class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-green-500
      bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200
-     hover:bg-green-100 dark:hover:bg-green-900/60">
+     hover:bg-green-100 dark:hover:bg-green-900/60 shadow-sm transition-all hover:shadow-md">
           {{-- normal state --}}
           <span class="btn-label inline-flex items-center gap-2">
             <i class="fa-solid fa-file-excel"></i>
@@ -118,7 +119,7 @@
         <button id="btnResetFilters"
           type="button"
           class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600
-             bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+             bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm transition-all hover:shadow-md">
           <i class="fa-solid fa-rotate-left"></i>
           Reset Filters
         </button>
@@ -131,7 +132,7 @@
         <label for="{{ Str::slug($label) }}" class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ $label }}</label>
         <div class="relative mt-1">
           <select id="{{ Str::slug($label) }}"
-            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm shadow-sm">
             <option value="All" selected>All</option>
           </select>
         </div>
@@ -141,28 +142,29 @@
   </div>
 
   {{-- Tabel section --}}
-  <div class="mt-8 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-    <!-- <div class="overflow-x-auto"> -->
-      <table id="exportTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead class="bg-gray-50 dark:bg-gray-700/50">
-          <tr>
-            <th class="py-3 px-4 text-left ...">No</th>
-            <th class="py-3 px-4 text-left ...">Package Info</th>
-            <th class="py-3 px-4 text-left ...">Revision Note</th>
-            <th class="py-3 px-4 text-left ...">Current Revision</th>
-            <th class="py-3 px-4 text-left ...">ECN No</th>
-            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Doc Group</th>
-            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sub-Category</th>
-            <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Part Group</th>
-            <th class="py-3 px-4 text-left ...">Uploaded At</th>
-            <th class="py-3 px-4 text-left ...">Size</th>
-            <th class="py-3 px-4 text-center ...">Action</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
-        </tbody>
-      </table>
-    <!-- </div> -->
+  <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="p-4 overflow-x-auto w-full">
+          <table id="exportTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500 font-semibold">
+                    <tr>
+                        <th class="px-4 py-3 w-12 text-center">No</th>
+                        <th class="px-4 py-3 min-w-[200px]">Package Info</th>
+                        <th class="px-4 py-3 w-28">Current Rev</th>
+                        <th class="px-4 py-3">ECN</th>
+                        <th class="px-4 py-3">Category</th>
+                        <th class="px-4 py-3">Part Group</th>
+                        <th class="px-4 py-3 min-w-[150px] max-w-[200px]">Revision Note</th> 
+                        <th class="px-4 py-3 w-32">Uploaded</th>
+                        <th class="px-4 py-3 w-24 text-right">Size</th>
+                        <th class="px-4 py-3 w-24 text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
+                    {{-- DataTables fills this --}}
+                </tbody>
+          </table>
+      </div>
+  </div>
   </div>
 
 </div>
@@ -220,7 +222,7 @@ $(function () {
       },
       templateResult: function (item) {
         if (item.loading) return item.text;
-        return $('<div class="text-sm">' + (item.text || item.id) + '</div>');
+        return $('<div class="text-sm py-1">' + (item.text || item.id) + '</div>');
       },
       templateSelection: function (item) {
         return item.text || item.id || 'All';
@@ -272,17 +274,30 @@ $(function () {
       }
     });
   }
+    function highlightText(data, searchVal) {
+        if (!searchVal || !data) return data;
+        // Escape regex characters to prevent crashes if user types special chars
+        const safeSearch = searchVal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${safeSearch})`, 'gi');
+        return data.toString().replace(regex, '<span class="bg-yellow-200 text-gray-900">$1</span>');
+    }
 
-  // Initialize DataTable
-  function initTable() {
+    // Initialize DataTable
+    function initTable() {
     const $staticIcon  = $('#search-icon-static');
     const $loadingIcon = $('#search-icon-loading')
 
     table = $('#exportTable').DataTable({
       processing: true,
       serverSide: true,
-      responsive: true,
-      dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
+      
+      responsive: false, 
+      scrollX: false, 
+      autoWidth: false,
+
+      // Hide default search & length, use custom. Keep pagination & info.
+      dom: 't<"flex flex-col sm:flex-row justify-between items-center p-4 border-t border-gray-100 dark:border-gray-700 gap-4"<"text-gray-600 dark:text-gray-400 text-sm"i><"flex justify-end"p>>',
+      pageLength: 10,
       ajax: {
         url: '{{ route("api.export.list") }}',
         type: 'GET',
@@ -295,74 +310,143 @@ $(function () {
           d.project_status = f.project_status;
         },
         error: function (xhr, error, thrown) {
-                console.error('DataTable Error:', error);
-                $loadingIcon.removeClass('opacity-100').addClass('opacity-0');
-                $staticIcon.removeClass('opacity-0');
-            }
+            console.error('DataTable Error:', error);
+            $loadingIcon.removeClass('opacity-100').addClass('opacity-0');
+            $staticIcon.removeClass('opacity-0');
+        }
       },
       order: [[ 8, 'desc' ]],
 
       createdRow: function(row, data, dataIndex) {
-        $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer');
+        $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0 text-gray-900 dark:text-gray-100');
+        $('td', row).addClass('py-2 px-4 align-middle'); // Standard padding
       },
 
       columns: [
-        { data: null, name: 'No', orderable: false, searchable: false },
+        { 
+            data: null, 
+            name: 'No', 
+            orderable: false, 
+            searchable: false,
+            className: 'text-center text-gray-400 font-mono text-xs'
+        },
         {
             data: null,
             name: 'Package Info',
             searchable: true,
             orderable: false,
             render: function(data, type, row) {
-                return `${row.customer} - ${row.model} - ${row.part_no}`;
+                const searchVal = $('#custom-export-search').val();
+
+                // Line 1: Part No (Bold) + Optional Partners (separated by slash)
+                let mainText = row.part_no;
+                if (row.partners) {
+                    let pClean = row.partners.replace(/,/g, ' /'); 
+                    mainText += ` / ${pClean}`;
+                }
+                // Highlight Line 1
+                mainText = highlightText(mainText, searchVal);
+
+                // Line 2: Customer - Model (Gray)
+                let subText = `${row.customer} - ${row.model}`;
+                // Highlight Line 2
+                subText = highlightText(subText, searchVal);
+
+                return `
+                    <div class="flex flex-col min-w-[200px]">
+                        <span class="text-sm font-bold text-gray-900 dark:text-gray-100">${mainText}</span>
+                        <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5 whitespace-nowrap">
+                            ${subText}
+                        </div>
+                    </div>
+                `;
             }
         },
-        {
-    data: 'note',
-    name: 'revision_note',
-    searchable: true,
-    orderable: false,
-    render: function (data) {
-        if (!data) {
-            return '<span class="italic text-gray-400">No note</span>';
-        }
-        return `
-            <div class="max-w-xs truncate text-gray-800 dark:text-gray-300" title="${data}">
-                ${data}
-            </div>
-        `;
-    }
-},
         {
             data: null,
             name: 'Revision',
             searchable: true,
             orderable: false,
             render: function(data, type, row) {
-                let revStr = `Rev${row.revision_no}`;
-                if (row.revision_label_name) {
-                    return `${row.revision_label_name} - ${revStr}`;
+               
+                let labelBadges = '';
+                if(row.revision_label_name) {
+                    labelBadges = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 mr-1 whitespace-nowrap">${row.revision_label_name}</span>`;
                 }
-                return revStr;
+                
+                return `
+                    <div class="flex items-center min-w-[100px]">
+                        ${labelBadges}
+                        <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                            Rev ${row.revision_no}
+                        </span>
+                    </div>
+                `;
             }
         },
-        {data: 'ecn_no', name: 'ecn_no', searchable: true},
-        {data: 'doctype_group', name: 'doctype_group', searchable: true, orderable: true},
-        {data: 'doctype_subcategory', name: 'doctype_subcategory', searchable: true, orderable: true},
-        {data: 'part_group', name: 'part_group', searchable: true, orderable: true},
-        {data: 'uploaded_at', name: 'uploaded_at', searchable: true},
+        {
+            data: 'ecn_no', 
+            name: 'ecn_no', 
+            searchable: true,
+            render: function(data) {
+                return data ? `<span class="font-mono text-xs text-gray-600 dark:text-gray-400">${data}</span>` : '<span class="text-gray-300">-</span>';
+            }
+        },
+        {
+            data: null, 
+            name: 'doctype_group', 
+            searchable: true, 
+            orderable: true,
+            render: function(data, type, row) {
+                return `
+                    <div class="flex flex-col min-w-[120px]">
+                        <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">${row.doctype_group}</span>
+                        <span class="text-xs text-gray-600 dark:text-gray-400">${row.doctype_subcategory || ''}</span>
+                    </div>
+                `;
+            }
+        },
+        
+        {data: 'part_group', name: 'part_group', searchable: true, orderable: true, render: d => `<span class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">${d}</span>`},
+        {
+            data: 'note',
+            name: 'revision_note',
+            searchable: true,
+            orderable: false,
+            render: function (data) {
+                if (!data) return '<span class="text-gray-300 italic text-xs">-</span>';
+                const searchVal = $('#custom-export-search').val();
+                const hlData = highlightText(data, searchVal);
+                // Matched width with HTML header
+                return `<div class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 min-w-[150px] max-w-[200px] whitespace-normal" title="${data}">
+                            ${hlData}
+                        </div>`;
+            }
+        },
+        {
+            data: 'uploaded_at', 
+            name: 'uploaded_at', 
+            searchable: true,
+            render: function(data) {
+                if(!data) return '-';
+                // Simple date format
+                const d = new Date(data);
+                return `<span class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap" title="${data}">${d.toLocaleDateString()}</span>`;
+            }
+        },
         {
             data: 'total_size',
             name: 'size',
             searchable: false,
             orderable: true,
+            className: 'text-right',
             render: function(data, type, row) {
-                if (data === null) return '0 KB';
-                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                if (data === null) return '-';
+                const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
                 let size = parseInt(data);
-                if (size === 0) return '0 Bytes';
+                if (size === 0) return '<span class="text-gray-300 text-xs">0 B</span>';
                 const i = Math.floor(Math.log(size) / Math.log(1024));
-                return parseFloat((size / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];
+                return `<span class="font-mono text-xs text-gray-600 dark:text-gray-400">${parseFloat((size / Math.pow(1024, i)).toFixed(1))} ${sizes[i]}</span>`;
             }
         },
         {
@@ -370,35 +454,69 @@ $(function () {
             name: 'Info',
             orderable: false,
             searchable: false,
+            className: 'text-center',
             render: function(data, type, row) {
-                const detailUrl = `/file-manager.export/${encodeURIComponent(row.id)}`;
-                let viewButton = `<button type="button" onclick="openPackageDetails('${row.id}')" class="text-blue-600 hover:text-blue-900 dark:hover:text-blue-300 dark:text-blue-400 transition-colors" title="Details">
-                <i class="fa-solid fa-eye fa-lg"></i></button>`;
-                let downloadButton = `<button type="button" onclick="confirmDownload('${row.id}')" class="ml-4 text-green-600 hover:text-green-900 dark:hover:text-green-300 dark:text-green-400 transition-colors" title="Download Package"><i class="fa-solid fa-download fa-lg"></i></button>`;
-                return `<div class="text-center">${viewButton}${downloadButton}</div>`;
+                // View Button: Square (rounded-md), Larger Icon, New Icon (fa-up-right-from-square)
+                let viewButton = `<button type="button" onclick="openPackageDetails('${row.id}')" 
+                    class="p-2 rounded-md hover:bg-blue-100 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-gray-700 transition-colors" 
+                    title="View Package Details">
+                    <i class="fa-solid fa-up-right-from-square text-base"></i>
+                </button>`;
+                
+                // Download Button: Square (rounded-md), Larger Icon
+                let downloadButton = `<button type="button" onclick="confirmDownload('${row.id}')" 
+                    class="p-2 rounded-md hover:bg-green-100 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:bg-gray-700 transition-colors ml-1" 
+                    title="Download Package">
+                    <i class="fa-solid fa-download text-base"></i>
+                </button>`;
+                
+                return `<div class="flex items-center justify-center">${viewButton}${downloadButton}</div>`;
             }
         }
       ],
     });
 
+    // Skeleton Loader Logic
+    function showSkeleton() {
+        const $tbody = $('#exportTable tbody');
+        $tbody.empty();
+        let rows = '';
+        for (let i = 0; i < 5; i++) {
+            rows += `
+                <tr class="animate-pulse border-b border-gray-100 dark:border-gray-700">
+                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-8 mx-auto"></div></td>
+                    <td class="px-4 py-4">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-2"></div>
+                        <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+                    </td>
+                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div></td>
+                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16"></div></td>
+                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-12"></div></td>
+                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div></td>
+                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20"></div></td>
+                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24"></div></td>
+                    <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16 ml-auto"></div></td>
+                    <td class="px-4 py-4"><div class="flex justify-center gap-2"><div class="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded-md"></div><div class="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded-md"></div></div></td>
+                </tr>
+            `;
+        }
+        $tbody.html(rows);
+    }
+
     table.on('processing.dt', function (e, settings, processing) {
         if (processing) {
             $staticIcon.addClass('opacity-0');
             $loadingIcon.removeClass('opacity-0').addClass('opacity-100');
+            if(settings.json) showSkeleton();
         } else {
             $loadingIcon.removeClass('opacity-100').addClass('opacity-0');
             $staticIcon.removeClass('opacity-0');
         }
     });
-    
-    $('#dt-custom-search').on('keyup', function () {
-        const val = this.value;
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(function() {
-            table.search(val).draw(); 
-        }, 500); // Delay 500ms
-    });
 
+    // Show initial skeleton before first draw
+    showSkeleton();
+    
     table.on('draw.dt', function () {
       const info = table.page.info();
       table.column(0, { page: 'current' }).nodes().each(function (cell, i) {
@@ -408,12 +526,9 @@ $(function () {
 
     $('#exportTable tbody').on('click', 'tr', function (e) {
       if ($(e.target).closest('button').length || $(e.target).closest('a').length) return;
-
       const data = table.row(this).data();
       if (!data || !data.id) return;
-
-      const encryptedId = encodeURIComponent(data.id);
-      window.location.href = `/file-manager.export/${encryptedId}`;
+      window.location.href = `/file-manager.export/${encodeURIComponent(data.id)}`;
     });
   }
 
@@ -429,8 +544,10 @@ $(function () {
       resetSelect2ToAll($('#document-type'));
       resetSelect2ToAll($('#category'));
       resetSelect2ToAll($('#project-status'));
-
-      if (table) table.ajax.reload(null, true);
+      $('#custom-export-search').val('');
+      if (table) {
+          table.search('').draw();
+      }
       loadKPI();
     });
 
@@ -438,82 +555,48 @@ $(function () {
         const f = getCurrentFilters();
         const query = $.param(f);
         const url = '{{ route("approvals.summary") }}?' + query;
-
         const $btn = $(this);
 
         function setLoading(isLoading) {
           if (isLoading) {
-            $btn.prop('disabled', true)
-              .addClass('opacity-60 cursor-not-allowed');
+            $btn.prop('disabled', true).addClass('opacity-75 cursor-wait');
             $btn.find('.btn-label').addClass('hidden');
             $btn.find('.btn-spinner').removeClass('hidden');
           } else {
-            $btn.prop('disabled', false)
-              .removeClass('opacity-60 cursor-not-allowed');
+            $btn.prop('disabled', false).removeClass('opacity-75 cursor-wait');
             $btn.find('.btn-label').removeClass('hidden');
             $btn.find('.btn-spinner').addClass('hidden');
           }
         }
-
         setLoading(true);
-
-        const $iframe = $('<iframe>', {
-          src: url,
-          style: 'display:none;'
-        }).appendTo('body');
-
-        let done = false;
-
-        function finish() {
-          if (done) return;
-          done = true;
-          setLoading(false);
-          $iframe.remove();
-        }
-
-        const timeoutId = setTimeout(finish, 7000);
-
-        $iframe.on('load', function() {
-          clearTimeout(timeoutId);
-          setTimeout(finish, 1000);
-        });
+        const $iframe = $('<iframe>', { src: url, style: 'display:none;' }).appendTo('body');
+        
+        // Timeout handling
+        setTimeout(() => { setLoading(false); $iframe.remove(); }, 5000);
     });
 
+    // Consolidated Search Logic
     const $inputSearch = $('#custom-export-search');
     const $btnClear    = $('#btn-clear-search');
     let searchTimeout  = null;
 
-    // Handler Input (Typing)
     $inputSearch.on('keyup input', function () {
         const val = this.value;
+        $btnClear.toggleClass('hidden', val.length === 0);
 
-        // Toggle tombol Clear (X)
-        if (val.length > 0) {
-            $btnClear.removeClass('hidden');
-        } else {
-            $btnClear.addClass('hidden');
-        }
-        
-        // Debounce Search
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(function() {
-            if (table.search() !== val) {
-                table.search(val).draw(); 
-            }
-        }, 600);
+            if (table) table.search(val).draw();
+        }, 500); 
     });
 
-    // 2. Handler Tombol Clear (X)
     $btnClear.on('click', function () {
-        $inputSearch.val('').focus(); // Kosongkan input & balikin fokus
-        $btnClear.addClass('hidden'); // Sembunyikan tombol X
-        
-        // Reset search datatable
-        table.search('').draw();
+        $inputSearch.val('').focus();
+        $btnClear.addClass('hidden');
+        if (table) table.search('').draw();
     });
   }
 
-  // start
   initTable();
   loadKPI();
   bindHandlers();

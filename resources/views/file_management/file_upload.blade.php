@@ -26,107 +26,229 @@
 
 <div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 font-sans">
 
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Upload Files</h2>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage and upload your files to the Data Center.</p>
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Upload Management</h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Control and monitor your drawing submissions.</p>
+        </div>
+        <a href="{{ route('drawing.upload') }}"
+            class="inline-flex items-center gap-2 justify-center px-6 py-3 border border-transparent text-sm font-bold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
+            <i class="fa-solid fa-plus-circle text-lg"></i>
+            <span>Upload New Drawing</span>
+        </a>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-full">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
+    <div class="flex flex-col lg:flex-row gap-8">
+        {{-- Sidebar Filters --}}
+        <aside class="w-full lg:w-72 flex-shrink-0 space-y-6">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-md border border-gray-200 dark:border-gray-700 sticky top-24">
+                <div class="flex items-center gap-2 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
+                    <i class="fa-solid fa-filter text-indigo-500"></i>
+                    <h3 class="font-bold text-gray-900 dark:text-gray-100 text-sm">Quick Filters</h3>
+                </div>
+
+                <div class="space-y-5">
+                    <div class="relative">
+                        <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Search</label>
+                        <div class="relative">
+                            <input type="text" id="custom-upload-search" 
+                                class="block w-full pl-4 pr-10 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-md text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all dark:text-gray-100"
+                                placeholder="Part No, ECN...">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <i id="search-icon-static" class="fa-solid fa-magnifying-glass text-gray-400 text-[10px]"></i>
+                                <i id="search-icon-loading" class="fa-solid fa-spinner fa-spin text-indigo-500 text-[10px] opacity-0 absolute"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Customer</label>
+                        <select id="filter-customer" class="js-upload-filter w-full"></select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Model</label>
+                        <select id="filter-model" class="js-upload-filter w-full"></select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Doc Type</label>
+                        <select id="filter-doc-type" class="js-upload-filter w-full"></select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Category</label>
+                        <select id="filter-category" class="js-upload-filter w-full"></select>
+                    </div>
+
+                    <button id="btnResetUploadFilters" class="w-full py-2.5 text-xs font-semibold text-gray-500 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        Reset All Filters
+                    </button>
+                </div>
             </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Upload</p>
-                <p id="totalUpload" class="text-2xl font-semibold text-gray-900 dark:text-gray-100">-</p>
+        </aside>
+
+        {{-- Main Content --}}
+        <main class="flex-1 min-w-0 space-y-8">
+            {{-- KPI Row - Compact --}}
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                @foreach([
+                    ['id' => 'totalUpload',  'label' => 'Total',    'icon' => 'fa-cloud-arrow-up',  'color' => 'indigo'],
+                    ['id' => 'totalDraft',   'label' => 'Draft',    'icon' => 'fa-file-pen',        'color' => 'blue'],
+                    ['id' => 'totalPending', 'label' => 'Pending',  'icon' => 'fa-hourglass-start', 'color' => 'yellow'],
+                    ['id' => 'totalRejected','label' => 'Rejected', 'icon' => 'fa-ban',             'color' => 'red']
+                ] as $card)
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-md border border-gray-200 dark:border-gray-700 flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-md bg-{{ $card['color'] }}-100 dark:bg-{{ $card['color'] }}-900/30 flex items-center justify-center text-{{ $card['color'] }}-600 dark:text-{{ $card['color'] }}-400">
+                        <i class="fa-solid {{ $card['icon'] }}"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{{ $card['label'] }}</p>
+                        <p id="{{ $card['id'] }}" class="text-xl font-bold text-gray-900 dark:text-gray-100">-</p>
+                    </div>
+                </div>
+                @endforeach
             </div>
-        </div>
-        <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-full">
-                <i class="fa-solid fa-file-pen fa-lg"></i>
-            </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Draft</p>
-                <p id="totalDraft" class="text-2xl font-semibold text-gray-900 dark:text-gray-100">-</p>
-            </div>
-        </div>
-        {{-- Card 3 --}}
-        <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-yellow-500 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/50 rounded-full">
-                <i class="fa-solid fa-hourglass-half fa-lg"></i>
-            </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Pending</p>
-                <p id="totalPending" class="text-2xl font-semibold text-gray-900 dark:text-gray-100">-</p>
-            </div>
-        </div>
-        {{-- Card 4 --}}
-        <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-            <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-red-500 dark:text-red-400 bg-red-100 dark:bg-red-900/50 rounded-full">
-                <i class="fa-solid fa-ban fa-lg"></i>
-            </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Rejected</p>
-                <p id="totalRejected" class="text-2xl font-semibold text-gray-900 dark:text-gray-100">-</p>
-            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+                {{-- Status Tabs --}}
+                <div class="px-6 border-b border-gray-100 dark:border-gray-700 flex items-center gap-6 overflow-x-auto no-scrollbar" id="status-tabs-container">
+                    @foreach(['All' => 'All Files', 'draft' => 'Draft', 'pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected'] as $val => $text)
+                    <button type="button" 
+                        class="status-tab relative py-4 text-sm font-semibold transition-all whitespace-nowrap {{ $val === 'All' ? 'text-indigo-600 active-tab' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300' }}"
+                        data-status="{{ $val }}">
+                        {{ $text }}
+                        <span class="absolute bottom-0 left-0 w-full h-1 bg-indigo-600 rounded-t-full tab-indicator {{ $val === 'All' ? 'opacity-100' : 'opacity-0' }} transition-opacity duration-200"></span>
+                    </button>
+                    @endforeach
+                </div>
+
+                <div class="p-0 overflow-x-auto w-full">
+                    <table id="fileTable" class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500 font-semibold">
+                    <tr>
+                        <th class="px-4 py-3 w-12 text-center">No</th>
+                        <th class="px-4 py-3 min-w-[200px]">Package Info</th>
+                        <th class="px-4 py-3 w-28">Revision</th>
+                        <th class="px-4 py-3">ECN No</th>
+                        <th class="px-4 py-3">Category</th>
+                        <th class="px-4 py-3">Part Group</th>
+                        <th class="px-4 py-3 w-32">Uploaded At</th>
+                        <th class="px-4 py-3 w-28 text-center">Status</th>
+                        <th class="px-4 py-3 w-24 text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
+                    {{-- JS will inject initial skeletons here immediately on load --}}
+                </tbody>
+            </table>
         </div>
     </div>
-
-    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-2 mb-3">
-            <a href="{{ route('drawing.upload') }}"
-                class="w-full sm:w-auto inline-flex items-center gap-2 justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800">
-                <i class="fa-solid fa-upload"></i>
-                Upload New Drawing
-            </a>
-        </div>
-
-        <!-- <div class="overflow-x-auto > -->
-        <table id="fileTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-            <thead class="bg-gray-50 dark:bg-gray-700/50">
-                <tr>
-                    <th class="py-3 px-4 text-left ...">No</th>
-                    <th class="py-3 px-4 text-left ...">Package Info</th>
-                    <th class="py-3 px-4 text-left ...">Revision</th>
-                    <th class="py-3 px-4 text-left ...">ECN No</th>
-                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Doc Group</th>
-                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sub-Category</th>
-                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Part Group</th>
-                    <th class="py-3 px-4 text-left ...">Uploaded At</th>
-                    <th class="py-3 px-4 text-left ...">Status</th>
-                    <th class="py-3 px-4 text-center ...">Action</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
-            </tbody>
-        </table>
-        <!-- </div> -->
-    </div>
-
+</main>
+</div>
 </div>
 
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    let currentStatus = 'All';
+    
+    // Helper for highlighting search terms (Stabilo effect)
+    function highlightText(data, searchVal) {
+        if (!searchVal || !data) return data;
+        const safeSearch = searchVal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${safeSearch})`, 'gi');
+        return data.toString().replace(regex, '<span class="bg-yellow-200 text-gray-900">$1</span>');
+    }
+
+    // Skeleton Loader logic
+    function getSkeleton() {
+        return `
+            <tr class="skeleton-row">
+                <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-8 animate-pulse"></div></td>
+                <td class="px-4 py-4"><div class="space-y-2"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48 animate-pulse"></div><div class="h-3 bg-gray-100 dark:bg-gray-800 rounded w-32 animate-pulse"></div></div></td>
+                <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse"></div></td>
+                <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div></td>
+                <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div></td>
+                <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse"></div></td>
+                <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div></td>
+                <td class="px-4 py-4" align="center"><div class="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-16 animate-pulse"></div></td>
+                <td class="px-4 py-4" align="center"><div class="h-8 bg-gray-200 dark:bg-gray-700 rounded-md w-8 animate-pulse"></div></td>
+            </tr>
+        `;
+    }
+
     $(document).ready(function() {
-        loadKpiStats();
+        // 1. URL Sync & Initial State (Power Feature)
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Restore filters from URL if present
+        if(urlParams.get('q')) $('#custom-upload-search').val(urlParams.get('q'));
+        if(urlParams.get('status')) {
+            currentStatus = urlParams.get('status');
+            // Update tab UI
+            $('.status-tab').removeClass('text-indigo-600 active-tab').addClass('text-gray-400');
+            $('.tab-indicator').removeClass('opacity-100').addClass('opacity-0');
+            const $activeTab = $(`.status-tab[data-status="${currentStatus}"]`);
+            $activeTab.removeClass('text-gray-400').addClass('text-indigo-600 active-tab');
+            $activeTab.find('.tab-indicator').removeClass('opacity-0').addClass('opacity-100');
+        }
+
+        // 2. Keyboard shortcut: Press "/" to search
+        $(document).on('keyup', function(e) {
+            if (e.key === '/' && !$(e.target).is('input, textarea, select')) {
+                $('#custom-upload-search').focus();
+            }
+        });
+
+        // 3. Inject initial skeletons
+        let initialSkeletons = '';
+        for (let i = 0; i < 8; i++) initialSkeletons += getSkeleton();
+        $('#fileTable tbody').html(initialSkeletons);
+
+        initSelect2();
+
+        let searchTimeout;
+        const $staticIcon = $('#search-icon-static');
+        const $loadingIcon = $('#search-icon-loading');
 
         let table = $('#fileTable').DataTable({
-            processing: true,
+            processing: false,
             serverSide: true,
+            responsive: false,
+            autoWidth: false,
+            deferRender: true, // Optimization: lazy render rows
+            stateSave: false,  // Set to true if you want to remember filters on refresh
             ajax: {
                 url: '{{ route("api.files.list") }}',
                 type: 'GET',
+                data: function(d) {
+                    d.customer = $('#filter-customer').val();
+                    d.model = $('#filter-model').val();
+                    d.doc_type = $('#filter-doc-type').val();
+                    d.category = $('#filter-category').val();
+                    d.status = currentStatus;
+                    d.search = { value: $('#custom-upload-search').val() };
+                }
             },
-            order: [
-                [7, "desc"]
-            ],
-            columns: [{
+            order: [[6, "desc"]], 
+            dom: 't<"flex flex-col sm:flex-row justify-between items-center p-6 border-t border-gray-100 dark:border-gray-700 gap-4" <"text-gray-500 dark:text-gray-400 text-xs font-mono"i> <"flex justify-end"p>>',
+            
+            createdRow: function(row, data, dataIndex) {
+                 $(row).addClass('hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-colors cursor-pointer border-b border-gray-50 dark:border-gray-800 last:border-0 text-gray-900 dark:text-gray-100');
+                 $('td', row).addClass('py-4 px-4 align-middle');
+            },
+
+            columns: [
+                {
                     data: null,
                     name: 'No',
                     orderable: false,
-                    searchable: false
+                    searchable: false,
+                    className: 'text-center text-gray-400 font-mono text-[10px]'
                 },
                 {
                     data: null,
@@ -134,7 +256,27 @@
                     searchable: true,
                     orderable: false,
                     render: function(data, type, row) {
-                        return `${row.customer} - ${row.model} - ${row.part_no}`;
+                        const searchVal = $('#custom-upload-search').val();
+                        
+                        // Line 1: Part No + Partners
+                        let mainText = row.part_no;
+                        if (row.partners) {
+                            let pClean = row.partners.replace(/,/g, ' / ');
+                            mainText += ` / ${pClean}`;
+                        }
+                        mainText = highlightText(mainText, searchVal);
+
+                        // Line 2: Customer - Model
+                        let subText = highlightText(`${row.customer} - ${row.model}`, searchVal);
+
+                        return `
+                            <div class="flex flex-col min-w-[200px]">
+                                <span class="text-sm font-bold text-gray-900 dark:text-gray-100">${mainText}</span>
+                                <div class="text-[11px] text-gray-600 dark:text-gray-400 mt-0.5 whitespace-nowrap">
+                                    ${subText}
+                                </div>
+                            </div>
+                        `;
                     }
                 },
                 {
@@ -143,82 +285,167 @@
                     searchable: true,
                     orderable: false,
                     render: function(data, type, row) {
-                        let revStr = `Rev${row.revision_no}`;
-                        if (row.revision_label_name) {
-                            return `${row.revision_label_name} - ${revStr}`;
+                        let labelBadges = '';
+                        if(row.revision_label_name) {
+                            labelBadges = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 mr-1 whitespace-nowrap">${row.revision_label_name}</span>`;
                         }
-                        return revStr;
+                        return `
+                            <div class="flex items-center">
+                                ${labelBadges}
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                                    REV ${row.revision_no}
+                                </span>
+                            </div>
+                        `;
                     }
                 },
                 {
                     data: 'ecn_no',
                     name: 'ecn_no',
-                    searchable: true
+                    searchable: true,
+                    render: function(data) {
+                        const searchVal = $('#custom-upload-search').val();
+                        return data ? `<span class="font-mono text-[11px] text-gray-600 dark:text-gray-400">${highlightText(data, searchVal)}</span>` : '<span class="text-gray-200">-</span>';
+                    }
                 },
                 {
-                    data: 'doctype_group',
+                    data: null,
                     name: 'doctype_group',
                     searchable: true,
-                    orderable: true
-                },
-                {
-                    data: 'doctype_subcategory',
-                    name: 'doctype_subcategory',
-                    searchable: true,
-                    orderable: true
+                    orderable: true,
+                    render: function(data, type, row) {
+                        return `
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-gray-700 dark:text-gray-300 capitalize">${row.doctype_group}</span>
+                                <span class="text-[10px] text-gray-600 dark:text-gray-400">${row.doctype_subcategory || ''}</span>
+                            </div>
+                        `;
+                    }
                 },
                 {
                     data: 'part_group',
                     name: 'part_group',
                     searchable: true,
-                    orderable: true
+                    orderable: true,
+                    render: d => `<span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap p-1 bg-gray-50 dark:bg-gray-800 rounded border border-gray-100 dark:border-gray-700">${d}</span>`
                 },
                 {
                     data: 'uploaded_at',
                     name: 'uploaded_at',
-                    searchable: true
+                    searchable: true,
+                    render: function(data) {
+                        if(!data) return '-';
+                        const d = new Date(data);
+                        return `
+                            <div class="flex flex-col text-[11px] font-mono text-gray-600 dark:text-gray-400">
+                                <span>${d.toLocaleDateString()}</span>
+                                <span class="opacity-80 text-[10px]">${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            </div>
+                        `;
+                    }
                 },
                 {
                     data: 'status',
                     name: 'status',
-                    render: function(data, type, row) {
-                        let colorClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-300';
-                        if (data === 'draft') {
-                            colorClass = 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300';
-                        } else if (data === 'pending') {
-                            colorClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
-                        } else if (data === 'rejected') {
-                            colorClass = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
-                        } else if (data === 'approved') {
-                            colorClass = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
-                        }
-                        return `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClass}">${data}</span>`;
+                    className: 'text-center',
+                    render: function(data) {
+                        let base = 'px-2 py-2 text-[9px] font-black uppercase rounded-full shadow-sm border ';
+                        let colors = {
+                            draft: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
+                            pending: 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
+                            rejected: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
+                            approved: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800'
+                        };
+                        return `<span class="${base} ${colors[data] || 'bg-gray-100 text-gray-600 border-gray-200'}">${data}</span>`;
                     }
                 },
                 {
                     data: null,
-                    name: 'Info',
+                    name: 'Action',
                     orderable: false,
                     searchable: false,
+                    className: 'text-center',
                     render: function(data, type, row) {
-                        return `<button class="text-blue-600 hover:text-blue-900 dark:hover:text-blue-300 dark:text-blue-400 transition-colors" title="Details" onclick="openPackageDetails('${row.id}')"><i class="fa-solid fa-eye fa-lg"></i></button>`;
+                        return `
+                        <button type="button" onclick="openPackageDetails('${row.id}')" 
+                            class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-indigo-50 text-indigo-600 dark:text-indigo-400 dark:hover:bg-gray-700 transition-all mx-auto border border-transparent hover:border-indigo-100" 
+                            title="Manage Files">
+                            <i class="fa-solid fa-up-right-from-square text-sm"></i>
+                        </button>`;
                     }
                 }
-            ],
-            responsive: true,
-            dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
-            createdRow: function(row, data, dataIndex) {
-                $(row).addClass(
-                    'transition-colors duration-150 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700'
-                );
-            }
+            ]
         });
 
+        // Tab Handler
+        $('.status-tab').on('click', function() {
+            const $container = $('#status-tabs-container');
+            
+            // 1. Reset all tabs
+            $container.find('.status-tab').removeClass('text-indigo-600 active-tab').addClass('text-gray-400');
+            $container.find('.tab-indicator').removeClass('opacity-100').addClass('opacity-0');
+            
+            // 2. Activate clicked tab
+            $(this).removeClass('text-gray-400').addClass('text-indigo-600 active-tab');
+            $(this).find('.tab-indicator').removeClass('opacity-0').addClass('opacity-100');
+
+            currentStatus = $(this).data('status');
+            syncUrlWithFilters();
+            table.draw();
+        });
+
+        function syncUrlWithFilters() {
+            const params = new URLSearchParams(window.location.search);
+            const q = $('#custom-upload-search').val();
+            const status = currentStatus;
+            
+            if (q) params.set('q', q); else params.delete('q');
+            if (status && status !== 'All') params.set('status', status); else params.delete('status');
+            
+            const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            window.history.replaceState({path: newUrl}, '', newUrl);
+        }
+
+        // Skeleton Loader Event Handling - Triggered on every AJAX start
+        table.on('preXhr.dt', function (e, settings, data) {
+            let skeletonHtml = '';
+            for (let i = 0; i < 8; i++) skeletonHtml += getSkeleton();
+            $('#fileTable tbody').html(skeletonHtml);
+        });
+
+        // High-speed search handler
+        $('#custom-upload-search').on('keyup', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                $staticIcon.addClass('opacity-0');
+                $loadingIcon.removeClass('opacity-0').addClass('opacity-100');
+                syncUrlWithFilters();
+                table.draw();
+            }, 500);
+        });
+
+        $('#btnResetUploadFilters').on('click', function() {
+            $('.js-upload-filter').val('All').trigger('change');
+            $('#custom-upload-search').val('').trigger('keyup');
+            $('.status-tab[data-status="All"]').trigger('click');
+        });
+
+        $('.js-upload-filter').on('change', function() { table.draw(); });
+
         table.on('draw.dt', function() {
+            $loadingIcon.removeClass('opacity-100').addClass('opacity-0');
+            $staticIcon.removeClass('opacity-0');
+            
+            const json = table.ajax.json();
+            if (json && json.kpis) {
+                $('#totalUpload').text(json.kpis.totalupload || 0);
+                $('#totalDraft').text(json.kpis.totaldraft || 0);
+                $('#totalPending').text(json.kpis.totalpending || 0);
+                $('#totalRejected').text(json.kpis.totalrejected || 0);
+            }
+
             var PageInfo = $('#fileTable').DataTable().page.info();
-            table.column(0, {
-                page: 'current'
-            }).nodes().each(function(cell, i) {
+            table.column(0, { page: 'current' }).nodes().each(function(cell, i) {
                 cell.innerHTML = i + 1 + PageInfo.start;
             });
         });
@@ -269,18 +496,48 @@
         });
     });
 
-    function loadKpiStats() {
-        fetch('{{ route("api.files.kpi-stats") }}')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('totalUpload').textContent = data.totalupload || 0;
-                document.getElementById('totalDraft').textContent = data.totaldraft || 0;
-                document.getElementById('totalPending').textContent = data.totalpending || 0;
-                document.getElementById('totalRejected').textContent = data.totalrejected || 0;
-            })
-            .catch(error => {
-                console.error('Error loading KPI stats:', error);
+    function initSelect2() {
+        const selectConfigs = [
+            { id: '#filter-customer', select2: 'customer' },
+            { id: '#filter-model',    select2: 'model',    dependsOn: '#filter-customer' },
+            { id: '#filter-doc-type', select2: 'doc_type' },
+            { id: '#filter-category', select2: 'category', dependsOn: '#filter-doc-type' }
+        ];
+
+        selectConfigs.forEach(conf => {
+            $(conf.id).select2({
+                placeholder: 'All',
+                allowClear: false,
+                ajax: {
+                    url: '{{ route("api.export.filters") }}',
+                    dataType: 'json',
+                    delay: 250,
+                    data: params => {
+                        let query = {
+                            select2: conf.select2,
+                            q: params.term,
+                            page: params.page || 1
+                        };
+                        if (conf.dependsOn) {
+                            const depVal = $(conf.dependsOn).val();
+                            if (conf.select2 === 'model') query.customer_code = depVal;
+                            if (conf.select2 === 'category') query.doc_type = depVal;
+                        }
+                        return query;
+                    },
+                    processResults: (data, params) => {
+                        params.page = params.page || 1;
+                        return {
+                            results: data.results,
+                            pagination: { more: data.pagination.more }
+                        };
+                    },
+                    cache: true
+                }
             });
+        });
+
+        $('#filter-status').select2({ minimumResultsForSearch: -1 });
     }
 
     function deleteFile(id) {
