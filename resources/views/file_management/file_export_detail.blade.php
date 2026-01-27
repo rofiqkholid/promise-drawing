@@ -150,9 +150,20 @@
                 <button @click="toggleSection('{{$category}}')"
                     class="w-full p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between focus:outline-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                     :aria-expanded="openSections.includes('{{$category}}')">
-                    <div class="flex items-center">
-                        <i class="fa-solid {{$icon}} mr-3 text-gray-500 dark:text-gray-400"></i>
-                        <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $title }}</span>
+                    <div class="flex flex-col gap-0.5">
+                        <div class="flex items-center">
+                            <i class="fa-solid {{$icon}} mr-3 w-4 text-center text-gray-500 dark:text-gray-400"></i>
+                            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {{ $title }}
+                            </span>
+                        </div>
+
+                        @if ($category === '3d')
+                        <div class="ml-7 flex items-center text-[10px] text-gray-500 dark:text-gray-400">
+                            <i class="fa-solid fa-circle-info text-blue-500 mr-1.5 opacity-75"></i>
+                            <span>Preview available for .igs/.iges, .stp/.step files only</span>
+                        </div>
+                    @endif
                     </div>
                     <span
                         class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full"
@@ -201,8 +212,9 @@
         </div>
 
         <div class="lg:col-span-8">
-            <div
-                class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+           <div x-ref="container2D" 
+         class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden relative flex flex-col"
+         :class="is2DFullscreen ? 'fixed inset-0 z-[100] rounded-none border-none' : ''">
                 <div x-show="!selectedFile" x-cloak
                     class="flex flex-col items-center justify-center h-96 p-6 bg-gray-50 dark:bg-gray-900/50 text-center">
                     <i class="fa-solid fa-hand-pointer text-5xl text-gray-400 dark:text-gray-500"></i>
@@ -219,6 +231,12 @@
                             <p class="text-xs text-gray-500 dark:text-gray-400" x-text="fileSizeInfo()">
                             </p>
                         </div>
+                        <button @click="toggle2DFullscreen()" 
+                        class="p-2 ml-4 text-gray-500 hover:text-blue-600 transition-colors flex items-center gap-2 text-sm font-medium" 
+                        title="Toggle Fullscreen">
+                    <span x-text="is2DFullscreen ? 'Exit Fullscreen' : 'Fullscreen'"></span>
+                    <i class="fa-solid" :class="is2DFullscreen ? 'fa-compress' : 'fa-expand'"></i>
+                </button>
                     </div>
 
 
@@ -678,6 +696,8 @@
                                 <div x-show="hpglError" class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded" x-text="hpglError"></div>
                             </div>
                     </div>
+    
+
                     </template>
 
                     <template x-if="isCad(selectedFile?.name)">
@@ -1745,6 +1765,7 @@
                 object: null
             },
             isFullscreen: false,
+            is2DFullscreen: false,
             partInfo: {
                 volume: '-',
                 area: '-'
@@ -5006,6 +5027,20 @@
 
                 this._forceRender();
             },
+            toggle2DFullscreen() {
+    const el = this.$refs.container2D;
+
+    if (!document.fullscreenElement) {
+        if (el.requestFullscreen) {
+            el.requestFullscreen();
+        } else if (el.webkitRequestFullscreen) {
+            el.webkitRequestFullscreen();
+        }
+        // State is2DFullscreen akan diupdate via event listener di init()
+    } else {
+        document.exitFullscreen();
+    }
+},
 
             toggleFullscreen() {
                 // Ganti target ke container paling luar yang mencakup toolbar
@@ -5464,6 +5499,17 @@
 
             /* ===== Lifecycle ===== */
             init() {
+                const fsChangeHandler = () => {
+        this.is2DFullscreen = !!document.fullscreenElement;
+        
+        // Paksa render ulang untuk memperbaiki bug 'double' pada beberapa browser
+        this.$nextTick(() => {
+            window.dispatchEvent(new Event('resize'));
+        });
+    };
+
+    document.addEventListener('fullscreenchange', fsChangeHandler);
+    document.addEventListener('webkitfullscreenchange', fsChangeHandler);
                 window.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape') {}
                 });
