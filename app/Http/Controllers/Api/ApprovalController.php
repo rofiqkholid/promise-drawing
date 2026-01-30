@@ -48,6 +48,49 @@ class ApprovalController extends Controller
         });
         return $data;
     }
+    /**
+     * Menentukan level approval user.
+     */
+    private function getApprovalLevel(User $user): int
+    {
+        /**
+         * DAFTAR USER APPROVER
+         * ===================
+         */
+
+        $level3Approvers = [
+            // contoh:
+            7, // Pak Gunawan
+        ];
+
+        $level2Approvers = [
+            6, // Pak Budi
+        ];
+
+        $level1Approvers = [
+            5, // Pak Riyan
+            1, // Admin
+        ];
+
+        /**
+         * PRIORITAS LEVEL TERTINGGI
+         * =========================
+         */
+        if (in_array($user->id, $level3Approvers, true)) {
+            return 3;
+        }
+
+        if (in_array($user->id, $level2Approvers, true)) {
+            return 2;
+        }
+
+        if (in_array($user->id, $level1Approvers, true)) {
+            return 1;
+        }
+
+        return 0;
+    }
+
     public function kpi(Request $req)
     {
         $q = DB::table('doc_package_revisions as dpr')
@@ -59,75 +102,124 @@ class ApprovalController extends Controller
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
             ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
             ->where('dpr.revision_status', '<>', 'draft')
-            
-        ->where('dp.is_delete', 0)
-        ->where('p.is_delete', 0);
+            ->where('dp.is_delete', 0)
+            ->where('p.is_delete', 0);
 
+        // ========================
+        // JOIN APPROVAL (WAJIB DULU)
+        // ========================
+        $q->leftJoin('package_approvals as pa', 'pa.revision_id', '=', 'dpr.id');
+
+        // ========================
+        // FILTERS
+        // ========================
         if ($req->filled('customer') && $req->customer !== 'All') {
             $q->where('c.code', $req->customer);
         }
+
         if ($req->filled('model') && $req->model !== 'All') {
             $q->where('m.name', $req->model);
         }
+
         if ($req->filled('doc_type') && $req->doc_type !== 'All') {
             $q->where('dtg.name', $req->doc_type);
         }
+
         if ($req->filled('category') && $req->category !== 'All') {
             $q->where('dsc.name', $req->category);
         }
+
         if ($req->filled('status') && $req->status !== 'All') {
-            
-            $statusMapping = [
-                'Waiting'  => ['pending', 'waiting'],
-                'Approved' => ['approved'],
-                'Rejected' => ['rejected'],
-            ];
-            $vals = $statusMapping[$req->status] ?? [];
-            if ($vals) {
-                $q->whereIn('dpr.revision_status', $vals);
+            if ($req->status === 'Approved') {
+                $q->where('pa.decision', 'approved');
+            } elseif ($req->status === 'Rejected') {
+                $q->where('pa.decision', 'rejected');
+            } elseif ($req->status === 'Waiting') {
+                $q->where('pa.decision', 'pending');
             }
         }
-        
+
         if ($req->filled('project_status')) {
             $ps = $req->project_status;
-            if (strcasecmp($ps, 'All') !== 0) {   
+            if (strcasecmp($ps, 'All') !== 0) {
                 $q->where('ps.name', $ps);
             }
         }
 
-
+        // ========================
+        // KPI AGGREGATION
+        // ========================
         $row = $q->selectRaw("
-            COUNT(*) AS total,
-            SUM(CASE WHEN dpr.revision_status = 'pending'  THEN 1 ELSE 0 END) AS waiting,
-            SUM(CASE WHEN dpr.revision_status = 'approved' THEN 1 ELSE 0 END) AS approved,
-            SUM(CASE WHEN dpr.revision_status = 'rejected' THEN 1 ELSE 0 END) AS rejected
-        ")->first();
+        COUNT(*) AS total,
 
-        $total    = (int)($row->total ?? 0);
-        $waiting  = (int)($row->waiting ?? 0);
-        $approved = (int)($row->approved ?? 0);
-        $rejected = (int)($row->rejected ?? 0);
+        SUM(
+            CASE
+                WHEN pa.decision = 'pending'
+                     AND COALESCE(pa.lvl1, 0) = 0
+                THEN 1 ELSE 0
+            END
+        ) AS waiting_l1,
+
+        SUM(
+            CASE
+                WHEN pa.decision = 'pending'
+                     AND COALESCE(pa.lvl1, 0) = 1
+                     AND COALESCE(pa.lvl2, 0) = 0
+                THEN 1 ELSE 0
+            END
+        ) AS waiting_l2,
+         SUM(
+    CASE
+        WHEN pa.decision = 'pending'
+             AND COALESCE(pa.lvl1, 0) = 1
+             AND COALESCE(pa.lvl2, 0) = 1
+             AND COALESCE(pa.lvl3, 0) = 0
+        THEN 1 ELSE 0
+    END
+) AS waiting_l3,
+
+        SUM(CASE WHEN pa.decision = 'approved' THEN 1 ELSE 0 END) AS approved,
+        SUM(CASE WHEN pa.decision = 'rejected' THEN 1 ELSE 0 END) AS rejected
+    ")->first();
+
+        // ========================
+        // RESPONSE
+        // ========================
+        $total     = (int) ($row->total ?? 0);
+        $waitingL1 = (int) ($row->waiting_l1 ?? 0);
+        $waitingL2 = (int) ($row->waiting_l2 ?? 0);
+        $waitingL3 = (int) ($row->waiting_l3 ?? 0);
+        $approved  = (int) ($row->approved ?? 0);
+        $rejected  = (int) ($row->rejected ?? 0);
 
         return response()->json([
-            'cards' => compact('total', 'waiting', 'approved', 'rejected'),
+            'cards' => [
+                'total'      => $total,
+                'waiting_l1' => $waitingL1,
+                'waiting_l2' => $waitingL2,
+                'waiting_l3' => $waitingL3,
+                'approved'   => $approved,
+                'rejected'   => $rejected,
+            ],
             'metrics' => [
                 'approval_rate'  => $total ? round($approved * 100 / $total, 2) : 0.0,
                 'rejection_rate' => $total ? round($rejected * 100 / $total, 2) : 0.0,
-                'wip_rate'       => $total ? round($waiting  * 100 / $total, 2) : 0.0,
+                'wip_rate'       => $total ? round(($waitingL1 + $waitingL2 + $waitingL3) * 100 / $total, 2) : 0.0,
             ],
         ]);
     }
 
+
     public function filters(Request $request): JsonResponse
     {
-        
+
         if ($request->filled('select2')) {
             $field   = $request->get('select2');
             $q       = trim($request->get('q', ''));
             $page    = max(1, (int)$request->get('page', 1));
             $perPage = 20;
 
-            
+
             $customerCode = $request->get('customer_code');
             $docTypeName  = $request->get('doc_type');
 
@@ -189,18 +281,28 @@ class ApprovalController extends Controller
 
                 case 'status':
                     $all = collect([
-                        ['id' => 'Waiting',  'text' => 'Waiting'],
-                        ['id' => 'Approved', 'text' => 'Approved'],
-                        ['id' => 'Rejected', 'text' => 'Rejected'],
+                        ['id' => 'Waiting L1', 'text' => 'Waiting L1'],
+                        ['id' => 'Waiting L2', 'text' => 'Waiting L2'],
+                        ['id' => 'Waiting L3', 'text' => 'Waiting L3'],
+                        ['id' => 'Approved',   'text' => 'Approved'],
+                        ['id' => 'Rejected',   'text' => 'Rejected'],
                     ]);
+
                     $filtered = $q
-                        ? $all->filter(fn($r) => str_contains(strtolower($r['text']), strtolower($q)))
+                        ? $all->filter(
+                            fn($r) =>
+                            str_contains(strtolower($r['text']), strtolower($q))
+                        )
                         : $all;
+
                     $total = $filtered->count();
-                    $items = $filtered->slice(($page - 1) * $perPage, $perPage)->values();
+                    $items = $filtered
+                        ->slice(($page - 1) * $perPage, $perPage)
+                        ->values();
                     break;
 
-                case 'project_status':   
+
+                case 'project_status':
                     $builder = DB::table('project_status as ps')
                         ->selectRaw('ps.name AS id, ps.name AS text')
                         ->when($q, fn($x) => $x->where('ps.name', 'like', "%{$q}%"))
@@ -256,11 +358,14 @@ class ApprovalController extends Controller
             'models'     => $models,
             'doc_types'  => $docTypes,
             'categories' => $categories,
-            'statuses'   => collect([
-                ['name' => 'Waiting'],
+            'statuses' => collect([
+                ['name' => 'Waiting L1'],
+                ['name' => 'Waiting L2'],
+                ['name' => 'Waiting L3'],
                 ['name' => 'Approved'],
                 ['name' => 'Rejected'],
             ]),
+
         ]);
     }
 
@@ -281,14 +386,17 @@ class ApprovalController extends Controller
                 'pa.requested_at',
                 'pa.decided_at',
                 'pa.decision',
-                'pa.decided_by'
+                'pa.decided_by',
+                'pa.lvl1',
+                'pa.lvl2',
+                'pa.lvl3'
             )
             ->selectRaw("
-            ROW_NUMBER() OVER (
-              PARTITION BY pa.revision_id
-              ORDER BY COALESCE(pa.decided_at, pa.requested_at) DESC, pa.id DESC
-            ) as rn
-        ");
+        ROW_NUMBER() OVER (
+          PARTITION BY pa.revision_id
+          ORDER BY COALESCE(pa.decided_at, pa.requested_at) DESC, pa.id DESC
+        ) as rn
+    ");
 
         $query = DB::table('doc_package_revisions as dpr')
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
@@ -304,9 +412,9 @@ class ApprovalController extends Controller
                     ->where('pa.rn', '=', 1);
             })
             ->where('dpr.revision_status', '<>', 'draft')
-            
-    ->where('dp.is_delete', 0)
-    ->where('p.is_delete', 0);
+
+            ->where('dp.is_delete', 0)
+            ->where('p.is_delete', 0);
 
         $recordsTotal = (clone $query)->count();
 
@@ -324,20 +432,37 @@ class ApprovalController extends Controller
             $query->where('dsc.name', $request->category);
         }
         if ($request->filled('status') && $request->status !== 'All') {
-            $statusMap = [
-                'Waiting'  => ['pending', 'waiting'],
-                'Approved' => ['approved'],
-                'Rejected' => ['rejected'],
-            ];
-            $vals = $statusMap[$request->status] ?? [];
-            if ($vals) {
-                $placeholders = implode(',', array_fill(0, count($vals), '?'));
-                $query->whereRaw(
-                    "COALESCE(pa.decision, dpr.revision_status) IN ($placeholders)",
-                    $vals
-                );
+
+            switch ($request->status) {
+
+                case 'Waiting L1':
+                    $query->where('pa.decision', 'pending')
+                        ->whereRaw('COALESCE(pa.lvl1,0) = 0');
+                    break;
+
+                case 'Waiting L2':
+                    $query->where('pa.decision', 'pending')
+                        ->whereRaw('COALESCE(pa.lvl1,0) = 1')
+                        ->whereRaw('COALESCE(pa.lvl2,0) = 0');
+                    break;
+                case 'Waiting L3':
+                    $query->where('pa.decision', 'pending')
+                        ->whereRaw('COALESCE(pa.lvl1,0) = 1')
+                        ->whereRaw('COALESCE(pa.lvl2,0) = 1')
+                        ->whereRaw('COALESCE(pa.lvl3,0) = 0');
+                    break;
+
+                case 'Approved':
+                    $query->where('pa.decision', 'approved');
+                    break;
+
+                case 'Rejected':
+                    $query->where('pa.decision', 'rejected');
+                    break;
             }
         }
+
+
 
         if ($request->filled('project_status')) {
             $ps = $request->project_status;
@@ -381,16 +506,27 @@ class ApprovalController extends Controller
             'pg.code_part_group as part_group',
             'dpr.ecn_no as ecn_no',
             'dpr.revision_no as revision',
-            'dpr.receipt_date as receipt_date',   
+            'dpr.receipt_date as receipt_date',
             DB::raw("
-            CASE COALESCE(pa.decision, dpr.revision_status)
-                WHEN 'pending'  THEN 'Waiting'
-                WHEN 'waiting'  THEN 'Waiting'
-                WHEN 'approved' THEN 'Approved'
-                WHEN 'rejected' THEN 'Rejected'
-                ELSE COALESCE(pa.decision, dpr.revision_status)
-            END as status
-        "),
+CASE
+    WHEN pa.decision = 'pending' AND COALESCE(pa.lvl1,0) = 0
+        THEN 'Waiting L1'
+    WHEN pa.decision = 'pending'
+         AND COALESCE(pa.lvl1,0) = 1
+         AND COALESCE(pa.lvl2,0) = 0
+        THEN 'Waiting L2'
+    WHEN pa.decision = 'pending'
+         AND COALESCE(pa.lvl1,0) = 1
+         AND COALESCE(pa.lvl2,0) = 1
+         AND COALESCE(pa.lvl3,0) = 0
+        THEN 'Waiting L3'
+    WHEN pa.decision = 'approved'
+        THEN 'Approved'
+    WHEN pa.decision = 'rejected'
+        THEN 'Rejected'
+    ELSE 'Waiting'
+END as status
+"),
             'pa.requested_at as request_date',
             'pa.decided_at   as decision_date'
         );
@@ -400,7 +536,7 @@ class ApprovalController extends Controller
             'dpr.updated_at',
             'pa.requested_at',
             'pa.decided_at',
-            'dpr.receipt_date',     
+            'dpr.receipt_date',
             'dpr.revision_status',
             'c.code',
             'm.name',
@@ -436,12 +572,12 @@ class ApprovalController extends Controller
 
     public function showDetail(string $id)
     {
-        
+
         if (ctype_digit($id)) {
-            
+
             $revisionId = (int) $id;
         } else {
-            
+
             try {
                 $revisionId = decrypt($id);
             } catch (DecryptException $e) {
@@ -449,12 +585,12 @@ class ApprovalController extends Controller
             }
         }
 
-     
+
         $revision = DB::table('doc_package_revisions as dpr')
             ->leftJoin('users as ou', 'ou.id', '=', 'dpr.obsolete_by')
             ->leftJoin('departments as od', 'od.id', '=', 'ou.id_dept')
             ->where('dpr.id', $revisionId)
-           
+
             ->first([
                 'dpr.*',
                 'ou.name as obsolete_name',
@@ -466,12 +602,52 @@ class ApprovalController extends Controller
             abort(404, 'Approval request not found.');
         }
 
-       
+        // ================================
+        // AMBIL STATUS APPROVAL TERAKHIR
+        // ================================
+        $approval = DB::table('package_approvals')
+            ->where('revision_id', $revisionId)
+            ->orderByRaw('COALESCE(decided_at, requested_at) DESC')
+            ->first();
+
+        $approvalStatus = 'Waiting';
+
+        if ($approval) {
+            if ($approval->decision === 'approved') {
+                $approvalStatus = 'Approved';
+            } elseif ($approval->decision === 'rejected') {
+                $approvalStatus = 'Rejected';
+            } elseif ($approval->decision === 'pending') {
+
+                if ((int) $approval->lvl1 === 0) {
+                    $approvalStatus = 'Waiting L1';
+                } elseif (
+                    (int) $approval->lvl1 === 1 &&
+                    (int) $approval->lvl2 === 0
+                ) {
+                    $approvalStatus = 'Waiting L2';
+                } elseif (
+                    (int) $approval->lvl1 === 1 &&
+                    (int) $approval->lvl2 === 1 &&
+                    (int) $approval->lvl3 === 0
+                ) {
+                    $approvalStatus = 'Waiting L3';
+                }
+            }
+        }
+
+
+        if (!$approval) {
+            $approvalStatus = ucfirst($revision->revision_status ?? 'Waiting');
+        }
+
+
+
         $receiptDate = $revision->receipt_date
             ? Carbon::parse($revision->receipt_date)
             : null;
 
-      
+
         $uploadDateRevision = $revision->created_at
             ? Carbon::parse($revision->created_at)
             : null;
@@ -482,7 +658,7 @@ class ApprovalController extends Controller
             ? Carbon::parse($revision->obsolete_at)
             : null;
 
-     
+
         $lastApproval = DB::table('package_approvals as pa')
             ->leftJoin('users as u', 'u.id', '=', 'pa.decided_by')
             ->leftJoin('departments as d', 'd.id', '=', 'u.id_dept')
@@ -520,8 +696,8 @@ class ApprovalController extends Controller
             ->leftJoin('users as u', 'u.id', '=', 'dp.created_by')
             ->leftJoin('departments as dept', 'u.id_dept', '=', 'dept.id')
             ->where('dp.id', $revision->package_id)
-            ->where('dp.is_delete', 0)  
-            ->where('p.is_delete', 0) 
+            ->where('dp.is_delete', 0)
+            ->where('p.is_delete', 0)
             ->select(
                 'c.code as customer',
                 'm.name as model',
@@ -540,7 +716,7 @@ class ApprovalController extends Controller
             abort(404, 'Package not found.');
         }
 
-     
+
         $fileRows = DB::table('doc_package_revision_files')
             ->where('revision_id', $revisionId)
             ->select(
@@ -556,7 +732,7 @@ class ApprovalController extends Controller
             ->get();
 
 
-        
+
         $extList = $fileRows
             ->map(fn($r) => strtolower(pathinfo($r->name, PATHINFO_EXTENSION)))
             ->filter()
@@ -565,7 +741,7 @@ class ApprovalController extends Controller
 
         $extUpper = $extList->map(fn($e) => strtoupper($e));
 
-        
+
         $extIcons = $extUpper->isEmpty()
             ? []
             : FileExtensions::whereIn('code', $extUpper)
@@ -580,7 +756,7 @@ class ApprovalController extends Controller
                     $url = URL::signedRoute('preview.file', ['id' => $item->id]);
 
                     $ext = strtolower(pathinfo($item->name, PATHINFO_EXTENSION));
-                    $iconSrc = $extIcons[$ext] ?? null; 
+                    $iconSrc = $extIcons[$ext] ?? null;
 
                     return [
                         'id'            => $item->id,
@@ -590,17 +766,17 @@ class ApprovalController extends Controller
                         'ori_position'  => $item->ori_position,
                         'copy_position' => $item->copy_position,
                         'obslt_position' => $item->obslt_position,
-                        'size'          => $item->file_size, 
+                        'size'          => $item->file_size,
                     ];
                 });
             })
             ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
 
-       
+
         $logs = $this->buildApprovalLogs($revision->package_id, $revisionId);
 
-    
+
         $uploaderName   = $package->uploader_name ?? 'System';
         $uploadedAt     = optional($package->created_at);
         $hasUploadedLog = $logs->contains(fn($log) => ($log['action'] ?? '') === 'uploaded');
@@ -615,11 +791,11 @@ class ApprovalController extends Controller
                 'time_ts' => $uploadedAt->timestamp,
             ]);
 
-          
+
             $logs = $logs->sortByDesc('time_ts')->values();
         }
 
-   
+
         $detail = [
             'metadata' => [
                 'customer'    => $package->customer,
@@ -633,19 +809,15 @@ class ApprovalController extends Controller
                 'uploader'    => $uploaderName,
                 'uploaded_at' => $uploadedAt ? $uploadedAt->format('Y-m-d H:i') : null,
             ],
-            'status'       => match ($revision->revision_status) {
-                'pending'  => 'Waiting',
-                'approved' => 'Approved',
-                'rejected' => 'Rejected',
-                default    => ucfirst($revision->revision_status ?? 'Waiting'),
-            },
+            'status' => $approvalStatus,
+
             'files'        => $files,
             'activityLogs' => $logs,
 
-             'is_finish'    => (int) ($revision->is_finish ?? 0),
+            'is_finish'    => (int) ($revision->is_finish ?? 0),
 
             'note'         => $revision->note ?? null,
-            
+
             'stamp'        => [
                 'receipt_date' => $receiptDate?->toDateString(),
                 'upload_date'  => $uploadDateRevision?->toDateString(),
@@ -658,12 +830,12 @@ class ApprovalController extends Controller
         $detail = $this->sanitizeForJson($detail);
         $hash = encrypt($revisionId);
 
-       
+
         $stampFormats = StampFormat::where('is_active', true)
             ->orderBy('id')
             ->get();
 
-       
+
         $userDeptCode = null;
         $isEngineering = false;
 
@@ -678,6 +850,11 @@ class ApprovalController extends Controller
             $userName = Auth::user()->name ?? null;
         }
 
+        $approvalLevel = Auth::check()
+            ? $this->getApprovalLevel(Auth::user())
+            : 0;
+
+
         return view('approvals.approval_detail', [
             'approvalId'    => $hash,
             'detail'        => $detail,
@@ -685,12 +862,14 @@ class ApprovalController extends Controller
             'userDeptCode'  => $userDeptCode,
             'userName'      => $userName,
             'isEngineering' => $isEngineering,
+            'approval'      => $approval,
+            'approvalLevel' => $approvalLevel,
         ]);
     }
 
     public function updateFileStampPosition(Request $request, int $fileId): JsonResponse
     {
-       
+
         $data = $request->validate([
             'ori_position'   => 'nullable|integer|min:0|max:5',
             'copy_position'  => 'nullable|integer|min:0|max:5',
@@ -702,7 +881,7 @@ class ApprovalController extends Controller
             return response()->json(['message' => 'File not found.'], 404);
         }
 
-        
+
         if (array_key_exists('ori_position', $data)) {
             $file->ori_position = $data['ori_position'];
         }
@@ -738,10 +917,50 @@ class ApprovalController extends Controller
             return response()->json(['message' => 'Invalid revision.'], 404);
         }
 
+        $user  = Auth::user();
+        $level = $this->getApprovalLevel($user);
+
+        if ($level === 0) {
+            return response()->json([
+                'message' => 'You are not authorized to approve this revision.'
+            ], 403);
+        }
+
+
         try {
             DB::beginTransaction();
 
-          
+            $approval = DB::table('package_approvals')
+                ->where('revision_id', $revisionId)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$approval) {
+                DB::rollBack();
+                return response()->json(['message' => 'Approval data not found.'], 404);
+            }
+
+            if (in_array($approval->decision, ['approved', 'rejected'], true)) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'This revision is already finalized.'
+                ], 409);
+            }
+
+            if (
+                ($approval->lvl1_decided_by && $approval->lvl1_decided_by === $user->id) ||
+                ($approval->lvl2_decided_by && $approval->lvl2_decided_by === $user->id) ||
+                ($approval->lvl3_decided_by && $approval->lvl3_decided_by === $user->id)
+            ) {
+
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'You have already approved this revision.'
+                ], 403);
+            }
+
+
+
             $revision = DB::table('doc_package_revisions')
                 ->where('id', $revisionId)
                 ->lockForUpdate()
@@ -760,6 +979,73 @@ class ApprovalController extends Controller
                 return response()->json(['message' => 'Revision cannot be approved.'], 422);
             }
 
+            if ($level === 1 && !$approval->lvl1) {
+
+                DB::table('package_approvals')
+                    ->where('id', $approval->id)
+                    ->update([
+                        'lvl1'            => 1,
+                        'lvl1_decided_by' => $user->id,
+                        'updated_at'      => Carbon::now(),
+                    ]);
+
+                DB::commit();
+                return response()->json([
+                    'message' => 'Approved Level 1. Waiting for Level 2.'
+                ]);
+            }
+
+            if ($level === 2) {
+
+                if ((int) $approval->lvl1 !== 1) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => 'Level 1 approval is required first.'
+                    ], 422);
+                }
+
+                if ((int) $approval->lvl2 === 1) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => 'Already approved at Level 2.'
+                    ], 409);
+                }
+
+                DB::table('package_approvals')
+                    ->where('id', $approval->id)
+                    ->update([
+                        'lvl2'            => 1,
+                        'lvl2_decided_by' => $user->id,
+                        'updated_at'      => Carbon::now(),
+                    ]);
+
+                DB::commit();
+                return response()->json([
+                    'message' => 'Approved Level 2. Waiting for Level 3.'
+                ]);
+            }
+
+
+            if ($level !== 3) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'Only Level 3 approver can finalize approval.'
+                ], 403);
+            }
+
+            if (
+                (int) $approval->lvl1 !== 1 ||
+                (int) $approval->lvl2 !== 1 ||
+                (int) $approval->lvl3 === 1
+            ) {
+                DB::rollBack();
+                return response()->json([
+                   'message' => 'Waiting for previous approval levels to be completed.'
+                ], 422);
+            }
+
+
+
             $packageId = (int) $revision->package_id;
 
             $package = DB::table('doc_packages')
@@ -772,7 +1058,7 @@ class ApprovalController extends Controller
             $isOlder   = !is_null($currentNo) && $revNo < (int) $currentNo;
 
             if (!$isOlder) {
-              
+
                 DB::table('doc_package_revisions')
                     ->where('package_id', $packageId)
                     ->where('id', '!=', $revisionId)
@@ -815,15 +1101,18 @@ class ApprovalController extends Controller
             }
 
             DB::table('package_approvals')
-                ->where('revision_id', $revisionId)
+                ->where('id', $approval->id)
                 ->update([
-                    'decided_by' => $userId,
-                    'decided_at' => Carbon::now(),
-                    'decision'   => 'approved',
-                    'updated_at' => Carbon::now(),
+                    'lvl3'            => 1,
+                    'lvl3_decided_by' => $user->id,
+                    'decision'        => 'approved',
+                    'decided_by'      => $user->id,
+                    'decided_at'      => Carbon::now(),
+                    'updated_at'      => Carbon::now(),
                 ]);
 
-          
+
+
             $packageInfo = DB::table('doc_packages as dp')
                 ->join('customers as c', 'dp.customer_id', '=', 'c.id')
                 ->join('models as m', 'dp.model_id', '=', 'm.id')
@@ -874,7 +1163,7 @@ class ApprovalController extends Controller
             $token       = str_replace('=', '-', $rawToken);
             $downloadUrl = route('file-manager.export.detail', ['id' => $token]);
 
-          
+
             $segments = array_filter([
                 $packageInfo->customer ?? null,
                 $packageInfo->model ?? null,
@@ -887,7 +1176,7 @@ class ApprovalController extends Controller
 
             $packageData = implode(' - ', $segments);
 
-            
+
             $approvalData = [
                 'package_data'  => $packageData,
                 'revision_id'   => $revision->id,
@@ -909,26 +1198,33 @@ class ApprovalController extends Controller
                 'download_url'  => $downloadUrl,
             ];
 
-            try {
-               
-                $users = $this->getNotificationUsersForPackage($packageId);
+            // =======================
+            // EMAIL NOTIFICATION (RULE LAMA)
+            // =======================
+            if ($level === 3) {
+                try {
 
-                foreach ($users as $user) {
-                    Mail::to($user->email)->send(
-                        new RevisionApprovedNotification($user, $approvalData)
-                    );
-                }
-            } catch (\Throwable $mailEx) {
-                if (!$request->boolean('confirm_without_email')) {
-                    DB::rollBack();
-                    return response()->json([
-                        'message'            => 'Email delivery failed. Do you want to approve without sending emails?',
-                        'error'              => $mailEx->getMessage(),
-                        'needs_confirmation' => true,
-                        'code'               => 'EMAIL_FAILED',
-                    ], 409);
+                    $users = $this->getNotificationUsersForPackage($packageId);
+
+                    foreach ($users as $user) {
+                        Mail::to($user->email)->send(
+                            new RevisionApprovedNotification($user, $approvalData)
+                        );
+                    }
+                } catch (\Throwable $mailEx) {
+
+                    if (!$request->boolean('confirm_without_email')) {
+                        DB::rollBack();
+                        return response()->json([
+                            'message'            => 'Email delivery failed. Do you want to approve without sending emails?',
+                            'error'              => $mailEx->getMessage(),
+                            'needs_confirmation' => true,
+                            'code'               => 'EMAIL_FAILED',
+                        ], 409);
+                    }
                 }
             }
+
 
             DB::commit();
             return response()->json(['message' => 'Revision approved successfully!']);
@@ -964,7 +1260,7 @@ class ApprovalController extends Controller
 
         $userId = Auth::user()->id ?? 1;
 
-       
+
         try {
             $revisionId = decrypt($id);
         } catch (DecryptException $e) {
@@ -972,6 +1268,71 @@ class ApprovalController extends Controller
         }
 
         $request->validate(['note' => 'required|string|max:500']);
+
+        $user  = Auth::user();
+        $level = $this->getApprovalLevel($user);
+
+        $approval = DB::table('package_approvals')
+            ->where('revision_id', $revisionId)
+            ->first();
+
+        if (!$approval) {
+            return response()->json([
+                'message' => 'Approval data not found.'
+            ], 404);
+        }
+
+        // =======================
+        // RULE REJECT STRICT PER LEVEL
+        // =======================
+
+        // Waiting L1 → hanya L1
+        if (
+            $approval->decision === 'pending' &&
+            (int) $approval->lvl1 === 0
+        ) {
+            if ($level !== 1) {
+                return response()->json([
+                    'message' => 'Only Level 1 approver can reject at this stage.'
+                ], 403);
+            }
+        }
+
+        // Waiting L2 → hanya L2
+        if (
+            $approval->decision === 'pending' &&
+            (int) $approval->lvl1 === 1 &&
+            (int) $approval->lvl2 === 0
+        ) {
+            if ($level !== 2) {
+                return response()->json([
+                    'message' => 'Only Level 2 approver can reject at this stage.'
+                ], 403);
+            }
+        }
+
+        // Waiting L3 → hanya L3
+        if (
+            $approval->decision === 'pending' &&
+            (int) $approval->lvl1 === 1 &&
+            (int) $approval->lvl2 === 1 &&
+            (int) $approval->lvl3 === 0
+        ) {
+            if ($level !== 3) {
+                return response()->json([
+                    'message' => 'Only Level 3 approver can reject at this stage.'
+                ], 403);
+            }
+        }
+
+        // Sudah final → tidak boleh reject
+        if (in_array($approval->decision, ['approved', 'rejected'], true)) {
+            return response()->json([
+                'message' => 'This revision is already finalized.'
+            ], 409);
+        }
+
+
 
         DB::beginTransaction();
         try {
@@ -992,14 +1353,35 @@ class ApprovalController extends Controller
                     'updated_at'      => Carbon::now(),
                 ]);
 
+            $update = [
+                'decision'   => 'rejected',
+                'decided_by' => $userId,
+                'decided_at' => Carbon::now(),
+                'reason'     => $request->note,
+                'updated_at' => Carbon::now(),
+            ];
+
+            // simpan siapa yg reject
+            if ($level === 1) {
+                $update['lvl1'] = 1;
+                $update['lvl1_decided_by'] = $userId;
+            }
+
+            if ($level === 2) {
+                $update['lvl2'] = 1;
+                $update['lvl2_decided_by'] = $userId;
+            }
+
+            if ($level === 3) {
+                $update['lvl3'] = 1;
+                $update['lvl3_decided_by'] = $userId;
+            }
+
+
             DB::table('package_approvals')
                 ->where('revision_id', $revisionId)
-                ->update([
-                    'decided_by' => $userId ?? 1,
-                    'decided_at' => Carbon::now(),
-                    'decision'   => 'rejected',
-                    'reason'     => $request->note,
-                ]);
+                ->update($update);
+
 
             $packageInfo = DB::table('doc_packages as dp')
                 ->join('customers as c', 'dp.customer_id', '=', 'c.id')
@@ -1023,9 +1405,16 @@ class ApprovalController extends Controller
                 'revision_id'   => $revisionId,
                 'activity_code' => ActivityLog::REJECT,
                 'user_id'       => $userId,
-                'meta'          => [
+                'meta' => [
                     'note'            => $request->note,
-                   
+                    'reject_level' => match ($level) {
+                        3 => 'L3',
+                        2 => 'L2',
+                        default => 'L1',
+                    },
+
+                    'rejected_by'     => $user->name ?? 'System',
+
                     'customer_code'   => $packageInfo->customer,
                     'model_name'      => $packageInfo->model,
                     'part_no'         => $packageInfo->part_no,
@@ -1092,7 +1481,7 @@ class ApprovalController extends Controller
             ->map(function ($row) {
                 $code = strtoupper($row->activity_code ?? '');
 
-                
+
                 $action = match (true) {
                     str_starts_with($code, 'UPLOAD') => 'uploaded',
                     str_starts_with($code, 'APPROVE') => 'approved',
@@ -1103,7 +1492,7 @@ class ApprovalController extends Controller
                     default => strtolower($code ?: 'info')
                 };
 
-              
+
                 $rawMeta = $row->meta;
                 $metaArr = [];
 
@@ -1125,7 +1514,7 @@ class ApprovalController extends Controller
                     'note'    => $metaArr['note'] ?? '',
                     'time'    => optional($row->created_at)->format('Y-m-d H:i'),
 
-                 
+
                     'snapshot' => [
                         'part_no'     => $metaArr['part_no'] ?? null,
                         'revision_no' => $metaArr['revision_no'] ?? null,
@@ -1141,12 +1530,67 @@ class ApprovalController extends Controller
     {
         $userId = Auth::user()->id ?? 1;
 
-       
+
         try {
             $revisionId = decrypt($id);
         } catch (DecryptException $e) {
             return response()->json(['message' => 'Invalid revision.'], 404);
         }
+
+        $approval = DB::table('package_approvals')
+            ->where('revision_id', $revisionId)
+            ->first();
+
+        if (!$approval) {
+            return response()->json(['message' => 'Rollback not allowed.'], 403);
+        }
+
+        $user  = Auth::user();
+        $level = $this->getApprovalLevel($user);
+
+        // =======================
+        // RULE ROLLBACK 3 LAYER
+        // =======================
+
+        // Waiting L2 → hanya L1
+        if (
+            $approval->decision === 'pending' &&
+            (int) $approval->lvl1 === 1 &&
+            (int) $approval->lvl2 === 0
+        ) {
+            if ($level !== 1) {
+                return response()->json([
+                    'message' => 'Only Level 1 approver can rollback at this stage.'
+                ], 403);
+            }
+        }
+
+        // Waiting L3 → hanya L2
+        if (
+            $approval->decision === 'pending' &&
+            (int) $approval->lvl1 === 1 &&
+            (int) $approval->lvl2 === 1 &&
+            (int) $approval->lvl3 === 0
+        ) {
+            if ($level !== 2) {
+                return response()->json([
+                    'message' => 'Only Level 2 approver can rollback at this stage.'
+                ], 403);
+            }
+        }
+
+        // Approved / Rejected → hanya L3
+        if (
+            in_array($approval->decision, ['approved', 'rejected'], true)
+        ) {
+            if ($level !== 3) {
+                return response()->json([
+                    'message' => 'Only Level 3 approver can rollback finalized approval.'
+                ], 403);
+            }
+        }
+
+
 
         DB::beginTransaction();
         try {
@@ -1160,17 +1604,71 @@ class ApprovalController extends Controller
                 return response()->json(['message' => 'Revision not found.'], 404);
             }
 
-            if (!in_array($revision->revision_status, ['approved', 'rejected'], true)) {
-                DB::rollBack();
-                return response()->json(['message' => 'Revision cannot be rolled back.'], 422);
+            $userLevel = $this->getApprovalLevel(Auth::user());
+
+            // =======================
+            // VALIDASI ROLLBACK 3 LAYER
+            // =======================
+
+            // Waiting L2 → hanya L1
+            if (
+                $approval->decision === 'pending' &&
+                (int)$approval->lvl1 === 1 &&
+                (int)$approval->lvl2 === 0
+            ) {
+                if ($userLevel !== 1) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => 'Only Level 1 approver can rollback at Waiting L2.'
+                    ], 403);
+                }
             }
+
+            // Waiting L3 → hanya L2
+            elseif (
+                $approval->decision === 'pending' &&
+                (int)$approval->lvl1 === 1 &&
+                (int)$approval->lvl2 === 1 &&
+                (int)$approval->lvl3 === 0
+            ) {
+                if ($userLevel !== 2) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => 'Only Level 2 approver can rollback at Waiting L3.'
+                    ], 403);
+                }
+            }
+
+            // Approved / Rejected → hanya L3
+            elseif (
+                in_array($approval->decision, ['approved', 'rejected'], true)
+            ) {
+                if ($userLevel !== 3) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => 'Only Level 3 approver can rollback finalized approval.'
+                    ], 403);
+                }
+            }
+
+            // Waiting L1 → tidak boleh rollback
+            elseif (
+                $approval->decision === 'pending' &&
+                (int)$approval->lvl1 === 0
+            ) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'Rollback is not allowed at Waiting L1.'
+                ], 403);
+            }
+
 
             $packageId = (int) $revision->package_id;
 
-           
+
             $previousStatus = ucfirst($revision->revision_status);
 
-            
+
             $wasActiveApproved = (
                 $revision->revision_status === 'approved'
                 && (int) $revision->is_obsolete === 0
@@ -1186,7 +1684,7 @@ class ApprovalController extends Controller
                     'updated_at'      => Carbon::now(),
                 ]);
 
-           
+
             if ($wasActiveApproved) {
                 $prev = DB::table('doc_package_revisions as r')
                     ->join('package_approvals as pa', 'pa.revision_id', '=', 'r.id')
@@ -1228,12 +1726,19 @@ class ApprovalController extends Controller
             DB::table('package_approvals')
                 ->where('revision_id', $revisionId)
                 ->update([
-                    'decision'   => 'pending',
-                    'decided_by' => null,
-                    'decided_at' => null,
-                    'reason'     => null,
-                    'updated_at' => Carbon::now(),
+                    'decision'         => 'pending',
+                    'decided_by'       => null,
+                    'decided_at'       => null,
+                    'lvl1'             => 0,
+                    'lvl2'             => 0,
+                    'lvl3'             => 0,
+                    'lvl1_decided_by'  => null,
+                    'lvl2_decided_by'  => null,
+                    'lvl3_decided_by'  => null,
+                    'reason'           => null,
+                    'updated_at'       => Carbon::now(),
                 ]);
+
 
             $packageInfo = DB::table('doc_packages as dp')
                 ->join('customers as c', 'dp.customer_id', '=', 'c.id')
@@ -1250,7 +1755,7 @@ class ApprovalController extends Controller
                     'dtg.name as doc_type'
                 ]);
 
-            
+
             ActivityLog::create([
                 'scope_type'    => 'package',
                 'scope_id'      => $packageId,
@@ -1258,21 +1763,21 @@ class ApprovalController extends Controller
                 'activity_code' => 'ROLLBACK',
                 'user_id'       => $userId,
                 'meta'          => [
-                    'note'            => 'Rollback performed (Reset to Waiting)',
-                    'previous_status' => $previousStatus, 
+                    'note'            => 'Rollback performed',
+                    'rollback_by'     => Auth::user()->name ?? 'System',
+                    'rollback_level' => 'L' . $level,
+                    'previous_status' => $previousStatus,
                     'current_status'  => 'Waiting',
 
-                    
-                    'customer_code'   => $packageInfo->customer,
-                    'model_name'      => $packageInfo->model,
-                    'part_no'         => $packageInfo->part_no,
-                    'part_group_code' => $packageInfo->code_part_group ?? '-',
-                    'doc_type'        => $packageInfo->doc_type,
-                    'revision_no'     => $revision->revision_no,
-                    'ecn_no'          => $revision->ecn_no,
-                    'action_status'   => 'Rollback'
+                    // tambahan konteks (opsional tapi bagus)
+                    'customer_code'   => $packageInfo->customer ?? null,
+                    'model_name'      => $packageInfo->model ?? null,
+                    'part_no'         => $packageInfo->part_no ?? null,
+                    'revision_no'     => $revision->revision_no ?? null,
+                    'ecn_no'          => $revision->ecn_no ?? null,
                 ],
             ]);
+
 
             DB::commit();
             return response()->json([
@@ -1311,7 +1816,7 @@ class ApprovalController extends Controller
 
         DB::beginTransaction();
         try {
-            
+
             $revision = DB::table('doc_package_revisions as dpr')
                 ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
                 ->join('customers as c', 'dp.customer_id', '=', 'c.id')
@@ -1339,7 +1844,7 @@ class ApprovalController extends Controller
                 return response()->json(['message' => 'Revision not found.'], 404);
             }
 
-        
+
             $deptRows = DB::table('departments')
                 ->whereIn('code', ['PURCHASING', 'PUD'])
                 ->get(['id', 'code']);
@@ -1363,7 +1868,7 @@ class ApprovalController extends Controller
                     'updated_at'    => Carbon::now(),
                 ]);
 
-            
+
             $recipients = User::query()
                 ->whereIn('id_dept', $deptIds)
                 ->whereNotNull('email')
@@ -1376,12 +1881,12 @@ class ApprovalController extends Controller
                 ], 422);
             }
 
-         
+
             $recipientNames = $recipients->map(function ($u) {
                 return "{$u->name} ({$u->email})";
             })->implode(', ');
 
-            
+
             $shareData = [
                 'customer'    => $revision->customer,
                 'model'       => $revision->model,
@@ -1408,7 +1913,7 @@ class ApprovalController extends Controller
                 }
             }
 
-          
+
             ActivityLog::create([
                 'scope_type'    => 'package',
                 'scope_id'      => $revision->package_id,
@@ -1416,17 +1921,17 @@ class ApprovalController extends Controller
                 'activity_code' => 'SHARE_INTERNAL',
                 'user_id'       => $currentUser->id,
                 'meta'          => [
-                   
+
                     'shared_by'       => $currentUser->name,
                     'sender_email'    => $currentUser->email,
 
-                   
+
                     'note'            => $request->input('note'),
                     'shared_to_dept'  => $deptCode,
                     'recipients'      => $recipientNames,
                     'recipient_count' => $recipients->count(),
 
-                  
+
                     'part_no'         => $revision->part_no,
                     'customer_code'   => $revision->customer,
                     'model_name'      => $revision->model,
@@ -1462,14 +1967,17 @@ class ApprovalController extends Controller
                 'pa.requested_at',
                 'pa.decided_at',
                 'pa.decision',
-                'pa.decided_by'
+                'pa.decided_by',
+                'pa.lvl1',
+                'pa.lvl2',
+                'pa.lvl3'
             )
             ->selectRaw("
-            ROW_NUMBER() OVER (
-              PARTITION BY pa.revision_id
-              ORDER BY COALESCE(pa.decided_at, pa.requested_at) DESC, pa.id DESC
-            ) as rn
-        ");
+        ROW_NUMBER() OVER (
+          PARTITION BY pa.revision_id
+          ORDER BY COALESCE(pa.decided_at, pa.requested_at) DESC, pa.id DESC
+        ) as rn
+    ");
 
         $query = DB::table('doc_package_revisions as dpr')
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
@@ -1485,10 +1993,10 @@ class ApprovalController extends Controller
                     ->where('pa.rn', '=', 1);
             })
             ->where('dpr.revision_status', '<>', 'draft')
-            
-    ->where('dp.is_delete', 0)
-    ->where('p.is_delete', 0);
-       
+
+            ->where('dp.is_delete', 0)
+            ->where('p.is_delete', 0);
+
         if ($request->filled('customer') && $request->customer !== 'All') {
             $query->where('c.code', $request->customer);
         }
@@ -1509,7 +2017,7 @@ class ApprovalController extends Controller
         }
 
 
-       
+
         $query->whereRaw("COALESCE(pa.decision, dpr.revision_status) = 'approved'");
 
         $rowsDb = $query->select(
@@ -1529,48 +2037,59 @@ class ApprovalController extends Controller
             ->orderBy('c.code')
             ->orderBy('m.name')
             ->orderBy('p.part_no')
+            ->orderBy('dtg.name')
+            ->orderBy('dpr.revision_no', 'asc')
             ->get();
 
         $generatedAt = Carbon::now();
 
         $rows = [];
-        foreach ($rowsDb as $r) {
-            $uploadDate = $r->upload_date
-                ? Carbon::parse($r->upload_date)->format('Y-m-d')
-                : '';
 
-            $receiveDate = $r->receipt_date
-                ? Carbon::parse($r->receipt_date)->format('Y-m-d')
-                : '';
+// Langkah A: Identifikasi index revisi tertinggi untuk setiap kunci unik
+$highestRevisionMap = [];
+foreach ($rowsDb as $index => $r) {
+    // Kunci unik berdasarkan part_no dan tipe dokumennya
+    $key = $r->part_no . '|' . $r->doctype;
+    // Karena query sudah ORDER BY revision_no ASC, 
+    // index yang terakhir masuk ke key ini otomatis adalah revisi terbesar.
+    $highestRevisionMap[$key] = $index;
+}
 
-            $ecnNo      = $r->ecn_no ?? '';
-            $revisionNo = $r->revision_no ?? '';
+// Langkah B: Bangun data rows untuk export
+foreach ($rowsDb as $index => $r) {
+    $uploadDate = $r->upload_date ? Carbon::parse($r->upload_date)->format('Y-m-d') : '';
+    $receiveDate = $r->receipt_date ? Carbon::parse($r->receipt_date)->format('Y-m-d') : '';
+    
+    $key = $r->part_no . '|' . $r->doctype;
 
-            
-            if (is_null($r->is_finish)) {
-               
-                $isFinish = '0';
-            } else {
-               
-                $isFinish = $r->is_finish ? '1' : '0';
-            }
-
-           
-            $rows[] = [
-                $r->customer,
-                $r->model,
-                $r->part_no,
-                $r->part_name,
-                $r->doctype,
-                $r->category,
-                $ecnNo,
-                $revisionNo,
-                $r->part_group,
-                $receiveDate,
-                $uploadDate,
-                $isFinish,
-            ];
+    // LOGIKA FINISH GOOD BARU:
+    // Hanya tampilkan status aslinya jika index saat ini adalah yang tertinggi di grupnya
+    if ($index === $highestRevisionMap[$key]) {
+        if (is_null($r->is_finish)) {
+            $isFinish = '0';
+        } else {
+            $isFinish = $r->is_finish ? '1' : '0';
         }
+    } else {
+        // Jika bukan revisi terbaru (revisi lama), paksa jadi '0'
+        $isFinish = '0'; 
+    }
+
+    $rows[] = [
+        $r->customer,
+        $r->model,
+        $r->part_no,
+        $r->part_name,
+        $r->doctype,
+        $r->category,
+        $r->ecn_no ?? '',
+        $r->revision_no ?? '',
+        $r->part_group,
+        $receiveDate,
+        $uploadDate,
+        $isFinish,
+    ];
+}
 
         $export   = new ApprovalSummaryExport($rows, $generatedAt->format('Y-m-d H:i'));
         $filename = 'approval-summary-' . $generatedAt->format('Ymd_His') . '.xlsx';
@@ -1584,9 +2103,9 @@ class ApprovalController extends Controller
 
     private function formatObsoleteDate(Carbon $date): string
     {
-        $month = $date->format('M');      
+        $month = $date->format('M');
         $day   = (int) $date->format('j');
-        $year  = $date->format('Y');      
+        $year  = $date->format('Y');
 
         if (in_array($day % 100, [11, 12, 13], true)) {
             $suffix = 'th';
@@ -1606,7 +2125,7 @@ class ApprovalController extends Controller
     private function getFeasibilityStatusId(): ?int
     {
         return DB::table('project_status')
-            ->where('name', 'Feasibility Study')   
+            ->where('name', 'Feasibility Study')
             ->value('id');
     }
 
@@ -1625,13 +2144,13 @@ class ApprovalController extends Controller
         return (int) $statusId === (int) $feasId;
     }
 
-    
+
 
     private function getNotificationUsersForPackage(int $packageId)
     {
         $isFeasibility = $this->isFeasibilityPackage($packageId);
 
-       
+
         $query = User::select('users.*')
             ->distinct()
             ->leftJoin('user_roles', 'user_roles.user_id', '=', 'users.id')
@@ -1642,7 +2161,7 @@ class ApprovalController extends Controller
             });
 
         if ($isFeasibility) {
-          
+
             $allowedRoles = ['ENG'];
 
             $query->whereExists(function ($q2) use ($allowedRoles) {
