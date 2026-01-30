@@ -173,7 +173,8 @@
                             <div>
                                 <label for="receipt_date"
                                     class="block text-sm font-medium text-gray-700 dark:text-gray-300">Receipt
-                                    Date</label>
+                                    Date<span
+                                        class="text-red-500">*</span></label>
                                 <input type="date" x-model="receipt_date" id="receipt_date" name="receipt_date"
                                     class="mt-1 block w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                                     :class="{ 'border-red-500 dark:border-red-400 focus:ring-red-500 focus:border-red-500': validationErrors.receipt_date }"

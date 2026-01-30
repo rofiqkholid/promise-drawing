@@ -70,30 +70,30 @@
 
         <!-- Body: single line with dashes -->
         <div class="px-4 pt-4 pb-2">
-  <!-- Meta line -->
-  <p class="text-xs md:text-sm text-gray-900 dark:text-gray-100 whitespace-normal break-words leading-snug"
-     x-text="metaLine()"
-     :title="metaLine()"></p>
+          <!-- Meta line -->
+          <p class="text-xs md:text-sm text-gray-900 dark:text-gray-100 whitespace-normal break-words leading-snug"
+            x-text="metaLine()"
+            :title="metaLine()"></p>
 
-  <!-- REVISION NOTE / NO NOTE -->
-<template x-if="pkg.note && pkg.note.trim().length > 0">
-    <p
-        class="flex items-start gap-1 text-[11px] md:text-xs italic leading-snug
+          <!-- REVISION NOTE / NO NOTE -->
+          <template x-if="pkg.note && pkg.note.trim().length > 0">
+            <p
+              class="flex items-start gap-1 text-[11px] md:text-xs italic leading-snug
                text-amber-700 dark:text-amber-300 mt-1 mb-0">
-        <i class="fa-solid fa-quote-left mt-[2px] text-amber-400"></i>
-        <span class="whitespace-pre-line break-words" x-text="pkg.note"></span>
-    </p>
-</template>
+              <i class="fa-solid fa-quote-left mt-[2px] text-amber-400"></i>
+              <span class="whitespace-pre-line break-words" x-text="pkg.note"></span>
+            </p>
+          </template>
 
-<template x-if="!pkg.note || pkg.note.trim().length === 0">
-    <p
-        class="text-[11px] md:text-xs italic leading-snug
+          <template x-if="!pkg.note || pkg.note.trim().length === 0">
+            <p
+              class="text-[11px] md:text-xs italic leading-snug
                text-gray-400 dark:text-gray-500 mt-1 mb-0">
-       No note is available for this package.
-    </p>
-</template>
+              No note is available for this package.
+            </p>
+          </template>
 
-</div>
+        </div>
 
 
         <!-- Footer (Approve / Reject / Rollback / Share) -->
@@ -116,7 +116,7 @@
           </div>
 
           <!-- Waiting: Reject + Approve -->
-          <template x-if="isWaiting()">
+          <template x-if="canAct()">
             <div class="flex gap-2">
               <button @click="rejectPackage()"
                 class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm">
@@ -130,22 +130,22 @@
           </template>
 
           <!-- Approved: Rollback + Share -->
-          <template x-if="isApproved()">
-            <div class="flex gap-2">
-              <button @click="rollbackPackage()"
-                class="inline-flex items-center px-3 py-1.5 bg-amber-600 text-white rounded-md hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 text-sm">
-                <i class="fa-solid fa-rotate-left mr-2"></i> Rollback
-              </button>
+          <!-- Rollback -->
+<template x-if="canRollback()">
+  <button @click="rollbackPackage()"
+    class="inline-flex items-center px-3 py-1.5 bg-amber-600 text-white rounded-md">
+    <i class="fa-solid fa-rotate-left mr-2"></i> Rollback
+  </button>
+</template>
 
-              <button @click="openShareModal()"
-                class="inline-flex items-center px-3 py-1.5 text-sm rounded-md border border-blue-600
-               bg-blue-600 text-white hover:bg-blue-500 focus:outline-none focus:ring-2
-               focus:ring-blue-500 focus:ring-offset-2">
-                <i class="fa-solid fa-share-nodes mr-2"></i>
-                Share
-              </button>
-            </div>
-          </template>
+<!-- Share -->
+<template x-if="canShare()">
+  <button @click="openShareModal()"
+    class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-md">
+    <i class="fa-solid fa-share-nodes mr-2"></i> Share
+  </button>
+</template>
+
         </div>
 
       </div>
@@ -808,15 +808,15 @@
                 @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
                 <div class="relative w-full h-full flex items-center justify-center"
                   :style="imageTransformStyle()">
-                  
+
                   <!-- Wrapper with relative positioning for stamps -->
                   <div class="relative inline-block">
                     <canvas x-ref="hpglCanvas" class="pointer-events-none select-none"></canvas>
 
                     <!-- Stamp overlay positioned exactly over the drawing area -->
                     <div class="absolute pointer-events-none"
-                         :style="`left: ${hpglDrawingBounds.left}px; top: ${hpglDrawingBounds.top}px; width: ${hpglDrawingBounds.width}px; height: ${hpglDrawingBounds.height}px;`">
-                      
+                      :style="`left: ${hpglDrawingBounds.left}px; top: ${hpglDrawingBounds.top}px; width: ${hpglDrawingBounds.width}px; height: ${hpglDrawingBounds.height}px;`">
+
                       <!-- STAMP ORIGINAL -->
                       <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
                         <div :class="[
@@ -1147,7 +1147,7 @@
     transition: height 300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
     will-change: height;
   }
-  
+
   [x-collapse].x-collapse-transitioning {
     overflow: hidden !important;
   }
@@ -1324,6 +1324,8 @@
       userDeptCode: JSON.parse(`@json($userDeptCode ?? null)`),
       userName: JSON.parse(`@json($userName ?? null)`),
       isEngineering: JSON.parse(`@json($isEngineering ?? false)`),
+      approvalLevel: Number(`@json($approvalLevel ?? 0)`),
+
 
       // URL template update posisi stamp per file
       updateStampUrlTemplate: `{{ route('approvals.files.updateStamp', ['fileId' => '__FILE_ID__']) }}`,
@@ -1340,7 +1342,7 @@
         copy: 'bottom-center',
         obsolete: 'bottom-right',
       },
-      
+
 
       selectedFile: null,
       openSections: [],
@@ -1373,7 +1375,12 @@
       hpglLoading: false,
       hpglError: '',
       // HPGL drawing bounds in CSS pixels (for stamp positioning)
-      hpglDrawingBounds: { left: 0, top: 0, width: 0, height: 0 },
+      hpglDrawingBounds: {
+        left: 0,
+        top: 0,
+        width: 0,
+        height: 0
+      },
 
       // PDF state
       pdfLoading: false,
@@ -1437,7 +1444,7 @@
       },
       imageTransformStyle() {
         return `transform: translate(${this.panX}px, ${this.panY}px) scale(${this.imageZoom}); transform-origin: center center;`;
-      },   
+      },
       // mapping dari integer DB -> key string
       // mapping dari integer DB -> key string (0-5)
       positionIntToKey(pos) {
@@ -2132,201 +2139,211 @@
 
           // Standardize separators: replace newlines with ';', then split by ';'
           let commands = text.replace(/[\r\n]+/g, ';').split(';');
-          
+
           // Many HPGL files concatenate commands without semicolons
           // Use iterative parsing to avoid stack overflow on very long strings
           const expandedCommands = [];
           for (const cmd of commands) {
-              if (!cmd || !cmd.trim()) continue;
-              
-              // For very long commands, split manually
-              if (cmd.length > 10000) {
-                  let i = 0;
-                  while (i < cmd.length) {
-                      // Find next opcode (2 uppercase letters)
-                      if (i + 1 < cmd.length && /[A-Z]/.test(cmd[i]) && /[A-Z]/.test(cmd[i+1])) {
-                          const opcode = cmd.substring(i, i+2);
-                          i += 2;
-                          
-                          // Collect arguments until next opcode or end
-                          let args = '';
-                          while (i < cmd.length && !(/[A-Z]/.test(cmd[i]) && i+1 < cmd.length && /[A-Z]/.test(cmd[i+1]))) {
-                              args += cmd[i];
-                              i++;
-                          }
-                          
-                          expandedCommands.push(opcode + args);
-                      } else {
-                          i++;
-                      }
+            if (!cmd || !cmd.trim()) continue;
+
+            // For very long commands, split manually
+            if (cmd.length > 10000) {
+              let i = 0;
+              while (i < cmd.length) {
+                // Find next opcode (2 uppercase letters)
+                if (i + 1 < cmd.length && /[A-Z]/.test(cmd[i]) && /[A-Z]/.test(cmd[i + 1])) {
+                  const opcode = cmd.substring(i, i + 2);
+                  i += 2;
+
+                  // Collect arguments until next opcode or end
+                  let args = '';
+                  while (i < cmd.length && !(/[A-Z]/.test(cmd[i]) && i + 1 < cmd.length && /[A-Z]/.test(cmd[i + 1]))) {
+                    args += cmd[i];
+                    i++;
                   }
-              } else {
-                  // For shorter commands, use regex (faster)
-                  const parts = cmd.match(/[A-Z]{2}[^A-Z]*/g);
-                  if (parts && parts.length > 1) {
-                      expandedCommands.push(...parts);
-                  } else {
-                      expandedCommands.push(cmd);
-                  }
+
+                  expandedCommands.push(opcode + args);
+                } else {
+                  i++;
+                }
               }
+            } else {
+              // For shorter commands, use regex (faster)
+              const parts = cmd.match(/[A-Z]{2}[^A-Z]*/g);
+              if (parts && parts.length > 1) {
+                expandedCommands.push(...parts);
+              } else {
+                expandedCommands.push(cmd);
+              }
+            }
           }
-          
+
           commands = expandedCommands;
 
           let penDown = false;
-          let isRelative = false; 
-          let x = 0, y = 0;
+          let isRelative = false;
+          let x = 0,
+            y = 0;
           const segments = [];
           const unknownCommands = new Set();
 
           // Parse coordinates
           const parseCoords = (str) => {
-              if (!str || !str.trim()) return [];
-              return str.replace(/,/g, ' ').trim().split(/\s+/).map(Number).filter(v => !isNaN(v));
+            if (!str || !str.trim()) return [];
+            return str.replace(/,/g, ' ').trim().split(/\s+/).map(Number).filter(v => !isNaN(v));
           };
 
           const addSegment = (x1, y1, x2, y2) => {
-              segments.push({ x1, y1, x2, y2 });
+            segments.push({
+              x1,
+              y1,
+              x2,
+              y2
+            });
           };
 
           // Helper to approximate arc/circle with line segments
           const addArc = (cx, cy, radius, startAngle, endAngle, steps = 32) => {
-              const angleStep = (endAngle - startAngle) / steps;
-              let prevX = cx + radius * Math.cos(startAngle * Math.PI / 180);
-              let prevY = cy + radius * Math.sin(startAngle * Math.PI / 180);
-              
-              for (let i = 1; i <= steps; i++) {
-                  const angle = startAngle + angleStep * i;
-                  const nx = cx + radius * Math.cos(angle * Math.PI / 180);
-                  const ny = cy + radius * Math.sin(angle * Math.PI / 180);
-                  addSegment(prevX, prevY, nx, ny);
-                  prevX = nx;
-                  prevY = ny;
-              }
+            const angleStep = (endAngle - startAngle) / steps;
+            let prevX = cx + radius * Math.cos(startAngle * Math.PI / 180);
+            let prevY = cy + radius * Math.sin(startAngle * Math.PI / 180);
+
+            for (let i = 1; i <= steps; i++) {
+              const angle = startAngle + angleStep * i;
+              const nx = cx + radius * Math.cos(angle * Math.PI / 180);
+              const ny = cy + radius * Math.sin(angle * Math.PI / 180);
+              addSegment(prevX, prevY, nx, ny);
+              prevX = nx;
+              prevY = ny;
+            }
           };
 
           for (const raw of commands) {
             if (!raw || !raw.trim()) continue;
-            
+
             const cmd = raw.trim().toUpperCase();
             const op = cmd.slice(0, 2);
             const argsStr = cmd.slice(2);
             const coords = parseCoords(argsStr);
 
             const processMove = () => {
-                for (let i = 0; i < coords.length; i += 2) {
-                    if (i + 1 >= coords.length) break;
-                    let nx = coords[i];
-                    let ny = coords[i+1];
+              for (let i = 0; i < coords.length; i += 2) {
+                if (i + 1 >= coords.length) break;
+                let nx = coords[i];
+                let ny = coords[i + 1];
 
-                    if (isRelative) {
-                        nx = x + nx;
-                        ny = y + ny;
-                    }
-
-                    if (penDown) {
-                        addSegment(x, y, nx, ny);
-                    }
-                    
-                    x = nx;
-                    y = ny;
+                if (isRelative) {
+                  nx = x + nx;
+                  ny = y + ny;
                 }
+
+                if (penDown) {
+                  addSegment(x, y, nx, ny);
+                }
+
+                x = nx;
+                y = ny;
+              }
             };
 
             if (op === 'IN') {
-                penDown = false;
-                isRelative = false;
-                x = 0; y = 0;
+              penDown = false;
+              isRelative = false;
+              x = 0;
+              y = 0;
             } else if (op === 'SP') {
-                // Select Pen - ignore
+              // Select Pen - ignore
             } else if (op === 'PU') {
-                penDown = false;
-                if (coords.length > 0) processMove();
+              penDown = false;
+              if (coords.length > 0) processMove();
             } else if (op === 'PD') {
-                penDown = true;
-                if (coords.length > 0) processMove();
+              penDown = true;
+              if (coords.length > 0) processMove();
             } else if (op === 'PA') {
-                isRelative = false;
-                if (coords.length > 0) processMove();
+              isRelative = false;
+              if (coords.length > 0) processMove();
             } else if (op === 'PR') {
-                isRelative = true;
-                if (coords.length > 0) processMove();
+              isRelative = true;
+              if (coords.length > 0) processMove();
             } else if (op === 'CI') {
-                // Circle: CI radius[,chord_angle]
-                if (coords.length >= 1) {
-                    const radius = Math.abs(coords[0]);
-                    addArc(x, y, radius, 0, 360, 64);
-                }
+              // Circle: CI radius[,chord_angle]
+              if (coords.length >= 1) {
+                const radius = Math.abs(coords[0]);
+                addArc(x, y, radius, 0, 360, 64);
+              }
             } else if (op === 'AA') {
-                // Arc Absolute: AA cx,cy,angle[,chord_angle]
-                if (coords.length >= 3) {
-                    const cx = coords[0];
-                    const cy = coords[1];
-                    const sweepAngle = coords[2];
-                    const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-                    const startAngle = Math.atan2(y - cy, x - cx) * 180 / Math.PI;
-                    const endAngle = startAngle + sweepAngle;
-                    
-                    addArc(cx, cy, radius, startAngle, endAngle, Math.max(16, Math.abs(sweepAngle) / 5));
-                    
-                    // Update position to end of arc
-                    x = cx + radius * Math.cos(endAngle * Math.PI / 180);
-                    y = cy + radius * Math.sin(endAngle * Math.PI / 180);
-                }
+              // Arc Absolute: AA cx,cy,angle[,chord_angle]
+              if (coords.length >= 3) {
+                const cx = coords[0];
+                const cy = coords[1];
+                const sweepAngle = coords[2];
+                const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+                const startAngle = Math.atan2(y - cy, x - cx) * 180 / Math.PI;
+                const endAngle = startAngle + sweepAngle;
+
+                addArc(cx, cy, radius, startAngle, endAngle, Math.max(16, Math.abs(sweepAngle) / 5));
+
+                // Update position to end of arc
+                x = cx + radius * Math.cos(endAngle * Math.PI / 180);
+                y = cy + radius * Math.sin(endAngle * Math.PI / 180);
+              }
             } else if (op === 'AR') {
-                // Arc Relative: AR dx,dy,angle[,chord_angle]
-                if (coords.length >= 3) {
-                    const cx = x + coords[0];
-                    const cy = y + coords[1];
-                    const sweepAngle = coords[2];
-                    const radius = Math.sqrt(coords[0] ** 2 + coords[1] ** 2);
-                    const startAngle = Math.atan2(-coords[1], -coords[0]) * 180 / Math.PI;
-                    const endAngle = startAngle + sweepAngle;
-                    
-                    addArc(cx, cy, radius, startAngle, endAngle, Math.max(16, Math.abs(sweepAngle) / 5));
-                    
-                    x = cx + radius * Math.cos(endAngle * Math.PI / 180);
-                    y = cy + radius * Math.sin(endAngle * Math.PI / 180);
-                }
+              // Arc Relative: AR dx,dy,angle[,chord_angle]
+              if (coords.length >= 3) {
+                const cx = x + coords[0];
+                const cy = y + coords[1];
+                const sweepAngle = coords[2];
+                const radius = Math.sqrt(coords[0] ** 2 + coords[1] ** 2);
+                const startAngle = Math.atan2(-coords[1], -coords[0]) * 180 / Math.PI;
+                const endAngle = startAngle + sweepAngle;
+
+                addArc(cx, cy, radius, startAngle, endAngle, Math.max(16, Math.abs(sweepAngle) / 5));
+
+                x = cx + radius * Math.cos(endAngle * Math.PI / 180);
+                y = cy + radius * Math.sin(endAngle * Math.PI / 180);
+              }
             } else if (op === 'LT') {
-                // Line Type - ignore for now (solid, dashed, dotted, etc.)
-                // We'll render everything as solid lines
+              // Line Type - ignore for now (solid, dashed, dotted, etc.)
+              // We'll render everything as solid lines
             } else if (op === 'PG') {
-                // Page Feed - ignore, continue rendering on same canvas
-                // Multi-page HPGL files will be rendered as one continuous drawing
+              // Page Feed - ignore, continue rendering on same canvas
+              // Multi-page HPGL files will be rendered as one continuous drawing
             } else {
-                // Track unknown commands
-                if (op && op.length === 2 && /^[A-Z]{2}$/.test(op)) {
-                    unknownCommands.add(op);
-                }
+              // Track unknown commands
+              if (op && op.length === 2 && /^[A-Z]{2}$/.test(op)) {
+                unknownCommands.add(op);
+              }
             }
           }
 
           if (!segments.length) {
-              throw new Error('No drawable content found in HPGL file');
+            throw new Error('No drawable content found in HPGL file');
           }
 
           // Calculate bounds ONLY from drawn segments to ensure tight fit
-          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          let minX = Infinity,
+            minY = Infinity,
+            maxX = -Infinity,
+            maxY = -Infinity;
           for (const s of segments) {
-              if (s.x1 < minX) minX = s.x1;
-              if (s.x2 < minX) minX = s.x2;
-              if (s.x1 > maxX) maxX = s.x1;
-              if (s.x2 > maxX) maxX = s.x2;
-              
-              if (s.y1 < minY) minY = s.y1;
-              if (s.y2 < minY) minY = s.y2;
-              if (s.y1 > maxY) maxY = s.y1;
-              if (s.y2 > maxY) maxY = s.y2;
+            if (s.x1 < minX) minX = s.x1;
+            if (s.x2 < minX) minX = s.x2;
+            if (s.x1 > maxX) maxX = s.x1;
+            if (s.x2 > maxX) maxX = s.x2;
+
+            if (s.y1 < minY) minY = s.y1;
+            if (s.y2 < minY) minY = s.y2;
+            if (s.y1 > maxY) maxY = s.y1;
+            if (s.y2 > maxY) maxY = s.y2;
           }
 
           // Prevent race condition
           const currentHpglName = this.findFileByNameInsensitive(this.extOf(url))?.name;
           const selectedName = this.selectedFile?.name;
-          if (this.selectedFile && currentHpglName && selectedName && 
-              this.extOf(currentHpglName) === this.extOf(selectedName) && 
-              currentHpglName !== selectedName) {
-             return;
+          if (this.selectedFile && currentHpglName && selectedName &&
+            this.extOf(currentHpglName) === this.extOf(selectedName) &&
+            currentHpglName !== selectedName) {
+            return;
           }
 
           // Reset Render State
@@ -2335,7 +2352,7 @@
           this.panX = 0;
           this.panY = 0;
 
-          await this.$nextTick(); 
+          await this.$nextTick();
           await new Promise(r => setTimeout(r, 50));
 
           const canvas = this.$refs.hpglCanvas;
@@ -2348,7 +2365,7 @@
             container = container.parentElement;
             if (!container || container === document.body) break;
           }
-          
+
           // Use the found container, or fallback to reasonable defaults based on viewport
           const viewW = Math.max(container?.clientWidth || window.innerWidth * 0.6, 800);
           const viewH = Math.max(container?.clientHeight || window.innerHeight * 0.7, 500);
@@ -2357,34 +2374,34 @@
           const dpr = window.devicePixelRatio || 1;
           const zoomCapability = 5; // Support up to 5x zoom without blur
           const totalScale = dpr * zoomCapability;
-          
+
           canvas.width = viewW * totalScale;
           canvas.height = viewH * totalScale;
           canvas.style.width = viewW + 'px';
           canvas.style.height = viewH + 'px';
 
           const ctx = canvas.getContext('2d');
-          
+
           // Reset and configure context
           ctx.setTransform(1, 0, 0, 1, 0, 0);
           ctx.clearRect(0, 0, canvas.width, canvas.height);
-          
+
           // Scale drawing context to match local coordinate system (CSS pixels)
           ctx.scale(totalScale, totalScale);
 
           // Line thickness configuration
           // 0.2 CSS pixels for thin crisp lines like real plotter output
-          ctx.lineWidth = 0.2; 
+          ctx.lineWidth = 0.2;
           ctx.lineCap = 'butt';
           ctx.lineJoin = 'miter';
-          ctx.strokeStyle = '#000'; 
+          ctx.strokeStyle = '#000';
 
           const dx = maxX - minX || 1;
           const dy = maxY - minY || 1;
 
           // Calculate scale to fit viewport (98% fit)
           const scale = 0.98 * Math.min(viewW / dx, viewH / dy);
-          
+
           // Center the drawing
           const transX = viewW / 2 - (minX + dx / 2) * scale;
           const transY = viewH / 2 + (minY + dy / 2) * scale;
@@ -2396,19 +2413,19 @@
             const sy = -s.y1 * scale + transY;
             const ex = s.x2 * scale + transX;
             const ey = -s.y2 * scale + transY;
-            
+
             ctx.moveTo(sx, sy);
             ctx.lineTo(ex, ey);
           }
           ctx.stroke();
-          
+
           // Calculate actual drawing bounds in CSS pixels for stamp positioning
           // The drawing occupies a specific region within the canvas
           const drawingLeft = minX * scale + transX;
           const drawingTop = -maxY * scale + transY; // Y is inverted
           const drawingWidth = dx * scale;
           const drawingHeight = dy * scale;
-          
+
           this.hpglDrawingBounds = {
             left: drawingLeft,
             top: drawingTop,
@@ -2804,8 +2821,10 @@
 
       /* ===== Helper status ===== */
       isWaiting() {
-        return (this.pkg.status || '').toLowerCase() === 'waiting';
+        const s = (this.pkg.status || '').toLowerCase();
+        return s === 'waiting l1' || s === 'waiting l2' || s === 'waiting l3';
       },
+
       isApproved() {
         return (this.pkg.status || '').toLowerCase() === 'approved';
       },
@@ -2814,6 +2833,45 @@
         const flag = this.pkg?.is_finish ?? this.pkg?.metadata?.is_finish ?? 0;
         return Number(flag) === 1 || flag === true;
       },
+
+      currentWaitingLevel() {
+        const s = (this.pkg.status || '').toLowerCase();
+        if (s === 'waiting l1') return 1;
+        if (s === 'waiting l2') return 2;
+        if (s === 'waiting l3') return 3;
+        return 0;
+      },
+
+      canAct() {
+        return this.isWaiting() && this.approvalLevel === this.currentWaitingLevel();
+      },
+      canRollback() {
+  const s = (this.pkg.status || '').toLowerCase();
+
+  // Waiting L2 → rollback oleh L1
+  if (s === 'waiting l2') {
+    return this.approvalLevel === 1;
+  }
+
+  // Waiting L3 → rollback oleh L2
+  if (s === 'waiting l3') {
+    return this.approvalLevel === 2;
+  }
+
+  // Approved / Rejected → rollback oleh L3
+  if (s === 'approved' || s === 'rejected') {
+    return this.approvalLevel === 3;
+  }
+
+  return false;
+},
+canShare() {
+  const s = (this.pkg.status || '').toLowerCase();
+  return s === 'approved';
+},
+
+
+
 
 
       /* ===== approve / reject / rollback ===== */
@@ -2902,8 +2960,21 @@
           }
 
 
-          this.pkg.status = 'Approved';
-          this.addPkgActivity('approved', '{{ auth()->user()->name ?? "Reviewer" }}');
+          // tentukan status berikutnya berdasarkan level
+          if (this.approvalLevel === 1) {
+            this.pkg.status = 'Waiting L2';
+          } else if (this.approvalLevel === 2) {
+            this.pkg.status = 'Waiting L3';
+          } else if (this.approvalLevel === 3) {
+            this.pkg.status = 'Approved';
+          }
+
+          // activity log
+          this.addPkgActivity(
+            'approved',
+            '{{ auth()->user()->name ?? "Reviewer" }}'
+          );
+
           this.showApproveModal = false;
           toastSuccess('Success', json.message || 'Revision approved successfully!');
         } catch (err) {
@@ -2984,7 +3055,14 @@
             throw new Error(result.message || 'Server returned an error.');
           }
 
-          this.pkg.status = 'Waiting';
+          if (this.approvalLevel === 1) {
+            this.pkg.status = 'Waiting L1';
+          } else if (this.approvalLevel === 2) {
+            this.pkg.status = 'Waiting L2';
+          } else if (this.approvalLevel === 3) {
+            this.pkg.status = 'Waiting L3';
+          }
+
           this.addPkgActivity('rollbacked', '{{ auth()->user()->name ?? "Reviewer" }}', 'Status set to Waiting');
           this.showRollbackModal = false;
           toastSuccess('Rolled back', result.message || 'Status has been set back to Waiting.');

@@ -160,7 +160,7 @@ class DrawingUploadController extends Controller
             'category' => 'required|integer|exists:doctype_subcategories,id',
             'partGroup' => 'required|integer|exists:part_groups,id',
             'ecn_no' => 'required|string|max:50',
-            'receipt_date' => 'nullable|date',
+            'receipt_date' => 'required|date',
             'revision_label_id' => 'nullable|integer|exists:customer_revision_labels,id',
             'is_finish' => 'required|in:0,1',
             'revision_no' => 'nullable|integer',

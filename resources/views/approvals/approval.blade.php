@@ -30,9 +30,16 @@
       <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage Your File in Data Center</p>
     </div>
 
-    <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:mt-0">
+    <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4
+ sm:mt-0">
+
       {{-- Card Total Document --}}
-      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+      <div
+        class="kpi-card flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm
+         cursor-pointer transition hover:shadow-md hover:ring-2 hover:ring-offset-2
+         hover:ring-blue-400 dark:hover:ring-blue-500"
+        data-status="All">
+
         <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-full">
           <i class="fa-solid fa-box-archive fa-lg"></i>
         </div>
@@ -43,20 +50,76 @@
           </p>
         </div>
       </div>
-      {{-- Card Waiting --}}
-      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-yellow-500 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/50 rounded-full">
-          <i class="fa-solid fa-clock fa-lg"></i>
+      {{-- Card Waiting L1 --}}
+      <div
+        class="kpi-card flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm
+         cursor-pointer transition hover:shadow-md hover:ring-2 hover:ring-offset-2
+         hover:ring-yellow-400 dark:hover:ring-yellow-500"
+        data-status="Waiting L1">
+
+        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 
+              text-yellow-600 dark:text-yellow-400 
+              bg-yellow-100 dark:bg-yellow-900/50 rounded-full">
+          <i class="fa-solid fa-hourglass-start fa-lg"></i>
         </div>
         <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Waiting</p>
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Waiting L1</p>
           <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            <span id="cardWaiting">0</span>
+            <span id="cardWaitingL1">0</span>
           </p>
         </div>
       </div>
+
+      {{-- Card Waiting L2 --}}
+      <div
+        class="kpi-card flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm
+         cursor-pointer transition hover:shadow-md hover:ring-2 hover:ring-offset-2
+         hover:ring-blue-400 dark:hover:ring-blue-500"
+        data-status="Waiting L2">
+
+        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 
+              text-blue-600 dark:text-blue-400 
+              bg-blue-100 dark:bg-blue-900/50 rounded-full">
+          <i class="fa-solid fa-hourglass-half fa-lg"></i>
+        </div>
+        <div class="ml-4">
+          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Waiting L2</p>
+          <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            <span id="cardWaitingL2">0</span>
+          </p>
+        </div>
+      </div>
+
+     {{-- Card Waiting L3 --}}
+<div
+  class="kpi-card flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm
+   cursor-pointer transition hover:shadow-md hover:ring-2 hover:ring-offset-2
+   hover:ring-purple-400 dark:hover:ring-purple-500"
+  data-status="Waiting L3">
+
+  <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 
+        text-purple-600 dark:text-purple-400 
+        bg-purple-100 dark:bg-purple-900/50 rounded-full">
+    <i class="fa-solid fa-hourglass-end fa-lg"></i>
+  </div>
+
+  <div class="ml-4">
+    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Waiting L3</p>
+    <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+      <span id="cardWaitingL3">0</span>
+    </p>
+  </div>
+</div>
+
+
+
       {{-- Card Approved --}}
-      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+      <div
+        class="kpi-card flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm
+         cursor-pointer transition hover:shadow-md hover:ring-2 hover:ring-offset-2
+         hover:ring-green-400 dark:hover:ring-green-500"
+        data-status="Approved">
+
         <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-full">
           <i class="fa-solid fa-circle-check fa-lg"></i>
         </div>
@@ -68,7 +131,12 @@
         </div>
       </div>
       {{-- Card Rejected --}}
-      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
+      <div
+        class="kpi-card flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm
+         cursor-pointer transition hover:shadow-md hover:ring-2 hover:ring-offset-2
+         hover:ring-red-400 dark:hover:ring-red-500"
+        data-status="Rejected">
+
         <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-red-500 dark:text-red-400 bg-red-100 dark:bg-red-900/50 rounded-full">
           <i class="fa-solid fa-circle-xmark fa-lg"></i>
         </div>
@@ -495,43 +563,45 @@
         project_status: valOrAll($('#project-status').val()),
       };
     }
+
     function saveFilters() {
-  const filters = {
-    customer: $('#customer').val(),
-    model: $('#model').val(),
-    doc_type: $('#document-type').val(),
-    category: $('#category').val(),
-    status: $('#status').val(),
-    project_status: $('#project-status').val(),
-  };
-  sessionStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
-}
+      const filters = {
+        customer: $('#customer').val(),
+        model: $('#model').val(),
+        doc_type: $('#document-type').val(),
+        category: $('#category').val(),
+        status: $('#status').val(),
+        project_status: $('#project-status').val(),
+      };
+      sessionStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(filters));
+    }
 
-function restoreFilters() {
-  const raw = sessionStorage.getItem(FILTER_STORAGE_KEY);
-  if (!raw) return;
+    function restoreFilters() {
+      const raw = sessionStorage.getItem(FILTER_STORAGE_KEY);
+      if (!raw) return;
 
-  const f = JSON.parse(raw);
+      const f = JSON.parse(raw);
 
-  function setSelect2($el, val) {
-    if (!val || val === 'All') return;
-    const opt = new Option(val, val, true, true);
-    $el.append(opt).trigger('change');
-  }
+      function setSelect2($el, val) {
+        if (!val || val === 'All') return;
+        const opt = new Option(val, val, true, true);
+        $el.append(opt).trigger('change');
+      }
 
-  setSelect2($('#customer'), f.customer);
-  setSelect2($('#model'), f.model);
-  setSelect2($('#document-type'), f.doc_type);
-  setSelect2($('#category'), f.category);
-  setSelect2($('#status'), f.status);
-  setSelect2($('#project-status'), f.project_status);
-}
+      setSelect2($('#customer'), f.customer);
+      setSelect2($('#model'), f.model);
+      setSelect2($('#document-type'), f.doc_type);
+      setSelect2($('#category'), f.category);
+      setSelect2($('#status'), f.status);
+      setSelect2($('#project-status'), f.project_status);
+    }
 
 
 
 
     function loadKPI() {
       const params = getCurrentFilters();
+      delete params.status;
       $('#cardTotal, #cardWaiting, #cardApproved, #cardRejected').text('…');
 
       $.ajax({
@@ -541,7 +611,9 @@ function restoreFilters() {
         success: function(res) {
           const c = res.cards || {};
           $('#cardTotal').text(c.total ?? 0);
-          $('#cardWaiting').text(c.waiting ?? 0);
+          $('#cardWaitingL1').text(c.waiting_l1 ?? 0);
+          $('#cardWaitingL2').text(c.waiting_l2 ?? 0);
+          $('#cardWaitingL3').text(c.waiting_l3 ?? 0);
           $('#cardApproved').text(c.approved ?? 0);
           $('#cardRejected').text(c.rejected ?? 0);
         },
@@ -567,17 +639,17 @@ function restoreFilters() {
     }
 
     function fmtDateOnly(v) {
-  if (!v) return '';
-  const d = new Date(v);
-  if (isNaN(d)) return v;
+      if (!v) return '';
+      const d = new Date(v);
+      if (isNaN(d)) return v;
 
-  const pad = n => n.toString().padStart(2, '0');
-  const dd = pad(d.getDate());
-  const MM = pad(d.getMonth() + 1);
-  const yyyy = d.getFullYear();
+      const pad = n => n.toString().padStart(2, '0');
+      const dd = pad(d.getDate());
+      const MM = pad(d.getMonth() + 1);
+      const yyyy = d.getFullYear();
 
-  return `${dd}-${MM}-${yyyy}`;
-}
+      return `${dd}-${MM}-${yyyy}`;
+    }
 
 
     function openShareModal(rowData) {
@@ -723,7 +795,7 @@ function restoreFilters() {
             data: 'decision_date',
             name: 'pa.decided_at',
             render: function(v, t, row) {
-              if (!v || row.status === 'Waiting')
+              if (!v || row.status.startsWith('Waiting'))
                 return '<span class="text-gray-400">—</span>';
               const text = fmtDate(v);
               return `<span title="${row.status} at ${v}">${text}</span>`;
@@ -735,11 +807,23 @@ function restoreFilters() {
             data: 'status',
             name: 'dpr.revision_status',
             render: function(data) {
-              let cls = '';
-              if (data === 'Rejected') cls = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
-              if (data === 'Waiting') cls = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
-              if (data === 'Approved') cls = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
-              return `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${cls}">${data ?? ''}</span>`;
+              let cls = 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
+
+              if (data === 'Waiting L1') {
+                cls = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300';
+              } else if (data === 'Waiting L2') {
+                cls = 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300';
+              } else if (data === 'Approved') {
+                cls = 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300';
+              } else if (data === 'Rejected') {
+                cls = 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300';
+              }
+
+              return `
+      <span class="px-3 py-1 inline-flex text-xs font-semibold rounded-full ${cls}">
+        ${data ?? ''}
+      </span>
+    `;
             }
           },
           {
@@ -748,18 +832,28 @@ function restoreFilters() {
             searchable: false,
             className: 'text-center whitespace-nowrap',
             render: function(packageId, type, row) {
+
+              // selain Approved → tidak ada action
+              if (row.status !== 'Approved') {
+                return '<span class="text-gray-400 text-xs">—</span>';
+              }
+
+              // hanya Approved → boleh Share
               return `
-                                <button 
-                                    type="button" 
-                                    class="btn-share px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 
-                                           bg-blue-100 dark:bg-blue-900/50 rounded-md hover:bg-blue-200 dark:hover:bg-blue-900/80"
-                                    data-id="${packageId}" 
-                                    title="Share package ${packageId}">
-                                    <i class="fa-solid fa-share-nodes fa-fw"></i> Share
-                                </button>
-                            `;
+      <button 
+        type="button" 
+        class="btn-share px-3 py-1.5 text-xs font-medium 
+               text-blue-700 dark:text-blue-300 
+               bg-blue-100 dark:bg-blue-900/50 
+               rounded-md hover:bg-blue-200 dark:hover:bg-blue-900/80"
+        data-id="${packageId}"
+        title="Share package">
+        <i class="fa-solid fa-share-nodes fa-fw"></i> Share
+      </button>
+    `;
             }
           }
+
         ],
 
         columnDefs: [{
@@ -809,18 +903,18 @@ function restoreFilters() {
 
       // tombol reset
       $('#btnResetFilters').on('click', function() {
-  sessionStorage.removeItem(FILTER_STORAGE_KEY);
+        sessionStorage.removeItem(FILTER_STORAGE_KEY);
 
-  resetSelect2ToAll($('#customer'));
-  resetSelect2ToAll($('#model'));
-  resetSelect2ToAll($('#document-type'));
-  resetSelect2ToAll($('#category'));
-  resetSelect2ToAll($('#status'));
-  resetSelect2ToAll($('#project-status'));
+        resetSelect2ToAll($('#customer'));
+        resetSelect2ToAll($('#model'));
+        resetSelect2ToAll($('#document-type'));
+        resetSelect2ToAll($('#category'));
+        resetSelect2ToAll($('#status'));
+        resetSelect2ToAll($('#project-status'));
 
-  if (table) table.ajax.reload(null, true);
-  loadKPI();
-});
+        if (table) table.ajax.reload(null, true);
+        loadKPI();
+      });
 
       $('#btnDownloadSummary').on('click', function() {
         const f = getCurrentFilters();
@@ -948,12 +1042,37 @@ function restoreFilters() {
       });
     }
 
+    function bindKpiCardClick() {
+      $('.kpi-card').on('click', function() {
+        const status = $(this).data('status') || 'All';
+
+        // set Select2 Status
+        const $status = $('#status');
+
+        // reset dulu
+        $status.empty();
+
+        // inject option
+        const opt = new Option(status, status, true, true);
+        $status.append(opt).trigger('change');
+
+        // simpan filter
+        saveFilters();
+
+        // reload table & KPI
+        if (table) table.ajax.reload(null, true);
+        loadKPI();
+      });
+    }
+
+
 
     // start
-    restoreFilters(); 
+    restoreFilters();
     initTable();
     loadKPI();
     bindHandlers();
+    bindKpiCardClick();
   });
 </script>
 @endpush
