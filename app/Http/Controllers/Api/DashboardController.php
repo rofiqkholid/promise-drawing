@@ -425,75 +425,113 @@ class DashboardController extends Controller
     }
 
     public function getUploadMonitoringData(Request $request)
-    {
-        $query = DB::connection('sqlsrv')
-            ->table('UploadActual')
-            ->select(
-                'customer_name',
-                'model_name',
-                'part_group',
-                'project_status',
-                DB::raw('MAX(CAST(plan_count AS FLOAT)) as plan_count'),
-                DB::raw('SUM(CAST(actual_count AS FLOAT)) as actual_count')
-            );
+{
+    $rankedData = DB::connection('sqlsrv')
+        ->table('doc_packages as dp')
+        ->leftJoin('models as m', 'dp.model_id', '=', 'm.id')
+        ->leftJoin('products as p', 'dp.product_id', '=', 'p.id')
+        ->leftJoin('customers as c', 'dp.customer_id', '=', 'c.id')
+        ->leftJoin('doc_package_revisions as dpr', 'dp.id', '=', 'dpr.package_id')
+        ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+        ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
+        ->where('dp.is_delete', 0)
+        ->where('dp.is_active', 1)
+        ->whereNotNull('dp.current_revision_id')
+        ->where('dpr.is_finish', 1)
+        ->where('doctype_subcategory_id', 2)
+        ->select([
+            'c.code as customer_name',
+            'm.name as model_name',
+            'ps.name as project_status',
+            'pg.code_part_group as part_group',
+            'pg.planning as plan_count',
+            DB::raw('1 as actual_count'),
+            DB::raw("
+                ROW_NUMBER() OVER (
+                    PARTITION BY p.part_no
+                    ORDER BY dp.current_revision_no DESC, dp.created_at DESC
+                ) as RowNum
+            "),
+        ]);
 
-        
-        if ($request->filled('date_end')) {
-            $query->whereDate('created_at', '<=', $request->date_end);
-        }
-
-        if ($request->filled('project_status') && $request->project_status !== 'ALL') {
-            $query->where('project_status', $request->project_status);
-        }
-
-        if ($request->filled('customer')) {
-            $query->whereIn('customer_name', $request->customer);
-        }
-
-        if ($request->filled('model')) {
-            $query->whereIn('model_name', $request->model);
-        }
-
-        if ($request->filled('part_group')) {
-            $query->whereIn('part_group', $request->part_group);
-        }
-
-        $query->groupBy(
+    $query = DB::connection('sqlsrv')
+        ->query()
+        ->fromSub($rankedData, 'RankedData')
+        ->where('RowNum', 1)
+        ->select([
             'customer_name',
             'model_name',
+            'project_status',
             'part_group',
-            'project_status'
+            'plan_count',
+            DB::raw('SUM(actual_count) as actual_count'),
+        ])
+        ->groupBy(
+            'customer_name',
+            'model_name',
+            'project_status',
+            'part_group',
+            'plan_count'
         );
 
-        $sortBy = $request->input('sort_by', 'plan');
-        $orderColumn = $sortBy === 'actual' ? 'actual_count' : 'plan_count';
-        $query->orderBy($orderColumn, 'desc');
-
-        $results = $query->get();
-
-        $results = $results->map(function ($item) {
-            $plan = floatval($item->plan_count);
-            $actual = floatval($item->actual_count);
-
-            $percentage = $plan > 0 ? ($actual / $plan) * 100 : 0;
-            $item->percentage = number_format($percentage, 1);
-
-            if ($item->project_status === 'Feasibility Study') {
-                $item->project_status = 'FS';
-            } elseif ($item->project_status === 'Project') {
-                $item->project_status = 'PR';
-            } elseif ($item->project_status === 'Regular') {
-                $item->project_status = 'RE';
-            }
-
-            return $item;
-        });
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $results
-        ]);
+    // =========================
+    // 3. Filter Dinamis
+    // =========================
+    if ($request->filled('project_status') && $request->project_status !== 'ALL') {
+        $query->where('project_status', $request->project_status);
     }
+
+    if ($request->filled('customer')) {
+        $query->whereIn('customer_name', $request->customer);
+    }
+
+    if ($request->filled('model')) {
+        $query->whereIn('model_name', $request->model);
+    }
+
+    if ($request->filled('part_group')) {
+        $query->whereIn('part_group', $request->part_group);
+    }
+
+    // =========================
+    // 4. Sorting
+    // =========================
+    $sortBy = $request->input('sort_by', 'plan');
+    $orderColumn = $sortBy === 'actual' ? 'actual_count' : 'plan_count';
+    $query->orderBy($orderColumn, 'desc');
+
+    // =========================
+    // 5. Eksekusi
+    // =========================
+    $results = $query->get();
+
+    // =========================
+    // 6. Mapping Persentase
+    // =========================
+    $results = $results->map(function ($item) {
+        $plan = (float) $item->plan_count;
+        $actual = (float) $item->actual_count;
+
+        $percentage = $plan > 0 ? ($actual / $plan) * 100 : 0;
+        $item->percentage = number_format($percentage, 1);
+
+        if ($item->project_status === 'Feasibility Study') {
+            $item->project_status = 'FS';
+        } elseif ($item->project_status === 'Project') {
+            $item->project_status = 'PR';
+        } elseif ($item->project_status === 'Regular') {
+            $item->project_status = 'RE';
+        }
+
+        return $item;
+    });
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $results
+    ]);
+}
+
 
     public function getPhaseStatus(Request $request)
     {
