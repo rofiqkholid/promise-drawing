@@ -2048,10 +2048,10 @@ END as status
 // Langkah A: Identifikasi index revisi tertinggi untuk setiap kunci unik
 $highestRevisionMap = [];
 foreach ($rowsDb as $index => $r) {
-    // Kunci unik berdasarkan part_no dan tipe dokumennya
-    $key = $r->part_no . '|' . $r->doctype;
+    // Kunci unik berdasarkan part_no, tipe dokumen, dan kategori
+    $key = $r->part_no . '|' . $r->doctype . '|' . $r->category;
     // Karena query sudah ORDER BY revision_no ASC, 
-    // index yang terakhir masuk ke key ini otomatis adalah revisi terbesar.
+    // index yang terakhir masuk ke key ini otomatis adalah revisi terbesar untuk grup ini.
     $highestRevisionMap[$key] = $index;
 }
 
@@ -2060,7 +2060,7 @@ foreach ($rowsDb as $index => $r) {
     $uploadDate = $r->upload_date ? Carbon::parse($r->upload_date)->format('Y-m-d') : '';
     $receiveDate = $r->receipt_date ? Carbon::parse($r->receipt_date)->format('Y-m-d') : '';
     
-    $key = $r->part_no . '|' . $r->doctype;
+    $key = $r->part_no . '|' . $r->doctype . '|' . $r->category;
 
     // LOGIKA FINISH GOOD BARU:
     // Hanya tampilkan status aslinya jika index saat ini adalah yang tertinggi di grupnya
