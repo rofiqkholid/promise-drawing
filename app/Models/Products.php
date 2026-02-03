@@ -18,6 +18,7 @@ class Products extends Model
         'part_name',
         'group_id',
         'is_delete',
+        'is_count',
     ];
 
     protected $table = 'products';

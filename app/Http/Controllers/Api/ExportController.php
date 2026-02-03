@@ -422,6 +422,7 @@ class ExportController extends Controller
                 $partnerParts = $partnersMap[$row->group_id]
                     ->where('id', '!=', $row->product_id)
                     ->pluck('part_no')
+                    ->unique()
                     ->toArray();
 
                 if (!empty($partnerParts)) {

@@ -649,6 +649,40 @@ $(function () {
 
     renderRecent();
 
+    // --- Persistence Logic ---
+    const STORAGE_KEY = 'file_export_filters';
+
+    function saveFilterState() {
+        const filters = {
+            search: $('#custom-export-search').val(),
+            customer: { id: $('#customer').val(), text: $('#customer').select2('data')[0]?.text },
+            model: { id: $('#model').val(), text: $('#model').select2('data')[0]?.text },
+            doc_type: { id: $('#document-type').val(), text: $('#document-type').select2('data')[0]?.text },
+            category: { id: $('#category').val(), text: $('#category').select2('data')[0]?.text },
+            project_status: { id: $('#project-status').val(), text: $('#project-status').select2('data')[0]?.text },
+        };
+        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
+    }
+
+    function loadFilterState() {
+        const saved = sessionStorage.getItem(STORAGE_KEY);
+        if (!saved) return null;
+        try {
+            return JSON.parse(saved);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function restoreSelect2($el, data) {
+        if (data && data.id && data.id !== 'All') {
+            const opt = new Option(data.text || data.id, data.id, true, true);
+            $el.append(opt).trigger('change');
+        }
+    }
+
+    // --- End Persistence Logic ---
+
     $inputSearch.on('keyup input', function () {
         const val = this.value;
         const $iconStatic = $('#search-icon-static');
@@ -663,6 +697,7 @@ $(function () {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(function() {
             syncUrlWithFilters();
+            saveFilterState(); // Save on search
             if (val && val.length > 2) saveSearch(val);
             if (table) table.search(val).draw();
             
@@ -677,8 +712,57 @@ $(function () {
     $btnClear.on('click', function () {
         $inputSearch.val('').focus();
         $btnClear.addClass('hidden');
+        saveFilterState(); // Save on clear
         if (table) table.search('').draw();
     });
+
+    // Trigger Save on any filter change
+    $('#customer, #model, #document-type, #category, #project-status').on('change', function() {
+        saveFilterState();
+    });
+
+    // Handle Reset with Storage Clear
+    $('#btnResetFilters').on('click', function () {
+      sessionStorage.removeItem(STORAGE_KEY); // Clear saved filters
+      
+      const $filters = $('#customer, #model, #document-type, #category, #project-status');
+      $filters.off('change'); 
+
+      resetSelect2ToAll($('#customer'));
+      resetSelect2ToAll($('#model'));
+      resetSelect2ToAll($('#document-type'));
+      resetSelect2ToAll($('#category'));
+      resetSelect2ToAll($('#project-status'));
+      $('#custom-export-search').val('');
+      
+      syncUrlWithFilters();
+
+      $filters.on('change', function () {
+          saveFilterState();
+          if (table) table.ajax.reload(null, true);
+      });
+
+      if (table) table.search('').draw();
+    });
+
+    // INITIAL LOAD: Restore filters from sessionStorage
+    const savedFilters = loadFilterState();
+    if (savedFilters) {
+        if (savedFilters.search) {
+            $inputSearch.val(savedFilters.search);
+            $btnClear.toggleClass('hidden', savedFilters.search.length === 0);
+        }
+        restoreSelect2($('#customer'), savedFilters.customer);
+        restoreSelect2($('#model'), savedFilters.model);
+        restoreSelect2($('#document-type'), savedFilters.doc_type);
+        restoreSelect2($('#category'), savedFilters.category);
+        restoreSelect2($('#project-status'), savedFilters.project_status);
+        
+        if (table) {
+            if (savedFilters.search) table.search(savedFilters.search);
+            table.ajax.reload();
+        }
+    }
   }
 
   initTable();

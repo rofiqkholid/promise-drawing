@@ -28,6 +28,7 @@
                         <th scope="col" class="px-6 py-3 sorting" data-column="status">Status</th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="part_no">Part No</th>
                         <th scope="col" class="px-6 py-3 sorting" data-column="part_name">Part Name</th>
+                        <th scope="col" class="px-6 py-3 text-center">Monitored</th>
                         <th scope="col" class="px-6 py-3 text-center">Group</th>
                         <th scope="col" class="px-6 py-3 text-center">Action</th>
                     </tr>
@@ -78,6 +79,16 @@
                     <label for="part_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part Name <span class="text-red-600">*</span></label>
                     <input type="text" name="part_name" id="part_name" maxlength="50" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="e.g. Bracket Assembly" required>
                     <p id="add-part_name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                </div>
+
+                <div class="mb-4">
+                     <label class="inline-flex items-center cursor-pointer">
+                        <input type="hidden" name="is_count" value="0">
+                        <input type="checkbox" name="is_count" id="add_is_count" value="1" class="sr-only peer" checked>
+                        <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
+                        <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Include in Monitoring</span>
+                    </label>
+                    <p class="text-xs text-gray-500 mt-1 ml-14">Uncheck if this is a "Jail Part" or reference only.</p>
                 </div>
 
                 <div class="mb-4">
@@ -149,6 +160,15 @@
                             <label for="edit_part_name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white text-left">Part Name <span class="text-red-600">*</span></label>
                             <input type="text" name="part_name" id="edit_part_name" maxlength="50" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:outline-none focus:ring-0 focus:border-gray-300 dark:focus:border-gray-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                             <p id="edit-part_name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                        </div>
+                        
+                         <div class="mb-4">
+                             <label class="inline-flex items-center cursor-pointer">
+                                <input type="hidden" name="is_count" value="0">
+                                <input type="checkbox" name="is_count" id="edit_is_count" value="1" class="sr-only peer">
+                                <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
+                                <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Include in Monitoring</span>
+                            </label>
                         </div>
                     </div>
 
@@ -489,10 +509,36 @@
                     searchable: false,
                     className: 'text-center',
                     render: (d) => {
+                         if (d.is_count == 1 || d.is_count === true) {
+                            return `<span class="text-green-600 dark:text-green-400" title="Monitored"><i class="fa-solid fa-check-circle"></i></span>`;
+                        } else {
+                             return `<span class="text-gray-400 dark:text-gray-500" title="Not Monitored / Ref Only"><i class="fa-solid fa-ban"></i></span>`;
+                        }
+                    }
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    searchable: false,
+                    className: 'text-center',
+                    render: (d) => {
                         if (d.group_id) {
-                            return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-                                        <i class="fa-solid fa-link mr-1"></i> Paired
+                            if (d.partner_part_nos) {
+                                // If partners exist, split and show them as badges
+                                const partners = d.partner_part_nos.split(', ');
+                                let html = '';
+                                partners.forEach(p => {
+                                    html += `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 mr-1 mb-1" title="Paired with ${p}">
+                                        <i class="fa-solid fa-link mr-1"></i> ${p}
                                     </span>`;
+                                });
+                                return html;
+                            } else {
+                                // Fallback if group_id exists but subquery returned null (e.g. only 1 item in group left)
+                                return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300" title="Link exists but no partner found">
+                                            <i class="fa-solid fa-link-slash mr-1"></i> Orphaned Group
+                                        </span>`;
+                            }
                         } else {
                              return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                                         Single
@@ -580,6 +626,7 @@
                         
                         // Reset Partner fields
                         $('#add_has_pair').prop('checked', false).trigger('change');
+                        $('#add_is_count').prop('checked', true); // Reset to default checked
                         $('#add_partner_id').val(null).trigger('change');
 
                         toast('success', 'Success', 'Product added');
@@ -613,6 +660,7 @@
                 success: (data) => {
                     $('#edit_part_no').val(data.part_no);
                     $('#edit_part_name').val(data.part_name);
+                    $('#edit_is_count').prop('checked', (data.is_count == 1 || data.is_count === true));
                     $('#editProductForm').attr('action', `/master/products/${id}`);
 
                     setSelect2Value($('#edit_customer_id'), data.customer_id, data.customer_label || '');

@@ -46,6 +46,14 @@ class ProductsController extends Controller
                 DB::raw("COALESCE(m.name,'') as model_name"),
                 DB::raw("COALESCE(c.code,'') as customer_code"),
                 DB::raw("COALESCE(ps.name,'No Status') as status_name"),
+                'p.is_count',
+                DB::raw("(
+                    SELECT STRING_AGG(p2.part_no, ', ') WITHIN GROUP (ORDER BY p2.part_no)
+                    FROM products p2 
+                    WHERE p2.group_id = p.group_id 
+                    AND p2.id != p.id 
+                    AND p2.is_delete = 0
+                ) as partner_part_nos")
             ]);
 
         $recordsTotal = (clone $query)->count();
@@ -89,6 +97,8 @@ class ProductsController extends Controller
                 'part_no'       => $r->part_no,
                 'part_name'     => $r->part_name,
                 'group_id'      => $r->group_id,
+                'is_count'      => $r->is_count,
+                'partner_part_nos' => $r->partner_part_nos,
             ]);
 
         return response()->json([
@@ -221,6 +231,7 @@ class ProductsController extends Controller
             'part_no'     => ['required', 'string', 'max:20'],
             'part_name'   => ['required', 'string', 'max:50'],
             'partner_id'  => ['nullable', 'exists:products,id'],
+            'is_count'    => ['nullable', 'boolean'],
         ]);
 
         DB::beginTransaction();
@@ -245,7 +256,8 @@ class ProductsController extends Controller
                 'model_id'    => $v['model_id'],
                 'part_no'     => $v['part_no'],
                 'part_name'   => $v['part_name'],
-                'group_id'    => $groupId
+                'group_id'    => $groupId,
+                'is_count'    => $v['is_count'] ?? 1,
             ]);
 
             DB::commit();
@@ -270,6 +282,7 @@ class ProductsController extends Controller
             p.part_no,
             p.part_name,
             p.group_id,
+            p.is_count,
             ISNULL(c.code, '')  AS customer_label,
             ISNULL(m.name, '')  AS model_label
         ")
@@ -318,6 +331,7 @@ class ProductsController extends Controller
             'create_new_partner' => ['nullable', 'boolean'],
             'new_partner_part_no' => ['required_if:create_new_partner,1', 'nullable', 'string', 'max:20', 'unique:products,part_no'],
             'new_partner_part_name' => ['required_if:create_new_partner,1', 'nullable', 'string', 'max:50'],
+            'is_count'    => ['nullable', 'boolean'],
         ]);
 
         DB::beginTransaction();
@@ -329,6 +343,7 @@ class ProductsController extends Controller
                 'model_id'    => $v['model_id'],
                 'part_no'     => $v['part_no'],
                 'part_name'   => $v['part_name'],
+                'is_count'    => $v['is_count'] ?? 1,
             ];
 
             if (!empty($v['unlink_pair']) && $v['unlink_pair'] == true) {
