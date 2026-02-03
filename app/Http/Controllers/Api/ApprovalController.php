@@ -60,16 +60,18 @@ class ApprovalController extends Controller
 
         $level3Approvers = [
             // contoh:
-            7,5, // Pak Gunawan
+            
+            5, // Pak Riyan
+            1, // Admin
         ];
 
         $level2Approvers = [
-            6,5, // Pak Budi
+            6, // Pak Budi
         ];
 
         $level1Approvers = [
-            5, // Pak Riyan 
-            1, // Admin
+            
+            7, // Pak Gunawan
         ];
 
         /**
