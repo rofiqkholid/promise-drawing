@@ -2842,33 +2842,37 @@
         return 0;
       },
 
-      canAct() {
-        return this.isWaiting() && this.approvalLevel === this.currentWaitingLevel();
-      },
+     canAct() {
+    const s = (this.pkg.status || '').toLowerCase();
+    const isFinal = (s === 'approved' || s === 'rejected');
+
+    // Jika user Level 3, tampilkan tombol Approve/Reject selama status belum Final
+    if (this.approvalLevel === 3) {
+        return !isFinal;
+    }
+
+    // Untuk level lain, gunakan aturan normal (hanya tampil jika gilirannya)
+    return this.isWaiting() && this.approvalLevel === this.currentWaitingLevel();
+},
       canRollback() {
-  const s = (this.pkg.status || '').toLowerCase();
+    const s = (this.pkg.status || '').toLowerCase();
 
-  // Waiting L2 → rollback oleh L1
-  if (s === 'waiting l2') {
-    return this.approvalLevel === 1;
-  }
+    // MASTER ACCESS: Level 3 bisa rollback kapan saja kecuali statusnya masih 'Waiting L1' (karena tidak ada yang perlu di-rollback)
+    if (this.approvalLevel === 3) {
+        return s !== 'waiting l1';
+    }
 
-  // Waiting L3 → rollback oleh L2
-  if (s === 'waiting l3') {
-    return this.approvalLevel === 2;
-  }
+    // Aturan Normal untuk Level 1 dan 2
+    if (s === 'waiting l2') return this.approvalLevel === 1;
+    if (s === 'waiting l3') return this.approvalLevel === 2;
 
-  // Approved / Rejected → rollback oleh L3
-  if (s === 'approved' || s === 'rejected') {
-    return this.approvalLevel === 3;
-  }
-
-  return false;
+    return false;
 },
 canShare() {
   const s = (this.pkg.status || '').toLowerCase();
   return s === 'approved';
 },
+
 
 
 

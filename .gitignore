@@ -1,3 +1,4 @@
 .env
 config/
 app/Http/Controllers/Api/FilePreviewController.php
+node_modules/.vite/deps/_metadata.json
