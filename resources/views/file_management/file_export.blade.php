@@ -127,7 +127,7 @@
   {{-- Tabel section --}}
   <div class="mt-8 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div class="p-4 overflow-x-auto w-full">
-          <table id="exportTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <table id="exportTable" class="min-w-[1200px] w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-600 dark:text-gray-400 font-bold tracking-tight">
                     <tr>
                         <th class="px-4 py-3 w-8 text-center">No</th>

@@ -527,11 +527,28 @@
                                 // If partners exist, split and show them as badges
                                 const partners = d.partner_part_nos.split(', ');
                                 let html = '';
-                                partners.forEach(p => {
-                                    html += `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 mr-1 mb-1" title="Paired with ${p}">
-                                        <i class="fa-solid fa-link mr-1"></i> ${p}
+                                const maxDisplay = 2;
+
+                                if (partners.length <= maxDisplay) {
+                                    partners.forEach(p => {
+                                        html += `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 mr-1 mb-1" title="Paired with ${p}">
+                                            <i class="fa-solid fa-link mr-1"></i> ${p}
+                                        </span>`;
+                                    });
+                                } else {
+                                    // Show first few
+                                    partners.slice(0, maxDisplay).forEach(p => {
+                                        html += `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 mr-1 mb-1" title="Paired with ${p}">
+                                            <i class="fa-solid fa-link mr-1"></i> ${p}
+                                        </span>`;
+                                    });
+                                    // Show MORE badge
+                                    const remaining = partners.slice(maxDisplay);
+                                    const remainingText = remaining.join(', ');
+                                    html += `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 mr-1 mb-1 cursor-help" title="Also paired with: ${remainingText}">
+                                        +${remaining.length} more
                                     </span>`;
-                                });
+                                }
                                 return html;
                             } else {
                                 // Fallback if group_id exists but subquery returned null (e.g. only 1 item in group left)
