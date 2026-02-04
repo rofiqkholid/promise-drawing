@@ -4,179 +4,194 @@
 
 @section('content')
 
-<div class="p-6 lg:p-8 bg-slate-50 dark:bg-gray-900 min-h-screen" 
+<div class="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0F1A] font-sans antialiased text-slate-900 dark:text-slate-100 p-4 md:p-8"
     x-data="receiptDetail({
         revisionId: @js($receiptId ?? null),
         userDeptCode: @js($userDeptCode ?? null)
     })" 
     x-init="init()">
 
-    {{-- Loading Overlay --}}
+    {{-- Glass Loading Overlay --}}
     <div x-show="isLoadingRevision" x-transition.opacity
-        class="fixed inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center"
+        class="fixed inset-0 bg-white/40 dark:bg-black/60 backdrop-blur-[2px] z-[100] flex flex-col items-center justify-center"
         style="display: none;">
-        <div class="relative flex items-center justify-center mb-4">
-            <div class="absolute animate-ping inline-flex h-12 w-12 rounded-full bg-blue-400 opacity-25"></div>
-            <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <div class="relative flex items-center justify-center mb-6">
+            <div class="absolute animate-ping inline-flex h-16 w-16 rounded-full bg-indigo-500 opacity-20"></div>
+            <div class="w-12 h-12 border-[3px] border-indigo-600 border-t-transparent rounded-full animate-spin shadow-lg shadow-indigo-500/20"></div>
         </div>
-        <span class="text-sm font-semibold text-slate-700 dark:text-slate-200 tracking-wide animate-pulse">Loading Data...</span>
+        <p class="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-[0.2em] uppercase animate-pulse">Synchronizing Data</p>
     </div>
 
-    <div class="max-w-6xl mx-auto space-y-8">
+    <div class="max-w-7xl mx-auto space-y-8">
         
-        {{-- Header Section --}}
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <h2 class="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-3">
-                    <span class="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg text-blue-600 dark:text-blue-400">
-                        <i class="fa-solid fa-file-invoice fa-lg"></i>
-                    </span>
-                    Package Details
-                </h2>
-                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Review specifications and download stamped files.</p>
+        {{-- Navigation & Breadcrumbs --}}
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="space-y-1">
+                <nav class="flex items-center gap-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">
+                    <a href="{{ route('receipt') }}" class="hover:text-indigo-500 transition-colors">Receipt</a>
+                    <i class="fa-solid fa-chevron-right text-[8px] opacity-30"></i>
+                    <span class="text-indigo-600 dark:text-indigo-400">Package Details</span>
+                </nav>
+                <div class="flex items-center gap-4">
+                    <div class="h-12 w-1.5 bg-indigo-600 rounded-full hidden md:block"></div>
+                    <div>
+                        <h2 class="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white leading-none">
+                            Drawing Package <span class="text-indigo-600" x-text="pkg.metadata?.ecn_no || '—'"></span>
+                        </h2>
+                        <p class="mt-2 text-sm font-medium text-slate-500 dark:text-slate-400 max-w-lg leading-relaxed">
+                            Secured access to technical drawings and engineering change notifications.
+                        </p>
+                    </div>
+                </div>
             </div>
-            <div class="flex items-center gap-3">
+            
+            <div class="flex-shrink-0">
                 <a href="{{ route('receipt') }}"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-gray-700 transition-all shadow-sm">
-                    <i class="fa-solid fa-arrow-left"></i> Back to List
+                    class="group inline-flex items-center gap-2.5 px-5 py-2.5 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 text-xs font-bold uppercase tracking-wider rounded-xl hover:border-indigo-500/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm">
+                    <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i> Return to List
                 </a>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
             
-            {{-- LEFT COLUMN: Metadata Information --}}
-            <div class="lg:col-span-2 space-y-6">
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-100 dark:border-gray-700 flex justify-between items-center bg-slate-50/50 dark:bg-gray-800">
-                        <h3 class="font-semibold text-slate-800 dark:text-white">Project Information</h3>
-                        
-                        {{-- Revision Badge --}}
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
+            {{-- Main Content Column --}}
+            <div class="lg:col-span-3 space-y-8">
+                
+                {{-- Engineering Specifications Card --}}
+                <div class="bg-white dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm backdrop-blur-sm">
+                    <div class="px-8 py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/30 dark:bg-slate-800/20">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-microchip text-indigo-500 text-sm"></i>
+                            <h3 class="font-bold text-xs uppercase tracking-[0.15em] text-slate-400">Engineering Specifications</h3>
+                        </div>
+                        <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-widest rounded-md border border-indigo-100 dark:border-indigo-900/30"
                             x-text="revisionBadgeText()">
                         </span>
                     </div>
 
-                    <div class="p-6">
-                        {{-- Grid Layout for Metadata --}}
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-6">
-                            {{-- Baris 1 --}}
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Customer</label>
-                                <p class="text-sm font-medium text-slate-800 dark:text-slate-200 truncate" x-text="pkg.metadata?.customer || '-'"></p>
+                    <div class="p-8">
+                        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-y-8 gap-x-10">
+                            @foreach([
+                                ['label' => 'Customer',      'key' => 'customer', 'icon' => 'fa-building'],
+                                ['label' => 'Project Model', 'key' => 'model',    'icon' => 'fa-car-side'],
+                                ['label' => 'Part Number',   'key' => 'part_no',  'icon' => 'fa-hashtag'],
+                                ['label' => 'Document Group','key' => 'doc_type', 'icon' => 'fa-layer-group'],
+                                ['label' => 'Sub Category',  'key' => 'category', 'icon' => 'fa-tags'],
+                                ['label' => 'ECN Control',   'key' => 'ecn_no',   'icon' => 'fa-barcode']
+                            ] as $meta)
+                            <div class="space-y-2">
+                                <div class="flex items-center gap-1.5 opacity-60">
+                                    <i class="fa-solid {{ $meta['icon'] }} text-[10px] text-slate-400"></i>
+                                    <label class="block text-[9px] font-black uppercase tracking-widest text-slate-400">{{ $meta['label'] }}</label>
+                                </div>
+                                <p class="text-sm font-bold text-slate-800 dark:text-slate-200 truncate" x-text="pkg.metadata?.{{ $meta['key'] }} || '—'"></p>
                             </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Model</label>
-                                <p class="text-sm font-medium text-slate-800 dark:text-slate-200 truncate" x-text="pkg.metadata?.model || '-'"></p>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Part Number</label>
-                                <p class="text-sm font-medium text-slate-800 dark:text-slate-200 truncate" x-text="pkg.metadata?.part_no || '-'"></p>
-                            </div>
-                            
-                            {{-- Baris 2 --}}
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Doc Type</label>
-                                <p class="text-sm font-medium text-slate-800 dark:text-slate-200 truncate" x-text="pkg.metadata?.doc_type || '-'"></p>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Category</label>
-                                <p class="text-sm font-medium text-slate-800 dark:text-slate-200 truncate" x-text="pkg.metadata?.category || '-'"></p>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">ECN Number</label>
-                                <p class="text-sm font-medium text-slate-800 dark:text-slate-200 truncate" x-text="pkg.metadata?.ecn_no || '-'"></p>
-                            </div>
+                            @endforeach
+                        </div>
 
-                            {{-- Divider --}}
-                            <div class="col-span-full border-t border-slate-100 dark:border-gray-700 my-1"></div>
-
-                            {{-- Baris 3 (Total Stats & Expire) --}}
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Files</label>
-                                <p class="text-sm font-bold text-slate-800 dark:text-slate-200">
-                                    <i class="fa-regular fa-copy mr-1 text-slate-400"></i>
-                                    <span x-text="getTotalFiles()"></span> Files
-                                </p>
+                        <div class="mt-10 pt-8 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="flex items-center gap-4 bg-slate-50/50 dark:bg-slate-800/30 p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                                <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center text-slate-400 shadow-sm">
+                                    <i class="fa-solid fa-files-medical"></i>
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Payload Files</label>
+                                    <p class="text-sm font-black text-slate-800 dark:text-slate-100"><span x-text="getTotalFiles()"></span> Items</p>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Total Size</label>
-                                <p class="text-sm font-bold text-slate-800 dark:text-slate-200">
-                                    <i class="fa-solid fa-weight-hanging mr-1 text-slate-400"></i>
-                                    <span x-text="getTotalSize()"></span>
-                                </p>
+                            <div class="flex items-center gap-4 bg-slate-50/50 dark:bg-slate-800/30 p-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+                                <div class="w-10 h-10 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center text-slate-400 shadow-sm">
+                                    <i class="fa-solid fa-hard-drive"></i>
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Package Weight</label>
+                                    <p class="text-sm font-black text-slate-800 dark:text-slate-100 uppercase" x-text="getTotalSize()"></p>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Link Expires On</label>
-                                <p class="text-sm font-bold text-red-600 dark:text-red-400">
-                                    <i class="fa-regular fa-clock mr-1"></i>
-                                    <span x-text="formatDate(pkg.metadata?.expired_at)"></span>
-                                </p>
+                            <div class="flex items-center gap-4 bg-red-50/30 dark:bg-red-900/10 p-4 rounded-xl border border-dashed border-red-200/50 dark:border-red-900/30">
+                                <div class="w-10 h-10 rounded-lg bg-white dark:bg-red-600 flex items-center justify-center text-red-500 shadow-sm">
+                                    <i class="fa-solid fa-hourglass-end text-white text-xs"></i>
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-black uppercase tracking-widest text-red-400 mb-0.5">Access Termination</label>
+                                    <p class="text-sm font-black text-red-600 dark:text-red-400 uppercase" x-text="formatDate(pkg.metadata?.expired_at)"></p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Accordion File Lists --}}
+                {{-- Unified File Explorer --}}
                 <div class="space-y-4">
                     @foreach([
-                        ['title' => '2D Drawings', 'icon' => 'fa-drafting-compass', 'key' => '2d', 'color' => 'text-purple-600', 'bg' => 'bg-purple-100'],
-                        ['title' => '3D Models', 'icon' => 'fa-cubes', 'key' => '3d', 'color' => 'text-emerald-600', 'bg' => 'bg-emerald-100'],
-                        ['title' => 'ECN / Documents', 'icon' => 'fa-file-lines', 'key' => 'ecn', 'color' => 'text-amber-600', 'bg' => 'bg-amber-100']
+                        ['title' => '2D Technical Drawings', 'key' => '2d',  'icon' => 'fa-compass-drafting', 'color' => 'indigo'],
+                        ['title' => '3D Geometric Models',  'key' => '3d',  'icon' => 'fa-cube',             'color' => 'emerald'],
+                        ['title' => 'Engineering Documents', 'key' => 'ecn', 'icon' => 'fa-file-signature',  'color' => 'amber']
                     ] as $section)
-                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 overflow-hidden transition-all duration-300"
-                         :class="{'ring-2 ring-blue-500/20': openSections.includes('{{ $section['key'] }}')}">
+                    <div class="group/section bg-white dark:bg-slate-900/40 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transition-all duration-300 shadow-sm"
+                         :class="{'ring-2 ring-{{ $section['color'] }}-500/20 border-{{ $section['color'] }}-500/20': openSections.includes('{{ $section['key'] }}')}">
                         
                         <button @click="toggleSection('{{ $section['key'] }}')"
-                            class="w-full px-6 py-4 flex items-center justify-between bg-white dark:bg-gray-800 hover:bg-slate-50 dark:hover:bg-gray-700/50 transition-colors group">
-                            <div class="flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-lg flex items-center justify-center {{ $section['bg'] }} dark:bg-gray-700">
-                                    <i class="fa-solid {{ $section['icon'] }} {{ $section['color'] }} dark:text-gray-300 text-lg"></i>
+                            class="w-full px-8 py-5 flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all">
+                            <div class="flex items-center gap-5">
+                                <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-{{ $section['color'] }}-50 dark:bg-{{ $section['color'] }}-900/20 text-{{ $section['color'] }}-600 dark:text-{{ $section['color'] }}-400 group-hover/section:scale-110 transition-transform shadow-sm">
+                                    <i class="fa-solid {{ $section['icon'] }} text-sm"></i>
                                 </div>
-                                <div class="text-left">
-                                    <span class="block text-sm font-bold text-slate-800 dark:text-white group-hover:text-blue-600 transition-colors">{{ $section['title'] }}</span>
-                                    <span class="text-xs text-slate-500 dark:text-slate-400" x-text="`${pkg.files?.['{{ $section['key'] }}']?.length || 0} Files Available`"></span>
+                                <div class="text-left space-y-0.5">
+                                    <h4 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">{{ $section['title'] }}</h4>
+                                    <p class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]" x-text="`${pkg.files?.['{{ $section['key'] }}']?.length || 0} Registered Objects`"></p>
                                 </div>
                             </div>
-                            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 dark:bg-gray-700 text-slate-400 group-hover:text-blue-600 transition-all">
-                                <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300"
-                                   :class="{'rotate-180': openSections.includes('{{ $section['key'] }}')}"></i>
+                            <div class="flex items-center gap-3">
+                                <i class="fa-solid fa-chevron-down text-[10px] text-slate-300 transition-transform duration-500 ease-out"
+                                   :class="{'rotate-180 text-{{ $section['color'] }}-500': openSections.includes('{{ $section['key'] }}')}"></i>
                             </div>
                         </button>
 
-                        <div x-show="openSections.includes('{{ $section['key'] }}')" x-collapse>
-                            <div class="border-t border-slate-100 dark:border-gray-700">
-                                <ul class="divide-y divide-slate-100 dark:divide-gray-700">
-                                    <template x-for="file in (pkg.files?.['{{ $section['key'] }}'] || [])" :key="file.id || file.name">
-                                        <li class="px-6 py-3 flex items-center hover:bg-slate-50 dark:hover:bg-gray-700/30 transition-colors group/item">
-                                            <div class="flex items-center min-w-0 gap-3 w-full">
-                                                <div class="flex-shrink-0">
-                                                    <template x-if="file.icon_src">
-                                                        <img :src="file.icon_src" class="w-8 h-8 object-contain" />
-                                                    </template>
-                                                    <template x-if="!file.icon_src">
-                                                        <div class="w-8 h-8 rounded bg-slate-100 dark:bg-gray-700 flex items-center justify-center text-slate-400">
-                                                            <i class="fa-solid fa-file"></i>
+                        <div x-show="openSections.includes('{{ $section['key'] }}')" x-collapse x-cloak>
+                            <div class="px-6 pb-6 pt-2">
+                                <div class="bg-slate-50/50 dark:bg-slate-800/20 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800/50">
+                                    <ul class="divide-y divide-slate-100 dark:divide-slate-800/50">
+                                        <template x-for="file in (pkg.files?.['{{ $section['key'] }}'] || [])" :key="file.id || file.name">
+                                            <li class="px-6 py-4 flex items-center justify-between hover:bg-white dark:hover:bg-slate-800/50 transition-colors group/file">
+                                                <div class="flex items-center gap-5 min-w-0 flex-1">
+                                                    <div class="relative flex-shrink-0 group-hover/file:rotate-6 transition-transform">
+                                                        <template x-if="file.icon_src">
+                                                            <img :src="file.icon_src" class="w-9 h-9 object-contain drop-shadow-sm" />
+                                                        </template>
+                                                        <template x-if="!file.icon_src">
+                                                            <div class="w-9 h-9 rounded-lg bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 shadow-sm">
+                                                                <i class="fa-solid fa-file-code text-xs"></i>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                    
+                                                    <div class="min-w-0 pr-4">
+                                                        <h5 class="text-xs font-bold text-slate-700 dark:text-slate-200 truncate group-hover/file:text-indigo-600 transition-colors" x-text="file.name"></h5>
+                                                        <div class="flex items-center gap-3 mt-1 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                                            <span class="flex items-center gap-1"><i class="fa-regular fa-hard-drive opacity-50"></i> <span x-text="file.size ? formatBytes(file.size) : '0 B'"></span></span>
+                                                            <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                                            <span class="flex items-center gap-1"><i class="fa-regular fa-clock opacity-50"></i> READY</span>
                                                         </div>
-                                                    </template>
-                                                </div>
-                                                
-                                                <div class="flex flex-col min-w-0 flex-grow">
-                                                    <div class="flex justify-between items-center">
-                                                        <span class="text-sm font-medium text-slate-700 dark:text-slate-200 truncate pr-4" x-text="file.name"></span>
-                                                        <span class="text-[10px] text-slate-400 bg-slate-100 dark:bg-gray-700 px-2 py-0.5 rounded" x-text="file.size ? formatBytes(file.size) : ''"></span>
                                                     </div>
                                                 </div>
+                                                
+                                                <button @click="downloadSingleFile(file)" class="flex-shrink-0 w-8 h-8 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-indigo-600 hover:border-indigo-500 transition-all flex items-center justify-center opacity-0 group-hover/file:opacity-100 shadow-sm translate-x-4 group-hover/file:translate-x-0">
+                                                    <i class="fa-solid fa-download text-[10px]"></i>
+                                                </button>
+                                            </li>
+                                        </template>
+                                        <template x-if="!pkg.files?.['{{ $section['key'] }}']?.length">
+                                            <div class="px-8 py-10 text-center space-y-3">
+                                                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-300">
+                                                    <i class="fa-solid fa-folder-open text-xl"></i>
+                                                </div>
+                                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">System Data Node Empty<br><span class="opacity-50 font-medium">No objects found for this classification.</span></p>
                                             </div>
-                                        </li>
-                                    </template>
-                                    <template x-if="!pkg.files?.['{{ $section['key'] }}']?.length">
-                                        <li class="p-8 text-center flex flex-col items-center justify-center text-slate-400">
-                                            <i class="fa-regular fa-folder-open text-2xl mb-2 opacity-50"></i>
-                                            <span class="text-sm italic">No files found in this category.</span>
-                                        </li>
-                                    </template>
-                                </ul>
+                                        </template>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -184,49 +199,70 @@
                 </div>
             </div>
 
-            {{-- RIGHT COLUMN: Actions & History --}}
+            {{-- Controls & Actions Column --}}
             <div class="lg:col-span-1 space-y-6">
                 
-                {{-- Download All Card --}}
-                <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
-                    <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
+                {{-- Master Control Card --}}
+                <div class="bg-indigo-600 dark:bg-indigo-700 rounded-2xl shadow-xl shadow-indigo-600/20 p-8 text-white relative overflow-hidden group">
+                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
+                    <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-indigo-400/20 rounded-full blur-2xl"></div>
                     
-                    <h3 class="text-lg font-bold mb-2">Download Package</h3>
-                    <p class="text-blue-100 text-sm mb-6">Download all stamped drawings and documents in a single ZIP file.</p>
-                    
-                    <button @click="downloadPackage()"
-                        class="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white text-blue-700 rounded-lg font-bold hover:bg-blue-50 hover:shadow-md transition-all active:scale-95">
-                        <i class="fa-solid fa-file-zipper"></i>
-                        Download ZIP Archive
-                    </button>
+                    <div class="relative z-10 space-y-6">
+                        <div class="space-y-2">
+                            <h3 class="text-xl font-black uppercase tracking-tight leading-none">Compile Package</h3>
+                            <p class="text-indigo-100 text-[10px] font-bold uppercase tracking-[0.1em] opacity-80">ZIP Archive Generation</p>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3 text-xs bg-black/10 p-3 rounded-xl border border-white/5">
+                                <i class="fa-solid fa-stamp text-indigo-300"></i>
+                                <span class="font-bold tracking-wide">Auto-Stamp Applied</span>
+                            </div>
+                            <div class="flex items-center gap-3 text-xs bg-black/10 p-3 rounded-xl border border-white/5">
+                                <i class="fa-solid fa-shield-check text-indigo-300"></i>
+                                <span class="font-bold tracking-wide">SECURE Channel SSL</span>
+                            </div>
+                        </div>
+
+                        <button @click="downloadPackage()"
+                            class="w-full flex items-center justify-center gap-3 py-4 bg-white text-indigo-600 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-slate-50 hover:shadow-2xl hover:shadow-indigo-900/40 transition-all active:scale-95 group/btn">
+                            <i class="fa-solid fa-cloud-arrow-down group-hover/btn:translate-y-0.5 transition-transform"></i>
+                            Execute Download
+                        </button>
+                    </div>
                 </div>
 
-                {{-- Revision Selector --}}
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 p-5" 
+                {{-- Version Controller --}}
+                <div class="bg-white dark:bg-slate-900/40 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6" 
                      x-show="revisionList.length > 0">
-                    <label class="flex items-center text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-                        <i class="fa-solid fa-clock-rotate-left mr-2 text-slate-400"></i>
-                        Revision History
-                    </label>
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="fa-solid fa-code-merge text-slate-400 text-xs"></i>
+                        <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-400">Object Version History</h4>
+                    </div>
                     <div class="relative">
                         <select x-model="selectedRevisionId" @change="onRevisionChange()" :disabled="isLoadingRevision"
-                            class="block w-full py-2.5 pl-3 pr-10 text-sm border-slate-300 dark:border-gray-600 bg-slate-50 dark:bg-gray-700 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:text-white cursor-pointer hover:bg-white dark:hover:bg-gray-600 transition-colors">
+                            class="block w-full py-3.5 pl-4 pr-10 text-xs font-black uppercase tracking-widest border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 dark:text-white cursor-pointer hover:bg-white dark:hover:bg-slate-800 transition-all appearance-none">
                             <template x-for="rev in revisionList" :key="rev.id">
                                 <option :value="rev.id" x-text="rev.text" :selected="rev.id == selectedRevisionId"></option>
                             </template>
                         </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none opacity-30">
+                            <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                        </div>
                     </div>
-                    <p class="text-xs text-slate-400 mt-2">Select a revision to view its details.</p>
+                    <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-3 text-center uppercase tracking-widest">Select snapshot version to restore</p>
                 </div>
 
-                {{-- Help / Info --}}
-                <div class="bg-blue-50 dark:bg-gray-800/50 rounded-xl p-5 border border-blue-100 dark:border-gray-700">
-                    <div class="flex items-start gap-3">
-                        <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
-                        <div>
-                            <h4 class="text-sm font-semibold text-blue-900 dark:text-blue-300">Important Note</h4>
-                            <p class="text-xs text-blue-700 dark:text-slate-400 mt-1 leading-relaxed">
-                                All downloaded files are automatically stamped with your supplier information and the current timestamp for tracking purposes.
+                {{-- Technical Protocol --}}
+                <div class="p-6 rounded-2xl border border-indigo-100 dark:border-slate-800 bg-indigo-50/20 dark:bg-indigo-900/5">
+                    <div class="flex items-start gap-4">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-500 shrink-0">
+                            <i class="fa-solid fa-shield-halved text-xs"></i>
+                        </div>
+                        <div class="space-y-2">
+                            <h4 class="text-[10px] font-black text-indigo-900 dark:text-indigo-400 uppercase tracking-widest">Quality Protocol</h4>
+                            <p class="text-[10px] font-bold text-indigo-700/60 dark:text-slate-500 leading-relaxed uppercase tracking-wider">
+                                All payloads are injected with <span class="text-indigo-600 dark:text-indigo-400">Digital Identity Stamps</span>. Unauthorized distribution is trace-mapped by system forensics.
                             </p>
                         </div>
                     </div>
@@ -237,6 +273,7 @@
         </div>
     </div>
 </div>
+
 @endsection
 
 @push('style')
@@ -354,18 +391,41 @@
                     if (this.selectedRevisionId) this.fetchData(this.selectedRevisionId);
                 },
 
+                // --- Single File Download ---
+                downloadSingleFile(file) {
+                    if (!file || !file.id) return;
+                    
+                    // Simple download - the backend handles the stamp
+                    const downloadUrl = `/download/receipt/file/${file.id}`;
+                    
+                    notify('info', `Preparing ${file.name}...`);
+                    
+                    // Trigger download
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.setAttribute('download', file.name);
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                },
+
                 // --- Download Package ---
                 downloadPackage() {
                     if (!this.exportId) return notify('error', 'Package ID not found.');
 
                     Swal.fire({
-                        title: 'Download All Files?',
-                        text: "Files will be stamped and compressed into a ZIP archive.",
+                        title: 'Confirm System Export',
+                        text: "Target objects will be stamped and compiled into an encrypted ZIP container.",
                         icon: 'question',
                         showCancelButton: true,
-                        confirmButtonText: 'Yes, Download',
-                        confirmButtonColor: '#2563eb',
-                        cancelButtonColor: '#94a3b8'
+                        confirmButtonText: 'Execute Export',
+                        confirmButtonColor: '#4f46e5',
+                        cancelButtonColor: '#94a3b8',
+                        customClass: {
+                            popup: 'rounded-2xl',
+                            confirmButton: 'rounded-xl font-bold uppercase tracking-widest text-[10px] px-6 py-3',
+                            cancelButton: 'rounded-xl font-bold uppercase tracking-widest text-[10px] px-6 py-3'
+                        }
                     }).then((result) => {
                         if (result.isConfirmed) this.executeZipDownload();
                     });
@@ -377,11 +437,15 @@
                     const signal = this._downloadAbortController.signal;
 
                     Swal.fire({
-                        title: 'Preparing ZIP...',
-                        html: 'Applying stamps and compressing files.<br><span class="text-xs text-gray-400">Please do not close this page.</span>',
+                        title: 'Compiling Data...',
+                        html: '<div class="space-y-3 mt-4"><div class="text-[10px] font-black uppercase tracking-widest text-indigo-600 animate-pulse">Processing Payloads</div><p class="text-[11px] text-slate-400 font-medium">Please maintain connection. This process may take several moments.</p></div>',
                         allowOutsideClick: false,
                         showCancelButton: true,
-                        cancelButtonText: 'Cancel',
+                        cancelButtonText: 'Abort',
+                        customClass: {
+                            popup: 'rounded-2xl p-10',
+                            cancelButton: 'rounded-xl font-bold uppercase tracking-widest text-[10px] px-6 py-2'
+                        },
                         didOpen: () => Swal.showLoading()
                     }).then((res) => {
                         if (res.dismiss === Swal.DismissReason.cancel) {
@@ -403,28 +467,23 @@
                     })
                     .then(data => {
                         if (data.success && data.download_url) {
-                            Swal.fire({
-                                title: 'Ready!',
-                                text: 'Your package is ready to download.',
-                                icon: 'success',
-                                confirmButtonText: 'Download Now',
-                                confirmButtonColor: '#10b981'
-                            }).then((r) => {
-                                if(r.isConfirmed) window.location.href = data.download_url;
-                            });
+                            Swal.close();
+                            notify('success', 'Package Exported Successfully');
+                            window.location.href = data.download_url;
                         } else {
                             throw new Error('Invalid server response.');
                         }
                     })
                     .catch(err => {
                         if (err.name === 'AbortError') {
-                            notify('info', 'Download canceled.');
+                            notify('info', 'Process aborted by user.');
                         } else {
-                            Swal.fire('Error', err.message, 'error');
+                            Swal.fire('System Error', err.message, 'error');
                         }
                     });
                 }
             };
         }
+
     </script>
 @endpush

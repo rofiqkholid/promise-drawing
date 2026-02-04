@@ -140,6 +140,60 @@ class ReceiptController extends Controller
             'categories' => $categories,
         ]);
     }
+    public function choiseFilter(Request $request): JsonResponse
+    {
+        $userId = Auth::user()->id ?? 1;
+
+        // 1. Identify Supplier ID
+        $userSupplier = DB::table('user_supplier')->where('user_id', $userId)->first();
+        if ($userSupplier) {
+            $userRoleId = (string) $userSupplier->supplier_id;
+        } else {
+            $userRole = DB::table('user_roles')->where('user_id', $userId)->first();
+            if (!$userRole) {
+                return response()->json([
+                    'totalReceived' => 0,
+                    'totalActive' => 0,
+                    'totalExpired' => 0,
+                    'totalReceivedToday' => 0,
+                ]);
+            }
+            $userRoleId = (string) $userRole->role_id;
+        }
+
+        $baseQuery = DB::table('package_shares as ps')
+            ->join('doc_package_revisions as dpr', 'ps.revision_id', '=', 'dpr.id')
+            ->where('ps.supplier_id', $userRoleId)
+            ->where('dpr.revision_status', 'approved');
+
+        // Apply filters if any
+        if ($request->filled('customer') && $request->customer !== 'All') {
+            $baseQuery->join('doc_packages as dp_c', 'dpr.package_id', '=', 'dp_c.id')
+                ->join('customers as c_c', 'dp_c.customer_id', '=', 'c_c.id')
+                ->where('c_c.code', $request->customer);
+        }
+        // ... more filters could be added here if needed, but usually KPI follows global filters
+
+        $totalReceived = (clone $baseQuery)->count();
+        $totalActive   = (clone $baseQuery)
+            ->where(function ($q) {
+                $q->whereNull('ps.expired_at')
+                    ->orWhere('ps.expired_at', '>', now());
+            })->count();
+        $totalExpired  = (clone $baseQuery)
+            ->whereNotNull('ps.expired_at')
+            ->where('ps.expired_at', '<=', now())->count();
+        
+        $totalReceivedToday = (clone $baseQuery)
+            ->whereDate('ps.shared_at', Carbon::today())->count();
+
+        return response()->json([
+            'totalReceived'      => $totalReceived,
+            'totalActive'        => $totalActive,
+            'totalExpired'       => $totalExpired,
+            'totalReceivedToday' => $totalReceivedToday,
+        ]);
+    }
 
     public function receiptList(Request $request): JsonResponse
     {

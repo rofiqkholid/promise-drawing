@@ -180,7 +180,7 @@ class ShareController extends Controller
     {
         $start       = (int) $request->get('start', 0);
         $length      = (int) $request->get('length', 10);
-        $searchValue = $request->get('search')['value'] ?? '';
+        $searchValue = $request->input('search_term') ?? $request->input('search.value') ?? '';
 
         $orderColumnIndex = (int) ($request->get('order')[0]['column'] ?? 0);
         $orderDir         = $request->get('order')[0]['dir'] ?? 'desc';
