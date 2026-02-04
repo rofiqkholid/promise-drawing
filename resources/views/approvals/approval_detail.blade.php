@@ -2843,8 +2843,14 @@
       },
 
       canAct() {
-        return this.isWaiting() && this.approvalLevel === this.currentWaitingLevel();
-      },
+    if (!this.isWaiting()) return false;
+    
+    // Level 3 (ICT/Manager) bisa approve di semua stage L1, L2, atau L3
+    if (this.approvalLevel === 3) return true;
+
+    // Level lainnya harus sesuai dengan stage-nya
+    return this.approvalLevel === this.currentWaitingLevel();
+},
       canRollback() {
   const s = (this.pkg.status || '').toLowerCase();
 
