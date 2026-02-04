@@ -1,6 +1,23 @@
 @extends('layouts.app')
 @section('title', 'Master Data Management')
 @section('header-title', 'Product Master')
+@push('css')
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #475569;
+    }
+</style>
+@endpush
 
 @section('content')
 <div class="p-4 sm:p-6 lg:p-8 text-gray-900 dark:text-gray-100">
@@ -180,10 +197,10 @@
                             <div id="edit_current_partner_info" class="mb-6 hidden">
                                 <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Connection:</p>
                                 <div class="bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-600 shadow-sm">
-                                    <div class="w-full space-y-2" id="edit_partner_label_display">
+                                    <div class="w-full space-y-1 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar" id="edit_partner_label_display">
                                         {{-- Partner items with toggles will be injected here --}}
                                     </div>
-                                    <div class="mt-3 flex justify-end">
+                                    <div class="mt-3 pt-2 border-t border-gray-100 dark:border-gray-700 flex justify-end">
                                         <label class="inline-flex items-center cursor-pointer select-none">
                                             <input type="checkbox" name="unlink_pair" value="1" class="sr-only peer">
                                             <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-red-300 dark:peer-focus:ring-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-red-600"></div>
@@ -707,16 +724,15 @@
                         data.partner_label.forEach(p => {
                             const isChecked = (p.is_count == 1 || p.is_count === true) ? 'checked' : '';
                             partnersHtml += `
-                                <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/30 rounded border border-gray-100 dark:border-gray-600/50">
+                                <div class="flex items-center justify-between p-1.5 bg-gray-50 dark:bg-gray-700/30 rounded border border-gray-100 dark:border-gray-600/50">
                                     <div class="flex items-center overflow-hidden mr-2">
-                                        <i class="fa-solid fa-cube text-blue-500 mr-2 flex-shrink-0"></i>
                                         <div class="flex flex-col truncate">
-                                            <span class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate" title="${p.text}">${p.text}</span>
-                                            <span class="text-[10px] text-gray-500">Connected Product</span>
+                                            <span class="text-[11px] font-semibold text-gray-800 dark:text-gray-200 truncate" title="${p.text}">${p.text}</span>
+                                            <span class="text-[9px] text-gray-500">Connected Product</span>
                                         </div>
                                     </div>
                                     <div class="flex items-center flex-shrink-0" title="Include in Monitoring">
-                                        <label class="inline-flex items-center cursor-pointer scale-[0.85] origin-right">
+                                        <label class="inline-flex items-center cursor-pointer scale-[0.75] origin-right">
                                             <input type="hidden" name="partner_monitoring[${p.id}]" value="0">
                                             <input type="checkbox" name="partner_monitoring[${p.id}]" value="1" class="sr-only peer" ${isChecked}>
                                             <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
