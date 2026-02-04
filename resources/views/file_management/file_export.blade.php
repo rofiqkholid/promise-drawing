@@ -4,7 +4,9 @@
 @section('header-title', 'File Manager - Download')
 
 @section('content')
-<nav class="flex px-5 py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300 rounded-md" aria-label="Breadcrumb">
+<div class="w-full px-2 sm:px-4 lg:px-6 xl:px-4 2xl:px-6">
+<div class="w-full">
+<nav class="flex px-3 sm:px-5 py-2 sm:py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300 rounded-md" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
 
         <li class="inline-flex items-center">
@@ -24,47 +26,48 @@
         </li>
     </ol>
 </nav>
+</div>
 
-<div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900" x-data="{ modalOpen: false }">
+<div class="w-full p-3 sm:p-4 lg:p-6 bg-gray-50 dark:bg-gray-900" x-data="{ modalOpen: false }">
   <div class="sm:flex sm:items-center sm:justify-between">
     <div>
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Download Files</h2>
+      <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 sm:text-2xl lg:text-3xl">Download Files</h2>
       <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Find and download your files from the Data Center.</p>
     </div>
 
-    {{-- Original KPI Cards Style --}}
-    <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4 sm:mt-0">
-      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-md">
-          <i class="fa-solid fa-box-archive fa-lg"></i>
+    {{-- KPI Cards - Horizontal Scroll on Mobile --}}
+    <div class="mt-4 flex overflow-x-auto pb-2 sm:pb-0 gap-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:mt-0 no-scrollbar">
+      <div class="flex-shrink-0 w-[240px] sm:w-auto flex items-center p-3 sm:p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm">
+        <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-md">
+          <i class="fa-solid fa-box-archive text-base sm:text-lg"></i>
         </div>
-        <div class="ml-4">
-          <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Packages</p>
-          <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <div class="ml-3 sm:ml-4">
+          <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Total Packages</p>
+          <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
             <span id="cardTotal">0</span>
           </p>
         </div>
       </div>
 
-      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-yellow-500 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/50 rounded-md">
-          <i class="fa-solid fa-layer-group fa-lg"></i>
+      <div class="flex-shrink-0 w-[240px] sm:w-auto flex items-center p-3 sm:p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm">
+        <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 text-yellow-500 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/50 rounded-md">
+          <i class="fa-solid fa-layer-group text-base sm:text-lg"></i>
         </div>
-        <div class="ml-4">
-          <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revisions</p>
-          <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <div class="ml-3 sm:ml-4">
+          <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Total Revisions</p>
+          <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
             <span id="cardTotalRevisions">0</span>
           </p>
         </div>
       </div>
 
-      <div class="flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-md">
-          <i class="fa-solid fa-cloud-arrow-down fa-lg"></i>
+      <div class="flex-shrink-0 w-[240px] sm:w-auto flex items-center p-3 sm:p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm">
+        <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-md">
+          <i class="fa-solid fa-cloud-arrow-down text-base sm:text-lg"></i>
         </div>
-        <div class="ml-4">
-          <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Download</p>
-          <p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <div class="ml-3 sm:ml-4">
+          <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Total Download</p>
+          <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
             <span id="cardDownload">0</span>
           </p>
         </div>
@@ -73,7 +76,7 @@
   </div>
 
   {{-- Clean & Unified Search Center --}}
-  <div class="mt-6 bg-white dark:bg-gray-800 px-6 py-6 rounded-md border border-gray-200 dark:border-gray-700 transition-all duration-300">
+  <div class="mt-4 sm:mt-6 bg-white dark:bg-gray-800 px-4 sm:px-6 py-4 sm:py-6 rounded-md border border-gray-200 dark:border-gray-700 transition-all duration-300">
     
     {{-- Slim Hero Search Bar --}}
     <div class="flex flex-col items-center mb-6">
@@ -85,8 +88,8 @@
 
             <input type="text" 
                 id="custom-export-search" 
-                class="block w-full pl-14 pr-20 py-3.5 border border-gray-300 dark:border-gray-600 rounded-full leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-base transition-all duration-300 group" 
-                placeholder="Search drawings by ECN, Part No, etc..."
+                class="block w-full pl-12 sm:pl-14 pr-16 sm:pr-20 py-3 sm:py-3.5 border border-gray-300 dark:border-gray-600 rounded-full leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-sm sm:text-base transition-all duration-300 group" 
+                placeholder="Search drawings..."
                 autocomplete="off">
 
             <div class="absolute inset-y-0 right-0 pr-4 flex items-center gap-3">
@@ -103,53 +106,52 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+    <div class="grid grid-cols-2 md:grid-cols-12 gap-3 sm:gap-4 items-end">
       @foreach(['Customer', 'Model', 'Document Type', 'Category', 'Project Status'] as $label)
-      <div class="md:col-span-2">
+      <div class="col-span-1 md:col-span-2">
         <label for="{{ Str::slug($label) }}" class="text-[10px] uppercase font-bold text-gray-600 dark:text-gray-400 tracking-wider mb-2 block">{{ $label }}</label>
         <select id="{{ Str::slug($label) }}" class="js-filter appearance-none block w-full pl-3 pr-10 py-2.5 text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"></select>
       </div>
       @endforeach
 
-      <div class="md:col-span-2 flex items-center gap-2">
-            <button id="btnResetFilters" type="button" class="w-10 h-[38px] inline-flex items-center justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 transition-all" title="Reset Filters">
+      <div class="col-span-2 md:col-span-2 flex items-center gap-2">
+            <button id="btnResetFilters" type="button" class="w-9 sm:w-10 h-9 sm:h-[38px] inline-flex items-center justify-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 transition-all" title="Reset Filters">
                 <i class="fa-solid fa-rotate-left text-xs"></i>
             </button>
 
-            <button id="btnDownloadSummary" type="button" class="flex-1 h-[38px] inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-md bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 transition-all shadow-sm">
-                <span class="btn-label flex items-center gap-2"><i class="fa-solid fa-file-excel text-base"></i><span>Export</span></span>
-                <span class="btn-spinner hidden"><i class="fa-solid fa-circle-notch fa-spin text-base"></i></span>
+            <button id="btnDownloadSummary" type="button" class="flex-1 h-9 sm:h-[38px] inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold rounded-md bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 transition-all shadow-sm">
+                <span class="btn-label flex items-center gap-1.5 sm:gap-2"><i class="fa-solid fa-file-excel text-sm sm:text-base"></i><span class="hidden sm:inline">Export</span><span class="sm:hidden">XLS</span></span>
+                <span class="btn-spinner hidden"><i class="fa-solid fa-circle-notch fa-spin text-sm sm:text-base"></i></span>
             </button>
       </div>
     </div>
   </div>
 
   {{-- Tabel section --}}
-  <div class="mt-8 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden">
-      <div class="p-4 overflow-x-auto w-full">
-          <table id="exportTable" class="min-w-[1200px] w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-600 dark:text-gray-400 font-bold tracking-tight">
-                    <tr>
-                        <th class="px-4 py-3 w-8 text-center">No</th>
-                        <th class="px-4 py-3 min-w-[200px]">Package Info</th>
-                        <th class="px-4 py-3 w-28">Current Rev</th>
-                        <th class="px-4 py-3">ECN</th>
-                        <th class="px-4 py-3">Category</th>
-                        <th class="px-4 py-3">Part Group</th>
-                        <th class="px-4 py-3 min-w-[150px] max-w-[200px]">Revision Note</th> 
-                        <th class="px-4 py-3 w-32">Uploaded</th>
-                        <th class="px-4 py-3 w-24 text-right">Size</th>
-                        <th class="px-4 py-3 w-24 text-center">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
-                    {{-- DataTables fills this --}}
-                </tbody>
-          </table>
-      </div>
+  <div class="mt-8 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+      <table id="exportTable" class="w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-600 dark:text-gray-400 font-bold tracking-tight">
+                <tr>
+                    <th class="px-4 py-3 w-8 text-center bg-gray-50 dark:bg-gray-700/50">No</th>
+                    <th class="px-4 py-3 min-w-[200px]">Package Info</th>
+                    <th class="px-4 py-3 w-28">Current Rev</th>
+                    <th class="px-4 py-3">ECN</th>
+                    <th class="px-4 py-3">Category</th>
+                    <th class="px-4 py-3">Part Group</th>
+                    <th class="px-4 py-3 min-w-[150px] max-w-[200px]">Revision Note</th> 
+                    <th class="px-4 py-3 w-32">Uploaded</th>
+                    <th class="px-4 py-3 w-24 text-right">Size</th>
+                    <th class="px-4 py-3 w-24 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
+                {{-- DataTables fills this --}}
+            </tbody>
+      </table>
   </div>
   </div>
 
+</div>
 </div>
 @endsection
 
@@ -275,10 +277,13 @@ $(function () {
       processing: true,
       serverSide: true,
       
+      autoWidth: false,
       responsive: false, 
-      scrollX: false, 
+      scrollX: true, 
+      scrollCollapse: true,
       deferRender: true,
       stateSave: false,
+      dom: '<"p-4"r><"w-full h-full overflow-x-auto"t><"p-4 border-t border-gray-100 dark:border-gray-700 flex flex-col md:flex-row justify-between items-center gap-4"ip>',
 
       ajax: {
         url: '{{ route("api.export.list") }}',
@@ -1400,25 +1405,27 @@ $(function () {
 @endpush
 
 @push('styles')
-    <style>
-        #activity-log-content::-webkit-scrollbar {
-            width: 6px;
+        /* Ensure DataTable doesn't break mobile layout */
+        .dataTables_wrapper {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
         }
-        #activity-log-content::-webkit-scrollbar-track {
-            background: transparent;
+
+        .dataTables_scrollBody {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
         }
-        #activity-log-content::-webkit-scrollbar-thumb {
-            background-color: #d1d5db;
-            border-radius: 20px;
+
+        #exportTable {
+            min-width: 1200px !important; /* Force a minimum width to trigger scroll */
+            width: 100% !important;
         }
-        .dark #activity-log-content::-webkit-scrollbar-thumb {
-            background-color: #4b5563;
-        }
-        #activity-log-content:hover::-webkit-scrollbar-thumb {
-            background-color: #93c5fd;
-        }
-        .dark #activity-log-content:hover::-webkit-scrollbar-thumb {
-            background-color: #60a5fa;
+
+        @media (max-width: 768px) {
+            #exportTable {
+                min-width: 1000px !important;
+            }
         }
     </style>
 @endpush

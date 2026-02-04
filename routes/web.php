@@ -30,6 +30,8 @@ use App\Http\Controllers\Api\FilePreviewController;
 use App\Http\Controllers\Api\ReceiptController;
 use App\Http\Controllers\Api\ShareController;
 use App\Http\Controllers\Api\ActivityLogController;
+use App\Http\Controllers\Api\AboutController;
+use App\Http\Controllers\Api\SettingProfileController;
 use Illuminate\Support\Facades\Auth;
 
 Route::get('/infophp', function () {
@@ -164,6 +166,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/stampFormat', function () {
         return view('master.stampFormat');
     })->middleware(['auth', 'check.menu:18'])->name('stampFormat');
+
+    //about
+    Route::get('/about', function () {
+        return view('about.about');
+    })->middleware(['auth', 'check.menu:32'])->name('about');
+    //setprofile
+    Route::get('/setProfile', function () {
+        return view('setProfile.setProfile');
+    })->middleware(['auth', 'check.menu:33'])->name('setProfile');
 
 
 
@@ -394,6 +405,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/share/get-suppliers', [ShareController::class, 'getSuppliers'])->name('share.getSuppliers');
     Route::get('/share/list', [ShareController::class, 'listPackage'])->name('share.list');
     Route::get('/share/filters', [ShareController::class, 'choiseFilter'])->name('share.filters');
+    Route::get('/share/kpi', [ShareController::class, 'kpi'])->name('share.kpi');
+    Route::get('/share/history', [ShareController::class, 'getHistory'])->name('share.history');
     Route::post('/share/save', [ShareController::class, 'saveShare'])->name('share.save');
     Route::get('/share/{id}', [ShareController::class, 'showDetail'])->name('share.detail');
     Route::post('/share/files/{fileId}/blocks', [ShareController::class, 'updateBlocks'])
@@ -419,5 +432,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/activity-logs/filters', [ActivityLogController::class, 'filters'])->middleware(['auth'])->name('activity-logs.filters');
     Route::get('/activity-logs/export', [ActivityLogController::class, 'export'])->name('activity-logs.export');
     #endregion
+
+    #region profile settings
+    Route::get('/setProfile', [SettingProfileController::class, 'edit'])->middleware(['auth']) ->name('setProfile');
+    Route::put('/setProfile/update', [SettingProfileController::class, 'update'])->middleware(['auth']) ->name('setProfile.update');
+    #end region
+
+    #region about
+    Route::get('/about/profile', [AboutController::class, 'getSystemProfile'])->middleware(['auth'])->name('about.profile');
+    #end region
 
 });

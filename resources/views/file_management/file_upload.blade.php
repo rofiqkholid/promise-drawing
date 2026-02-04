@@ -3,28 +3,26 @@
 @section('header-title', 'File Manager/Dashboard')
 
 @section('content')
-<nav class="flex px-5 py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300" aria-label="Breadcrumb">
+<div class="w-full px-2 sm:px-4 lg:px-6 xl:px-4 2xl:px-6">
+<nav class="flex px-3 sm:px-5 py-2 sm:py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300 rounded-md" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
-
         <li class="inline-flex items-center">
-            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium hover:text-blue-600">
-                Monitoring
+            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium hover:text-blue-600 transition-colors">
+                <i class="fa-solid fa-chart-line mr-2"></i> Monitoring
             </a>
         </li>
-
         <li aria-current="page">
             <div class="flex items-center">
-                <span class="mx-1 text-gray-400">/</span>
-
-                <span class="text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded">
-                    Upload Files
+                <span class="text-gray-400 mx-1">/</span>
+                <span class="text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20">
+                    Upload Management
                 </span>
             </div>
         </li>
     </ol>
 </nav>
 
-<div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 font-sans">
+<div class="w-full p-3 sm:p-4 lg:p-6 bg-gray-50 dark:bg-gray-900 font-sans">
 
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
@@ -47,8 +45,8 @@
                     <h3 class="font-bold text-gray-900 dark:text-gray-100 text-sm">Quick Filters</h3>
                 </div>
 
-                <div class="space-y-5">
-                    <div class="relative">
+                <div class="grid grid-cols-2 lg:grid-cols-1 gap-x-4 gap-y-5">
+                    <div class="col-span-2 lg:col-span-1 border-b border-gray-50 dark:border-gray-700/50 pb-2">
                         <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Search</label>
                         <div class="relative">
                             <input type="text" id="custom-upload-search" 
@@ -61,45 +59,47 @@
                         </div>
                     </div>
 
-                    <div>
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Customer</label>
                         <select id="filter-customer" class="js-upload-filter w-full"></select>
                     </div>
 
-                    <div>
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Model</label>
                         <select id="filter-model" class="js-upload-filter w-full"></select>
                     </div>
 
-                    <div>
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Doc Type</label>
                         <select id="filter-doc-type" class="js-upload-filter w-full"></select>
                     </div>
 
-                    <div>
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Category</label>
                         <select id="filter-category" class="js-upload-filter w-full"></select>
                     </div>
 
-                    <button id="btnResetUploadFilters" class="w-full py-2.5 text-xs font-semibold text-gray-500 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-rotate-left"></i>
-                        Reset All Filters
-                    </button>
+                    <div class="col-span-2 lg:col-span-1 pt-2 border-t border-gray-50 dark:border-gray-700/50 lg:border-none">
+                        <button id="btnResetUploadFilters" class="w-full py-2.5 text-xs font-semibold text-gray-500 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            Reset All Filters
+                        </button>
+                    </div>
                 </div>
             </div>
         </aside>
 
         {{-- Main Content --}}
         <main class="flex-1 min-w-0 space-y-8">
-            {{-- KPI Row - Compact --}}
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {{-- KPI Row - Horizontal Scroll on Mobile --}}
+            <div class="flex overflow-x-auto pb-4 lg:pb-0 gap-4 lg:grid lg:grid-cols-4 no-scrollbar">
                 @foreach([
                     ['id' => 'totalUpload',  'label' => 'Total',    'icon' => 'fa-cloud-arrow-up',  'color' => 'indigo'],
                     ['id' => 'totalDraft',   'label' => 'Draft',    'icon' => 'fa-file-pen',        'color' => 'blue'],
                     ['id' => 'totalPending', 'label' => 'Pending',  'icon' => 'fa-hourglass-start', 'color' => 'yellow'],
                     ['id' => 'totalRejected','label' => 'Rejected', 'icon' => 'fa-ban',             'color' => 'red']
                 ] as $card)
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-md border border-gray-200 dark:border-gray-700 flex items-center gap-4">
+                <div class="flex-shrink-0 w-[240px] lg:w-auto bg-white dark:bg-gray-800 p-4 rounded-md border border-gray-200 dark:border-gray-700 flex items-center gap-4 shadow-sm">
                     <div class="w-10 h-10 rounded-md bg-{{ $card['color'] }}-100 dark:bg-{{ $card['color'] }}-900/30 flex items-center justify-center text-{{ $card['color'] }}-600 dark:text-{{ $card['color'] }}-400">
                         <i class="fa-solid {{ $card['icon'] }}"></i>
                     </div>
@@ -124,31 +124,31 @@
                     @endforeach
                 </div>
 
-                <div class="p-0 overflow-x-auto w-full">
-                    <table id="fileTable" class="min-w-full divide-y divide-gray-100 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500 font-semibold">
-                    <tr>
-                        <th class="px-4 py-3 w-12 text-center">No</th>
-                        <th class="px-4 py-3 min-w-[200px]">Package Info</th>
-                        <th class="px-4 py-3 w-28">Revision</th>
-                        <th class="px-4 py-3">ECN No</th>
-                        <th class="px-4 py-3">Category</th>
-                        <th class="px-4 py-3">Part Group</th>
-                        <th class="px-4 py-3 w-32">Uploaded At</th>
-                        <th class="px-4 py-3 w-28 text-center">Status</th>
-                        <th class="px-4 py-3 w-24 text-center">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
-                    {{-- JS will inject initial skeletons here immediately on load --}}
-                </tbody>
-            </table>
-        </div>
+                <div>
+                    <table id="fileTable" class="w-full divide-y divide-gray-100 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500 font-semibold">
+                            <tr>
+                                <th class="px-4 py-3 w-12 text-center">No</th>
+                                <th class="px-4 py-3 min-w-[200px]">Package Info</th>
+                                <th class="px-4 py-3 w-28">Revision</th>
+                                <th class="px-4 py-3">ECN No</th>
+                                <th class="px-4 py-3">Category</th>
+                                <th class="px-4 py-3">Part Group</th>
+                                <th class="px-4 py-3 w-32">Uploaded At</th>
+                                <th class="px-4 py-3 w-28 text-center">Status</th>
+                                <th class="px-4 py-3 w-24 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
+                            {{-- JS will inject initial skeletons here immediately on load --}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
-</main>
 </div>
 </div>
-
 @endsection
 
 @push('scripts')
@@ -218,10 +218,13 @@
         let table = $('#fileTable').DataTable({
             processing: false,
             serverSide: true,
-            responsive: false,
             autoWidth: false,
+            responsive: false,
+            scrollX: true,
+            scrollCollapse: true,
             deferRender: true, // Optimization: lazy render rows
             stateSave: false,  // Set to true if you want to remember filters on refresh
+            dom: '<"p-4"r><"w-full overflow-x-auto"t><"p-6 border-t border-gray-50 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4"ip>',
             ajax: {
                 url: '{{ route("api.files.list") }}',
                 type: 'GET',
@@ -1047,30 +1050,27 @@
 @endpush
 
 @push('styles')
-<style>
-    #activity-log-content::-webkit-scrollbar {
-        width: 6px;
+    /* Ensure DataTable doesn't break mobile layout */
+    .dataTables_wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important;
     }
 
-    #activity-log-content::-webkit-scrollbar-track {
-        background: transparent;
+    .dataTables_scrollBody {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
     }
 
-    #activity-log-content::-webkit-scrollbar-thumb {
-        background-color: #d1d5db;
-        border-radius: 20px;
+    #fileTable {
+        min-width: 1200px !important;
+        width: 100% !important;
     }
 
-    .dark #activity-log-content::-webkit-scrollbar-thumb {
-        background-color: #4b5563;
-    }
-
-    #activity-log-content:hover::-webkit-scrollbar-thumb {
-        background-color: #93c5fd;
-    }
-
-    .dark #activity-log-content:hover::-webkit-scrollbar-thumb {
-        background-color: #60a5fa;
+    @media (max-width: 768px) {
+        #fileTable {
+            min-width: 1000px !important;
+        }
     }
 </style>
 @endpush

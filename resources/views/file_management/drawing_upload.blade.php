@@ -3,72 +3,70 @@
 @section('header-title', 'File Manager/Upload Drawing Package')
 
 @section('content')
-<nav class="flex px-5 py-3 mb-3 text-gray-700 bg-gray-50 shadow-sm" aria-label="Breadcrumb">
+<div class="w-full px-2 sm:px-4 lg:px-6 xl:px-4 2xl:px-6">
+<nav class="flex px-3 sm:px-5 py-2 sm:py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300 rounded-md" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
-
         <li class="inline-flex items-center">
-            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600">
-                Monitoring
+            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium hover:text-blue-600 transition-colors">
+                <i class="fa-solid fa-chart-line mr-2"></i> Monitoring
             </a>
         </li>
-
         <li aria-current="page">
             <div class="flex items-center">
-                <span class="mx-1 text-gray-400">/</span>
-
-                <a href="{{ route('file-manager.upload') }}" class="text-sm font-semibold text-gray-500 px-2.5 py-0.5 hover:text-blue-600 rounded">
-                Upload Files
-            </a>
+                <span class="text-gray-400 mx-1">/</span>
+                <a href="{{ route('file-manager.upload') }}" class="text-sm font-medium hover:text-blue-600 transition-colors">
+                    Upload Management
+                </a>
             </div>
         </li>
         <li aria-current="page">
             <div class="flex items-center">
-                <span class="mx-1 text-gray-400">/</span>
-
-                <span class="text-sm font-semibold text-blue-800 px-2.5 py-0.5 rounded">
+                <span class="text-gray-400 mx-1">/</span>
+                <span class="text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20">
                     Drawing Package Details
                 </span>
             </div>
         </li>
     </ol>
 </nav>
-<div x-data="drawingUploader" x-init="init()" class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 font-sans">
 
-    <div class="mb-8">
-        <div class="flex justify-between items-center">
+<div x-data="drawingUploader" x-init="init()" class="w-full p-3 sm:p-4 lg:p-6 bg-gray-50 dark:bg-gray-900 font-sans">
+
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl"
-                x-text="isCreatingNewRevision ? 'Create New Revision' : 'Drawing Package Details'">Upload New Drawing
-                Package</h2>
-            <div class="flex items-center gap-2">
-
-                <button type="button" @click.prevent="startNewRevision"
-                    x-show="savedRevisionId && isReadOnly && !isCreatingNewRevision"
-                    class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-green-300 text-sm font-medium rounded-md shadow-sm text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:bg-green-700 dark:text-green-100 dark:border-green-600 dark:hover:bg-green-600 dark:focus:ring-offset-gray-800">
-                    <i class="fa-solid fa-plus-circle"></i>
-                    Create New Revision
-                </button>
-
-                <button type="button" onclick="reviseConfirm()"
-                    x-show="revisionStatus === 'pending' || revisionStatus === 'rejected'"
-                    class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
-                    <i class="fa-solid fa-file-pen"></i>
-                </button>
-
-                <button type="button" @click.prevent="deleteCurrentRevision"
-                    x-show="draftSaved && revisionStatus === 'draft' && !isReadOnly"
-                    class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md shadow-sm text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:bg-red-900 dark:text-red-300 dark:border-red-700 dark:hover:bg-red-800 dark:focus:ring-offset-gray-800">
-                    <i class="fa-solid fa-trash-can"></i>
-                    Delete Draft
-                </button>
-
-                <a href="{{ url('file-manager.upload') }}"
-                    class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    {{-- Back --}}
-                </a>
-            </div>
+                x-text="isCreatingNewRevision ? 'Create New Revision' : 'Drawing Package Details'">Upload New Drawing Package</h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Fill in the metadata and upload all related drawing files in one go.</p>
         </div>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Fill in the metadata and upload all related drawing files in one go.</p>
+        
+        <div class="flex items-center gap-2 sm:self-center">
+            <button type="button" @click.prevent="startNewRevision"
+                x-show="savedRevisionId && isReadOnly && !isCreatingNewRevision"
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-md shadow-sm transition-all">
+                <i class="fa-solid fa-plus-circle"></i>
+                <span>Create New Revision</span>
+            </button>
+
+            <button type="button" onclick="reviseConfirm()"
+                x-show="revisionStatus === 'pending' || revisionStatus === 'rejected'"
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm font-bold rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+                <i class="fa-solid fa-file-pen"></i>
+                <span>Revise</span>
+            </button>
+
+            <button type="button" @click.prevent="deleteCurrentRevision"
+                x-show="draftSaved && revisionStatus === 'draft' && !isReadOnly"
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm font-bold rounded-md shadow-sm hover:bg-red-100 dark:hover:bg-red-900/50 transition-all">
+                <i class="fa-solid fa-trash-can"></i>
+                <span>Delete Draft</span>
+            </button>
+
+            <a href="{{ url('file-manager.upload') }}"
+                class="inline-flex items-center justify-center w-10 h-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded-md shadow-sm hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-400 transition-all"
+                title="Back to List">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+        </div>
     </div>
 
     <form @submit.prevent="submitForm" id="uploadDrawingForm" class="space-y-8">
@@ -326,25 +324,32 @@
                     below or click to browse.</p>
             </div>
 
-            <div class="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Enable Categories</label>
-                <div class="flex items-center space-x-6">
+            <div class="mb-8 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                <div class="flex items-center justify-between mb-4">
+                    <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Enable File Categories</label>
+                    <span class="text-[10px] text-gray-400 dark:text-gray-500 italic">Toggle folders to upload files</span>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-6 sm:gap-10">
                     <template x-for="cat in availableCategories" :key="cat.id">
-                        <label :for="`enable_${cat.id}`" class="flex items-center cursor-pointer">
-                            <div class="relative">
+                        <label :for="`enable_${cat.id}`" 
+                            class="flex items-center group cursor-pointer select-none"
+                            :class="isReadOnly ? 'opacity-60 cursor-not-allowed' : ''">
+                            <div class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" :id="`enable_${cat.id}`" :value="cat.id"
                                     x-model="enabledCategories" class="sr-only peer" :disabled="isReadOnly">
-                                <div class="block bg-gray-200 dark:bg-gray-600 w-12 h-7 rounded-full transition"></div>
-                                <div
-                                    class="dot absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition transform peer-checked:translate-x-full peer-checked:bg-blue-600">
-                                </div>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                             </div>
-                            <div class="ml-3 text-sm text-gray-700 dark:text-gray-300" x-text="cat.name"></div>
+                            <div class="ml-3 flex items-center">
+                                <i :class="cat.icon" class="text-xs mr-2 transition-colors" 
+                                   :class="enabledCategories.includes(cat.id) ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'"></i>
+                                <span class="text-sm font-semibold transition-colors"
+                                      :class="enabledCategories.includes(cat.id) ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 group-hover:text-gray-600'"
+                                      x-text="cat.name"></span>
+                            </div>
                         </label>
                     </template>
                 </div>
-                <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">Only enabled categories will have folders
-                    created and accept files.</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -514,7 +519,7 @@
         </div>
     </form>
 </div>
-
+</div>
 <script>
     function reviseConfirm() {
         const t = detectTheme();

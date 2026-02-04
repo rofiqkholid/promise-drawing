@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" x-bind:class="{ 'dark': darkMode }">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', sidebarOpen: false }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" x-bind:class="{ 'dark': darkMode }">
 
 <head>
     <meta charset="utf-8">
@@ -43,23 +43,23 @@
     @stack('style')
 </head>
 
-<body class="font-sans antialiased bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+<body class="font-sans antialiased bg-gray-100 dark:bg-gray-900 transition-colors duration-300 overflow-x-hidden max-w-full">
     <div id="loader" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 dark:bg-gray-900">
         <div class="loader-spinner"></div>
     </div>
 
     <div id="main-content" class="relative min-h-screen flex">
         @include('layouts.sidebar')
-        <div class="flex-1 flex flex-col pl-20">
+        <div class="flex-1 flex flex-col md:pl-20 w-full">
             @include('layouts.header')
 
-            <main class="flex-1 overflow-x-hidden overflow-y-auto p-2 pt-[70px]">
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-2 pt-[70px] w-full max-w-screen">
                 @yield('content')
             </main>
 
         </div>
     </div>
-    <div class="bottom-0 left-0 right-0 pl-20">
+    <div class="bottom-0 left-0 right-0 md:pl-20">
         @include('layouts.footer')
     </div>
 

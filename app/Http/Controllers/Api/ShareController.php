@@ -30,7 +30,7 @@ class ShareController extends Controller
     {
         try {
             $roles = DB::table('suppliers')
-                ->select('id', 'code')
+                ->select('id', 'code', 'name')
                 ->orderBy('code', 'asc')
                 ->get();
 
@@ -1002,6 +1002,100 @@ class ShareController extends Controller
             });
     }
 
+
+    public function getHistory(Request $request): JsonResponse
+    {
+        $logs = DB::table('activity_logs as al')
+            ->leftJoin('users as u', 'al.user_id', '=', 'u.id')
+            ->where('al.activity_code', 'SHARE_PACKAGE')
+            ->select('al.*', 'u.name as user_name')
+            ->orderBy('al.created_at', 'desc')
+            ->limit(15)
+            ->get();
+
+        $formatted = $logs->map(function ($log) {
+            $meta = json_decode($log->meta, true);
+            $expiredAt = isset($meta['expired_at']) ? Carbon::parse($meta['expired_at']) : null;
+            
+            return [
+                'user'       => $log->user_name ?? 'System',
+                'action'     => 'Shared',
+                'part_no'    => $meta['part_no'] ?? '-',
+                'shared_to'  => $meta['shared_to'] ?? ($meta['suppliers'] ?? '-'),
+                'time'       => Carbon::parse($log->created_at)->diffForHumans(),
+                'full_time'  => Carbon::parse($log->created_at)->format('Y-m-d H:i:s'),
+                'expired_at' => $expiredAt ? $expiredAt->format('Y-m-d') : null,
+                'is_expired' => $expiredAt ? $expiredAt->isPast() : false,
+            ];
+        });
+
+        return response()->json($formatted);
+    }
+
+    public function kpi(Request $request): JsonResponse
+    {
+        $query = DB::table('doc_package_revisions as dpr')
+            ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+            ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+            ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
+            ->where('dpr.revision_status', 'approved');
+
+        // Apply filters
+        if ($request->filled('customer') && $request->customer !== 'All') {
+            $query->where('c.code', $request->customer);
+        }
+        if ($request->filled('model') && $request->model !== 'All') {
+            $query->where('m.name', $request->model);
+        }
+        if ($request->filled('doc_type') && $request->doc_type !== 'All') {
+            $query->where('dtg.name', $request->doc_type);
+        }
+        if ($request->filled('category') && $request->category !== 'All') {
+            $query->where('dsc.name', $request->category);
+        }
+        if ($request->filled('status') && $request->status !== 'All') {
+            $query->where('ps.name', $request->status);
+        }
+
+        $revisionIds = (clone $query)->pluck('dpr.id');
+
+        $totalShared = DB::table('package_shares')
+            ->whereIn('revision_id', $revisionIds)
+            ->distinct('revision_id')
+            ->count('revision_id');
+
+        $now = now();
+
+        $activeShares = DB::table('package_shares')
+            ->whereIn('revision_id', $revisionIds)
+            ->where(function ($q) use ($now) {
+                $q->whereNull('expired_at')
+                    ->orWhere('expired_at', '>', $now);
+            })
+            ->distinct('revision_id')
+            ->count('revision_id');
+
+        $expiredShares = DB::table('package_shares')
+            ->whereIn('revision_id', $revisionIds)
+            ->where('expired_at', '<=', $now)
+            ->distinct('revision_id')
+            ->count('revision_id');
+
+        $pendingRequest = (clone $query)
+            ->leftJoin('package_shares as psr', 'psr.revision_id', '=', 'dpr.id')
+            ->whereNull('psr.revision_id')
+            ->count();
+
+        return response()->json([
+            'totalShared'   => $totalShared,
+            'totalActive'   => $activeShares,
+            'totalExpired'  => $expiredShares,
+            'totalRequest'  => $pendingRequest,
+        ]);
+    }
 
     private function formatObsoleteDate(Carbon $date): string
     {

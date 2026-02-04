@@ -8,14 +8,42 @@
         scrollbar-width: none;
     }
 </style>
+{{-- Mobile overlay backdrop --}}
+<div x-show="sidebarOpen" 
+     x-transition:enter="transition-opacity ease-linear duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="transition-opacity ease-linear duration-300"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     @click="sidebarOpen = false"
+     class="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+     style="display: none;">
+</div>
+
+{{-- Mobile: toggleable overlay. Desktop: always visible mini-sidebar with hover expansion --}}
 <aside
-    x-data="{ openMenu: '' }"
-    @mouseleave="openMenu = ''"
-    class="no-scrollbar fixed top-0 left-0 h-screen z-50 group w-20 hover:w-64 p-4 bg-white dark:bg-gray-900 flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden shadow-lg border-r border-gray-200 dark:border-gray-700">
+    x-data="{ hovering: false }"
+    @mouseenter="hovering = true"
+    @mouseleave="hovering = false"
+    :class="sidebarOpen ? 'flex' : 'hidden md:flex'"
+    x-transition:enter="transition ease-out duration-300 transform"
+    x-transition:enter-start="-translate-x-full md:translate-x-0"
+    x-transition:enter-end="translate-x-0"
+    x-transition:leave="transition ease-in duration-200 transform"
+    x-transition:leave-start="translate-x-0"
+    x-transition:leave-end="-translate-x-full md:translate-x-0"
+    class="no-scrollbar fixed top-0 left-0 h-screen z-50 group w-64 md:w-20 md:hover:w-64 p-4 bg-white dark:bg-gray-900 flex-col flex-shrink-0 transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden shadow-lg border-r border-gray-200 dark:border-gray-700">
+
+    {{-- Mobile close button --}}
+    <button @click="sidebarOpen = false" 
+            class="md:hidden absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+        <i class="fa-solid fa-xmark text-2xl"></i>
+    </button>
 
     <div class="flex items-center ml-[3px] h-16 mb-10 flex-shrink-0">
         <img src="{{ asset('assets/image/logo-promise.png') }}" alt="Logo" class="h-11 w-11 object-contain flex-shrink-0">
-        <span class="titlePromise ml-4 text-[1.5rem] font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">
+        <span class="titlePromise ml-4 text-[1.5rem] font-semibold text-gray-700 dark:text-gray-200 whitespace-nowrap transition-opacity duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100">
             Promise
         </span>
     </div>
@@ -40,7 +68,7 @@
     }
     @endphp
 
-    <nav class="flex-grow" x-data="{ openMenu: {{ $activeParentId ?? 'null' }} }">
+    <nav class="flex-grow" x-data="{ openMenu: {{ $activeParentId ?? 'null' }} }" x-init="$watch('sidebarOpen', value => { openMenu = value ? {{ $activeParentId ?? 'null' }} : null })">
         <ul>
             @foreach ($menus as $menu)
             @if (session()->has('allowed_menus') && in_array($menu->id, session('allowed_menus')))
@@ -55,15 +83,15 @@
                         <span class="flex items-center justify-center w-5 mr-3 flex-shrink-0">
                             <i class="{{ $menu->icon }}"></i>
                         </span>
-                        <span class="whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">{{ $menu->title }}</span>
+                        <span class="whitespace-nowrap transition-opacity duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100">{{ $menu->title }}</span>
                     </div>
 
-                    <span class="whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">
+                    <span class="whitespace-nowrap transition-opacity duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100">
                         <i class="fa-solid fa-chevron-down h-4 w-4 transform transition-transform duration-200" :class="{'rotate-180': openMenu === {{ $menu->id }}}"></i>
                     </span>
                 </button>
 
-                <ul x-show="openMenu === {{ $menu->id }}" x-transition class="mt-1 pl-4 space-y-1 hidden group-hover:block" style="display: none;">
+                <ul x-show="openMenu === {{ $menu->id }} && (sidebarOpen || hovering)" x-transition class="mt-1 pl-4 space-y-1 flex flex-col">
                     @foreach ($menu->children as $child)
                     @if (session()->has('allowed_menus') && in_array($child->id, session('allowed_menus')))
                     <li>
@@ -73,7 +101,7 @@
                             <span class="flex items-center justify-center w-5 mr-3 flex-shrink-0">
                                 <i class="{{ $child->icon }}"></i>
                             </span>
-                            <span class="whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">{{ $child->title }}</span>
+                            <span class="whitespace-nowrap transition-opacity duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100">{{ $child->title }}</span>
                         </a>
                     </li>
                     @endif
@@ -88,7 +116,7 @@
                     <span class="flex items-center justify-center w-5 mr-3 flex-shrink-0">
                         <i class="{{ $menu->icon }}"></i>
                     </span>
-                    <span class="whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">{{ $menu->title }}</span>
+                    <span class="whitespace-nowrap transition-opacity duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100">{{ $menu->title }}</span>
                 </a>
             </li>
             @endif
@@ -109,7 +137,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
                 </svg>
             </div>
-            <span class="ml-3 whitespace-nowrap transition-opacity duration-200 opacity-0 group-hover:opacity-100">
+            <span class="ml-3 whitespace-nowrap transition-opacity duration-200 opacity-100 md:opacity-0 md:group-hover:opacity-100">
             </span>
         </button>
     </div>

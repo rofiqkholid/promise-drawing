@@ -1,9 +1,12 @@
-<header class="fixed top-0 left-20 right-0 z-40 flex justify-between items-center p-1 pl-4 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300">
-
-
-    <div>
-        <h1 class="titlePromise text-[1.5rem] font-semibold text-gray-700 dark:text-gray-200">Promise</h1>
-        <p class="text-[0.7rem] text-gray-400 dark:text-gray-200">Project Management Integrated System Engineering</p>
+<header class="fixed top-0 left-0 md:left-20 right-0 z-40 flex justify-between items-center py-2 px-4 bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-300">
+    <div class="flex items-center gap-2 sm:gap-3">
+        <button @click="sidebarOpen = !sidebarOpen" class="md:hidden p-2 -ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none">
+            <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <div class="flex flex-col">
+            <h1 class="titlePromise text-[1.5rem] font-semibold text-gray-700 dark:text-gray-200 leading-none">Promise</h1>
+            <p class="hidden sm:block text-[0.7rem] text-gray-400 dark:text-gray-200 mt-1">Project Management Integrated System Engineering</p>
+        </div>
     </div>
 
     <div class="flex items-center space-x-2 sm:space-x-4">
@@ -55,19 +58,19 @@
 
         </div>
 
-        <div x-data="searchComponent({{ json_encode($menuItems ?? []) }})" class="relative">
+        <div x-data="searchComponent({{ json_encode($menuItems ?? []) }})" class="relative flex-1 sm:flex-initial sm:w-64 ml-2 sm:ml-0">
             <div class="relative">
                 <input
                     type="text"
                     placeholder="Search..."
-                    class="w-50 sm:w-64 pl-10 pr-4 py-2 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none"
+                    class="w-full pl-10 pr-4 py-2 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
                     x-model="searchQuery"
                     @focus="showDropdown()"
                     @blur="closeDropdown()"
                     @keydown="handleKeydown($event)"
                     x-ref="searchInput">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-300">
-                    <i class="fa-solid fa-magnifying-glass"></i>
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
+                    <i class="fa-solid fa-magnifying-glass text-sm"></i>
                 </span>
             </div>
 
@@ -78,7 +81,7 @@
                 x-transition:leave="transition ease-in duration-75"
                 x-transition:leave-start="transform opacity-100 scale-100"
                 x-transition:leave-end="transform opacity-0 scale-95"
-                class="absolute right-0 mt-2 w-72 sm:w-96 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50"
+                class="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50"
                 style="display: none;"
                 @mousedown.prevent>
 
@@ -156,21 +159,21 @@
             </div>
         </div>
 
-        <div x-data="{ userDropdownOpen: false }" class="relative ml-2">
+        <div x-data="{ userDropdownOpen: false }" class="relative ml-1 sm:ml-2 flex-shrink-0">
 
             <button @click="userDropdownOpen = !userDropdownOpen"
-                class="flex items-center mr-1.5 space-x-2 p-1.5 m-0.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none">
+                class="flex items-center space-x-2 p-1 sm:p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none">
 
-                <div class="hidden sm:flex flex-col text-right">
-                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ Auth::user()->name }}</span>
+                <div class="hidden sm:flex flex-col text-right ml-1">
+                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-tight">{{ Auth::user()->name }}</span>
                     <span class="text-[0.65rem] text-gray-500 dark:text-gray-400">{{ Auth::user()->department->code ?? '' }}</span>
                 </div>
 
-                <div class="relative w-8 h-8 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-300">
+                <div class="relative w-8 h-8 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-600">
                     <i class="fa-solid fa-circle-user text-2xl"></i>
                 </div>
 
-                <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-200"
+                <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 hidden sm:block pr-1 transition-transform duration-200"
                     :class="{'rotate-180': userDropdownOpen}"></i>
             </button>
 
