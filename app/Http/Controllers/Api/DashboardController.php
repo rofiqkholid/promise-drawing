@@ -425,112 +425,120 @@ class DashboardController extends Controller
     }
 
     public function getUploadMonitoringData(Request $request)
-{
-    $rankedData = DB::connection('sqlsrv')
-        ->table('doc_packages as dp')
-        ->leftJoin('models as m', 'dp.model_id', '=', 'm.id')
-        ->leftJoin('products as p', 'dp.product_id', '=', 'p.id')
-        ->leftJoin('customers as c', 'dp.customer_id', '=', 'c.id')
-        ->leftJoin('doc_package_revisions as dpr', 'dp.id', '=', 'dpr.package_id')
-        ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
-        ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
-        ->where('dp.is_delete', 0)
-        ->where('dp.is_active', 1)
-        ->whereNotNull('dp.current_revision_id')
-        ->where('dpr.is_finish', 1)
-        ->where('doctype_subcategory_id', 2)
-        ->select([
+    {
+        // --- 1. MEMBANGUN QUERY DASAR ---
+        $query = DB::connection('sqlsrv')
+            ->table('doc_packages as dp')
+            // Join sesuai Raw SQL yang diminta
+            ->join('products as p_origin', 'dp.product_id', '=', 'p_origin.id')
+            ->join('products as p', 'p_origin.group_id', '=', 'p.group_id')
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('doctype_subcategories as ds', 'dp.doctype_subcategory_id', '=', 'ds.id')
+            ->join('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+            ->join('doc_package_revisions as dpr', 'dpr.id', '=', 'dp.current_revision_id') // Perbaikan: dpr.id = dp.current_revision_id
+            ->join('project_status as ps', 'm.status_id', '=', 'ps.id')
+
+            // Filter Utama (Hardcoded sesuai Raw SQL)
+            ->where('dp.is_delete', 0)
+            ->where('p.is_count', 1)
+            ->where('dpr.is_finish', 1)
+            ->where('dpr.is_obsolete', 0)
+            ->where('ds.name', 'Go Mfg')
+            ->whereNotNull('dp.current_revision_id');
+
+        // --- 2. LOGIKA AKUMULASI TANGGAL ---
+        // Agar data terakumulasi (misal: total sampai tgl 4 adalah hasil tgl 3 + tgl 4),
+        // kita HANYA membatasi batas atas (date_end). 
+        // Batas bawah (date_start) tidak dipakai saat menghitung count agar history tetap terbawa.
+
+        if ($request->filled('date_end')) {
+            $query->whereDate('dp.created_at', '<=', $request->date_end);
+        }
+
+        // Catatan: Jika Anda ingin memfilter list 'Project' berdasarkan range tanggal, 
+        // sebaiknya filter itu diterapkan pada 'plan' atau atribut lain, bukan pada 'actual' count-nya.
+
+        // --- 3. FILTER DINAMIS (Dari Request) ---
+
+        if ($request->filled('project_status') && $request->project_status !== 'ALL') {
+            $query->where('ps.name', $request->project_status);
+        }
+
+        if ($request->filled('customer')) {
+            // Asumsi input 'customer' adalah array
+            $query->whereIn('c.code', $request->customer);
+        }
+
+        if ($request->filled('model')) {
+            $query->whereIn('m.name', $request->model);
+        }
+
+        if ($request->filled('part_group')) {
+            $query->whereIn('pg.code_part_group', $request->part_group);
+        }
+
+        // --- 4. SELECT & GROUPING ---
+        // Melakukan count(dp.id) untuk mendapatkan total aktual terakumulasi
+        $query->select([
             'c.code as customer_name',
-            'm.name as model_name',
+            'm.name as model',
             'ps.name as project_status',
             'pg.code_part_group as part_group',
             'pg.planning as plan_count',
-            DB::raw('1 as actual_count'),
-            DB::raw("
-                ROW_NUMBER() OVER (
-                    PARTITION BY p.part_no
-                    ORDER BY dp.current_revision_no DESC, dp.created_at DESC
-                ) as RowNum
-            "),
+            DB::raw('COUNT(dp.id) as actual_count'), // Menghitung total baris yang lolos filter
+            DB::raw('MAX(dp.created_at) as latest_upload') // Opsional: untuk melihat kapan terakhir update
         ]);
 
-    $query = DB::connection('sqlsrv')
-        ->query()
-        ->fromSub($rankedData, 'RankedData')
-        ->where('RowNum', 1)
-        ->select([
-            'customer_name',
-            'model_name',
-            'project_status',
-            'part_group',
-            'plan_count',
-            DB::raw('SUM(actual_count) as actual_count'),
-        ])
-        ->groupBy(
-            'customer_name',
-            'model_name',
-            'project_status',
-            'part_group',
-            'plan_count'
+        $query->groupBy(
+            'c.code',
+            'm.name',
+            'ps.name',
+            'pg.code_part_group',
+            'pg.planning'
         );
 
-    // =========================
-    // 3. Filter Dinamis
-    // =========================
-    if ($request->filled('project_status') && $request->project_status !== 'ALL') {
-        $query->where('project_status', $request->project_status);
-    }
+        // --- 5. SORTING ---
+        // Sort dilakukan setelah grouping
+        $sortBy = $request->input('sort_by', 'plan');
 
-    if ($request->filled('customer')) {
-        $query->whereIn('customer_name', $request->customer);
-    }
-
-    if ($request->filled('model')) {
-        $query->whereIn('model_name', $request->model);
-    }
-
-    if ($request->filled('part_group')) {
-        $query->whereIn('part_group', $request->part_group);
-    }
-
-    // =========================
-    // 4. Sorting
-    // =========================
-    $sortBy = $request->input('sort_by', 'plan');
-    $orderColumn = $sortBy === 'actual' ? 'actual_count' : 'plan_count';
-    $query->orderBy($orderColumn, 'desc');
-
-    // =========================
-    // 5. Eksekusi
-    // =========================
-    $results = $query->get();
-
-    // =========================
-    // 6. Mapping Persentase
-    // =========================
-    $results = $results->map(function ($item) {
-        $plan = (float) $item->plan_count;
-        $actual = (float) $item->actual_count;
-
-        $percentage = $plan > 0 ? ($actual / $plan) * 100 : 0;
-        $item->percentage = number_format($percentage, 1);
-
-        if ($item->project_status === 'Feasibility Study') {
-            $item->project_status = 'FS';
-        } elseif ($item->project_status === 'Project') {
-            $item->project_status = 'PR';
-        } elseif ($item->project_status === 'Regular') {
-            $item->project_status = 'RE';
+        if ($sortBy === 'actual') {
+            $query->orderBy('actual_count', 'desc');
+        } else {
+            $query->orderBy('plan_count', 'desc'); // Default sort by Plan
         }
 
-        return $item;
-    });
+        // Secondary sort biar rapi (sesuai raw SQL yang minta part_no, tapi karena grouping kita pakai part_group)
+        $query->orderBy('part_group', 'asc');
 
-    return response()->json([
-        'status' => 'success',
-        'data' => $results
-    ]);
-}
+        // --- 6. EKSEKUSI & MAPPING ---
+        $results = $query->get();
+
+        $results = $results->map(function ($item) {
+            $plan = (float) $item->plan_count;
+            $actual = (float) $item->actual_count;
+
+            // Hitung Persentase
+            $percentage = $plan > 0 ? ($actual / $plan) * 100 : 0;
+            $item->percentage = number_format($percentage, 1);
+
+            // Alias Project Status (Sesuai request kode sebelumnya)
+            if ($item->project_status === 'Feasibility Study') {
+                $item->project_status = 'FS';
+            } elseif ($item->project_status === 'Project') {
+                $item->project_status = 'PR';
+            } elseif ($item->project_status === 'Regular') {
+                $item->project_status = 'RE';
+            }
+
+            return $item;
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $results
+        ]);
+    }
 
 
     public function getPhaseStatus(Request $request)

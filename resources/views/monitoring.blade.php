@@ -134,8 +134,26 @@
         </div>
 
         <div class="w-full lg:w-[30%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
-            <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
-                <i class="fa-solid fa-chart-pie mr-2 text-orange-500"></i> Phase Status
+            <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex justify-between items-start">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-orange-500"></i>
+                    <span>Phase Status</span>
+                </div>
+                <div x-data="{ tooltipVisible: false }" class="relative">
+                    <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-xs cursor-pointer mt-1"></i>
+                    <div x-show="tooltipVisible"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-2"
+                         style="display: none;"
+                         class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
+                        <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 right-2"></div>
+                        <p class="text-gray-200 dark:text-gray-300">Shows the distribution of document statuses (e.g., Mass Pro, Development, Pilot) based on the current filters.</p>
+                    </div>
+                </div>
             </h3>
             <div class="relative w-full flex-1 min-h-0 flex justify-center items-center">
                 <canvas id="phaseStatusChart"></canvas>
@@ -147,8 +165,24 @@
     <div class="h-[35vh] flex-none flex flex-col lg:flex-row gap-2 items-stretch mb-2">
         <div class="w-full lg:w-[45%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-visible">
             <div class="flex-none flex justify-between items-center mb-2">
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
-                    <i class="fa-solid fa-arrow-trend-up mr-2 text-purple-500"></i> Trend Upload & Download
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-trend-up text-purple-500"></i>
+                    <span>Trend Upload & Download</span>
+                    <div x-data="{ tooltipVisible: false }" class="relative">
+                        <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-xs cursor-pointer"></i>
+                        <div x-show="tooltipVisible"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 translate-y-2"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 translate-y-2"
+                             style="display: none;"
+                             class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full left-0 mt-2">
+                            <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 left-2"></div>
+                            <p class="text-gray-200 dark:text-gray-300">Shows the monthly trend of document uploads and downloads for the selected year.</p>
+                        </div>
+                    </div>
                 </h3>
 
                 <div x-data="{
@@ -210,8 +244,26 @@
 
         <div class="w-full lg:w-[25%] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col p-5 h-full font-sans">
 
-            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center flex-shrink-0">
-                <i class="fa-solid fa-leaf mr-2 text-emerald-500"></i> Eco Impact
+            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2 flex justify-between items-start flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-leaf text-emerald-500"></i>
+                    <span>Eco Impact</span>
+                </div>
+                <div x-data="{ tooltipVisible: false }" class="relative">
+                    <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-xs cursor-pointer mt-1"></i>
+                    <div x-show="tooltipVisible"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-2"
+                         style="display: none;"
+                         class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
+                        <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 right-2"></div>
+                        <p class="text-gray-200 dark:text-gray-300">Eco Impact is calculated based on the number of documents uploaded to the system, representing the estimated environmental savings from not printing these documents.</p>
+                    </div>
+                </div>
             </h3>
 
             <div class="flex-1 w-full flex flex-col lg:flex-row items-center justify-center gap-4">
@@ -272,8 +324,26 @@
         </div>
 
         <div class="w-full lg:w-[30%] h-full bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
-            <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
-                <i class="fa-solid fa-newspaper mr-2 text-gray-500"></i> Activity Log
+            <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex justify-between items-start">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-newspaper text-gray-500"></i>
+                    <span>Activity Log</span>
+                </div>
+                <div x-data="{ tooltipVisible: false }" class="relative">
+                    <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-xs cursor-pointer mt-1"></i>
+                    <div x-show="tooltipVisible"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 translate-y-2"
+                         style="display: none;"
+                         class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
+                        <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 right-2"></div>
+                        <p class="text-gray-200 dark:text-gray-300">Displays recent user activities in the system, such as uploads, approvals, and shares, based on the current filters.</p>
+                    </div>
+                </div>
             </h3>
             <div id="activityLogContainer" class="flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0 divide-y divide-gray-200 dark:divide-gray-700"></div>
         </div>
@@ -537,7 +607,7 @@
             if (this.monitoringChart) this.monitoringChart.destroy();
 
             // Mapping Data
-            const labels = data.map(item => `${item.customer_name}-${item.model_name}-${item.project_status}-${item.part_group}`);
+            const labels = data.map(item => `${item.customer_name}-${item.model}-${item.project_status}-${item.part_group}`);
             const planData = data.map(item => parseFloat(item.plan_count));
             const actualData = data.map(item => parseFloat(item.actual_count));
             const percentageData = data.map(item => parseFloat(item.percentage));
