@@ -16,6 +16,7 @@ use App\Exports\ApprovalSummaryExport;
 use App\Models\Customers;
 use App\Models\Models;
 use App\Models\DoctypeGroups;
+use App\Models\Role;
 use App\Models\DoctypeSubcategory;
 use App\Models\DocPackageRevisionFile;
 use App\Models\DocTypeSubCategories;
@@ -51,45 +52,31 @@ class ApprovalController extends Controller
     /**
      * Menentukan level approval user.
      */
-    private function getApprovalLevel(User $user): int
-    {
-        /**
-         * DAFTAR USER APPROVER
-         * ===================
-         */
+   private function getApprovalLevel(User $user): int
+{
+    // Ambil semua role_id milik user dari tabel pivot user_roles
+    $userRoleIds = DB::table('user_roles')
+        ->where('user_id', $user->id)
+        ->pluck('role_id')
+        ->toArray();
 
-        $level3Approvers = [
-            // contoh:
-            7,5, // Pak Gunawan
-        ];
-
-        $level2Approvers = [
-            6,5, // Pak Budi
-        ];
-
-        $level1Approvers = [
-            5, // Pak Riyan 
-            1, // Admin
-        ];
-
-        /**
-         * PRIORITAS LEVEL TERTINGGI
-         * =========================
-         */
-        if (in_array($user->id, $level3Approvers, true)) {
-            return 3;
-        }
-
-        if (in_array($user->id, $level2Approvers, true)) {
-            return 2;
-        }
-
-        if (in_array($user->id, $level1Approvers, true)) {
-            return 1;
-        }
-
-        return 0;
+    // Level 3: Approver 3 atau ICT (Superuser)
+    if (in_array(Role::APV_3, $userRoleIds) || in_array(Role::ICT, $userRoleIds)) {
+        return 3;
     }
+
+    // Level 2: Approver 2
+    if (in_array(Role::APV_2, $userRoleIds)) {
+        return 2;
+    }
+
+    // Level 1: Approver 1
+    if (in_array(Role::APV_1, $userRoleIds)) {
+        return 1;
+    }
+
+    return 0; // Bukan approver
+}
 
     public function kpi(Request $req)
     {
@@ -907,535 +894,225 @@ END as status
 
 
 
-    public function approve(Request $request, string $id)
-    {
-        $userId = Auth::user()->id ?? 1;
+   public function approve(Request $request, string $id)
+{
+    $userId = Auth::user()->id ?? 1;
 
-        try {
-            $revisionId = decrypt($id);
-        } catch (DecryptException $e) {
-            return response()->json(['message' => 'Invalid revision.'], 404);
-        }
-
-        $user  = Auth::user();
-        $level = $this->getApprovalLevel($user);
-
-        if ($level === 0) {
-            return response()->json([
-                'message' => 'You are not authorized to approve this revision.'
-            ], 403);
-        }
-
-
-        try {
-            DB::beginTransaction();
-
-            $approval = DB::table('package_approvals')
-                ->where('revision_id', $revisionId)
-                ->lockForUpdate()
-                ->first();
-
-            if (!$approval) {
-                DB::rollBack();
-                return response()->json(['message' => 'Approval data not found.'], 404);
-            }
-
-            if (in_array($approval->decision, ['approved', 'rejected'], true)) {
-                DB::rollBack();
-                return response()->json([
-                    'message' => 'This revision is already finalized.'
-                ], 409);
-            }
-
-            if (
-                ($approval->lvl1_decided_by && $approval->lvl1_decided_by === $user->id) ||
-                ($approval->lvl2_decided_by && $approval->lvl2_decided_by === $user->id) ||
-                ($approval->lvl3_decided_by && $approval->lvl3_decided_by === $user->id)
-            ) {
-
-                DB::rollBack();
-                return response()->json([
-                    'message' => 'You have already approved this revision.'
-                ], 403);
-            }
-
-
-
-            $revision = DB::table('doc_package_revisions')
-                ->where('id', $revisionId)
-                ->lockForUpdate()
-                ->first(['id', 'package_id', 'revision_no', 'revision_status', 'ecn_no']);
-
-            if (!$revision) {
-                DB::rollBack();
-                return response()->json(['message' => 'Revision not found.'], 404);
-            }
-            if ($revision->revision_status === 'approved') {
-                DB::rollBack();
-                return response()->json(['message' => 'Revision already approved.'], 200);
-            }
-            if ($revision->revision_status !== 'pending') {
-                DB::rollBack();
-                return response()->json(['message' => 'Revision cannot be approved.'], 422);
-            }
-
-            if ($level === 1 && !$approval->lvl1) {
-
-                DB::table('package_approvals')
-                    ->where('id', $approval->id)
-                    ->update([
-                        'lvl1'            => 1,
-                        'lvl1_decided_by' => $user->id,
-                        'updated_at'      => Carbon::now(),
-                    ]);
-
-                DB::commit();
-                return response()->json([
-                    'message' => 'Approved Level 1. Waiting for Level 2.'
-                ]);
-            }
-
-            if ($level === 2) {
-
-                if ((int) $approval->lvl1 !== 1) {
-                    DB::rollBack();
-                    return response()->json([
-                        'message' => 'Level 1 approval is required first.'
-                    ], 422);
-                }
-
-                if ((int) $approval->lvl2 === 1) {
-                    DB::rollBack();
-                    return response()->json([
-                        'message' => 'Already approved at Level 2.'
-                    ], 409);
-                }
-
-                DB::table('package_approvals')
-                    ->where('id', $approval->id)
-                    ->update([
-                        'lvl2'            => 1,
-                        'lvl2_decided_by' => $user->id,
-                        'updated_at'      => Carbon::now(),
-                    ]);
-
-                DB::commit();
-                return response()->json([
-                    'message' => 'Approved Level 2. Waiting for Level 3.'
-                ]);
-            }
-
-
-            if ($level !== 3) {
-                DB::rollBack();
-                return response()->json([
-                    'message' => 'Only Level 3 approver can finalize approval.'
-                ], 403);
-            }
-
-            if (
-                (int) $approval->lvl1 !== 1 ||
-                (int) $approval->lvl2 !== 1 ||
-                (int) $approval->lvl3 === 1
-            ) {
-                DB::rollBack();
-                return response()->json([
-                   'message' => 'Waiting for previous approval levels to be completed.'
-                ], 422);
-            }
-
-
-
-            $packageId = (int) $revision->package_id;
-
-            $package = DB::table('doc_packages')
-                ->where('id', $packageId)
-                ->lockForUpdate()
-                ->first(['current_revision_id', 'current_revision_no']);
-
-            $currentNo = $package->current_revision_no ?? null;
-            $revNo     = (int) $revision->revision_no;
-            $isOlder   = !is_null($currentNo) && $revNo < (int) $currentNo;
-
-            if (!$isOlder) {
-
-                DB::table('doc_package_revisions')
-                    ->where('package_id', $packageId)
-                    ->where('id', '!=', $revisionId)
-                    ->where('revision_status', 'approved')
-                    ->where('is_obsolete', 0)
-                    ->update([
-                        'is_obsolete' => 1,
-                        'obsolete_at' => Carbon::now(),
-                        'obsolete_by' => $userId,
-                        'updated_at'  => Carbon::now(),
-                    ]);
-
-                DB::table('doc_package_revisions')
-                    ->where('id', $revisionId)
-                    ->update([
-                        'revision_status' => 'approved',
-                        'is_obsolete'     => 0,
-                        'obsolete_at'     => null,
-                        'obsolete_by'     => null,
-                        'updated_at'      => Carbon::now(),
-                    ]);
-
-                DB::table('doc_packages')
-                    ->where('id', $packageId)
-                    ->update([
-                        'current_revision_id' => $revision->id,
-                        'current_revision_no' => $revision->revision_no,
-                        'updated_at'          => Carbon::now(),
-                    ]);
-            } else {
-                DB::table('doc_package_revisions')
-                    ->where('id', $revisionId)
-                    ->update([
-                        'revision_status' => 'approved',
-                        'is_obsolete'     => 1,
-                        'obsolete_at'     => Carbon::now(),
-                        'obsolete_by'     => $userId,
-                        'updated_at'      => Carbon::now(),
-                    ]);
-            }
-
-            DB::table('package_approvals')
-                ->where('id', $approval->id)
-                ->update([
-                    'lvl3'            => 1,
-                    'lvl3_decided_by' => $user->id,
-                    'decision'        => 'approved',
-                    'decided_by'      => $user->id,
-                    'decided_at'      => Carbon::now(),
-                    'updated_at'      => Carbon::now(),
-                ]);
-
-
-
-            $packageInfo = DB::table('doc_packages as dp')
-                ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-                ->join('models as m', 'dp.model_id', '=', 'm.id')
-                ->join('products as p', 'dp.product_id', '=', 'p.id')
-                ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-                ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
-                ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
-                ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
-                ->where('dp.id', $packageId)
-                ->select(
-                    'dp.id',
-                    'c.code as customer',
-                    'm.name as model',
-                    'p.part_no',
-                    'dtg.name as doc_type',
-                    'dsc.name as category',
-                    'pg.code_part_group as part_group',
-                    'ps.name as project_status'
-                )
-                ->first();
-
-            ActivityLog::create([
-                'scope_type'    => 'package',
-                'scope_id'      => $packageId,
-                'revision_id'   => $revisionId,
-                'activity_code' => ActivityLog::APPROVE,
-                'user_id'       => $userId,
-                'meta'          => [
-                    'note'            => 'Revision approved',
-                    'customer_code'   => $packageInfo->customer,
-                    'model_name'      => $packageInfo->model,
-                    'part_no'         => $packageInfo->part_no,
-                    'part_group_code' => $packageInfo->part_group ?? '-',
-                    'doc_type'        => $packageInfo->doc_type,
-                    'revision_no'     => $revision->revision_no,
-                    'ecn_no'          => $revision->ecn_no,
-                    'action_status'   => 'Approved',
-                ],
-            ]);
-
-            $filenames = DB::table('doc_package_revision_files')
-                ->where('revision_id', $revisionId)
-                ->orderBy('id')
-                ->pluck('filename')
-                ->toArray();
-
-            $rawToken    = encrypt((string) $revision->id);
-            $token       = str_replace('=', '-', $rawToken);
-            $downloadUrl = route('file-manager.export.detail', ['id' => $token]);
-
-
-            $segments = array_filter([
-                $packageInfo->customer ?? null,
-                $packageInfo->model ?? null,
-                $packageInfo->part_no ?? null,
-                $packageInfo->doc_type ?? null,
-                $packageInfo->category ?? null,
-                $packageInfo->part_group ?? null,
-                $revision->ecn_no ?? null,
-            ], fn($v) => !is_null($v) && $v !== '');
-
-            $packageData = implode(' - ', $segments);
-
-
-            $approvalData = [
-                'package_data'  => $packageData,
-                'revision_id'   => $revision->id,
-                'revision_no'   => $revision->revision_no,
-                'customer'      => $packageInfo->customer ?? '-',
-                'model'         => $packageInfo->model ?? '-',
-                'part_no'       => $packageInfo->part_no ?? '-',
-                'doc_type'      => $packageInfo->doc_type ?? '-',
-                'category'      => $packageInfo->category ?? '-',
-                'part_group'    => $packageInfo->part_group ?? '-',
-                'ecn_no'        => $revision->ecn_no ?? '-',
-                'project_status' => $packageInfo->project_status ?? null,
-
-                'approved_by'   => Auth::user()->name ?? 'System',
-                'approved_at'   => now()->format('Y-m-d H:i'),
-                'decision_date' => now()->format('Y-m-d H:i'),
-                'comment'       => '',
-                'filenames'     => $filenames,
-                'download_url'  => $downloadUrl,
-            ];
-
-            // =======================
-            // EMAIL NOTIFICATION (RULE LAMA)
-            // =======================
-            if ($level === 3) {
-                try {
-
-                    $users = $this->getNotificationUsersForPackage($packageId);
-
-                    foreach ($users as $user) {
-                        Mail::to($user->email)->send(
-                            new RevisionApprovedNotification($user, $approvalData)
-                        );
-                    }
-                } catch (\Throwable $mailEx) {
-
-                    if (!$request->boolean('confirm_without_email')) {
-                        DB::rollBack();
-                        return response()->json([
-                            'message'            => 'Email delivery failed. Do you want to approve without sending emails?',
-                            'error'              => $mailEx->getMessage(),
-                            'needs_confirmation' => true,
-                            'code'               => 'EMAIL_FAILED',
-                        ], 409);
-                    }
-                }
-            }
-
-
-            DB::commit();
-            return response()->json(['message' => 'Revision approved successfully!']);
-        } catch (QueryException $e) {
-            DB::rollBack();
-            $msg = $e->getMessage();
-            $isUniqueViolation =
-                str_contains($msg, '2627') ||
-                str_contains($msg, '2601') ||
-                str_contains($msg, 'IX_doc_package_revisions_one_active_approved');
-
-            if ($isUniqueViolation) {
-                return response()->json([
-                    'message' => 'Revision has already been approved by someone else.',
-                ], 409);
-            }
-
-            return response()->json([
-                'message' => 'Failed to approve revision.',
-                'error'   => $e->getMessage(),
-            ], 500);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            return response()->json([
-                'message' => 'Failed to approve revision.',
-                'error'   => $e->getMessage(),
-            ], 500);
-        }
+    try {
+        $revisionId = decrypt($id);
+    } catch (DecryptException $e) {
+        return response()->json(['message' => 'Invalid revision.'], 404);
     }
 
-    public function reject(Request $request, string $id)
-    {
+    $user  = Auth::user();
+    $level = $this->getApprovalLevel($user);
 
-        $userId = Auth::user()->id ?? 1;
+    if ($level === 0) {
+        return response()->json(['message' => 'You are not authorized to approve this revision.'], 403);
+    }
 
-
-        try {
-            $revisionId = decrypt($id);
-        } catch (DecryptException $e) {
-            return response()->json(['message' => 'Invalid revision.'], 404);
-        }
-
-        $request->validate(['note' => 'required|string|max:500']);
-
-        $user  = Auth::user();
-        $level = $this->getApprovalLevel($user);
+    try {
+        DB::beginTransaction();
 
         $approval = DB::table('package_approvals')
             ->where('revision_id', $revisionId)
+            ->lockForUpdate()
             ->first();
 
         if (!$approval) {
-            return response()->json([
-                'message' => 'Approval data not found.'
-            ], 404);
+            DB::rollBack();
+            return response()->json(['message' => 'Approval data not found.'], 404);
         }
 
-        // =======================
-        // RULE REJECT STRICT PER LEVEL
-        // =======================
-
-        // Waiting L1 → hanya L1
-        if (
-            $approval->decision === 'pending' &&
-            (int) $approval->lvl1 === 0
-        ) {
-            if ($level !== 1) {
-                return response()->json([
-                    'message' => 'Only Level 1 approver can reject at this stage.'
-                ], 403);
-            }
-        }
-
-        // Waiting L2 → hanya L2
-        if (
-            $approval->decision === 'pending' &&
-            (int) $approval->lvl1 === 1 &&
-            (int) $approval->lvl2 === 0
-        ) {
-            if ($level !== 2) {
-                return response()->json([
-                    'message' => 'Only Level 2 approver can reject at this stage.'
-                ], 403);
-            }
-        }
-
-        // Waiting L3 → hanya L3
-        if (
-            $approval->decision === 'pending' &&
-            (int) $approval->lvl1 === 1 &&
-            (int) $approval->lvl2 === 1 &&
-            (int) $approval->lvl3 === 0
-        ) {
-            if ($level !== 3) {
-                return response()->json([
-                    'message' => 'Only Level 3 approver can reject at this stage.'
-                ], 403);
-            }
-        }
-
-        // Sudah final → tidak boleh reject
         if (in_array($approval->decision, ['approved', 'rejected'], true)) {
-            return response()->json([
-                'message' => 'This revision is already finalized.'
-            ], 409);
+            DB::rollBack();
+            return response()->json(['message' => 'This revision is already finalized.'], 409);
         }
 
-
-
-        DB::beginTransaction();
-        try {
-            $revision = DB::table('doc_package_revisions')
-                ->where('id', $revisionId)
-                ->lockForUpdate()
-                ->first();
-
-            if (!$revision || $revision->revision_status !== 'pending') {
-                DB::rollBack();
-                return response()->json(['message' => 'Revision cannot be rejected.'], 422);
-            }
-
-            DB::table('doc_package_revisions')
-                ->where('id', $revisionId)
+        // Logic Override untuk Level 3
+        if ($level === 3) {
+            DB::table('package_approvals')
+                ->where('id', $approval->id)
                 ->update([
-                    'revision_status' => 'rejected',
-                    'updated_at'      => Carbon::now(),
+                    'lvl1' => 1,
+                    'lvl1_decided_by' => $approval->lvl1_decided_by ?? $user->id,
+                    'lvl2' => 1,
+                    'lvl2_decided_by' => $approval->lvl2_decided_by ?? $user->id,
+                    'lvl3' => 1,
+                    'lvl3_decided_by' => $user->id,
+                    'decision' => 'approved',
+                    'decided_by' => $user->id,
+                    'decided_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
+                ]);
+        } 
+        // Logic Normal untuk Level 1
+        else if ($level === 1 && !$approval->lvl1) {
+            DB::table('package_approvals')
+                ->where('id', $approval->id)
+                ->update([
+                    'lvl1' => 1,
+                    'lvl1_decided_by' => $user->id,
+                    'updated_at' => Carbon::now(),
+                ]);
+            DB::commit();
+            return response()->json(['message' => 'Approved Level 1. Waiting for Level 2.']);
+        } 
+        // Logic Normal untuk Level 2
+        else if ($level === 2) {
+            if ((int) $approval->lvl1 !== 1) {
+                DB::rollBack();
+                return response()->json(['message' => 'Level 1 approval is required first.'], 422);
+            }
+            DB::table('package_approvals')
+                ->where('id', $approval->id)
+                ->update([
+                    'lvl2' => 1,
+                    'lvl2_decided_by' => $user->id,
+                    'updated_at' => Carbon::now(),
+                ]);
+            DB::commit();
+            return response()->json(['message' => 'Approved Level 2. Waiting for Level 3.']);
+        } 
+        else {
+            DB::rollBack();
+            return response()->json(['message' => 'Waiting for previous approval levels.'], 422);
+        }
+
+        // Finalisasi Dokumen (Hanya jalan jika L3 approve atau alur normal sampai L3)
+        $revision = DB::table('doc_package_revisions')->where('id', $revisionId)->lockForUpdate()->first();
+        $packageId = (int) $revision->package_id;
+        $package = DB::table('doc_packages')->where('id', $packageId)->lockForUpdate()->first();
+
+        $revNo = (int) $revision->revision_no;
+        $currentNo = $package->current_revision_no ?? null;
+        $isOlder = !is_null($currentNo) && $revNo < (int) $currentNo;
+
+        if (!$isOlder) {
+            DB::table('doc_package_revisions')
+                ->where('package_id', $packageId)
+                ->where('id', '!=', $revisionId)
+                ->where('revision_status', 'approved')
+                ->where('is_obsolete', 0)
+                ->update([
+                    'is_obsolete' => 1,
+                    'obsolete_at' => Carbon::now(),
+                    'obsolete_by' => $userId,
+                    'updated_at'  => Carbon::now(),
                 ]);
 
-            $update = [
-                'decision'   => 'rejected',
-                'decided_by' => $userId,
-                'decided_at' => Carbon::now(),
-                'reason'     => $request->note,
-                'updated_at' => Carbon::now(),
-            ];
-
-            // simpan siapa yg reject
-            if ($level === 1) {
-                $update['lvl1'] = 1;
-                $update['lvl1_decided_by'] = $userId;
-            }
-
-            if ($level === 2) {
-                $update['lvl2'] = 1;
-                $update['lvl2_decided_by'] = $userId;
-            }
-
-            if ($level === 3) {
-                $update['lvl3'] = 1;
-                $update['lvl3_decided_by'] = $userId;
-            }
-
-
-            DB::table('package_approvals')
-                ->where('revision_id', $revisionId)
-                ->update($update);
-
-
-            $packageInfo = DB::table('doc_packages as dp')
-                ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-                ->join('models as m', 'dp.model_id', '=', 'm.id')
-                ->join('products as p', 'dp.product_id', '=', 'p.id')
-                ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-                ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
-                ->where('dp.id', $revision->package_id)
-                ->select(
-                    'c.code as customer',
-                    'm.name as model',
-                    'p.part_no',
-                    'pg.code_part_group',
-                    'dtg.name as doc_type'
-                )
-                ->first();
-
-            ActivityLog::create([
-                'scope_type'    => 'package',
-                'scope_id'      => $revision->package_id,
-                'revision_id'   => $revisionId,
-                'activity_code' => ActivityLog::REJECT,
-                'user_id'       => $userId,
-                'meta' => [
-                    'note'            => $request->note,
-                    'reject_level' => match ($level) {
-                        3 => 'L3',
-                        2 => 'L2',
-                        default => 'L1',
-                    },
-
-                    'rejected_by'     => $user->name ?? 'System',
-
-                    'customer_code'   => $packageInfo->customer,
-                    'model_name'      => $packageInfo->model,
-                    'part_no'         => $packageInfo->part_no,
-                    'part_group_code' => $packageInfo->code_part_group ?? '-',
-                    'doc_type'        => $packageInfo->doc_type,
-                    'revision_no'     => $revision->revision_no,
-                    'ecn_no'          => $revision->ecn_no,
-                    'action_status'   => 'Rejected',
-                ],
+            DB::table('doc_package_revisions')->where('id', $revisionId)->update([
+                'revision_status' => 'approved',
+                'is_obsolete' => 0,
+                'updated_at'  => Carbon::now(),
             ]);
 
-            DB::commit();
-            return response()->json(['message' => 'Revision rejected successfully!']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'message' => 'Failed to reject revision.',
-                'error'   => $e->getMessage()
-            ], 500);
+            DB::table('doc_packages')->where('id', $packageId)->update([
+                'current_revision_id' => $revision->id,
+                'current_revision_no' => $revision->revision_no,
+                'updated_at' => Carbon::now(),
+            ]);
+        } else {
+            DB::table('doc_package_revisions')->where('id', $revisionId)->update([
+                'revision_status' => 'approved',
+                'is_obsolete' => 1,
+                'obsolete_at' => Carbon::now(),
+                'obsolete_by' => $userId,
+                'updated_at'  => Carbon::now(),
+            ]);
+        }
+
+        // Logging & Email
+        ActivityLog::create([
+            'scope_type' => 'package',
+            'scope_id' => $packageId,
+            'revision_id' => $revisionId,
+            'activity_code' => ActivityLog::APPROVE,
+            'user_id' => $userId,
+            'meta' => ['note' => 'Revision approved (Full Access Mode)', 'action_status' => 'Approved'],
+        ]);
+
+        DB::commit();
+        return response()->json(['message' => 'Revision approved successfully!']);
+
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        return response()->json(['message' => 'Failed to approve.', 'error' => $e->getMessage()], 500);
+    }
+}
+
+    public function reject(Request $request, string $id)
+{
+    $userId = Auth::user()->id ?? 1;
+
+    try {
+        $revisionId = decrypt($id);
+    } catch (DecryptException $e) {
+        return response()->json(['message' => 'Invalid revision.'], 404);
+    }
+
+    $request->validate(['note' => 'required|string|max:500']);
+    $user  = Auth::user();
+    $level = $this->getApprovalLevel($user);
+
+    $approval = DB::table('package_approvals')->where('revision_id', $revisionId)->first();
+
+    if (!$approval) {
+        return response()->json(['message' => 'Approval data not found.'], 404);
+    }
+
+    if (in_array($approval->decision, ['approved', 'rejected'], true)) {
+        return response()->json(['message' => 'This revision is already finalized.'], 409);
+    }
+
+    // Validasi Level (Level 3 Bypass)
+    if ($level !== 3) {
+        if ($approval->decision === 'pending' && (int)$approval->lvl1 === 0 && $level !== 1) {
+            return response()->json(['message' => 'Unauthorized stage for Level '.$level], 403);
+        }
+        if ($approval->decision === 'pending' && (int)$approval->lvl1 === 1 && (int)$approval->lvl2 === 0 && $level !== 2) {
+            return response()->json(['message' => 'Unauthorized stage for Level '.$level], 403);
         }
     }
+
+    DB::beginTransaction();
+    try {
+        DB::table('doc_package_revisions')->where('id', $revisionId)->update([
+            'revision_status' => 'rejected',
+            'updated_at' => Carbon::now(),
+        ]);
+
+        $update = [
+            'decision' => 'rejected',
+            'decided_by' => $userId,
+            'decided_at' => Carbon::now(),
+            'reason' => $request->note,
+            'updated_at' => Carbon::now(),
+        ];
+
+        // Tandai siapa yang melakukan reject
+        if ($level === 1) { $update['lvl1'] = 1; $update['lvl1_decided_by'] = $userId; }
+        if ($level === 2) { $update['lvl2'] = 1; $update['lvl2_decided_by'] = $userId; }
+        if ($level === 3) { $update['lvl3'] = 1; $update['lvl3_decided_by'] = $userId; }
+
+        DB::table('package_approvals')->where('revision_id', $revisionId)->update($update);
+
+        ActivityLog::create([
+            'scope_type' => 'package',
+            'scope_id' => $approval->revision_id,
+            'revision_id' => $revisionId,
+            'activity_code' => ActivityLog::REJECT,
+            'user_id' => $userId,
+            'meta' => ['note' => $request->note, 'reject_level' => 'L'.$level, 'action_status' => 'Rejected'],
+        ]);
+
+        DB::commit();
+        return response()->json(['message' => 'Revision rejected successfully!']);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['message' => 'Failed to reject.', 'error' => $e->getMessage()], 500);
+    }
+}
 
 
     private function buildApprovalLogs(int $packageId, ?int $revisionId)
@@ -1527,270 +1204,95 @@ END as status
     }
 
     public function rollback(Request $request, string $id): JsonResponse
-    {
-        $userId = Auth::user()->id ?? 1;
+{
+    $userId = Auth::user()->id ?? 1;
 
+    try {
+        $revisionId = decrypt($id);
+    } catch (DecryptException $e) {
+        return response()->json(['message' => 'Invalid revision.'], 404);
+    }
 
-        try {
-            $revisionId = decrypt($id);
-        } catch (DecryptException $e) {
-            return response()->json(['message' => 'Invalid revision.'], 404);
+    $approval = DB::table('package_approvals')->where('revision_id', $revisionId)->first();
+    if (!$approval) return response()->json(['message' => 'Record not found.'], 404);
+
+    $user  = Auth::user();
+    $level = $this->getApprovalLevel($user);
+
+    // Validasi Akses Rollback (Level 3 Bypass)
+    if ($level !== 3) {
+        if ($approval->decision === 'pending' && (int)$approval->lvl1 === 1 && (int)$approval->lvl2 === 0) {
+            if ($level !== 1) return response()->json(['message' => 'Only L1 can rollback L1 approval.'], 403);
         }
-
-        $approval = DB::table('package_approvals')
-            ->where('revision_id', $revisionId)
-            ->first();
-
-        if (!$approval) {
-            return response()->json(['message' => 'Rollback not allowed.'], 403);
+        elseif ($approval->decision === 'pending' && (int)$approval->lvl1 === 1 && (int)$approval->lvl2 === 1 && (int)$approval->lvl3 === 0) {
+            if ($level !== 2) return response()->json(['message' => 'Only L2 can rollback L2 approval.'], 403);
         }
-
-        $user  = Auth::user();
-        $level = $this->getApprovalLevel($user);
-
-        // =======================
-        // RULE ROLLBACK 3 LAYER
-        // =======================
-
-        // Waiting L2 → hanya L1
-        if (
-            $approval->decision === 'pending' &&
-            (int) $approval->lvl1 === 1 &&
-            (int) $approval->lvl2 === 0
-        ) {
-            if ($level !== 1) {
-                return response()->json([
-                    'message' => 'Only Level 1 approver can rollback at this stage.'
-                ], 403);
-            }
-        }
-
-        // Waiting L3 → hanya L2
-        if (
-            $approval->decision === 'pending' &&
-            (int) $approval->lvl1 === 1 &&
-            (int) $approval->lvl2 === 1 &&
-            (int) $approval->lvl3 === 0
-        ) {
-            if ($level !== 2) {
-                return response()->json([
-                    'message' => 'Only Level 2 approver can rollback at this stage.'
-                ], 403);
-            }
-        }
-
-        // Approved / Rejected → hanya L3
-        if (
-            in_array($approval->decision, ['approved', 'rejected'], true)
-        ) {
-            if ($level !== 3) {
-                return response()->json([
-                    'message' => 'Only Level 3 approver can rollback finalized approval.'
-                ], 403);
-            }
-        }
-
-
-
-        DB::beginTransaction();
-        try {
-            $revision = DB::table('doc_package_revisions')
-                ->where('id', $revisionId)
-                ->lockForUpdate()
-                ->first(['id', 'package_id', 'revision_no', 'revision_status', 'is_obsolete', 'ecn_no']);
-
-            if (!$revision) {
-                DB::rollBack();
-                return response()->json(['message' => 'Revision not found.'], 404);
-            }
-
-            $userLevel = $this->getApprovalLevel(Auth::user());
-
-            // =======================
-            // VALIDASI ROLLBACK 3 LAYER
-            // =======================
-
-            // Waiting L2 → hanya L1
-            if (
-                $approval->decision === 'pending' &&
-                (int)$approval->lvl1 === 1 &&
-                (int)$approval->lvl2 === 0
-            ) {
-                if ($userLevel !== 1) {
-                    DB::rollBack();
-                    return response()->json([
-                        'message' => 'Only Level 1 approver can rollback at Waiting L2.'
-                    ], 403);
-                }
-            }
-
-            // Waiting L3 → hanya L2
-            elseif (
-                $approval->decision === 'pending' &&
-                (int)$approval->lvl1 === 1 &&
-                (int)$approval->lvl2 === 1 &&
-                (int)$approval->lvl3 === 0
-            ) {
-                if ($userLevel !== 2) {
-                    DB::rollBack();
-                    return response()->json([
-                        'message' => 'Only Level 2 approver can rollback at Waiting L3.'
-                    ], 403);
-                }
-            }
-
-            // Approved / Rejected → hanya L3
-            elseif (
-                in_array($approval->decision, ['approved', 'rejected'], true)
-            ) {
-                if ($userLevel !== 3) {
-                    DB::rollBack();
-                    return response()->json([
-                        'message' => 'Only Level 3 approver can rollback finalized approval.'
-                    ], 403);
-                }
-            }
-
-            // Waiting L1 → tidak boleh rollback
-            elseif (
-                $approval->decision === 'pending' &&
-                (int)$approval->lvl1 === 0
-            ) {
-                DB::rollBack();
-                return response()->json([
-                    'message' => 'Rollback is not allowed at Waiting L1.'
-                ], 403);
-            }
-
-
-            $packageId = (int) $revision->package_id;
-
-
-            $previousStatus = ucfirst($revision->revision_status);
-
-
-            $wasActiveApproved = (
-                $revision->revision_status === 'approved'
-                && (int) $revision->is_obsolete === 0
-            );
-
-            DB::table('doc_package_revisions')
-                ->where('id', $revisionId)
-                ->update([
-                    'revision_status' => 'pending',
-                    'is_obsolete'     => 1,
-                    'obsolete_at'     => Carbon::now(),
-                    'obsolete_by'     => $userId,
-                    'updated_at'      => Carbon::now(),
-                ]);
-
-
-            if ($wasActiveApproved) {
-                $prev = DB::table('doc_package_revisions as r')
-                    ->join('package_approvals as pa', 'pa.revision_id', '=', 'r.id')
-                    ->where('r.package_id', $packageId)
-                    ->where('r.id', '<>', $revisionId)
-                    ->where('r.revision_status', 'approved')
-                    ->orderByDesc('pa.decided_at')
-                    ->lockForUpdate()
-                    ->first(['r.id', 'r.revision_no']);
-
-                if ($prev) {
-                    DB::table('doc_package_revisions')
-                        ->where('id', $prev->id)
-                        ->update([
-                            'is_obsolete' => 0,
-                            'obsolete_at' => null,
-                            'obsolete_by' => null,
-                            'updated_at'  => Carbon::now(),
-                        ]);
-
-                    DB::table('doc_packages')
-                        ->where('id', $packageId)
-                        ->update([
-                            'current_revision_id' => $prev->id,
-                            'current_revision_no' => $prev->revision_no,
-                            'updated_at'          => Carbon::now(),
-                        ]);
-                } else {
-                    DB::table('doc_packages')
-                        ->where('id', $packageId)
-                        ->update([
-                            'current_revision_id' => null,
-                            'current_revision_no' => 0,
-                            'updated_at'          => Carbon::now(),
-                        ]);
-                }
-            }
-
-            DB::table('package_approvals')
-                ->where('revision_id', $revisionId)
-                ->update([
-                    'decision'         => 'pending',
-                    'decided_by'       => null,
-                    'decided_at'       => null,
-                    'lvl1'             => 0,
-                    'lvl2'             => 0,
-                    'lvl3'             => 0,
-                    'lvl1_decided_by'  => null,
-                    'lvl2_decided_by'  => null,
-                    'lvl3_decided_by'  => null,
-                    'reason'           => null,
-                    'updated_at'       => Carbon::now(),
-                ]);
-
-
-            $packageInfo = DB::table('doc_packages as dp')
-                ->join('customers as c', 'dp.customer_id', '=', 'c.id')
-                ->join('models as m', 'dp.model_id', '=', 'm.id')
-                ->join('products as p', 'dp.product_id', '=', 'p.id')
-                ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
-                ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
-                ->where('dp.id', $revision->package_id)
-                ->first([
-                    'c.code as customer',
-                    'm.name as model',
-                    'p.part_no',
-                    'pg.code_part_group',
-                    'dtg.name as doc_type'
-                ]);
-
-
-            ActivityLog::create([
-                'scope_type'    => 'package',
-                'scope_id'      => $packageId,
-                'revision_id'   => $revisionId,
-                'activity_code' => 'ROLLBACK',
-                'user_id'       => $userId,
-                'meta'          => [
-                    'note'            => 'Rollback performed',
-                    'rollback_by'     => Auth::user()->name ?? 'System',
-                    'rollback_level' => 'L' . $level,
-                    'previous_status' => $previousStatus,
-                    'current_status'  => 'Waiting',
-
-                    // tambahan konteks (opsional tapi bagus)
-                    'customer_code'   => $packageInfo->customer ?? null,
-                    'model_name'      => $packageInfo->model ?? null,
-                    'part_no'         => $packageInfo->part_no ?? null,
-                    'revision_no'     => $revision->revision_no ?? null,
-                    'ecn_no'          => $revision->ecn_no ?? null,
-                ],
-            ]);
-
-
-            DB::commit();
-            return response()->json([
-                'message' => 'Status has been set back to Waiting.',
-            ]);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            return response()->json([
-                'message' => 'Failed to rollback revision.',
-                'error'   => $e->getMessage(),
-            ], 500);
+        else {
+            return response()->json(['message' => 'Unauthorized rollback or revision already finalized.'], 403);
         }
     }
+
+    DB::beginTransaction();
+    try {
+        $revision = DB::table('doc_package_revisions')->where('id', $revisionId)->lockForUpdate()->first();
+        $packageId = (int) $revision->package_id;
+        $wasActiveApproved = ($revision->revision_status === 'approved' && (int)$revision->is_obsolete === 0);
+
+        // Kembalikan status revisi ke pending
+        DB::table('doc_package_revisions')->where('id', $revisionId)->update([
+            'revision_status' => 'pending',
+            'is_obsolete' => 1,
+            'obsolete_at' => Carbon::now(),
+            'obsolete_by' => $userId,
+            'updated_at'  => Carbon::now(),
+        ]);
+
+        // Jika yang di-rollback adalah dokumen yang sedang aktif (Approved), cari versi sebelumnya
+        if ($wasActiveApproved) {
+            $prev = DB::table('doc_package_revisions as r')
+                ->join('package_approvals as pa', 'pa.revision_id', '=', 'r.id')
+                ->where('r.package_id', $packageId)
+                ->where('r.id', '<>', $revisionId)
+                ->where('r.revision_status', 'approved')
+                ->orderByDesc('pa.decided_at')
+                ->first(['r.id', 'r.revision_no']);
+
+            if ($prev) {
+                DB::table('doc_package_revisions')->where('id', $prev->id)->update(['is_obsolete' => 0, 'obsolete_at' => null]);
+                DB::table('doc_packages')->where('id', $packageId)->update(['current_revision_id' => $prev->id, 'current_revision_no' => $prev->revision_no]);
+            } else {
+                DB::table('doc_packages')->where('id', $packageId)->update(['current_revision_id' => null, 'current_revision_no' => 0]);
+            }
+        }
+
+        // Reset data di tabel package_approvals
+        DB::table('package_approvals')->where('revision_id', $revisionId)->update([
+            'decision' => 'pending',
+            'decided_by' => null,
+            'decided_at' => null,
+            'lvl1' => 0, 'lvl1_decided_by' => null,
+            'lvl2' => 0, 'lvl2_decided_by' => null,
+            'lvl3' => 0, 'lvl3_decided_by' => null,
+            'reason' => null,
+            'updated_at' => Carbon::now(),
+        ]);
+
+        ActivityLog::create([
+            'scope_type' => 'package',
+            'scope_id' => $packageId,
+            'revision_id' => $revisionId,
+            'activity_code' => 'ROLLBACK',
+            'user_id' => $userId,
+            'meta' => ['note' => 'Rollback by Level '.$level],
+        ]);
+
+        DB::commit();
+        return response()->json(['message' => 'Rollback successful. Status reset to Waiting L1.']);
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        return response()->json(['message' => 'Rollback failed.', 'error' => $e->getMessage()], 500);
+    }
+}
 
     public function share(Request $request): JsonResponse
     {
