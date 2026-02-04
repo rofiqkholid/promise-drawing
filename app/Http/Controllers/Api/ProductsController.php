@@ -298,7 +298,7 @@ class ProductsController extends Controller
                 ->where('group_id', $row->group_id)
                 ->where('id', '!=', $row->id)
                 ->where('is_delete', 0)
-                ->select('id', 'part_no', 'part_name')
+                ->select('id', 'part_no', 'part_name', 'is_count')
                 ->get();
             
             if ($partners->isNotEmpty()) {
@@ -306,7 +306,8 @@ class ProductsController extends Controller
                 $partnerText = $partners->map(function($p) {
                     return [
                         'id' => $p->id,
-                        'text' => $p->part_no . ' - ' . $p->part_name
+                        'text' => $p->part_no . ' - ' . $p->part_name,
+                        'is_count' => $p->is_count
                     ];
                 });
             }
@@ -331,7 +332,9 @@ class ProductsController extends Controller
             'create_new_partner' => ['nullable', 'boolean'],
             'new_partner_part_no' => ['required_if:create_new_partner,1', 'nullable', 'string', 'max:20', 'unique:products,part_no'],
             'new_partner_part_name' => ['required_if:create_new_partner,1', 'nullable', 'string', 'max:50'],
+            'new_partner_is_count' => ['nullable', 'boolean'],
             'is_count'    => ['nullable', 'boolean'],
+            'partner_monitoring' => ['nullable', 'array'],
         ]);
 
         DB::beginTransaction();
@@ -371,7 +374,8 @@ class ProductsController extends Controller
                      'model_id'    => $v['model_id'],    
                      'part_no'     => $v['new_partner_part_no'],
                      'part_name'   => $v['new_partner_part_name'],
-                     'group_id'    => $groupId
+                     'group_id'    => $groupId,
+                     'is_count'    => $v['new_partner_is_count'] ?? 1,
                  ]);
             }
             elseif (!empty($v['partner_id'])) {
@@ -392,6 +396,12 @@ class ProductsController extends Controller
                     }
                 }
             } 
+
+            if (!empty($r->partner_monitoring)) {
+                foreach ($r->partner_monitoring as $pid => $val) {
+                    Products::where('id', $pid)->update(['is_count' => (int)$val]);
+                }
+            }
 
             $product->update($dataToUpdate);
 

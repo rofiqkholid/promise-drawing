@@ -180,10 +180,8 @@
                             <div id="edit_current_partner_info" class="mb-6 hidden">
                                 <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Connection:</p>
                                 <div class="bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-600 shadow-sm">
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex flex-wrap items-center" id="edit_partner_label_display">
-                                            {{-- Badges will be injected here --}}
-                                        </div>
+                                    <div class="w-full space-y-2" id="edit_partner_label_display">
+                                        {{-- Partner items with toggles will be injected here --}}
                                     </div>
                                     <div class="mt-3 flex justify-end">
                                         <label class="inline-flex items-center cursor-pointer select-none">
@@ -223,6 +221,14 @@
                                         <div>
                                             <input type="text" name="new_partner_part_name" id="new_partner_part_name" maxlength="50" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-white" placeholder="Part Name">
                                             <p id="edit-new_partner_part_name-error" class="text-red-500 text-xs mt-1 text-left hidden"></p>
+                                        </div>
+                                        <div class="pt-1">
+                                            <label class="inline-flex items-center cursor-pointer">
+                                                <input type="hidden" name="new_partner_is_count" value="0">
+                                                <input type="checkbox" name="new_partner_is_count" value="1" class="sr-only peer" checked>
+                                                <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
+                                                <span class="ml-2 text-xs font-medium text-gray-600 dark:text-gray-400">Include in Monitoring</span>
+                                            </label>
                                         </div>
                                     </div>
                                 </div>
@@ -697,14 +703,29 @@
                     if (data.group_id && data.partner_label && Array.isArray(data.partner_label)) {
                         $('#edit_current_partner_info').removeClass('hidden');
                         
-                        let badgesHtml = '';
+                        let partnersHtml = '';
                         data.partner_label.forEach(p => {
-                            badgesHtml += `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 mr-1 mb-1">
-                                <i class="fa-solid fa-cube mr-1"></i> ${p.text}
-                            </span>`;
+                            const isChecked = (p.is_count == 1 || p.is_count === true) ? 'checked' : '';
+                            partnersHtml += `
+                                <div class="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/30 rounded border border-gray-100 dark:border-gray-600/50">
+                                    <div class="flex items-center overflow-hidden mr-2">
+                                        <i class="fa-solid fa-cube text-blue-500 mr-2 flex-shrink-0"></i>
+                                        <div class="flex flex-col truncate">
+                                            <span class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate" title="${p.text}">${p.text}</span>
+                                            <span class="text-[10px] text-gray-500">Connected Product</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center flex-shrink-0" title="Include in Monitoring">
+                                        <label class="inline-flex items-center cursor-pointer scale-[0.85] origin-right">
+                                            <input type="hidden" name="partner_monitoring[${p.id}]" value="0">
+                                            <input type="checkbox" name="partner_monitoring[${p.id}]" value="1" class="sr-only peer" ${isChecked}>
+                                            <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
+                                        </label>
+                                    </div>
+                                </div>`;
                         });
                         
-                        $('#edit_partner_label_display').html(badgesHtml).removeClass('text-sm font-medium'); // clear old text styling and use html
+                        $('#edit_partner_label_display').html(partnersHtml);
                         
                         // Reset unlink checkbox
                         $('input[name="unlink_pair"]').prop('checked', false);
