@@ -26,18 +26,26 @@ use Carbon\Carbon;
 
 class ShareController extends Controller
 {
-    public function getSuppliers()
+    public function getSuppliers(Request $request)
     {
         try {
-            $roles = DB::table('suppliers')
-                ->select('id', 'code', 'name')
-                ->orderBy('code', 'asc')
-                ->get();
+            $query = DB::table('suppliers')
+                ->select('id', 'code', 'name');
 
-            return response()->json($roles);
+            if ($request->filled('q')) {
+                $search = $request->get('q');
+                $query->where(function($q) use ($search) {
+                    $q->where('code', 'like', "%{$search}%")
+                      ->orWhere('name', 'like', "%{$search}%");
+                });
+            }
+
+            $suppliers = $query->orderBy('code', 'asc')->get();
+
+            return response()->json($suppliers);
         } catch (\Exception $e) {
-            Log::error('ShareController@getRoles failed: ' . $e->getMessage());
-            return response()->json(['error' => 'Gagal memuat daftar role'], 500);
+            Log::error('ShareController@getSuppliers failed: ' . $e->getMessage());
+            return response()->json(['error' => 'Gagal memuat daftar supplier'], 500);
         }
     }
 

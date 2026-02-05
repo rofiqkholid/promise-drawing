@@ -386,14 +386,18 @@ class ExportController extends Controller
         $revisionIds = $rawData->pluck('id');
         $groupIds    = $rawData->pluck('group_id')->filter()->unique();
 
-        //Batch Calculate Sizes
-        $sizesMap = collect();
+        //Batch Calculate Sizes & Counts
+        $statsMap = collect();
         if ($revisionIds->isNotEmpty()) {
-            $sizesMap = DB::table('doc_package_revision_files')
+            $statsMap = DB::table('doc_package_revision_files')
                 ->whereIn('revision_id', $revisionIds)
-                ->select('revision_id', DB::raw('SUM(file_size) as total_size'))
+                ->select('revision_id', 
+                    DB::raw('SUM(file_size) as total_size'),
+                    DB::raw('COUNT(*) as file_count')
+                )
                 ->groupBy('revision_id')
-                ->pluck('total_size', 'revision_id');
+                ->get()
+                ->keyBy('revision_id');
         }
 
         //Batch Fetch Partners
@@ -406,10 +410,11 @@ class ExportController extends Controller
                 ->groupBy('group_id');
         }
 
-        $formattedData = $rawData->map(function ($row) use ($partnersMap, $sizesMap) {
-            // Attach Size from memory (Must use raw ID before encryption)
-            $sizeVal = $sizesMap[$row->id] ?? 0;
-            $row->total_size = $sizeVal; 
+        $formattedData = $rawData->map(function ($row) use ($partnersMap, $statsMap) {
+            // Attach Size & Count from memory (Must use raw ID before encryption)
+            $stats = $statsMap->get($row->id);
+            $row->total_size = $stats->total_size ?? 0;
+            $row->file_count = $stats->file_count ?? 0; 
 
             $row->id = str_replace('=', '-', encrypt($row->id));
             
@@ -465,14 +470,14 @@ class ExportController extends Controller
     public function showDetail($id)
     {
         $originalEncryptedId = $id;
-
         try {
             $id = decrypt(str_replace('-', '=', $id));
         } catch (\Exception $e) {
             abort(404, 'Exportable file not found or not approved.');
         }
 
-        // $id = revision_id
+        // $id could be revision_id or package_id
+        // First, try to get the revision
         $revision = DB::table('doc_package_revisions as dpr')
             ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
             ->leftJoin('users as ou', 'ou.id', '=', 'dpr.obsolete_by')
@@ -487,8 +492,35 @@ class ExportController extends Controller
             )
             ->first();
 
+        // If not found, try to get package and find latest revision
         if (!$revision) {
-            abort(404, 'Exportable file not found or not approved.');
+            $package = DB::table('doc_packages')->where('id', $id)->first();
+            if (!$package) {
+                abort(404, 'Exportable file not found or not approved.');
+            }
+            
+            // Get latest approved revision
+            $revision = DB::table('doc_package_revisions as dpr')
+                ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
+                ->leftJoin('users as ou', 'ou.id', '=', 'dpr.obsolete_by')
+                ->leftJoin('departments as od', 'od.id', '=', 'ou.id_dept')
+                ->where('dpr.package_id', $package->id)
+                ->where('dpr.revision_status', '=', 'approved')
+                ->orderBy('dpr.revision_no', 'desc')
+                ->select(
+                    'dpr.*',
+                    'crl.label as revision_label',
+                    'ou.name as obsolete_name',
+                    'od.code as obsolete_dept'
+                )
+                ->first();
+                
+            if (!$revision) {
+                abort(404, 'No approved revision found.');
+            }
+            
+            // Update encrypted ID to the latest revision
+            $originalEncryptedId = str_replace('=', '-', encrypt($revision->id));
         }
 
         // CEK HAK AKSES BERDASARKAN PACKAGE
@@ -502,10 +534,10 @@ class ExportController extends Controller
             ->select('dpr.id', 'dpr.revision_no', 'crl.label', 'dpr.is_obsolete')
             ->get()
             ->map(function ($rev) {
-                $labelText = $rev->label ? " ({$rev->label})" : "";
+                $labelText = $rev->label ? " | {$rev->label}" : "";
                 return [
                     'id'   => str_replace('=', '-', encrypt($rev->id)),
-                    'text' => "Rev-{$rev->revision_no}{$labelText}",
+                    'revision' => "Rev-{$rev->revision_no}{$labelText}",
                     'is_obsolete' => (bool)($rev->is_obsolete ?? 0)
                 ];
             });
@@ -635,6 +667,8 @@ class ExportController extends Controller
                 'is_obsolete'  => $isObsolete,
                 'obsolete_info' => $obsoleteStampInfo,
             ],
+            'id' => $originalEncryptedId,
+            'revisionHistory' => $revisionList,
         ];
 
         $stampFormat = StampFormat::where('is_active', true)->first();
@@ -694,6 +728,22 @@ class ExportController extends Controller
 
         // CEK AKSES
         $this->abortIfNoAccessToPackage((int)$revision->package_id);
+
+        $revisionList = DB::table('doc_package_revisions as dpr')
+            ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
+            ->where('dpr.package_id', $revision->package_id)
+            ->where('dpr.revision_status', '=', 'approved')
+            ->orderBy('dpr.revision_no', 'desc')
+            ->select('dpr.id', 'dpr.revision_no', 'crl.label', 'dpr.is_obsolete')
+            ->get()
+            ->map(function ($rev) {
+                $labelText = $rev->label ? " | {$rev->label}" : "";
+                return [
+                    'id'   => str_replace('=', '-', encrypt($rev->id)),
+                    'revision' => "Rev-{$rev->revision_no}{$labelText}",
+                    'is_obsolete' => (bool)($rev->is_obsolete ?? 0)
+                ];
+            });
 
         // Metadata Paket
         $package = DB::table('doc_packages as dp')
@@ -820,6 +870,8 @@ class ExportController extends Controller
                 'is_obsolete'  => $isObsolete,
                 'obsolete_info' => $obsoleteStampInfo,
             ],
+            'id' => $originalEncryptedId,
+            'revisionHistory' => $revisionList,
         ];
 
         $stampFormat = StampFormat::where('is_active', true)->first();

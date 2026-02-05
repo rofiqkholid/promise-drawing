@@ -10,6 +10,8 @@ use App\Models\Customers;
 use App\Models\DoctypeGroups;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\DB;
+use App\Exports\ReceiptExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Contracts\Encryption\DecryptException;
@@ -31,6 +33,18 @@ class ReceiptController extends Controller
 
     public function receiptFilters(Request $request): JsonResponse
     {
+        $userId = Auth::user()->id ?? 1;
+        
+        // Identify User Role / Supplier ID exactly like receiptList
+        $userSupplier = DB::table('user_supplier')->where('user_id', $userId)->first();
+        if ($userSupplier) {
+            $userRoleId = (string) $userSupplier->supplier_id;
+        } else {
+            $userRole = DB::table('user_roles')->where('user_id', $userId)->first();
+            if (!$userRole) return response()->json(['results' => [], 'pagination' => ['more' => false]]);
+            $userRoleId = (string) $userRole->role_id;
+        }
+
         if ($request->filled('select2')) {
             $field   = $request->get('select2');
             $q       = trim($request->get('q', ''));
@@ -40,69 +54,109 @@ class ReceiptController extends Controller
             $customerCode = $request->get('customer_code');
             $docTypeName  = $request->get('doc_type');
 
-            $total = 0;
+            // Shared logic for finding available revisions
+            $base = DB::table('doc_package_revisions as dpr')
+                ->join('package_shares as ps', 'dpr.id', '=', 'ps.revision_id')
+                ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+                ->where('ps.supplier_id', $userRoleId)
+                ->where('dpr.revision_status', 'approved');
+
             $items = collect();
+            $totalCount = 0;
+
+            $feasId = $this->getFeasibilityStatusId();
 
             switch ($field) {
                 case 'customer':
-                    $builder = DB::table('customers as c')
-                        ->selectRaw('c.code AS id, c.code AS text')
-                        ->when($q, fn($x) => $x->where(function ($w) use ($q) {
-                            $w->where('c.code', 'like', "%{$q}%")
-                                ->orWhere('c.name', 'like', "%{$q}%");
-                        }))
-                        ->orderBy('c.code');
+                    $query = $base->join('customers as c', 'dp.customer_id', '=', 'c.id')
+                        ->join('models as m_f', 'dp.model_id', '=', 'm_f.id')
+                        ->where('m_f.status_id', '<>', $feasId)
+                        ->when($q, fn($x) => $x->where('c.code', 'like', "%{$q}%"));
+                    
+                    $totalCount = (clone $query)->count(DB::raw('DISTINCT(c.code)'));
 
-                    $total = (clone $builder)->count();
-                    $items = $builder->forPage($page, $perPage)->get();
+                    $items = $query->select('c.code as id', 'c.code as text')
+                        ->distinct()
+                        ->orderBy('c.code')
+                        ->forPage($page, $perPage)
+                        ->get();
+
+                    if ($page === 1) {
+                        $hasFeasibility = (clone $base)->join('models as m_fs', 'dp.model_id', '=', 'm_fs.id')
+                            ->where('m_fs.status_id', $feasId)->exists();
+                        if ($hasFeasibility) {
+                            $items->prepend(['id' => 'FEASIBILITY STUDY', 'text' => 'FEASIBILITY STUDY']);
+                        }
+                    }
                     break;
 
                 case 'model':
-                    $builder = DB::table('models as m')
-                        ->join('customers as c', 'm.customer_id', '=', 'c.id')
-                        ->selectRaw('m.name AS id, m.name AS text')
-                        ->when($customerCode && $customerCode !== 'All', fn($x) => $x->where('c.code', $customerCode))
-                        ->when($q, fn($x) => $x->where('m.name', 'like', "%{$q}%"))
-                        ->orderBy('m.name');
+                    $query = $base->join('models as m', 'dp.model_id', '=', 'm.id')
+                        ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+                        ->where('m.status_id', '<>', $feasId)
+                        ->when($customerCode && $customerCode !== 'All' && $customerCode !== 'FEASIBILITY STUDY', fn($x) => $x->where('c.code', $customerCode))
+                        ->when($q, fn($x) => $x->where('m.name', 'like', "%{$q}%"));
 
-                    $total = (clone $builder)->count();
-                    $items = $builder->forPage($page, $perPage)->get();
+                    if ($customerCode === 'FEASIBILITY STUDY') {
+                        // If filtered by feasibility customer, only show feasibility models (masked) in this dropdown?
+                        // Actually, better to just return "FEASIBILITY STUDY" as the only model option.
+                        $items = collect([['id' => 'FEASIBILITY STUDY', 'text' => 'FEASIBILITY STUDY']]);
+                        $totalCount = 1;
+                    } else {
+                        $totalCount = (clone $query)->count(DB::raw('DISTINCT(m.name)'));
+                        $items = $query->select('m.name as id', 'm.name as text')
+                            ->distinct()
+                            ->orderBy('m.name')
+                            ->forPage($page, $perPage)
+                            ->get();
+                    }
                     break;
 
                 case 'doc_type':
-                    $builder = DB::table('doctype_groups as dtg')
-                        ->selectRaw('dtg.name AS id, dtg.name AS text')
-                        ->when($q, fn($x) => $x->where('dtg.name', 'like', "%{$q}%"))
-                        ->orderBy('dtg.name');
+                    $query = $base->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+                        ->when($q, fn($x) => $x->where('dtg.name', 'like', "%{$q}%"));
 
-                    $total = (clone $builder)->count();
-                    $items = $builder->forPage($page, $perPage)->get();
+                    $totalCount = (clone $query)->count(DB::raw('DISTINCT(dtg.name)'));
+
+                    $items = $query->select('dtg.name as id', 'dtg.name as text')
+                        ->distinct()
+                        ->orderBy('dtg.name')
+                        ->forPage($page, $perPage)
+                        ->get();
                     break;
 
                 case 'category':
-                    $builder = DB::table('doctype_subcategories as dsc')
-                        ->join('doctype_groups as dtg', 'dsc.doctype_group_id', '=', 'dtg.id')
-                        ->selectRaw('dsc.name AS id, dsc.name AS text')
+                    $query = $base->join('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+                        ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
                         ->when($docTypeName && $docTypeName !== 'All', fn($x) => $x->where('dtg.name', $docTypeName))
-                        ->when($q, fn($x) => $x->where('dsc.name', 'like', "%{$q}%"))
-                        ->orderBy('dsc.name');
+                        ->when($q, fn($x) => $x->where('dsc.name', 'like', "%{$q}%"));
 
-                    $total = (clone $builder)->count();
-                    $items = $builder->forPage($page, $perPage)->get();
+                    $totalCount = (clone $query)->count(DB::raw('DISTINCT(dsc.name)'));
+
+                    $items = $query->select('dsc.name as id', 'dsc.name as text')
+                        ->distinct()
+                        ->orderBy('dsc.name')
+                        ->forPage($page, $perPage)
+                        ->get();
                     break;
-
-                // Blok 'case status' telah dihapus
 
                 default:
                     return response()->json(['results' => [], 'pagination' => ['more' => false]]);
             }
 
             if ($page === 1) {
-                $items = collect([['id' => 'All', 'text' => 'All']])->merge($items);
+                // Check if 'All' is already in items (e.g. from model logic)
+                $hasAll = false;
+                foreach($items as $it) {
+                    if (is_array($it) && $it['id'] === 'All') $hasAll = true;
+                    if (is_object($it) && $it->id === 'All') $hasAll = true;
+                }
+                if (!$hasAll) {
+                    $items->prepend(['id' => 'All', 'text' => 'All']);
+                }
             }
 
-            $effectiveTotal = $total + ($page === 1 ? 1 : 0);
-            $more = ($effectiveTotal > $page * $perPage);
+            $more = ($totalCount > $page * $perPage);
 
             return response()->json([
                 'results'    => array_values($items->toArray()),
@@ -110,34 +164,8 @@ class ReceiptController extends Controller
             ]);
         }
 
-        $customerId = $request->integer('customer_id') ?: null;
-        if (!$customerId && $request->filled('customer_code')) {
-            $customerId = Customers::where('code', $request->get('customer_code'))->value('id');
-        }
-
-        $models = $customerId
-            ? Models::where('customer_id', $customerId)->orderBy('name')->get(['id', 'name'])
-            : Models::orderBy('name')->get(['id', 'name']);
-
-        $docTypes = DoctypeGroups::orderBy('name')->get(['id', 'name']);
-
-        $docTypeName = $request->get('doc_type');
-        $docTypeId   = null;
-        if ($docTypeName && $docTypeName !== 'All') {
-            $docTypeId = DoctypeGroups::where('name', $docTypeName)->value('id');
-        }
-
-        $categories = DocTypeSubCategories::when($docTypeId, function ($q) use ($docTypeId) {
-            $q->where('doctype_group_id', $docTypeId);
-        })
-            ->orderBy('name')
-            ->get(['name']);
-
         return response()->json([
-            'customers'  => Customers::orderBy('code')->get(['id', 'code']),
-            'models'     => $models,
-            'doc_types'  => $docTypes,
-            'categories' => $categories,
+            'customers'  => [], 'models' => [], 'doc_types' => [], 'categories' => []
         ]);
     }
     public function choiseFilter(Request $request): JsonResponse
@@ -166,13 +194,36 @@ class ReceiptController extends Controller
             ->where('ps.supplier_id', $userRoleId)
             ->where('dpr.revision_status', 'approved');
 
+        $feasId = $this->getFeasibilityStatusId();
         // Apply filters if any
         if ($request->filled('customer') && $request->customer !== 'All') {
             $baseQuery->join('doc_packages as dp_c', 'dpr.package_id', '=', 'dp_c.id')
                 ->join('customers as c_c', 'dp_c.customer_id', '=', 'c_c.id')
-                ->where('c_c.code', $request->customer);
+                ->join('models as m_c', 'dp_c.model_id', '=', 'm_c.id');
+            
+            if ($request->customer === 'FEASIBILITY STUDY') {
+                $baseQuery->where('m_c.status_id', $feasId);
+            } else {
+                $baseQuery->where('c_c.code', $request->customer)
+                          ->where('m_c.status_id', '<>', $feasId);
+            }
         }
-        // ... more filters could be added here if needed, but usually KPI follows global filters
+
+        if ($request->filled('model') && $request->model !== 'All') {
+            if (!$request->filled('customer') || $request->customer === 'All') {
+                $baseQuery->join('doc_packages as dp_m', 'dpr.package_id', '=', 'dp_m.id')
+                    ->join('models as m_m', 'dp_m.model_id', '=', 'm_m.id');
+            } else {
+                $baseQuery->alias('m_c', 'm_m'); 
+            }
+            
+            if ($request->model === 'FEASIBILITY STUDY') {
+                $baseQuery->where('m_m.status_id', $feasId);
+            } else {
+                $baseQuery->where('m_m.name', $request->model)
+                          ->where('m_m.status_id', '<>', $feasId);
+            }
+        }
 
         $totalReceived = (clone $baseQuery)->count();
         $totalActive   = (clone $baseQuery)
@@ -195,7 +246,7 @@ class ReceiptController extends Controller
         ]);
     }
 
-    public function receiptList(Request $request): JsonResponse
+    public function receiptList(Request $request)
     {
         $userId = Auth::user()->id ?? 1;
 
@@ -253,6 +304,7 @@ class ReceiptController extends Controller
             ->join('products as p', 'dp.product_id', '=', 'p.id')
             ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
             ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', 'dsc.id')
+            ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
             ->leftJoinSub($latestPa, 'pa', function ($join) {
                 $join->on('pa.revision_id', '=', 'dpr.id')
                     ->where('pa.rn', '=', 1);
@@ -260,23 +312,52 @@ class ReceiptController extends Controller
             ->where('dpr.revision_status', '<>', 'draft')
             ->where('dpr.revision_status', 'approved');
 
+        // Subquery for Partners
+        $partnersSub = DB::table('products as p2')
+            ->select('group_id', DB::raw("STRING_AGG(CAST(part_no AS VARCHAR(MAX)), ',') WITHIN GROUP (ORDER BY part_no) as partners"))
+            ->whereNotNull('group_id')
+            ->where('is_delete', 0)
+            ->groupBy('group_id');
+
+        $query->leftJoinSub($partnersSub, 'p_extra', function ($join) {
+            $join->on('p.group_id', '=', 'p_extra.group_id');
+        });
+
         // 5. Filter Spesifik Supplier & Expired Date
-        // Hanya tampilkan paket yang dishare ke supplier ini DAN belum expired
-        $query->where('ps.supplier_id', $userRoleId)
-            ->where(function ($q) {
+        $query->where('ps.supplier_id', $userRoleId);
+        
+        $accessMode = $request->get('access', 'All');
+        if ($accessMode === 'active') {
+            $query->where(function ($q) {
                 $q->whereNull('ps.expired_at')
-                    ->orWhere('ps.expired_at', '>', now());
+                  ->orWhere('ps.expired_at', '>', now());
             });
+        } elseif ($accessMode === 'expired') {
+            $query->whereNotNull('ps.expired_at')
+                  ->where('ps.expired_at', '<=', now());
+        }
+        // If 'All', no expired filter applied here
 
         // 6. Hitung Total Record (Sebelum Filter Pencarian)
         $recordsTotal = (clone $query)->count();
 
         // 7. Filter Pencarian (Customer, Model, dll)
+        $feasId = $this->getFeasibilityStatusId();
         if ($request->filled('customer') && $request->customer !== 'All') {
-            $query->where('c.code', $request->customer);
+            if ($request->customer === 'FEASIBILITY STUDY') {
+                $query->where('m.status_id', $feasId);
+            } else {
+                $query->where('c.code', $request->customer)
+                      ->where('m.status_id', '<>', $feasId);
+            }
         }
         if ($request->filled('model') && $request->model !== 'All') {
-            $query->where('m.name', $request->model);
+            if ($request->model === 'FEASIBILITY STUDY') {
+                $query->where('m.status_id', $feasId);
+            } else {
+                $query->where('m.name', $request->model)
+                      ->where('m.status_id', '<>', $feasId);
+            }
         }
         if ($request->filled('doc_type') && $request->doc_type !== 'All') {
             $query->where('dtg.name', $request->doc_type);
@@ -285,41 +366,51 @@ class ReceiptController extends Controller
             $query->where('dsc.name', $request->category);
         }
 
-
         // 8. Global Search (Search Bar)
         if ($searchValue !== '') {
-            $query->where(function ($q) use ($searchValue) {
-                $q->where('c.code', 'like', "%{$searchValue}%")
-                    ->orWhere('m.name', 'like', "%{$searchValue}%")
-                    ->orWhere('p.part_no', 'like', "%{$searchValue}%")
-                    ->orWhere('dsc.name', 'like', "%{$searchValue}%")
-                    ->orWhere('dpr.ecn_no', 'like', "%{$searchValue}%")
-                    ->orWhereRaw("
+            $query->where(function ($q) use ($searchValue, $feasId) {
+                // When searching, we should also handle feasibility study
+                // If the search term is 'feasibility', it will match via the string concat or doctype etc.
+                // But we should protect real customer/model names from being searchable if they are feasibility.
+                
+                $q->where(function($sq) use ($searchValue, $feasId) {
+                      $sq->where('m.status_id', '<>', $feasId)
+                         ->where(function($ssq) use ($searchValue) {
+                             $ssq->where('c.code', 'like', "%{$searchValue}%")
+                                 ->orWhere('m.name', 'like', "%{$searchValue}%");
+                         });
+                })
+                ->orWhere('p.part_no', 'like', "%{$searchValue}%")
+                ->orWhere('dsc.name', 'like', "%{$searchValue}%")
+                ->orWhere('dpr.ecn_no', 'like', "%{$searchValue}%")
+                ->orWhereRaw("
                 CONCAT(
-                    c.code,' ',
-                    m.name,' ',
+                    CASE WHEN m.status_id = ? THEN 'FEASIBILITY STUDY' ELSE c.code END,' ',
+                    CASE WHEN m.status_id = ? THEN 'FEASIBILITY STUDY' ELSE m.name END,' ',
                     dtg.name,' ',
                     COALESCE(dsc.name,''),' ',
                     COALESCE(p.part_no,''),' ',
                     dpr.revision_no
                 ) LIKE ?
-            ", ["%{$searchValue}%"]);
+            ", [$feasId, $feasId, "%{$searchValue}%"]);
             });
         }
 
         // 9. Hitung Total Setelah Filter
         $recordsFiltered = (clone $query)->count();
 
-        // 10. Select Kolom
         $query->select(
             'dpr.id',
             'c.code as customer',
             'm.name as model',
-            'dtg.name as doc_type',
-            'dsc.name as category',
+            'm.status_id',
+            'dtg.name as doctype_group',
+            'dsc.name as doctype_subcategory',
             'p.part_no',
+            'p_extra.partners as partners_raw',
             'dpr.ecn_no',
-            'dpr.revision_no as revision',
+            'dpr.revision_no',
+            'crl.label as revision_label_name',
             'ps.shared_at as received',
             'ps.expired_at'
         );
@@ -344,6 +435,29 @@ class ReceiptController extends Controller
         $orderBy = in_array($orderColumnName, $orderWhitelist, true) ? $orderColumnName : 'ps.shared_at';
         $orderDirection = in_array(strtolower($orderDir), ['asc', 'desc'], true) ? $orderDir : 'desc';
 
+        // --- Logic Export Summary ---
+        if ($request->has('export')) {
+            $exportData = $query->orderBy($orderBy, $orderDirection)->get();
+            $rows = [];
+            $feasibilityStatusId = $this->getFeasibilityStatusId();
+
+            foreach ($exportData as $r) {
+                $isFeasibility = $feasibilityStatusId && (int)$r->status_id === (int)$feasibilityStatusId;
+                $rows[] = [
+                    $isFeasibility ? 'FEASIBILITY STUDY' : $r->customer,
+                    $isFeasibility ? 'FEASIBILITY STUDY' : $r->model,
+                    $r->part_no,
+                    $r->doctype_group,
+                    $r->doctype_subcategory,
+                    $r->ecn_no,
+                    $r->revision_no,
+                    $r ? Carbon::parse($r->received)->format('Y-m-d H:i') : '-',
+                    $r->expired_at ? Carbon::parse($r->expired_at)->format('Y-m-d') : 'Permanent'
+                ];
+            }
+            return Excel::download(new ReceiptExport($rows, now()->format('Y-m-d H:i')), 'receipt_summary_' . now()->format('YmdHis') . '.xlsx');
+        }
+
         // 12. Pagination & Execution
         $data = $query
             ->orderBy($orderBy, $orderDirection)
@@ -351,18 +465,48 @@ class ReceiptController extends Controller
             ->take($length)
             ->get();
 
-        // 13. Format Data (Encrypt ID)
-        $data = $data->map(function ($row) {
+        // 13. Format Data (Encrypt ID & Handle Partners)
+        $feasibilityStatusId = $this->getFeasibilityStatusId();
+        $data = $data->map(function ($row) use ($feasibilityStatusId) {
             $row->hash = encrypt($row->id);
+
+            // Handle Feasibility Study Masking
+            if ($feasibilityStatusId && (int)$row->status_id === (int)$feasibilityStatusId) {
+                $row->customer = 'FEASIBILITY STUDY';
+                $row->model = 'FEASIBILITY STUDY';
+            }
+            
+            // Handle Partners logic
+            $row->partners = null;
+            if (isset($row->partners_raw) && $row->partners_raw) {
+                $parts = explode(',', $row->partners_raw);
+                $others = array_filter($parts, fn($p) => trim($p) !== trim($row->part_no));
+                if (!empty($others)) {
+                    $row->partners = implode(',', $others);
+                }
+            }
+            
             return $row;
         });
 
-        // 14. Return JSON
+        // 14. Get KPIs for this view
+        $kpis = [
+            'total'   => $recordsTotal,
+            'active'  => (clone $query)->where(function($q) {
+                             $q->whereNull('ps.expired_at')->orWhere('ps.expired_at', '>', now());
+                         })->count(),
+            'expired' => (clone $query)->whereNotNull('ps.expired_at')
+                             ->where('ps.expired_at', '<=', now())->count(),
+            'today'   => (clone $query)->whereDate('ps.shared_at', Carbon::today())->count(),
+        ];
+
+        // 15. Return JSON
         return response()->json([
             "draw"            => (int) $request->get('draw'),
             "recordsTotal"    => $recordsTotal,
             "recordsFiltered" => $recordsFiltered,
             "data"            => $data,
+            "kpis"            => $kpis,
         ]);
     }
 
@@ -406,6 +550,7 @@ class ReceiptController extends Controller
             ->select(
                 'c.code as customer',
                 'm.name as model',
+                'm.status_id',
                 'p.part_no',
                 'dp.created_at',
                 'u.name as uploader_name'
@@ -448,10 +593,13 @@ class ReceiptController extends Controller
             $logs = $logs->sortByDesc('time_ts')->values();
         }
 
+        $feasibilityStatusId = $this->getFeasibilityStatusId();
+        $isFeasibility = $feasibilityStatusId && (int)$package->status_id === (int)$feasibilityStatusId;
+
         $detail = [
             'metadata' => [
-                'customer'    => $package->customer,
-                'model'       => $package->model,
+                'customer'    => $isFeasibility ? 'FEASIBILITY STUDY' : $package->customer,
+                'model'       => $isFeasibility ? 'FEASIBILITY STUDY' : $package->model,
                 'part_no'     => $package->part_no,
                 'revision'    => 'Rev-' . $revision->revision_no,
                 'uploader'    => $uploaderName,
@@ -468,14 +616,16 @@ class ReceiptController extends Controller
         ];
 
         $hash = encrypt($revisionId);
+        $userDeptCode = (Auth::check() && Auth::user()->id_dept) ? DB::table('departments')->where('id', Auth::user()->id_dept)->value('code') : null;
 
         return view('receipt.receipt_detail', [
             'receiptId' => $hash,
             'detail'     => $detail,
+            'userDeptCode' => $userDeptCode
         ]);
     }
 
-    public function receiptHistoryList(Request $request): JsonResponse
+    public function receiptHistoryList(Request $request)
     {
         $userId = Auth::user()->id ?? 1;
 
@@ -522,6 +672,7 @@ class ReceiptController extends Controller
             'dpr.id',
             'c.code as customer',
             'm.name as model',
+            'm.status_id',
             'dtg.name as doc_type',
             'dsc.name as category',
             'p.part_no',
@@ -537,9 +688,17 @@ class ReceiptController extends Controller
             ->get();
 
         // --- TAMBAHAN PENTING: Generate Hash ---
-        $data->transform(function ($row) {
+        $feasibilityStatusId = $this->getFeasibilityStatusId();
+        $data->transform(function ($row) use ($feasibilityStatusId) {
             // Gunakan bin2hex agar aman di URL
             $row->hash = bin2hex(encrypt($row->id));
+
+            // Masking
+            if ($feasibilityStatusId && (int)$row->status_id === (int)$feasibilityStatusId) {
+                $row->customer = 'FEASIBILITY STUDY';
+                $row->model = 'FEASIBILITY STUDY';
+            }
+
             return $row;
         });
 
@@ -768,10 +927,13 @@ class ReceiptController extends Controller
         })->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
         // 10. Susun Response Detail
+        $feasibilityStatusId = $this->getFeasibilityStatusId();
+        $isFeasibility = $feasibilityStatusId && (int)$package->status_id === (int)$feasibilityStatusId;
+
         $detail = [
             'metadata' => [
-                'customer' => $package->customer,
-                'model'    => $package->model,
+                'customer' => $isFeasibility ? 'FEASIBILITY STUDY' : $package->customer,
+                'model'    => $isFeasibility ? 'FEASIBILITY STUDY' : $package->model,
                 'model_status_id' => $package->status_id,
                 'part_no'  => $package->part_no,
                 'revision' => 'Rev-' . $revision->revision_no,
@@ -793,6 +955,25 @@ class ReceiptController extends Controller
             ],
         ];
 
+        // 10. Fetch All Shared Revisions for this Package (for Version Switching)
+        $revisionList = DB::table('doc_package_revisions as dpr')
+            ->join('package_shares as ps', 'dpr.id', '=', 'ps.revision_id')
+            ->leftJoin('customer_revision_labels as crl', 'dpr.revision_label_id', '=', 'crl.id')
+            ->where('dpr.package_id', $revision->package_id)
+            ->where('ps.supplier_id', $userRoleId)
+            ->where('dpr.revision_status', 'approved')
+            ->orderBy('dpr.revision_no', 'desc')
+            ->select('dpr.id', 'dpr.revision_no', 'crl.label')
+            ->get()
+            ->map(function ($rev) {
+                return [
+                    'id' => encrypt($rev->id),
+                    'revision_no' => $rev->revision_no,
+                    'label' => $rev->label,
+                    'text' => "Revision " . $rev->revision_no . ($rev->label ? " ({$rev->label})" : "")
+                ];
+            });
+
         $stampFormat = StampFormat::where('is_active', true)->first();
         $userName = Auth::check() ? Auth::user()->name : null;
 
@@ -800,7 +981,7 @@ class ReceiptController extends Controller
             'success' => true,
             'exportId' => $originalEncryptedId,
             'detail' => $detail,
-            'revisionList' => [],
+            'revisionList' => $revisionList,
             'stampFormat' => $stampFormat,
             'userName' => $userName,
 
@@ -987,6 +1168,10 @@ class ReceiptController extends Controller
         $canStamp = class_exists('\Imagick') && $stampFormat;
 
         $model = Str::slug($package->model);
+        $feasibilityStatusId = $this->getFeasibilityStatusId();
+        if ($feasibilityStatusId && (int)$package->status_id === (int)$feasibilityStatusId) {
+             $model = 'feasibility';
+        }
 
         $sharedAtRaw = $stampContext['sharedAt'];
         $sharedAtDate = Carbon::parse($sharedAtRaw);
@@ -1782,5 +1967,12 @@ class ReceiptController extends Controller
             Log::error('Imagick stamp burn-in failed: ' . $e->getMessage(), ['file_id' => $file->id, 'path' => $originalPath]);
             return $originalPath;
         }
+    }
+
+    private function getFeasibilityStatusId(): ?int
+    {
+        return DB::table('project_status')
+            ->where('name', 'Feasibility Study') 
+            ->value('id');
     }
 }

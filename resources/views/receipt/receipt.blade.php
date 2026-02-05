@@ -3,570 +3,601 @@
 @section('header-title', 'Receipt')
 
 @section('content')
+<div class="w-full px-2 sm:px-4 lg:px-6 xl:px-4 2xl:px-6">
+    <div class="w-full">
+        <nav class="flex px-3 sm:px-5 py-2 sm:py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300 rounded-md" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+                <li class="inline-flex items-center">
+                    <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium hover:text-blue-600 transition-colors">
+                        <i class="fa-solid fa-chart-line mr-2"></i> Monitoring
+                    </a>
+                </li>
+                <li aria-current="page">
+                    <div class="flex items-center">
+                        <span class="text-gray-400 mx-1">/</span>
+                        <span class="text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20">
+                            Receipt Library
+                        </span>
+                    </div>
+                </li>
+            </ol>
+        </nav>
+    </div>
 
-<div class="w-full p-3 sm:p-4 lg:p-6 bg-gray-50 dark:bg-gray-900 font-sans" x-data="{ modalOpen: false }">
-
-    {{-- Header --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Receipt Management</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">View and download your shared drawing packages.</p>
-        </div>
-
-        <div class="flex items-center gap-3">
-            <button id="btnOpenHistory"
-                    type="button"
-                    class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-md border border-red-200 dark:border-red-900/30
-                        bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-all shadow-sm">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-                History Expired
+    <div class="w-full p-3 sm:p-4 lg:p-6 bg-gray-50 dark:bg-gray-900 font-sans">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Receipt Repository</h2>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">View and manage drawing packages received from engineering.</p>
+            </div>
+            <button id="btnExportSummary"
+                class="inline-flex items-center gap-2 justify-center px-6 py-3 border border-emerald-600 text-sm font-bold rounded-md text-white bg-emerald-600 hover:bg-emerald-700 transition-all shadow-sm shadow-emerald-200 dark:shadow-none">
+                <i class="fa-solid fa-file-excel text-lg"></i>
+                <span class="btn-label">Export Summary</span>
+                <span class="btn-spinner hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
             </button>
         </div>
-    </div>
 
-    {{-- KPI Row --}}
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        @foreach([
-            ['id' => 'totalReceived',      'label' => 'Total Received',  'icon' => 'fa-box-archive',    'color' => 'indigo'],
-            ['id' => 'totalActive',        'label' => 'Active Access',   'icon' => 'fa-check-circle',   'color' => 'green'],
-            ['id' => 'totalExpired',       'label' => 'Expired Links',   'icon' => 'fa-calendar-xmark', 'color' => 'red'],
-            ['id' => 'totalReceivedToday', 'label' => 'Received Today',  'icon' => 'fa-clock',          'color' => 'blue']
-        ] as $card)
-        <div class="bg-white dark:bg-gray-800 p-4 rounded-md border border-gray-200 dark:border-gray-700 flex items-center gap-4 shadow-sm group hover:border-{{ $card['color'] }}-100 dark:hover:border-{{ $card['color'] }}-500/30 transition-all">
-            <div class="w-10 h-10 rounded-md bg-{{ $card['color'] }}-100 dark:bg-{{ $card['color'] }}-900/30 flex items-center justify-center text-{{ $card['color'] }}-600 dark:text-{{ $card['color'] }}-400 group-hover:scale-110 transition-transform">
-                <i class="fa-solid {{ $card['icon'] }}"></i>
-            </div>
-            <div>
-                <p class="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{{ $card['label'] }}</p>
-                <p id="{{ $card['id'] }}" class="text-xl font-bold text-gray-900 dark:text-gray-100 leading-none mt-1">-</p>
-            </div>
-        </div>
-        @endforeach
-    </div>
+        <div class="flex flex-col lg:flex-row gap-8">
+            {{-- Sidebar Filters --}}
+            <aside class="w-full lg:w-72 flex-shrink-0 space-y-6">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-md border border-gray-200 dark:border-gray-700 sticky top-24 shadow-sm">
+                    <div class="flex items-center gap-2 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
+                        <i class="fa-solid fa-filter text-blue-500"></i>
+                        <h3 class="font-bold text-gray-900 dark:text-gray-100 text-sm">Quick Filters</h3>
+                    </div>
 
-    {{-- Filter Bar --}}
-    <div class="bg-white dark:bg-gray-800 p-4 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm mb-6">
-        <div class="flex flex-wrap items-end gap-3 px-1">
-            <div class="flex-1 min-w-[200px]">
-                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 px-0.5">Search Package</label>
-                <div class="relative group">
-                    <input type="text" id="custom-receipt-search" 
-                        class="block w-full pl-9 pr-4 py-2 bg-gray-50/50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600 rounded-md text-xs font-semibold focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all dark:text-gray-100 group-hover:border-indigo-300 dark:group-hover:border-indigo-500/50 placeholder:font-normal"
-                        placeholder="Part No, Model, or ECN...">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i id="receipt-search-icon" class="fa-solid fa-magnifying-glass text-gray-400 text-[10px]"></i>
+                    <div class="grid grid-cols-2 lg:grid-cols-1 gap-x-4 gap-y-5">
+                        <div class="col-span-2 lg:col-span-1 border-b border-gray-50 dark:border-gray-700/50 pb-2">
+                            <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Search</label>
+                            <div class="relative">
+                                <input type="text" id="custom-receipt-search" 
+                                    class="block w-full pl-4 pr-10 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-md text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-gray-100"
+                                    placeholder="Part No, ECN...">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <i id="search-icon-static" class="fa-solid fa-magnifying-glass text-gray-400 text-[10px]"></i>
+                                    <i id="search-icon-loading" class="fa-solid fa-spinner fa-spin text-blue-500 text-[10px] opacity-0 absolute"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-span-1 lg:col-span-1">
+                            <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Customer</label>
+                            <select id="customer" class="js-filter w-full"></select>
+                        </div>
+
+                        <div class="col-span-1 lg:col-span-1">
+                            <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Model</label>
+                            <select id="model" class="js-filter w-full"></select>
+                        </div>
+
+                        <div class="col-span-1 lg:col-span-1">
+                            <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Doc Type</label>
+                            <select id="document-type" class="js-filter w-full"></select>
+                        </div>
+
+                        <div class="col-span-1 lg:col-span-1">
+                            <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Category</label>
+                            <select id="category" class="js-filter w-full"></select>
+                        </div>
+
+                        <div class="col-span-2 lg:col-span-1 pt-2 border-t border-gray-50 dark:border-gray-700/50 lg:border-none">
+                            <button id="btnResetFilters" class="w-full py-2.5 text-xs font-semibold text-gray-500 hover:text-blue-600 transition-colors flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                Reset All Filters
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            @foreach([
-                ['id' => 'customer', 'label' => 'Customer', 'w' => 'w-40'],
-                ['id' => 'model', 'label' => 'Model', 'w' => 'w-48'],
-                ['id' => 'document-type', 'label' => 'Doc Type', 'w' => 'w-40'],
-                ['id' => 'category', 'label' => 'Category', 'w' => 'w-48']
-            ] as $f)
-            <div class="{{ $f['w'] }}">
-                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 px-0.5">{{ $f['label'] }}</label>
-                <select id="{{ $f['id'] }}" 
-                        class="js-filter appearance-none block w-full px-3 py-2 text-xs font-semibold border border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-700/30 text-gray-900 dark:text-gray-100 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
-                    <option value="All" selected>All</option>
-                </select>
-            </div>
-            @endforeach
+            </aside>
 
-            <div class="flex-shrink-0 mb-0.5">
-                <button id="btnResetFilters" class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-md transition-all h-[34px] w-[34px] flex items-center justify-center border border-transparent hover:border-indigo-100 dark:hover:border-indigo-500/30" title="Reset Filters">
-                    <i class="fa-solid fa-rotate-left text-xs"></i>
-                </button>
-            </div>
+            {{-- Main Content --}}
+            <main class="flex-1 min-w-0 space-y-8">
+                {{-- KPI Row --}}
+                <div class="flex overflow-x-auto pb-4 lg:pb-0 gap-4 lg:grid lg:grid-cols-4 no-scrollbar">
+                    @foreach([
+                        ['id' => 'totalReceived',      'label' => 'Total',    'icon' => 'fa-inbox',             'color' => 'blue'],
+                        ['id' => 'totalActive',        'label' => 'Active',   'icon' => 'fa-circle-check',      'color' => 'emerald'],
+                        ['id' => 'totalExpired',       'label' => 'Expired',  'icon' => 'fa-clock-rotate-left', 'color' => 'rose'],
+                        ['id' => 'totalReceivedToday', 'label' => 'Today',    'icon' => 'fa-calendar-day',      'color' => 'amber']
+                    ] as $card)
+                    <div class="flex-shrink-0 w-[240px] lg:w-auto bg-white dark:bg-gray-800 p-4 rounded-md border border-gray-200 dark:border-gray-700 flex items-center gap-4 shadow-sm">
+                        <div class="w-10 h-10 rounded-md bg-{{ $card['color'] === 'emerald' ? 'green' : ($card['color'] === 'rose' ? 'red' : $card['color']) }}-100 dark:bg-{{ $card['color'] === 'emerald' ? 'green' : ($card['color'] === 'rose' ? 'red' : $card['color']) }}-900/30 flex items-center justify-center text-{{ $card['color'] === 'emerald' ? 'green' : ($card['color'] === 'rose' ? 'red' : $card['color']) }}-600 dark:text-{{ $card['color'] === 'emerald' ? 'green' : ($card['color'] === 'rose' ? 'red' : $card['color']) }}-400">
+                            <i class="fa-solid {{ $card['icon'] }}"></i>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-tight">{{ $card['label'] }}</p>
+                            <p id="{{ $card['id'] }}" class="text-xl font-bold text-gray-900 dark:text-gray-100">-</p>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+                    {{-- Access Tabs --}}
+                    <div class="px-6 border-b border-gray-100 dark:border-gray-700 flex items-center gap-6 overflow-x-auto no-scrollbar" id="access-tabs-container">
+                        @foreach(['All' => 'All Packages', 'active' => 'Active Access', 'expired' => 'Expired Link'] as $val => $text)
+                        <button type="button" 
+                            class="access-tab relative py-4 text-sm font-semibold transition-all whitespace-nowrap {{ $val === 'All' ? 'text-blue-600 active-tab' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300' }}"
+                            data-access="{{ $val }}">
+                            {{ $text }}
+                            <span class="absolute bottom-0 left-0 w-full h-1 bg-blue-600 rounded-t-full tab-indicator {{ $val === 'All' ? 'opacity-100' : 'opacity-0' }} transition-opacity duration-200"></span>
+                        </button>
+                        @endforeach
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table id="receiptTable" class="w-full divide-y divide-gray-100 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-700/50 text-[10px] uppercase text-gray-600 dark:text-gray-400 font-bold tracking-tight">
+                                <tr>
+                                    <th class="px-4 py-3.5 w-8 text-center bg-gray-50 dark:bg-gray-700/50">No</th>
+                                    <th class="px-4 py-3.5 min-w-[200px] text-left">Package Information</th>
+                                    <th class="px-4 py-3.5 w-24 text-center">Revision</th>
+                                    <th class="px-4 py-3.5 text-left">ECN No</th>
+                                    <th class="px-4 py-3.5 text-left">Category</th>
+                                    <th class="px-4 py-3.5 w-32 text-left">Received At</th>
+                                    <th class="px-4 py-3.5 w-32 text-left">Expires On</th>
+                                    <th class="px-4 py-3.5 w-24 text-center bg-gray-50 dark:bg-gray-700/50">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700 font-sans">
+                                {{-- JS will inject initial skeletons --}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
         </div>
     </div>
-
-    {{-- Table Section --}}
-    <div class="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table id="receiptTable" class="w-full divide-y divide-gray-100 dark:divide-gray-700">
-                <thead class="bg-gray-50/50 dark:bg-gray-700/50 text-[10px] uppercase text-gray-500 font-bold text-left tracking-widest leading-none">
-                    <tr>
-                        <th class="px-5 py-4 w-12 text-center">No</th>
-                        <th class="px-5 py-4 min-w-[300px]">Package Documents</th>
-                        <th class="px-5 py-4 w-32 border-l border-gray-100/50 dark:border-gray-700/50">ECN Number</th>
-                        <th class="px-5 py-4 w-20 text-center">Rev</th>
-                        <th class="px-5 py-4 w-40 border-l border-gray-100/50 dark:border-gray-700/50">Received At</th>
-                        <th class="px-5 py-4 w-40">Expires At</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
-                </tbody>
-            </table>
-        </div>
-    </div>
-
 </div>
 
-
 {{-- History Modal --}}
-<div id="historyModal"
-     class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm"
-     style="display: none;">
-
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-5xl mx-4 flex flex-col max-h-[90vh] border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div class="px-6 py-4 border-b dark:border-gray-700 flex items-center justify-between">
+<div id="historyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 backdrop-blur-sm" style="display: none;">
+    <div class="bg-white dark:bg-gray-800 rounded-md shadow-2xl w-full max-w-5xl mx-4 flex flex-col max-h-[90vh] border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="px-6 py-4 border-b dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-800">
             <div>
-                <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Expired History</h3>
-                <p class="text-[10px] text-gray-500 font-medium">List of packages that are no longer accessible</p>
+                <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Expired Repository</h3>
+                <p class="text-[10px] text-gray-500 font-medium tracking-tight">Access to these drawing packages has been deactivated.</p>
             </div>
-            <button type="button" class="btn-close-history text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 transition-colors">
+            <button type="button" class="btn-close-history text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                 <i class="fa-solid fa-xmark fa-lg"></i>
             </button>
         </div>
 
-        <div class="p-0 overflow-hidden flex-1 flex flex-col">
+        <div class="flex-1 overflow-hidden flex flex-col">
             <div class="overflow-y-auto flex-1">
-                <table id="historyTable" class="w-full divide-y divide-gray-100 dark:divide-gray-700">
-                    <thead class="bg-gray-50/50 dark:bg-gray-700/50 text-[9px] uppercase text-gray-500 font-bold text-left tracking-widest leading-none">
+                <table id="historyTable" class="w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700/50 text-[9px] uppercase text-gray-500 font-bold text-left tracking-widest leading-none">
                         <tr>
                             <th class="px-5 py-3 w-12 text-center">No</th>
-                            <th class="px-5 py-3 min-w-[200px]">Customer</th>
-                            <th class="px-5 py-3">Model</th>
-                            <th class="px-5 py-3">Part No</th>
+                            <th class="px-5 py-3 min-w-[200px]">Package Info</th>
+                            <th class="px-5 py-3">ECN No</th>
                             <th class="px-5 py-3 w-20 text-center">Rev</th>
-                            <th class="px-5 py-3">Received</th>
-                            <th class="px-5 py-3 text-red-500">Expired At</th>
+                            <th class="px-5 py-3 w-32">Received</th>
+                            <th class="px-5 py-3 w-32 text-red-500">Expired At</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-50 dark:divide-gray-700 text-[11px]">
-                    </tbody>
+                    <tbody class="divide-y divide-gray-100 dark:divide-gray-700"></tbody>
                 </table>
             </div>
         </div>
 
         <div class="px-6 py-3 bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex justify-end">
-            <button type="button" class="btn-close-history px-6 py-1.5 text-[10px] font-bold text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 uppercase tracking-widest transition-colors border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
-                Close
+            <button type="button" class="btn-close-history px-6 py-2 text-[10px] font-bold text-gray-500 hover:text-gray-900 uppercase tracking-widest transition-colors border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
+                Dismiss
             </button>
         </div>
     </div>
 </div>
 
+
 @endsection
 
 @push('scripts')
 <script>
-    $(function() {
+    let currentAccess = 'All';
+
+    // Helper for highlighting search terms (Stabilo effect)
+    function highlightText(data, searchVal) {
+        if (!searchVal || !data) return data || '';
+        const safeSearch = searchVal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${safeSearch})`, 'gi');
+        return data.toString().replace(regex, '<span class="bg-yellow-100 text-gray-900 border-b border-yellow-400">$1</span>');
+    }
+
+    // --- Toast Helpers ---
+    function detectTheme() {
+        const isDark = document.documentElement.classList.contains('dark');
+        return isDark ? {
+            bg: 'rgba(30,41,59,.95)', fg: '#E5E7EB', border: 'rgba(71,85,105,.5)', progress: 'rgba(255,255,255,.9)',
+            icon: { success: '#22c55e', error: '#ef4444', warning: '#f59e0b', info: '#3b82f6' }
+        } : {
+            bg: 'rgba(255,255,255,.98)', fg: '#0f172a', border: 'rgba(226,232,240,1)', progress: 'rgba(15,23,42,.8)',
+            icon: { success: '#16a34a', error: '#dc2626', warning: '#d97706', info: '#2563eb' }
+        };
+    }
+
+    const BaseToast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 2600,
+        timerProgressBar: true,
+        showClass: { popup: 'swal2-animate-toast-in' },
+        hideClass: { popup: 'swal2-animate-toast-out' },
+        didOpen: (el) => {
+            el.addEventListener('mouseenter', Swal.stopTimer);
+            el.addEventListener('mouseleave', Swal.resumeTimer);
+            const t = detectTheme();
+            const bar = el.querySelector('.swal2-timer-progress-bar'); if (bar) bar.style.background = t.progress;
+            const popup = el.querySelector('.swal2-popup'); if (popup) popup.style.borderColor = t.border;
+        }
+    });
+
+    function renderToast({ icon = 'success', title = 'Success', text = '' } = {}) {
+        const t = detectTheme();
+        BaseToast.fire({
+            icon, title, text,
+            iconColor: t.icon[icon] || t.icon.success,
+            background: t.bg,
+            color: t.fg,
+            customClass: { popup: 'swal2-toast border' }
+        });
+    }
+
+    // Skeleton Loader logic
+    function getSkeleton() {
+        return `
+            <tr class="skeleton-row">
+                <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-8 animate-pulse"></div></td>
+                <td class="px-4 py-4"><div class="space-y-2"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48 animate-pulse"></div><div class="h-3 bg-gray-100 dark:bg-gray-800 rounded w-32 animate-pulse"></div></div></td>
+                <td class="px-4 py-4 text-center"><div class="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-16 mx-auto animate-pulse"></div></td>
+                <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div></td>
+                <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div></td>
+                <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div></td>
+                <td class="px-4 py-4"><div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div></td>
+                <td class="px-4 py-4 text-center"><div class="h-8 bg-gray-200 dark:bg-gray-700 rounded-md w-8 mx-auto animate-pulse"></div></td>
+            </tr>
+        `;
+    }
+
+    $(document).ready(function() {
         let table;
         const ENDPOINT = '{{ route("receipts.filters") }}';
 
-        function loadKpis() {
-            const f = getCurrentFilters();
-            const $cards = $('#totalReceived, #totalActive, #totalExpired, #totalReceivedToday');
-            
-            $cards.addClass('animate-pulse opacity-50');
+        // 1. Keyboard shortcut: Press "/" to search
+        $(document).on('keyup', function(e) {
+            if (e.key === '/' && !$(e.target).is('input, textarea, select')) {
+                $('#custom-receipt-search').focus();
+            }
+        });
 
-            $.get('{{ route("receipts.kpi") }}', f, function(data) {
-                const countUp = (id, val) => {
-                    const $el = $('#' + id);
-                    const current = parseInt($el.text()) || 0;
-                    if (current === val) return;
-                    
-                    $({ val: current }).animate({ val: val }, {
-                        duration: 600,
-                        step: function() { $el.text(Math.ceil(this.val)); },
-                        complete: function() { $el.text(val); }
-                    });
-                };
-
-                countUp('totalReceived', data.totalReceived);
-                countUp('totalActive', data.totalActive);
-                countUp('totalExpired', data.totalExpired);
-                countUp('totalReceivedToday', data.totalReceivedToday);
-            }).always(() => {
-                $cards.removeClass('animate-pulse opacity-50');
-            });
-        }
-
-        function resetSelect2ToAll($el) {
-            $el.empty();
-            const opt = new Option('All', 'All', true, true);
-            $el.append(opt);
-            $el.trigger('change');
-            $el.trigger('select2:select');
-        }
-
+        // --- Select2 Helpers ---
         function makeSelect2($el, field, extraParamsFn) {
             $el.select2({
                 width: '100%',
                 placeholder: 'All',
                 allowClear: false,
-                minimumResultsForSearch: 0,
                 ajax: {
                     url: ENDPOINT,
                     dataType: 'json',
                     delay: 250,
-                    cache: true,
-                    data: function(params) {
-                        const p = {
-                            select2: field,
-                            q: params.term || '',
-                            page: params.page || 1
-                        };
-                        if (typeof extraParamsFn === 'function') {
-                            Object.assign(p, extraParamsFn());
-                        }
-                        return p;
+                    data: params => {
+                        let q = { select2: field, q: params.term || '', page: params.page || 1 };
+                        if (typeof extraParamsFn === 'function') Object.assign(q, extraParamsFn());
+                        return q;
                     },
-                    processResults: function(data, params) {
+                    processResults: (data, params) => {
                         params.page = params.page || 1;
-                        const results = Array.isArray(data.results) ? data.results.slice() : [];
-                        if (params.page === 1 && !results.some(r => r.id === 'All')) {
-                            results.unshift({
-                                id: 'All',
-                                text: 'All'
-                            });
-                        }
-                        return {
-                            results,
-                            pagination: {
-                                more: data.pagination ? data.pagination.more : false
-                            }
-                        };
+                        let res = Array.isArray(data.results) ? data.results.slice() : [];
+                        if (params.page === 1 && !res.some(r => r.id === 'All')) res.unshift({ id: 'All', text: 'All' });
+                        return { results: res, pagination: { more: data.pagination?.more || false }};
                     }
-                },
-                templateResult: function(item) {
-                    if (item.loading) return item.text;
-                    return $('<div class="text-[11px] font-semibold">' + (item.text || item.id) + '</div>');
-                },
-                templateSelection: function(item) {
-                    return item.text || item.id || 'All';
                 }
             });
         }
 
         makeSelect2($('#customer'), 'customer');
-        makeSelect2($('#model'), 'model', () => ({
-            customer_code: $('#customer').val() || ''
-        }));
+        makeSelect2($('#model'), 'model', () => ({ customer_code: $('#customer').val() || '' }));
         makeSelect2($('#document-type'), 'doc_type');
-        makeSelect2($('#category'), 'category', () => ({
-            doc_type: $('#document-type').val() || ''
-        }));
+        makeSelect2($('#category'), 'category', () => ({ doc_type: $('#document-type').val() || '' }));
 
-        $('#customer').on('change', function() {
-            resetSelect2ToAll($('#model'));
-        });
-        $('#document-type').on('change', function() {
-            resetSelect2ToAll($('#category'));
-        });
+        $('#customer').on('change', () => { $('#model').val('All').trigger('change'); });
+        $('#document-type').on('change', () => { $('#category').val('All').trigger('change'); });
 
-        function getCurrentFilters() {
-            const valOrAll = v => (v && v.length ? v : 'All');
-            return {
-                customer: valOrAll($('#customer').val()),
-                model: valOrAll($('#model').val()),
-                doc_type: valOrAll($('#document-type').val()),
-                category: valOrAll($('#category').val()),
-            };
-        }
+        // --- DataTable Initialization ---
+        let searchTimeout;
+        const $staticIcon = $('#search-icon-static');
+        const $loadingIcon = $('#search-icon-loading');
 
-        function fmtDate(v) {
-            if (!v) return '';
-            const d = new Date(v);
-            if (isNaN(d)) return v;
-            const pad = n => n.toString().padStart(2, '0');
-            const dd = pad(d.getDate());
-            const MM = pad(d.getMonth() + 1);
-            const yyyy = d.getFullYear();
-            const HH = pad(d.getHours());
-            const mm = pad(d.getMinutes());
-            return `${dd}-${MM}-${yyyy} ${HH}:${mm}`;
-        }
+        // Inject skeletons
+        let skeletons = '';
+        for(let i=0; i<8; i++) skeletons += getSkeleton();
+        $('#receiptTable tbody').html(skeletons);
 
-        // Helper for highlighting search terms
-        function highlightText(data, searchVal) {
-            if (!searchVal || !data) return data;
-            const safeSearch = searchVal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(`(${safeSearch})`, 'gi');
-            return data.replace(regex, '<mark class="bg-yellow-200 dark:bg-yellow-800 dark:text-gray-100 p-0">$1</mark>');
-        }
+        table = $('#receiptTable').DataTable({
+            processing: false,
+            serverSide: true,
+            autoWidth: false,
+            deferRender: true,
+            ajax: {
+                url: '{{ route("receipts.list") }}',
+                data: function(d) {
+                    d.customer = $('#customer').val();
+                    d.model = $('#model').val();
+                    d.doc_type = $('#document-type').val();
+                    d.category = $('#category').val();
+                    d.access = currentAccess; 
+                    d.search = { value: $('#custom-receipt-search').val() };
+                }
+            },
+            order: [[5, 'desc']],
+            language: {
+                info: `<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100/50 dark:border-blue-800/50 shadow-sm transition-all hover:bg-blue-50 dark:hover:bg-blue-900/40">
+                          <i class="fa-solid fa-layer-group text-blue-500 text-[10px]"></i>
+                          <span class="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase tracking-tight">Records</span>
+                          <span class="text-gray-900 dark:text-gray-100 text-[11px] font-black font-mono">_START_-_END_</span>
+                          <span class="text-gray-300 dark:text-gray-600">/</span>
+                          <span class="text-blue-600 dark:text-blue-400 text-[11px] font-black font-mono">_TOTAL_</span>
+                       </div>`,
+                infoEmpty: "No Records Found",
+                zeroRecords: '<div class="flex flex-col items-center justify-center p-12 text-gray-400"><i class="fa-solid fa-folder-open text-4xl mb-3 opacity-20"></i><span class="text-xs italic">No matching receipt found</span></div>',
+                paginate: {
+                    previous: 'Previous',
+                    next: 'Next'
+                }
+            },
+            dom: 't<"flex flex-col sm:flex-row justify-between items-center p-6 border-t border-gray-50 dark:border-gray-800 gap-4" <"flex-1"i> <"flex justify-end"p>>',
+            
+            createdRow: function(row) {
+                $(row).addClass('hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors border-b border-gray-50 dark:border-gray-800 last:border-0 text-gray-900 dark:text-gray-100 cursor-pointer');
+                $('td', row).addClass('py-4 px-4 align-middle');
+            },
 
+            columns: [
+                { 
+                    data: null, orderable: false, searchable: false, className: 'text-center text-gray-400 font-mono text-[10px]',
+                    render: (d, t, r, m) => m.row + m.settings._iDisplayStart + 1
+                },
+                {
+                    data: null, name: 'package_info', searchable: true, orderable: false,
+                    render: function(data, type, row) {
+                        const s = $('#custom-receipt-search').val();
+                        let p = highlightText(row.part_no || '-', s);
+                        
+                        // Append partners if available
+                        if (row.partners) {
+                            const pClean = row.partners.replace(/,/g, ' / ');
+                            p += ` <span class="text-gray-400 font-normal">/ ${highlightText(pClean, s)}</span>`;
+                        }
 
-        function initTable() {
-            table = $('#receiptTable').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: '{{ route("receipts.list") }}',
-                    type: 'GET',
-                    data: function(d) {
-                        const f = getCurrentFilters();
-                        d.customer = f.customer;
-                        d.model = f.model;
-                        d.doc_type = f.doc_type;
-                        d.category = f.category;
+                        const sub = highlightText(`${row.customer || '-'} / ${row.model || '-'}`, s);
+                        
+                        return `
+                            <div class="flex flex-col max-w-[450px]">
+                                <span class="text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-1">${p}</span>
+                                <div class="text-[11px] text-gray-500 mt-0.5 truncate uppercase tracking-tight">
+                                    ${sub}
+                                </div>
+                            </div>
+                        `;
                     }
                 },
-
-                // Default sort by Received Date (now index 4)
-                order: [
-                    [4, 'desc']
-                ],
-
-                columns: [{
-                        data: null,
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: null,
-                        orderable: false,
-                        searchable: false,
-                        render: function(data, type, row) {
-                            const parts = [
-                                row.customer,
-                                row.model,
-                                row.part_no,
-                                row.doc_type,
-                                row.category
-                            ].filter(Boolean);
-
-                            const combined = parts.join(' - ');
-                            const searchVal = $('#receiptTable').DataTable().search(); // Use internal search if any, or custom search
-                            const highlighted = highlightText(combined, $('#custom-receipt-search').val());
-
-                            return `<div class="text-[11px] font-bold text-gray-900 dark:text-gray-100 tracking-tight leading-relaxed">${highlighted}</div>`;
+                {
+                    data: 'revision_no', name: 'revision', className: 'text-center', searchable: true,
+                    render: function(v, type, row) {
+                        let label = '';
+                        if (row.revision_label_name) {
+                            label = `<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-[9px] font-black uppercase tracking-widest mr-1.5 shadow-sm">${row.revision_label_name}</span>`;
                         }
-                    },
-                    {
-                        data: 'ecn_no',
-                        name: 'dpr.ecn_no',
-                        defaultContent: '-',
-                        render: function(data) {
-                            const val = data ? data : '-';
-                            return `<div class="text-[10px] font-mono text-gray-600 dark:text-gray-400">${val}</div>`;
-                        }
-                    },
-                    {
-                        data: null,
-                        name: 'dpr.revision_no',
-                        orderable: false,
-                        searchable: false,
-                        className: 'text-center',
-                        render: function(data, type, row) {
-                            const revVal = row.revision ?? row.revision_no;
-                            if (revVal === undefined || revVal === null || revVal === '') return '<span class="text-gray-400">—</span>';
-                            return `<span class="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded text-[10px] font-bold">REV ${revVal}</span>`;
-                        }
-                    },
-                    
-                    {
-                        data: 'received',
-                        name: 'ps.shared_at',
-                        render: function(v) {
-                            const text = fmtDate(v);
-                            return `<div class="text-[10px] text-gray-500 dark:text-gray-400 font-mono">${text || '—'}</div>`;
-                        }
-                    },
-                    {
-                        data: 'expired_at',
-                        name: 'ps.expired_at',
-                        render: function(v) {
-                            if (!v) return '<span class="text-emerald-500 font-bold" title="Never Expire">∞ UNLIMITED</span>';
-                            const text = fmtDate(v);
-                            const isExpired = new Date(v) < new Date();
-                            const colorClass = isExpired ? 'text-red-500 font-bold' : 'text-gray-500 dark:text-gray-400';
-                            return `<div class="text-[10px] ${colorClass} font-mono">${text}</div>`;
-                        }
+                        return `
+                            <div class="flex items-center justify-center">
+                                ${label}
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-50 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-100 dark:border-blue-800 shadow-sm whitespace-nowrap uppercase tracking-widest">REV ${v}</span>
+                            </div>
+                        `;
                     }
-                ],
-
-                columnDefs: [{
-                        targets: 0,
-                        className: 'text-center text-[10px] font-bold text-gray-400',
-                        width: '40px'
+                },
+                {
+                    data: 'ecn_no', name: 'ecn', searchable: true,
+                    render: function(data, type, row) {
+                        if (!data) return '<span class="text-gray-300">-</span>';
+                        const s = $('#custom-receipt-search').val();
+                        return `<span class="px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 text-[10px] font-mono text-blue-600 dark:text-blue-400 shadow-sm">${highlightText(data, s)}</span>`;
                     }
-                ],
-
-                responsive: true,
-                dom: 't<"flex items-center justify-between mt-6 px-4"<"text-xs text-gray-500"i><"flex"p>>',
-                createdRow: function(row) {
-                    $(row).addClass('hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors cursor-pointer');
+                },
+                {
+                    data: null, name: 'category', searchable: true, orderable: true,
+                    render: function(data, type, row) {
+                        return `
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-gray-700 dark:text-gray-300 capitalize">${row.doctype_group || '-'}</span>
+                                <span class="text-[10px] text-gray-500 uppercase tracking-tighter">${row.doctype_subcategory || ''}</span>
+                            </div>
+                        `;
+                    }
+                },
+                {
+                    data: 'received', name: 'received', className: 'text-left',
+                    render: function(v) {
+                        if(!v) return '-';
+                        const d = new Date(v);
+                        return `
+                            <div class="flex flex-col text-[11px] font-mono text-gray-600 dark:text-gray-400">
+                                <span class="font-bold">${d.toLocaleDateString()}</span>
+                                <span class="opacity-70 text-[10px]">${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            </div>
+                        `;
+                    }
+                },
+                {
+                    data: 'expired_at', name: 'expired_at', className: 'text-left',
+                    render: function(v) {
+                        if(!v) return '<span class="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-widest border border-emerald-100 dark:border-emerald-800 shadow-sm">Permanent</span>';
+                        const exp = new Date(v);
+                        const days = Math.floor((exp - new Date()) / 86400000);
+                        let color = days < 3 ? 'text-rose-500 font-bold' : (days < 7 ? 'text-amber-500 font-bold' : 'text-gray-600 dark:text-gray-300');
+                        return `
+                            <div class="flex flex-col text-[11px] font-mono">
+                                <span class="${color}">${exp.toLocaleDateString()}</span>
+                                <span class="text-[10px] text-gray-400 uppercase tracking-tighter">${days > 0 ? days + ' d left' : (days === 0 ? 'Today' : 'Expired')}</span>
+                            </div>
+                        `;
+                    }
+                },
+                {
+                    data: null, className: 'text-center', orderable: false, searchable: false,
+                    render: function(data, type, row) {
+                        return `
+                            <button onclick="window.location.href='/receipts/${row.hash || row.id}'" 
+                                class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-600 dark:text-blue-400 dark:hover:bg-gray-700 transition-all mx-auto border border-transparent hover:border-blue-100" 
+                                title="Open Package">
+                                <i class="fa-solid fa-up-right-from-square text-sm"></i>
+                            </button>`;
+                    }
                 }
-            });
+            ]
+        });
 
-            table.on('draw.dt', function() {
-                const info = table.page.info();
-                table.column(0, {
-                    page: 'current'
-                }).nodes().each(function(cell, i) {
-                    cell.innerHTML = i + 1 + info.start;
-                });
-            });
+        // Tab Switching
+        $('.access-tab').on('click', function() {
+            const $container = $('#access-tabs-container');
+            $container.find('.access-tab').removeClass('text-blue-600 active-tab').addClass('text-gray-400');
+            $container.find('.tab-indicator').removeClass('opacity-100').addClass('opacity-0');
+            $(this).removeClass('text-gray-400').addClass('text-blue-600 active-tab');
+            $(this).find('.tab-indicator').removeClass('opacity-0').addClass('opacity-100');
+            currentAccess = $(this).data('access');
+            table.draw();
+        });
 
-            // Debounced Search Handler
-            let searchTimer;
-            $('#custom-receipt-search').on('keyup', function() {
-                clearTimeout(searchTimer);
-                const $icon = $('#receipt-search-icon');
-                $icon.removeClass('fa-magnifying-glass').addClass('fa-spinner fa-spin text-indigo-500');
-                
-                searchTimer = setTimeout(() => {
-                    table.search($(this).val()).draw();
-                    loadKpis();
-                    $icon.removeClass('fa-spinner fa-spin text-indigo-500').addClass('fa-magnifying-glass');
-                }, 500);
-            });
-        }
+        // Skeleton Loader Trigger
+        table.on('preXhr.dt', function() {
+            let skeletons = '';
+            for(let i=0; i<8; i++) skeletons += getSkeleton();
+            $('#receiptTable tbody').html(skeletons);
+        });
 
-        function bindHandlers() {
-            $('#customer, #model, #document-type, #category').on('change', function() {
-                if (table) table.ajax.reload(null, true);
-                loadKpis();
-            });
+        // Search Highlighting & Throttling
+        $('#custom-receipt-search').on('keyup', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const v = $(this).val();
+                $staticIcon.addClass('opacity-0');
+                $loadingIcon.removeClass('opacity-0').addClass('opacity-100');
+                table.draw();
+            }, 600);
+        });
 
-            $('#btnResetFilters').on('click', function() {
-                $('#custom-receipt-search').val('');
-                resetSelect2ToAll($('#customer'));
-                resetSelect2ToAll($('#model'));
-                resetSelect2ToAll($('#document-type'));
-                resetSelect2ToAll($('#category'));
+        // Reset Logic
+        $('#btnResetFilters').on('click', function() {
+            $('.js-filter').val('All').trigger('change.select2');
+            $('#custom-receipt-search').val('');
+            $('.access-tab[data-access="All"]').trigger('click');
+            table.draw();
+        });
 
-                if (table) {
-                    table.search('').ajax.reload(null, true);
-                }
-                loadKpis();
-            });
+        $('.js-filter').on('change', () => table.draw());
 
-            $('#receiptTable tbody').on('click', 'tr', function() {
-                const row = table.row(this).data();
-                if (row && row.hash) {
-                    window.location.href = `{{ url('/receipts') }}/${encodeURIComponent(row.hash)}`;
-                }
-            });
-        }
+        table.on('draw.dt', function() {
+            $loadingIcon.removeClass('opacity-100').addClass('opacity-0');
+            $staticIcon.removeClass('opacity-0');
 
-        initTable();
-        bindHandlers();
-        loadKpis();
+            const json = table.ajax.json();
+            if (json && json.kpis) {
+                $('#totalReceived').text(json.kpis.total || 0);
+                $('#totalActive').text(json.kpis.active || 0);
+                $('#totalExpired').text(json.kpis.expired || 0);
+                $('#totalReceivedToday').text(json.kpis.today || 0);
+            }
+        });
 
-        // --- LOGIKA HISTORY TABLE ---
+        // Row Click Navigation
+        $('#receiptTable tbody').on('click', 'tr', function(e) {
+            if ($(e.target).closest('button').length) return;
+            const data = table.row(this).data();
+            if (data) window.location.href = `/receipts/${data.hash || data.id}`;
+        });
+
+        // --- History Modal ---
         let historyTable;
-
-        function initHistoryTable() {
-            if (historyTable) {
-                historyTable.ajax.reload();
-                return;
-            }
-
+        function initHistory() {
+            if (historyTable) { historyTable.ajax.reload(); return; }
             historyTable = $('#historyTable').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: '{{ route("receipts.history_list") }}',
-                    type: 'GET'
-                },
-                order: [
-                    [6, 'desc']
-                ], // Default sort by Expired At
-                columns: [{
-                        data: null,
-                        orderable: false,
-                        searchable: false,
-                        className: 'text-center text-[10px] font-bold text-gray-400'
+                processing: false, serverSide: true,
+                ajax: '{{ route("receipts.history_list") }}',
+                order: [[ 5, 'desc' ]],
+                language: { info: '<span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">_TOTAL_ total expired records</span>' },
+                dom: 't<"p-4 border-t border-gray-100 dark:border-gray-700"ip>',
+                createdRow: row => $(row).addClass('hover:bg-rose-50/50 dark:hover:bg-rose-900/10 transition-colors cursor-pointer border-b border-gray-50 dark:border-gray-800 last:border-0 text-gray-900 dark:text-gray-100'),
+                columns: [
+                    { data: null, orderable: false, className: 'text-center text-gray-400 font-mono text-xs', render: (d, t, r, m) => m.row + 1 },
+                    { 
+                        data: null, name: 'package_info',
+                        render: (d,t,r) => `
+                            <div class="flex flex-col">
+                                <span class="text-xs font-bold text-gray-900 dark:text-gray-100">${r.part_no || '-'}</span>
+                                <span class="text-[10px] text-gray-500 uppercase">${r.customer || '-'} / ${r.model || '-'}</span>
+                            </div>`
                     },
-                    {
-                        data: 'customer',
-                        name: 'c.code',
-                        className: 'font-bold'
-                    },
-                    {
-                        data: 'model',
-                        name: 'm.name'
-                    },
-                    {
-                        data: 'part_no',
-                        name: 'p.part_no',
-                        className: 'font-mono'
-                    },
-                    {
-                        data: 'revision',
-                        name: 'dpr.revision_no',
-                        className: 'text-center',
-                        render: function(v) {
-                            return v ? `<span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded font-bold">REV ${v}</span>` : '-';
-                        }
-                    },
-                    {
-                        data: 'shared_at',
-                        name: 'ps.shared_at',
-                        render: function(v) {
-                            return `<span class="font-mono text-gray-500">${fmtDate(v)}</span>`;
-                        }
-                    },
-                    {
-                        data: 'expired_at',
-                        name: 'ps.expired_at',
-                        className: 'text-red-500 font-bold font-mono',
-                        render: function(v) {
-                            return fmtDate(v);
-                        }
-                    }
-                ],
-                dom: 't<"flex items-center justify-between mt-4 px-4"<"text-[10px] text-gray-400"i><"flex"p>>',
-                drawCallback: function(settings) {
-                    const api = this.api();
-                    api.column(0, {
-                        page: 'current'
-                    }).nodes().each(function(cell, i) {
-                        cell.innerHTML = i + 1 + api.page.info().start;
-                    });
-                }
+                    { data: 'ecn_no', name: 'ecn', render: v => `<span class="text-xs font-mono text-gray-500">${v || '-'}</span>` },
+                    { data: 'revision', className: 'text-center', render: v => `<span class="px-2 py-0.5 rounded-full bg-gray-100 text-[9px] font-black text-gray-500 uppercase border border-gray-200">REV ${v}</span>` },
+                    { data: 'shared_at', render: v => `<span class="text-[10px] font-mono text-gray-500">${v ? new Date(v).toLocaleDateString() : '-'}</span>` },
+                    { data: 'expired_at', className: 'text-rose-500 font-black', render: v => `<span class="text-[10px] font-mono uppercase">${v ? new Date(v).toLocaleDateString() : '-'}</span>` }
+                ]
             });
         }
 
-        // Event Handlers untuk Modal History
-        const $historyModal = $('#historyModal');
+        // --- Export Summary ---
+        $('#btnExportSummary').on('click', function() {
+            const $btn = $(this);
+            const $label = $btn.find('.btn-label');
+            const $spinner = $btn.find('.btn-spinner');
 
-        $('#btnOpenHistory').on('click', function() {
-            $historyModal.fadeIn(200);
-            initHistoryTable();
+            // Logic to get current filters
+            const filters = {
+                customer: $('#customer').val(),
+                model: $('#model').val(),
+                doc_type: $('#document-type').val(),
+                category: $('#category').val(),
+                search: $('#custom-receipt-search').val(),
+                access: $('.access-tab.active-tab').data('access')
+            };
+
+            $btn.prop('disabled', true).addClass('opacity-70 cursor-not-allowed');
+            $label.addClass('hidden');
+            $spinner.removeClass('hidden');
+
+            renderToast({
+                icon: 'info',
+                title: 'Preparing Data',
+                text: 'Please wait while we generate your report...'
+            });
+
+            // Simulate or call real export endpoint
+            // For now, we point to a placeholder or hypothetical route
+            const exportUrl = '{{ route("receipts.list") }}' + '?export=1&' + $.param(filters);
+            
+            // Redirect to export
+            window.location.href = exportUrl;
+
+            // Restore button after delay
+            setTimeout(() => {
+                $btn.prop('disabled', false).removeClass('opacity-70 cursor-not-allowed');
+                $label.removeClass('hidden');
+                $spinner.addClass('hidden');
+            }, 3000);
         });
 
-        $('body').on('click', '.btn-close-history', function() {
-            $historyModal.fadeOut(200);
-        });
-
-        $historyModal.on('click', function(e) {
-            if ($(e.target).is($historyModal)) {
-                $(this).fadeOut(200);
-            }
-        });
+        // Hide History Modal functions as they are no longer needed for the main header
+        // window.openHistoryModal = () => { $('#historyModal').fadeIn(200); initHistory(); };
+        $('.btn-close-history').on('click', () => $('#historyModal').fadeOut(200));
+        $('#historyModal').on('click', e => { if(e.target === e.currentTarget) $(e.target).fadeOut(200); });
     });
-
 </script>
 @endpush
 
 @push('style')
 <style>
-    [x-collapse] { @apply overflow-hidden; }
-    [x-cloak] { display: none !important; }
-
-    /* =========================================
-       DATATABLES DARK MODE FIX
-       ========================================= */
-    
-    /* Mengubah warna teks label (Show, Search, Info, Pagination) */
-    .dark .dataTables_wrapper .dataTables_length,
-    .dark .dataTables_wrapper .dataTables_filter,
-    .dark .dataTables_wrapper .dataTables_info,
-    .dark .dataTables_wrapper .dataTables_processing,
-    .dark .dataTables_wrapper .dataTables_paginate {
-        color: #d1d5db !important; /* text-gray-300 */
-    }
-
-    /* Mengubah warna teks label di dalam Pagination button */
-    .dark .dataTables_wrapper .dataTables_paginate .paginate_button {
-        color: #d1d5db !important;
-    }
     .dark .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
         color: #6b7280 !important; /* text-gray-500 */
     }
@@ -588,9 +619,79 @@
     }
     
     /* Hapus background putih default pada select option */
-    .dark .dataTables_wrapper select option {
-        background-color: #374151;
-        color: #f3f4f6;
+    /* Tampilan Pagination seperti Button Group (Halaman Lain) */
+    .dataTables_wrapper .dataTables_paginate {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        display: flex;
+        overflow: hidden;
+        padding-top: 0 !important;
+        margin-top: 1rem;
+    }
+
+    .dark .dataTables_wrapper .dataTables_paginate {
+        border-color: #374151;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        border: none !important;
+        border-right: 1px solid #e5e7eb !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        padding: 0.5rem 1rem !important;
+        background: white !important;
+        color: #1e293b !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        transition: all 0.15s ease !important;
+    }
+
+    .dark .dataTables_wrapper .dataTables_paginate .paginate_button {
+        background: #1f2937 !important;
+        color: #d1d5db !important;
+        border-right-color: #374151 !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button:last-child {
+        border-right: none !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background: #f3f4f6 !important;
+        color: #1e293b !important;
+        box-shadow: none !important;
+    }
+
+    .dark .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background: #374151 !important;
+        color: white !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.current):not(.disabled) {
+        background: #f9fafb !important;
+        color: #3b82f6 !important;
+    }
+
+    .dark .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.current):not(.disabled) {
+        background: #2d3748 !important;
+        color: #60a5fa !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+        color: #9ca3af !important;
+        cursor: not-allowed !important;
+        background: #fcfcfc !important;
+    }
+
+    .dark .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+        background: #111827 !important;
+        color: #4b5563 !important;
+    }
+
+    /* Hilangkan padding span penampung angka */
+    .dataTables_wrapper .dataTables_paginate span {
+        display: flex;
     }
 </style>
 @endpush

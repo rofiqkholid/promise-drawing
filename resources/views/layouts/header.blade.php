@@ -58,7 +58,7 @@
 
         </div>
 
-        <div x-data="searchComponent({{ json_encode($menuItems ?? []) }})" class="relative flex-1 sm:flex-initial sm:w-64 ml-2 sm:ml-0">
+        <div x-data="searchComponent(@js($menuItems ?? []))" class="relative flex-1 sm:flex-initial sm:w-64 ml-2 sm:ml-0">
             <div class="relative">
                 <input
                     type="text"

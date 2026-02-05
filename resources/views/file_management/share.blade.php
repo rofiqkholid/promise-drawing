@@ -23,39 +23,7 @@
         </li>
     </ol>
 </nav>
-    <style>
-        /* Clean Select2 Input */
-        .ms-style-select2 .select2-container--default .select2-selection--multiple {
-            border: 1px solid #e5e7eb;
-            background-color: #f9fafb !important;
-            border-radius: 0.375rem;
-            min-height: 42px;
-            padding: 4px 8px;
-        }
-        .dark .ms-style-select2 .select2-container--default .select2-selection--multiple {
-            border-color: #374151;
-            background-color: #1f2937 !important;
-        }
-        .ms-style-select2 .select2-container--default.select2-container--focus .select2-selection--multiple {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.1);
-        }
-        /* Hide default Select2 chips as we will render them externally */
-        .ms-style-select2 .select2-selection__choice {
-            display: none !important;
-        }
-        .ms-style-select2 .select2-search__field {
-            font-size: 13px !important;
-            margin-top: 0 !important;
-            padding: 0 !important;
-            height: 32px !important;
-            color: #374151 !important;
-        }
-        .dark .ms-style-select2 .select2-search__field {
-            color: #e5e7eb !important;
-        }
-    </style>
-</head>
+
 <div class="w-full p-3 sm:p-4 lg:p-6 bg-gray-50 dark:bg-gray-900 font-sans">
 
     {{-- Header --}}
@@ -168,65 +136,7 @@
         </main>
     </div>
 
-    {{-- Adjusted Share Modal --}}
-    <div id="shareModal"
-        class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60"
-        style="display: none;">
-        <div class="bg-white dark:bg-gray-800 rounded-md shadow-2xl w-full max-w-sm overflow-hidden border border-gray-200 dark:border-gray-700">
-            <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                <div>
-                    <h3 class="text-sm font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Share Package</h3>
-                    <p class="text-[10px] text-gray-500 font-medium">Distribute drawings to suppliers</p>
-                </div>
-                <button type="button" class="btn-close-modal text-gray-400 hover:text-gray-600 transition-colors p-2">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-
-            <div class="p-6 space-y-5">
-                {{-- Package Context --}}
-                <div class="p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-md">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                            <i class="fa-solid fa-file-shield text-xs"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <p id="modal-package-name" class="text-xs font-bold text-gray-900 dark:text-gray-100 truncate"></p>
-                            <p id="modal-package-info" class="text-[10px] text-gray-500 uppercase tracking-widest leading-none mt-1"></p>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Recipient Selection --}}
-                <div class="space-y-3">
-                    <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1 mb-1 block">Add Recipients</label>
-                        <div class="ms-style-select2 relative group">
-                            <select id="supplierListContainer" name="supplierListContainer" class="w-full" multiple="multiple"></select>
-                            <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
-                                <i class="fa-solid fa-magnifying-glass text-xs"></i>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    {{-- Selected Recipients Container --}}
-                    <div id="externalRecipientList" class="max-h-[150px] overflow-y-auto space-y-1 p-1 no-scrollbar">
-                        {{-- Items injected via JS --}}
-                    </div>
-                </div>
-            </div>
-
-            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex items-center justify-end gap-3">
-                <button type="button" class="btn-close-modal text-[10px] font-bold text-gray-500 hover:text-gray-700 uppercase tracking-widest transition-colors">
-                    Cancel
-                </button>
-                <button id="btnSaveShare" type="button" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-md shadow-sm transition-all uppercase tracking-wide flex items-center gap-2">
-                    <i class="fa-solid fa-paper-plane text-[10px]"></i>
-                    <span>Notify & Share</span>
-                </button>
-            </div>
-        </div>
-    </div>
+    <x-files.share-modal />
 
     {{-- Adjusted Access Manager Modal --}}
     <div id="shareDetailsModal"
@@ -357,6 +267,11 @@
                 text
             });
         }
+
+        // Expose toasts globally for components
+        window.toastSuccess = toastSuccess;
+        window.toastError = toastError;
+        window.toastWarning = toastWarning;
 
 
         let table;
@@ -609,6 +524,9 @@
                     $(row).addClass('hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors');
                 }
             });
+            
+            // Expose table globally
+            window.table = table;
 
             table.on('draw.dt', function() {
                 const info = table.page.info();
@@ -632,7 +550,8 @@
             });
         }
 
-        function loadKpis() {
+        // Global functions for access from HTML onclick and Modals
+        window.loadKpis = function() {
             const f = getCurrentFilters();
             const $cards = $('#totalShared, #totalActive, #totalExpired, #totalRequest');
             
@@ -659,9 +578,9 @@
             }).always(() => {
                 $cards.removeClass('animate-pulse opacity-50');
             });
-        }
+        };
 
-        function loadHistory() {
+        window.loadHistory = function() {
             const $container = $('#shareHistoryList');
             
             $.get('{{ route("share.history") }}', function(logs) {
@@ -688,7 +607,6 @@
                                 <div class="text-[11px] font-bold text-gray-800 dark:text-gray-200 leading-tight">
                                     ${log.part_no}
                                 </div>
-
                                 <div class="text-[10px] text-gray-500 dark:text-gray-400 leading-normal">
                                     <span class="opacity-60">To:</span> 
                                     <span class="font-medium text-gray-700 dark:text-gray-300">${log.shared_to}</span>
@@ -706,7 +624,7 @@
                     $container.append(node);
                 });
             });
-        }
+        };
 
         function bindHandlers() {
             $('#customer, #model, #document-type, #category, #status').on('change', function() {
@@ -728,190 +646,6 @@
 
         }
 
-        // --- Share Action Logic ---
-        const $shareModal = $('#shareModal');
-        const $supplierListContainer = $('#supplierListContainer');
-        const $hiddenPackageId = $('#hiddenPackageId');
-        const $btnSaveShare = $('#btnSaveShare');
-        const $externalRecipientList = $('#externalRecipientList');
-
-        // State for selected suppliers
-        let selectedSuppliers = [];
-
-        function renderSelectedSuppliers() {
-            $externalRecipientList.empty();
-            
-            if (selectedSuppliers.length === 0) {
-                $externalRecipientList.append(`
-                    <div class="flex flex-col items-center justify-center py-6 border border-dashed border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800/50">
-                        <i class="fa-solid fa-user-group text-gray-300 mb-2"></i>
-                        <p class="text-[11px] text-gray-400 font-medium">No recipients added</p>
-                    </div>
-                `);
-                return;
-            }
-
-            selectedSuppliers.forEach(supplier => {
-                const initials = supplier.code.substring(0, 2).toUpperCase();
-                const item = `
-                    <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm group hover:border-indigo-300 dark:hover:border-indigo-700 transition-all">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 font-bold text-[10px] border border-gray-100 dark:border-gray-600">
-                                ${initials}
-                            </div>
-                            <div class="min-w-0">
-                                <p class="text-[11px] font-bold text-gray-800 dark:text-gray-200 leading-tight truncate max-w-[180px]">${supplier.text}</p>
-                                <p class="text-[9px] text-gray-400 font-mono mt-0.5">${supplier.code}</p>
-                            </div>
-                        </div>
-                        <button type="button" class="text-gray-300 hover:text-red-500 transition-colors p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded" onclick="removeSupplier('${supplier.id}')">
-                            <i class="fa-solid fa-trash-can text-[10px]"></i>
-                        </button>
-                    </div>
-                `;
-                $externalRecipientList.append(item);
-            });
-        }
-
-        // Global function for removal (needs to be global for onclick attribute)
-        window.removeSupplier = function(id) {
-            selectedSuppliers = selectedSuppliers.filter(s => s.id != id); // loose comparison for string/int safety
-            renderSelectedSuppliers();
-            // Also unselect in Select2 if needed, though we clear it anyway
-        };
-
-        function initModalSuppliers() {
-            // Reset state
-            selectedSuppliers = [];
-            renderSelectedSuppliers();
-
-            if ($supplierListContainer.data('select2')) {
-                $supplierListContainer.select2('destroy');
-            }
-            $supplierListContainer.empty();
-            
-            $supplierListContainer.select2({
-                dropdownParent: $('#shareModal'),
-                width: '100%',
-                placeholder: 'Type to search suppliers...',
-                allowClear: true,
-                multiple: true,
-                closeOnSelect: true,
-                ajax: {
-                    url: "{{ route('share.getSuppliers') }}",
-                    method: 'GET',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            q: params.term || '',
-                            page: params.page || 1
-                        };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: data.map(item => ({
-                                id: item.id,
-                                text: item.name || item.code, // Fallback to code if name missing
-                                code: item.code
-                            }))
-                        };
-                    },
-                    cache: true
-                },
-                templateResult: function(data) {
-                    if (data.loading) return data.text;
-                    return $(`
-                        <div class="flex items-center justify-between px-1">
-                            <span class="font-medium text-sm text-gray-700 dark:text-gray-200">${data.text}</span>
-                            <span class="text-xs text-gray-400 font-mono bg-gray-100 dark:bg-gray-600 px-1.5 py-0.5 rounded">${data.code}</span>
-                        </div>
-                    `);
-                },
-                templateSelection: function(data) {
-                    return data.text || data.id; // Fallback
-                }
-            });
-
-            // Handle selection event
-            $supplierListContainer.on('select2:select', function(e) {
-                const data = e.params.data;
-                // Add to our list if not exists
-                if (!selectedSuppliers.find(s => s.id == data.id)) {
-                    selectedSuppliers.push({
-                        id: data.id,
-                        text: data.text,
-                        code: data.code
-                    });
-                    renderSelectedSuppliers();
-                }
-                // Clear the input so specific chips don't show up inside
-                $supplierListContainer.val(null).trigger('change');
-            });
-        }
-
-
-        // Global handlers for closing
-        $('body').on('click', '.btn-close-modal', function() {
-            $shareModal.hide();
-        });
-
-        $shareModal.on('click', function(e) {
-            if ($(e.target).is($shareModal)) {
-                $(this).hide();
-            }
-        });
-
-        $btnSaveShare.on('click', function() {
-            const $this = $(this);
-            const packageId = $hiddenPackageId.val();
-            // Use our tracked array instead of Select2 value
-            const supplierIds = selectedSuppliers.map(s => s.id);
-
-            if (!packageId) {
-                toastError('Error', 'Package ID not found.');
-                return;
-            }
-
-            if (supplierIds.length === 0) {
-                toastWarning('Add recipients', 'Please select at least one supplier to share with.');
-                return;
-            }
-
-            const originalContent = $this.html();
-            $this.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Sending...</span>');
-
-            $.ajax({
-                url: '{{ route("share.save") }}',
-                type: 'POST',
-                data: {
-                    package_id: packageId,
-                    supplier_ids: supplierIds
-                },
-                dataType: 'json',
-                success: function(response) {
-                    $shareModal.hide();
-                    toastSuccess('Sent', response.message || 'Shared successfully!');
-                    if (table) table.ajax.reload(null, false);
-                    loadKpis();
-                    loadHistory();
-                },
-                error: function(xhr) {
-                    console.error('Failed to share:', xhr.responseText);
-                    const msg = xhr.responseJSON?.message || 'Failed to share package.';
-                    if (xhr.status === 422) toastWarning('Check input', msg);
-                    else toastError('Error', msg);
-                },
-                complete: function() {
-                    $this.prop('disabled', false).html(originalContent);
-                }
-            });
-        });
-
-        initTable();
-        bindHandlers();
-        loadKpis();
-        loadHistory();
 
         // --- Share Details Modal Logic ---
         const $shareDetailsModal = $('#shareDetailsModal');
@@ -979,13 +713,34 @@
             const id = $(this).data('id');
             const row = table.row($(this).parents('tr')).data();
             
-            $('#modal-package-name').text(row.part_no || 'Document Package');
-            $('#modal-package-info').text(`${row.customer} - ${row.model} | ${row.doc_type}`);
-            $('#hiddenPackageId').val(id);
-            
-            initModalSuppliers();
-            $shareModal.show();
+            if (window.openShareModal) {
+                 window.openShareModal(
+                    id, 
+                    row.part_no || 'Document Package', 
+                    `${row.customer} - ${row.model} | ${row.doc_type}`
+                );
+            } else {
+                console.error('Share modal component not loaded');
+            }
         });
+
+        // Listen for package shared event from modal to refresh data
+        $(document).on('package:shared', function() {
+            if (table) {
+                table.ajax.reload(null, false); // Reload table without resetting pagination
+            }
+            loadKpis();
+            loadHistory();
+        });
+
+        // Initialize Data & Handlers
+        initTable();
+        // Check if bindHandlers exists before calling, or define it if it was lost
+        if (typeof bindHandlers === 'function') {
+            bindHandlers();
+        }
+        loadKpis();
+        loadHistory();
 
         $('#approvalTable tbody').on('click', 'tr', function(e) {
             if ($(e.target).closest('.btn-share, .btn-view-shares').length) return;
