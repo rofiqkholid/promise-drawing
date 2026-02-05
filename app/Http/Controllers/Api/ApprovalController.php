@@ -1728,7 +1728,7 @@ END as status
             ->whereNotNull('users.email')
             ->where(function ($q) {
                 $q->whereNull('user_roles.role_id')
-                    ->orWhere('user_roles.role_id', '!=', 5);
+                    ->orWhere('user_roles.role_id', '!=', 6);
             });
 
         if ($isFeasibility) {
