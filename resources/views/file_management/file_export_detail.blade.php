@@ -305,6 +305,7 @@
 
                 try {
                 $sel.select2({
+                    width: '100%',
                     data: history.map((h, idx) => ({
                         id: h.id,
                         text: `${h.revision} ${h.id == currentId ? '(Current)' : ''}`,
@@ -364,8 +365,13 @@
                     this.pkg = response.pkg;
                     
                     // Reinitialize revision selector with new data
+                    // Reinitialize revision selector with new data
                     const $sel = $(this.$refs.revisionSelector);
-                    $sel.select2('destroy'); // Destroy old instance
+                    if ($sel.data('select2')) {
+                        $sel.select2('destroy');
+                    }
+                    $sel.empty();
+                    
                     this.$nextTick(() => {
                         this.initRevisionSelector(); // Reinitialize with new data
                     });

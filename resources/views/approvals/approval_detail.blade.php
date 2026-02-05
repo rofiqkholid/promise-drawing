@@ -1318,13 +1318,13 @@
     // <- private variable, tidak ikut diproxy Alpine
     let pdfDoc = null;
     return {
-      approvalId: JSON.parse(`@json($approvalId)`),
-      pkg: JSON.parse(`@json($detail)`),
-      stampFormats: JSON.parse(`@json($stampFormats)`),
-      userDeptCode: JSON.parse(`@json($userDeptCode ?? null)`),
-      userName: JSON.parse(`@json($userName ?? null)`),
-      isEngineering: JSON.parse(`@json($isEngineering ?? false)`),
-      approvalLevel: Number(`@json($approvalLevel ?? 0)`),
+      approvalId: @js($approvalId),
+      pkg: @js($detail),
+      stampFormats: @js($stampFormats),
+      userDeptCode: @js($userDeptCode ?? null),
+      userName: @js($userName ?? null),
+      isEngineering: @js($isEngineering ?? false),
+      approvalLevel: @js($approvalLevel ?? 0),
 
 
       // URL template update posisi stamp per file
@@ -2843,14 +2843,8 @@
       },
 
       canAct() {
-    if (!this.isWaiting()) return false;
-    
-    // Level 3 (ICT/Manager) bisa approve di semua stage L1, L2, atau L3
-    if (this.approvalLevel === 3) return true;
-
-    // Level lainnya harus sesuai dengan stage-nya
-    return this.approvalLevel === this.currentWaitingLevel();
-},
+        return this.isWaiting() && this.approvalLevel === this.currentWaitingLevel();
+      },
       canRollback() {
   const s = (this.pkg.status || '').toLowerCase();
 
@@ -2967,26 +2961,6 @@ canShare() {
 
 
           // tentukan status berikutnya berdasarkan level
-         // 1. Cek apakah ada Warning dari Controller (Email Gagal)
-          if (json.warning) {
-            this.showApproveModal = false; // Tutup modal dulu
-            
-            await Swal.fire({
-              icon: 'warning',
-              title: json.warning_title || 'Notification Issue',
-              text: json.warning_message || 'Revision approved, but failed to send some emails.',
-              confirmButtonText: 'OK, I Understand',
-              confirmButtonColor: '#f59e0b' // Warna kuning/orange
-            });
-
-            // Reload halaman agar data dan log tersinkronisasi sempurna
-            window.location.reload();
-            return; 
-          }
-
-          // 2. Jika Sukses Murni (Tanpa Warning)
-          
-          // Update UI status secara langsung (Optimistic UI)
           if (this.approvalLevel === 1) {
             this.pkg.status = 'Waiting L2';
           } else if (this.approvalLevel === 2) {
@@ -2995,7 +2969,7 @@ canShare() {
             this.pkg.status = 'Approved';
           }
 
-          // Tambah activity log manual ke tampilan
+          // activity log
           this.addPkgActivity(
             'approved',
             '{{ auth()->user()->name ?? "Reviewer" }}'
@@ -3003,10 +2977,6 @@ canShare() {
 
           this.showApproveModal = false;
           toastSuccess('Success', json.message || 'Revision approved successfully!');
-          
-          // Opsional: Reload otomatis setelah beberapa saat untuk memastikan data fresh
-          // setTimeout(() => window.location.reload(), 1000);
-
         } catch (err) {
           console.error('Approve Error:', err);
           toastError('Error', err.message || 'Approve failed');
