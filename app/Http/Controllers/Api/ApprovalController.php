@@ -894,7 +894,7 @@ END as status
 
 
 
-   public function approve(Request $request, string $id)
+  public function approve(Request $request, string $id)
 {
     $userId = Auth::user()->id ?? 1;
 
@@ -929,7 +929,7 @@ END as status
             return response()->json(['message' => 'This revision is already finalized.'], 409);
         }
 
-        // Logic Override untuk Level 3
+        // --- UPDATE STATUS APPROVAL (LEVEL 1, 2, 3) ---
         if ($level === 3) {
             DB::table('package_approvals')
                 ->where('id', $approval->id)
@@ -946,31 +946,21 @@ END as status
                     'updated_at' => Carbon::now(),
                 ]);
         } 
-        // Logic Normal untuk Level 1
         else if ($level === 1 && !$approval->lvl1) {
-            DB::table('package_approvals')
-                ->where('id', $approval->id)
-                ->update([
-                    'lvl1' => 1,
-                    'lvl1_decided_by' => $user->id,
-                    'updated_at' => Carbon::now(),
-                ]);
+            DB::table('package_approvals')->where('id', $approval->id)->update([
+                'lvl1' => 1, 'lvl1_decided_by' => $user->id, 'updated_at' => Carbon::now(),
+            ]);
             DB::commit();
             return response()->json(['message' => 'Approved Level 1. Waiting for Level 2.']);
         } 
-        // Logic Normal untuk Level 2
         else if ($level === 2) {
             if ((int) $approval->lvl1 !== 1) {
                 DB::rollBack();
                 return response()->json(['message' => 'Level 1 approval is required first.'], 422);
             }
-            DB::table('package_approvals')
-                ->where('id', $approval->id)
-                ->update([
-                    'lvl2' => 1,
-                    'lvl2_decided_by' => $user->id,
-                    'updated_at' => Carbon::now(),
-                ]);
+            DB::table('package_approvals')->where('id', $approval->id)->update([
+                'lvl2' => 1, 'lvl2_decided_by' => $user->id, 'updated_at' => Carbon::now(),
+            ]);
             DB::commit();
             return response()->json(['message' => 'Approved Level 2. Waiting for Level 3.']);
         } 
@@ -979,7 +969,7 @@ END as status
             return response()->json(['message' => 'Waiting for previous approval levels.'], 422);
         }
 
-        // Finalisasi Dokumen (Hanya jalan jika L3 approve atau alur normal sampai L3)
+        // --- FINALISASI DOKUMEN (Hanya jalan di Level 3) ---
         $revision = DB::table('doc_package_revisions')->where('id', $revisionId)->lockForUpdate()->first();
         $packageId = (int) $revision->package_id;
         $package = DB::table('doc_packages')->where('id', $packageId)->lockForUpdate()->first();
@@ -990,49 +980,121 @@ END as status
 
         if (!$isOlder) {
             DB::table('doc_package_revisions')
-                ->where('package_id', $packageId)
-                ->where('id', '!=', $revisionId)
-                ->where('revision_status', 'approved')
-                ->where('is_obsolete', 0)
-                ->update([
-                    'is_obsolete' => 1,
-                    'obsolete_at' => Carbon::now(),
-                    'obsolete_by' => $userId,
-                    'updated_at'  => Carbon::now(),
-                ]);
+                ->where('package_id', $packageId)->where('id', '!=', $revisionId)
+                ->where('revision_status', 'approved')->where('is_obsolete', 0)
+                ->update(['is_obsolete' => 1, 'obsolete_at' => Carbon::now(), 'obsolete_by' => $userId, 'updated_at' => Carbon::now()]);
 
-            DB::table('doc_package_revisions')->where('id', $revisionId)->update([
-                'revision_status' => 'approved',
-                'is_obsolete' => 0,
-                'updated_at'  => Carbon::now(),
-            ]);
+            DB::table('doc_package_revisions')->where('id', $revisionId)
+                ->update(['revision_status' => 'approved', 'is_obsolete' => 0, 'updated_at' => Carbon::now()]);
 
-            DB::table('doc_packages')->where('id', $packageId)->update([
-                'current_revision_id' => $revision->id,
-                'current_revision_no' => $revision->revision_no,
-                'updated_at' => Carbon::now(),
-            ]);
+            DB::table('doc_packages')->where('id', $packageId)
+                ->update(['current_revision_id' => $revision->id, 'current_revision_no' => $revision->revision_no, 'updated_at' => Carbon::now()]);
         } else {
-            DB::table('doc_package_revisions')->where('id', $revisionId)->update([
-                'revision_status' => 'approved',
-                'is_obsolete' => 1,
-                'obsolete_at' => Carbon::now(),
-                'obsolete_by' => $userId,
-                'updated_at'  => Carbon::now(),
-            ]);
+            DB::table('doc_package_revisions')->where('id', $revisionId)
+                ->update(['revision_status' => 'approved', 'is_obsolete' => 1, 'obsolete_at' => Carbon::now(), 'obsolete_by' => $userId, 'updated_at' => Carbon::now()]);
         }
 
-        // Logging & Email
+        // Logging
         ActivityLog::create([
-            'scope_type' => 'package',
-            'scope_id' => $packageId,
-            'revision_id' => $revisionId,
-            'activity_code' => ActivityLog::APPROVE,
-            'user_id' => $userId,
+            'scope_type' => 'package', 'scope_id' => $packageId, 'revision_id' => $revisionId,
+            'activity_code' => ActivityLog::APPROVE, 'user_id' => $userId,
             'meta' => ['note' => 'Revision approved (Full Access Mode)', 'action_status' => 'Approved'],
         ]);
 
+        // =========================================================================
+        // MULAI PERUBAHAN: LOGIKA EMAIL (Disisipkan di sini)
+        // =========================================================================
+        
+        $failedRecipients = []; // Penampung jika ada email yang gagal
+
+        if (!$request->boolean('confirm_without_email')) {
+            try {
+                // 1. Ambil list penerima
+                $recipients = $this->getNotificationUsersForPackage($packageId);
+
+                // 2. Siapkan Data Lengkap (Query + Join Project Status)
+                $emailDataObj = DB::table('doc_package_revisions as dpr')
+                    ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+                    ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+                    ->join('models as m', 'dp.model_id', '=', 'm.id')
+                    ->join('products as p', 'dp.product_id', '=', 'p.id')
+                    ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
+                    ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
+                    ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+                    // JOIN PROJECT STATUS (Penting untuk warna Badge di email)
+                    ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
+                    ->where('dpr.id', $revisionId)
+                    ->select([
+                        'c.code as customer',
+                        'm.name as model',
+                        'p.part_no',
+                        'dtg.name as doc_type',
+                        'dsc.name as category',
+                        'pg.code_part_group as part_group',
+                        'ps.name as project_status', // <--- TAMBAHAN 1
+                        'dpr.ecn_no',
+                        'dpr.revision_no'
+                    ])
+                    ->first();
+
+                $approvalArray = (array) $emailDataObj;
+
+                // Tanggal
+                $approvalArray['approved_at'] = Carbon::now()->format('d M Y H:i');
+
+                // List File
+                $files = DB::table('doc_package_revision_files')
+                    ->where('revision_id', $revisionId)
+                    ->get(['filename', 'file_size']); 
+                
+                // Gunakan key 'files' (konsisten dengan View nanti)
+                $approvalArray['files'] = $files->map(function($f) {
+                    return [
+                        'name' => $f->filename,
+                        'size' => number_format($f->file_size / 1024, 0) . ' KB'
+                    ];
+                })->toArray();
+
+                // URL (Gunakan key 'download_url' agar sesuai View Anda)
+                $approvalArray['download_url'] = route('approval.detail', ['id' => encrypt($revisionId)]);
+
+                // 3. Loop Pengiriman
+                foreach ($recipients as $recipient) {
+                    // Try-Catch DI DALAM loop (Partial Success)
+                    try {
+                        Mail::to($recipient->email)->send(
+                            new RevisionApprovedNotification($recipient, $approvalArray)
+                        );
+                    } catch (\Throwable $e) {
+                        // Catat error, tapi JANGAN Rollback
+                        $failedRecipients[] = $recipient->name . " (" . $recipient->email . ")";
+                        Log::warning("Failed sending to {$recipient->email}: " . $e->getMessage());
+                    }
+                }
+
+            } catch (\Throwable $e) {
+                // Error level query persiapan (jarang terjadi)
+                Log::error("Email Preparation Error: " . $e->getMessage());
+            }
+        }
+
+        // =========================================================================
+        // AKHIR PERUBAHAN
+        // =========================================================================
+
         DB::commit();
+
+        // Respon khusus jika ada email yang gagal (Partial Success)
+        if (count($failedRecipients) > 0) {
+            $failListStr = implode(', ', $failedRecipients);
+            return response()->json([
+                'message' => 'Revision approved successfully.',
+                'warning' => true,
+                'warning_title' => 'Email Notification Issue',
+                'warning_message' => "Revision approved, but some users will not receive emails because the email address is invalid or unreachable.\nFailed users: " . $failListStr
+            ], 200);
+        }
+
         return response()->json(['message' => 'Revision approved successfully!']);
 
     } catch (\Throwable $e) {

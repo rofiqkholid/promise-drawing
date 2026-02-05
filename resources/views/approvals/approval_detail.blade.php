@@ -2967,6 +2967,26 @@ canShare() {
 
 
           // tentukan status berikutnya berdasarkan level
+         // 1. Cek apakah ada Warning dari Controller (Email Gagal)
+          if (json.warning) {
+            this.showApproveModal = false; // Tutup modal dulu
+            
+            await Swal.fire({
+              icon: 'warning',
+              title: json.warning_title || 'Notification Issue',
+              text: json.warning_message || 'Revision approved, but failed to send some emails.',
+              confirmButtonText: 'OK, I Understand',
+              confirmButtonColor: '#f59e0b' // Warna kuning/orange
+            });
+
+            // Reload halaman agar data dan log tersinkronisasi sempurna
+            window.location.reload();
+            return; 
+          }
+
+          // 2. Jika Sukses Murni (Tanpa Warning)
+          
+          // Update UI status secara langsung (Optimistic UI)
           if (this.approvalLevel === 1) {
             this.pkg.status = 'Waiting L2';
           } else if (this.approvalLevel === 2) {
@@ -2975,7 +2995,7 @@ canShare() {
             this.pkg.status = 'Approved';
           }
 
-          // activity log
+          // Tambah activity log manual ke tampilan
           this.addPkgActivity(
             'approved',
             '{{ auth()->user()->name ?? "Reviewer" }}'
@@ -2983,6 +3003,10 @@ canShare() {
 
           this.showApproveModal = false;
           toastSuccess('Success', json.message || 'Revision approved successfully!');
+          
+          // Opsional: Reload otomatis setelah beberapa saat untuk memastikan data fresh
+          // setTimeout(() => window.location.reload(), 1000);
+
         } catch (err) {
           console.error('Approve Error:', err);
           toastError('Error', err.message || 'Approve failed');

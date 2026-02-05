@@ -1,7 +1,7 @@
 @component('mail::message')
 # To, {{ $user->name }}
 
-Mr, **{{ $user->name }}**  
+Mr/Mrs, **{{ $user->name }}**  
 You have received an **approved document revision** in the **PROMISE** application.  
 Please log in to the application to view and download the approved file(s).
 
@@ -73,29 +73,25 @@ Date Approve    :  ({{ $approval['decision_date'] ?? $approval['approved_at'] ??
 
 ### List of Transmit Files
 
-@if(!empty($approval['filenames']) && is_array($approval['filenames']) && count($approval['filenames']) > 0)
-<ul style="font-size: 14px; line-height: 2;">
-@foreach($approval['filenames'] as $fn)
-<li>{{ $fn }}</li>
+@if(!empty($approval['files']) && count($approval['files']) > 0)
+<ul style="padding-left: 20px; margin: 0;">
+@foreach($approval['files'] as $file)
+<li style="margin-bottom: 5px;">
+{{ is_array($file) ? $file['name'] : $file->name }} 
+<span style="color: #6b7280; font-size: 12px;">
+({{ is_array($file) ? $file['size'] : $file->size }})
+</span>
+</li>
 @endforeach
 </ul>
 @else
-<p style="font-size: 14px;">
-    *(No files were found for this revision.)*
+<p style="font-size: 14px; color: #6b7280; font-style: italic;">
+(No files were found for this revision.)
 </p>
 @endif
 
----
-
-If the button above does not work, please copy and paste the link below into your browser:
-
-[{{ $approval['download_url'] ?? '-' }}]({{ $approval['download_url'] ?? '#' }})
-
----
-
 @component('mail::panel')
-**Attention:** This is an automated email. Please do not reply to this email.  
-If you have any questions, please contact the SAI listed in the operations manual.
+**Attention:** This is an automated email. Please do not reply to this email.
 @endcomponent
 
 @endcomponent

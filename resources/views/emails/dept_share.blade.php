@@ -40,17 +40,8 @@ Date   : {{ $share['shared_at'] ?? '-' }}
 
 Shared by: **{{ $share['shared_by'] ?? 'System' }}**
 
----
-
-If the button above does not work, please copy and paste the link below into your browser:
-
-[{{ $share['app_url'] ?? '-' }}]({{ $share['app_url'] ?? '#' }})
-
----
-
 @component('mail::panel')
 **Attention:** This is an automated email. Please do not reply to this email.  
-If you have any questions, please contact the related PIC according to the operations manual.
 @endcomponent
 
 @endcomponent
