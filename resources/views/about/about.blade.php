@@ -91,23 +91,50 @@
             {{-- TAB: OVERVIEW --}}
             <div id="overview" class="tab-content hidden opacity-0 transition-opacity duration-300">
                 {{-- CHANGE 2: Responsive grid (xl:grid-cols-4) --}}
-                <div class="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-10">
 
                     {{-- Left Side: Main Content --}}
-                    <div class="lg:col-span-2 xl:col-span-3 space-y-8">
-                        <div>
-                            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">Application Name</label>
+                    <div class="xl:col-span-8 space-y-10">
+                        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                Application Name
+                            </label>
                             <h2 id="app-name" class="text-4xl font-extrabold text-gray-800 mt-2"></h2>
                         </div>
 
-                        <div class="prose max-w-none">
-                            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block border-b pb-2">System Description</label>
+                        <!-- <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 block">
+                                System Showreel
+                            </label>
+
+                            <div class="relative rounded-xl overflow-hidden border bg-black aspect-video">
+                                <video
+                                    class="w-full h-full object-cover"
+                                    autoplay
+                                    muted
+                                    loop
+                                    playsinline>
+                                    <source src="{{ asset('assets/video/system-showreel.mp4') }}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+
+                            <p class="text-sm text-gray-500 mt-3">
+                                A quick overview of how the system manages drawings from upload to distribution.
+                            </p>
+                        </div> -->
+
+
+                        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 block">
+                                System Description
+                            </label>
                             <p id="app-description" class="text-gray-600 leading-loose text-lg whitespace-pre-line"></p>
                         </div>
                     </div>
 
                     {{-- Right Side: Technical Info --}}
-                    <div class="xl:col-span-1">
+                    <div class="xl:col-span-4">
                         <div class="bg-gray-50 rounded-xl p-6 border border-gray-200 shadow-sm sticky top-6">
                             <h4 class="font-bold text-gray-800 mb-6 flex items-center text-lg">
                                 <i class="fa-solid fa-circle-info text-blue-500 mr-2"></i> Technical Info
@@ -138,91 +165,121 @@
                 </div>
             </div>
 
-            {{-- TAB: LOGO --}}
             <div id="logo" class="tab-content hidden opacity-0 transition-opacity duration-300">
-                <div class="flex flex-col items-center justify-center py-12 min-h-[400px]">
-                    <div id="logo-wrapper" class="relative group mb-10">
-                        <div class="absolute -inset-1 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                        <div class="relative bg-white p-12 rounded-xl border border-gray-100 shadow-lg">
-                            <img src="{{ asset('assets/image/logo-promise.png') }}" alt="Logo" class="h-20 w-20 object-contain flex-shrink-0">
-                        </div>
-                    </div>
+                <div class="max-w-6xl mx-auto">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 items-center min-h-[400px]">
 
-                    <div class="max-w-3xl text-center">
-                        <h4 class="text-xl font-bold text-gray-800 mb-4">Philosophy & Identity</h4>
-                        <div class="w-24 h-1.5 bg-blue-500 mx-auto rounded-full mb-6"></div>
-                        <p id="logo-description" class="text-gray-600 italic leading-relaxed text-lg"></p>
+                        {{-- LEFT: LOGO --}}
+                        <div class="lg:col-span-5 flex justify-center">
+                            <div class="w-[300px] h-[300px] bg-white border border-gray-200 rounded-2xl shadow-sm flex items-center justify-center">
+                                <img
+                                    src="{{ asset('assets/image/logo-promise.png') }}"
+                                    alt="Logo"
+                                    class="w-full h-full object-contain p-6" />
+                            </div>
+                        </div>
+
+                        {{-- SPACER --}}
+                        <div class="hidden lg:block lg:col-span-1"></div>
+
+                        {{-- RIGHT: DESCRIPTION --}}
+                        <div class="lg:col-span-6">
+                            <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                Philosophy & Identity
+                            </label>
+
+                            <h4 class="text-2xl font-extrabold text-gray-800 mt-2 mb-4">
+                                System Identity Concept
+                            </h4>
+
+                            <div class="w-20 h-px bg-gray-300 mb-6"></div>
+
+                            <p id="logo-description" class="text-gray-600 leading-relaxed text-lg max-w-xl"></p>
+                        </div>
+
                     </div>
                 </div>
             </div>
 
+
+
+
             {{-- TAB: HELP --}}
-<div id="help" class="tab-content hidden opacity-0 transition-opacity duration-300">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        {{-- 1. Upload Drawing --}}
-        <div onclick="openVideoModal('upload', 'https://www.youtube.com/embed/LINK_VIDEO_1')" 
-             class="p-6 border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 cursor-pointer bg-white group hover:-translate-y-1">
-            <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-sm">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-            </div>
-            <h3 class="font-bold text-gray-900 text-lg mb-2">Upload Drawing</h3>
-            <p class="text-gray-500 text-sm leading-relaxed">Guide on how to upload technical documents (DWG/PDF) to the central server with full metadata.</p>
-        </div>
+            <div id="help" class="tab-content hidden opacity-0 transition-opacity duration-300">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
-        {{-- 2. Approval Flow --}}
-        <div onclick="openVideoModal('approval', 'https://www.youtube.com/embed/LINK_VIDEO_2')" 
-             class="p-6 border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 cursor-pointer bg-white group hover:-translate-y-1">
-            <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-green-600 group-hover:text-white transition-colors shadow-sm">
-                <i class="fa-solid fa-file-signature"></i>
-            </div>
-            <h3 class="font-bold text-gray-900 text-lg mb-2">Approval Flow</h3>
-            <p class="text-gray-500 text-sm leading-relaxed">Multi-level document approval workflow from Engineer to Manager before official release.</p>
-        </div>
+                    {{-- 1. Upload Drawing --}}
+                    <div onclick="openVideoModal('upload', 'https://www.youtube.com/embed/LINK_VIDEO_1')"
+                        class="p-6 border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 cursor-pointer bg-white group hover:-translate-y-1">
+                        <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-sm">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-lg mb-2">Upload Drawing</h3>
+                        <p class="text-gray-500 text-sm leading-relaxed">Guide on how to upload technical documents (DWG/PDF) to the central server with full metadata.</p>
+                    </div>
 
-        {{-- 3. Versioning Control --}}
-        <div onclick="openVideoModal('versioning', 'https://www.youtube.com/embed/LINK_VIDEO_3')" 
-             class="p-6 border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 cursor-pointer bg-white group hover:-translate-y-1">
-            <div class="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-orange-600 group-hover:text-white transition-colors shadow-sm">
-                <i class="fa-solid fa-code-branch"></i>
-            </div>
-            <h3 class="font-bold text-gray-900 text-lg mb-2">Versioning Control</h3>
-            <p class="text-gray-500 text-sm leading-relaxed">Automatic revision tracking to ensure you are always working with the latest drawing version.</p>
-        </div>
+                    {{-- 2. Approval Flow --}}
+                    <div onclick="openVideoModal('approval', 'https://www.youtube.com/embed/LINK_VIDEO_2')"
+                        class="p-6 border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 cursor-pointer bg-white group hover:-translate-y-1">
+                        <div class="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-green-600 group-hover:text-white transition-colors shadow-sm">
+                            <i class="fa-solid fa-file-signature"></i>
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-lg mb-2">Approval Flow</h3>
+                        <p class="text-gray-500 text-sm leading-relaxed">Multi-level document approval workflow from Engineer to Manager before official release.</p>
+                    </div>
 
-        {{-- 4. Distribution --}}
-        <div onclick="openVideoModal('distribution', 'https://www.youtube.com/embed/LINK_VIDEO_4')" 
-             class="p-6 border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 cursor-pointer bg-white group hover:-translate-y-1">
-            <div class="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors shadow-sm">
-                <i class="fa-solid fa-download"></i>
-            </div>
-            <h3 class="font-bold text-gray-900 text-lg mb-2">Distribution</h3>
-            <p class="text-gray-500 text-sm leading-relaxed">Secure download mechanisms and history logs for sharing documents with vendors.</p>
-        </div>
+                    {{-- 3. Versioning Control --}}
+                    <div onclick="openVideoModal('versioning', 'https://www.youtube.com/embed/LINK_VIDEO_3')"
+                        class="p-6 border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 cursor-pointer bg-white group hover:-translate-y-1">
+                        <div class="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-orange-600 group-hover:text-white transition-colors shadow-sm">
+                            <i class="fa-solid fa-code-branch"></i>
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-lg mb-2">Versioning Control</h3>
+                        <p class="text-gray-500 text-sm leading-relaxed">Automatic revision tracking to ensure you are always working with the latest drawing version.</p>
+                    </div>
 
-    </div>
-</div>
+                    {{-- 4. Distribution --}}
+                    <div onclick="openVideoModal('distribution', 'https://www.youtube.com/embed/LINK_VIDEO_4')"
+                        class="p-6 border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 cursor-pointer bg-white group hover:-translate-y-1">
+                        <div class="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors shadow-sm">
+                            <i class="fa-solid fa-share-nodes"></i>
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-lg mb-2">Share to Supplier</h3>
+                        <p class="text-gray-500 text-sm leading-relaxed">Securely share document packages with suppliers.</p>
+                    </div>
+
+                    {{-- 5. Download --}}
+                    <div onclick="openVideoModal('download', 'https://www.youtube.com/embed/LINK_VIDEO_4')"
+                        class="p-6 border border-gray-200 rounded-xl hover:shadow-lg transition-all duration-300 cursor-pointer bg-white group hover:-translate-y-1">
+                        <div class="w-14 h-14 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors shadow-sm">
+                            <i class="fa-solid fa-download"></i>
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-lg mb-2">Download</h3>
+                        <p class="text-gray-500 text-sm leading-relaxed">Securely download documents with complete access history tracking.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 <div id="videoModal" class="fixed inset-0 z-[99] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
     <div class="bg-white rounded-2xl w-full max-w-7xl overflow-hidden shadow-2xl relative flex flex-col md:flex-row h-auto md:h-[80vh]">
-        
+
         <div class="w-full md:w-1/4 p-8 border-b md:border-b-0 md:border-r border-gray-100 overflow-y-auto bg-gray-50">
             <h3 id="modalTitle" class="text-2xl font-extrabold text-gray-800 mb-6 tracking-tight">Tutorial</h3>
             <div id="stepContent" class="text-gray-600 space-y-4 leading-relaxed text-base">
-                </div>
+            </div>
         </div>
-        
+
         <div class="w-full md:w-3/4 flex flex-col bg-black relative">
             <button onclick="closeVideoModal()" class="absolute top-4 right-4 z-10 w-12 h-12 bg-white/10 hover:bg-white/30 text-white rounded-full flex items-center justify-center transition-all backdrop-blur-md">
                 <i class="fa-solid fa-xmark text-2xl"></i>
             </button>
-            
+
             <div class="flex-grow w-full h-full">
                 <iframe id="tutorialVideo" class="w-full h-full" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
             </div>
-            
+
             <div class="p-4 bg-white border-t flex justify-end items-center gap-4">
                 <span class="text-sm text-gray-400 mr-auto ml-2 hidden md:block italic">Press Esc to close</span>
                 <button onclick="closeVideoModal()" class="px-8 py-2.5 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-all shadow-lg active:scale-95">
@@ -237,37 +294,42 @@
 @push('scripts')
 <script>
     // --- 1. FUNGSI UNTUK MODAL VIDEO (BARU) ---
-   // Data teks untuk panduan sebelah kiri
+    // Data teks untuk panduan sebelah kiri
     const tutorialData = {
-    'upload': {
-        title: 'Drawing Upload Guide',
-        steps: `
+        'upload': {
+            title: 'Drawing Upload Guide',
+            steps: `
             <div class="space-y-3">
                 <p class="font-semibold text-blue-600 text-sm uppercase tracking-wider">Step-by-step Instructions:</p>
                 <ul class="list-decimal pl-5 space-y-2 text-sm text-gray-600">
-                    <li>Prepare technical files in <b>DWG</b> or <b>PDF</b> format.</li>
-                    <li>Ensure the file size does not exceed the <b>50MB</b> limit.</li>
-                    <li>Click the upload button and complete the metadata (Project, Discipline, Date).</li>
-                    <li>The system will validate the file before it is stored in the central server.</li>
+                    <li>Navigate to the Upload menu.</li>
+                    <li>Click the <b>Upload New Drawing</b> button.</li>
+                    <li>Carefully complete the upload form, especially when selecting whether the item is <b>Finish Good</b> or not.</li>
+                    <li>Upload the file according to its category (for example, upload 2D files to the 2D category).</li>
+                    <li>Click the <b>Save to Draft</b> button.</li>
+                    <li>Click the <b>Request Approval</b> button.</li>
                 </ul>
+                <p class="font-semibold text-green-600 text-sm uppercase tracking-wider">Proccess Completed</p>
             </div>`
-    },
-    'approval': {
-        title: 'Approval Workflow Guide',
-        steps: `
+        },
+        'approval': {
+            title: 'Approval Workflow Guide',
+            steps: `
             <div class="space-y-3">
                 <p class="font-semibold text-green-600 text-sm uppercase tracking-wider">Verification Process:</p>
                 <ul class="list-decimal pl-5 space-y-2 text-sm text-gray-600">
-                    <li>Uploaded documents will enter the <b>Engineer Review</b> queue.</li>
-                    <li>Once reviewed, the status will change to <b>Pending Manager</b>.</li>
-                    <li>The Manager will provide a <b>Digital Signature</b> for final approval.</li>
-                    <li>Automatic notifications will be sent to all relevant stakeholders.</li>
+                    <li>Navigate to the <b>Approval</b> menu.</li>
+                    <li>Search for documents with <b>Waiting</b> status that match your assigned role.</li>
+                    <li>Click the document row that you want to review or approve.</li>
+                    <li>Click the file to preview its contents.</li>
+                    <li>Click <b>Approve</b> or <b>Reject</b> according to your decision.</li>
                 </ul>
+                <p class="font-semibold text-green-600 text-sm uppercase tracking-wider">Proccess Completed</p>
             </div>`
-    },
-    'versioning': {
-        title: 'Versioning Control Guide',
-        steps: `
+        },
+        'versioning': {
+            title: 'Versioning Control Guide',
+            steps: `
             <div class="space-y-3">
                 <p class="font-semibold text-orange-600 text-sm uppercase tracking-wider">Revision Management:</p>
                 <ul class="list-decimal pl-5 space-y-2 text-sm text-gray-600">
@@ -277,10 +339,10 @@
                     <li>Always ensure you are retrieving data from the <b>Latest</b> status.</li>
                 </ul>
             </div>`
-    },
-    'distribution': {
-        title: 'Distribution Guide',
-        steps: `
+        },
+        'distribution': {
+            title: 'Distribution Guide',
+            steps: `
             <div class="space-y-3">
                 <p class="font-semibold text-purple-600 text-sm uppercase tracking-wider">Vendor Distribution:</p>
                 <ul class="list-decimal pl-5 space-y-2 text-sm text-gray-600">
@@ -290,46 +352,63 @@
                     <li>Check the <b>Access Log</b> to track who has downloaded the files.</li>
                 </ul>
             </div>`
-    }
-};
+        },
+        'download': {
+            title: 'Download Guide',
+            steps: `
+            <div class="space-y-3">
+                <p class="font-semibold text-purple-600 text-sm uppercase tracking-wider">Step-by-step Instructions:</p>
+                <ul class="list-decimal pl-5 space-y-2 text-sm text-gray-600">
+                    <li>Navigate to the <b>Download</b> menu.</li>
+                    <li>Search for the document you wish to download.</li>
+                    <li>Click the <b>Download</b> button in the <b>Action column</b>, <b>or</b></li>
+                    <li>Click the selected document row to view its details.</li>
+                    <li>Select the required document version.</li>
+                    <li>Click <b>Download.</b></li>
+                    <li>To download a specific file only, click the <b>Download</b> button next to the desired file.</b></li>
+                </ul>
+                <p class="font-semibold text-purple-600 text-sm uppercase tracking-wider">End of Guide</p>
+            </div>`
+        }
+    };
 
     function openVideoModal(type, videoUrl) {
-    const modal = document.getElementById('videoModal');
-    const iframe = document.getElementById('tutorialVideo');
-    const titleEl = document.getElementById('modalTitle');
-    const contentEl = document.getElementById('stepContent');
+        const modal = document.getElementById('videoModal');
+        const iframe = document.getElementById('tutorialVideo');
+        const titleEl = document.getElementById('modalTitle');
+        const contentEl = document.getElementById('stepContent');
 
-    const data = tutorialData[type];
-    
-    if (data) {
-        titleEl.innerText = data.title;
-        contentEl.innerHTML = data.steps;
-        
-        // Clean URL and add professional YouTube parameters
-        const cleanUrl = videoUrl.split('?')[0];
-        iframe.src = `${cleanUrl}?autoplay=1&rel=0&modestbranding=1&showinfo=0`;
+        const data = tutorialData[type];
 
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.body.style.overflow = 'hidden';
-    } else {
-        console.warn("Tutorial data not found for type: " + type);
+        if (data) {
+            titleEl.innerText = data.title;
+            contentEl.innerHTML = data.steps;
+
+            // Clean URL and add professional YouTube parameters
+            const cleanUrl = videoUrl.split('?')[0];
+            iframe.src = `${cleanUrl}?autoplay=1&rel=0&modestbranding=1&showinfo=0`;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        } else {
+            console.warn("Tutorial data not found for type: " + type);
+        }
     }
-}
 
     function closeVideoModal() {
         const modal = document.getElementById('videoModal');
         const iframe = document.getElementById('tutorialVideo');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
-        iframe.src = ""; 
+        iframe.src = "";
         document.body.style.overflow = 'auto';
     }
 
     // Tambahkan event listener untuk menutup dengan tombol Escape jika belum ada
-document.addEventListener('keydown', function(e) {
-    if (e.key === "Escape") closeVideoModal();
-});
+    document.addEventListener('keydown', function(e) {
+        if (e.key === "Escape") closeVideoModal();
+    });
 
 
 
@@ -392,7 +471,7 @@ document.addEventListener('keydown', function(e) {
 
         const activeContent = document.getElementById(tabId);
         activeContent.classList.remove('hidden');
-        void activeContent.offsetWidth; 
+        void activeContent.offsetWidth;
         activeContent.classList.remove('opacity-0');
 
         if (btnElement) {
