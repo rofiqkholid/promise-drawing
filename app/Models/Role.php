@@ -11,9 +11,9 @@ class Role extends Model
 
     // Mapping ID sesuai database
     const ICT   = 1;
-    const APV_1 = 8;
-    const APV_2 = 9;
-    const APV_3 = 10;
+    const APV_1 = 12;
+    const APV_2 = 13;
+    const APV_3 = 14;
 
     /**
      * The attributes that are mass assignable.

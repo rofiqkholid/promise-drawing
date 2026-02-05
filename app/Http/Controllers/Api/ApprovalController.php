@@ -1460,43 +1460,66 @@ END as status
         }
     }
 
-  public function exportSummary(Request $request)
+ public function exportSummary(Request $request)
 {
-    // 1. Ambil status approval terbaru untuk setiap revisi
+    // =========================================================================
+    // 1. Ambil status approval terbaru (CTE/Subquery optimization)
+    // =========================================================================
+    // Menggunakan Window Function untuk mengambil approval terakhir per revisi
     $latestPa = DB::table('package_approvals as pa')
         ->select('pa.id', 'pa.revision_id', 'pa.requested_at', 'pa.decided_at', 'pa.decision')
         ->selectRaw("ROW_NUMBER() OVER (PARTITION BY pa.revision_id ORDER BY COALESCE(pa.decided_at, pa.requested_at) DESC, pa.id DESC) as rn");
 
-    // 2. Query Utama dengan Logika Linked Group
+    // =========================================================================
+    // 2. Query Utama dengan Self-Join Products
+    // =========================================================================
     $query = DB::table('doc_package_revisions as dpr')
         ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
         ->join('customers as c', 'dp.customer_id', '=', 'c.id')
         ->join('models as m', 'dp.model_id', '=', 'm.id')
-        // Ambil produk referensi yang terdaftar di package
+        
+        // [LOGIKA PART LINKED / GROUP ID]
+        // ---------------------------------------------------------------------
+        // STEP A: Join ke Product REFERENSI (yang tersimpan di tabel transaksi dp)
+        // Kita beri alias 'p_ref' sebagai jembatan untuk mendapatkan group_id
         ->join('products as p_ref', 'dp.product_id', '=', 'p_ref.id')
-        // JOIN ULANG ke tabel products untuk mendapatkan SEMUA part dalam satu grup
-        // Jika group_id NULL, kita gunakan orOn agar produk tunggal tidak hilang
+
+        // STEP B: Join ke Product TAMPIL (yang akan di-select)
+        // Cari semua product 'p' yang memiliki group_id sama dengan 'p_ref'
         ->join('products as p', function ($join) {
-            $join->on(function($query) {
-                $query->on('p.group_id', '=', 'p_ref.group_id')
-                      ->whereNotNull('p_ref.group_id');
-            })->orOn('p.id', '=', 'p_ref.id');
+            $join->on(function($q) {
+                // Kondisi 1: Jika p_ref punya group_id valid, cari temannya
+                $q->on('p.group_id', '=', 'p_ref.group_id')
+                  ->whereNotNull('p_ref.group_id')
+                  ->where('p_ref.group_id', '<>', ''); // Handle string kosong jika ada
+            })
+            // Kondisi 2: (OR) Jika tidak punya group, atau untuk mencakup dirinya sendiri
+            ->orOn('p.id', '=', 'p_ref.id');
         })
+        // ---------------------------------------------------------------------
+
         ->join('doctype_groups as dtg', 'dp.doctype_group_id', '=', 'dtg.id')
         ->leftJoin('doctype_subcategories as dsc', 'dp.doctype_subcategory_id', '=', 'dsc.id')
         ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
         ->leftJoin('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+        
+        // Join ke subquery approval terakhir
         ->leftJoinSub($latestPa, 'pa', function ($join) {
             $join->on('pa.revision_id', '=', 'dpr.id')->where('pa.rn', '=', 1);
         });
 
-    // 3. Filter Constraint
+    // =========================================================================
+    // 3. Filter Constraint (Hardcoded)
+    // =========================================================================
     $query->where('dp.is_delete', 0)
-          ->where('p.is_delete', 0)
-          ->where('p.is_count', 1) // Sesuai permintaan: hanya yang is_count = 1
-          ->where('dpr.revision_status', '<>', 'draft');
+          ->where('p.is_delete', 0)  // Filter product 'TAMPIL' yang tidak didelete
+          ->where('p.is_count', 1)   // Filter product 'TAMPIL' yang is_count = 1
+          ->where('dpr.revision_status', '<>', 'draft')
+          ->whereRaw("LOWER(COALESCE(pa.decision, dpr.revision_status)) = 'approved'");
 
-    // 4. Filter Dinamis
+    // =========================================================================
+    // 4. Dynamic Filters (User Input)
+    // =========================================================================
     if ($request->filled('customer') && $request->customer !== 'All') {
         $query->where('c.code', $request->customer);
     }
@@ -1513,71 +1536,74 @@ END as status
         $query->where('ps.name', $request->project_status);
     }
 
-    // Filter Approved (Case Insensitive)
-    $query->whereRaw("LOWER(COALESCE(pa.decision, dpr.revision_status)) = 'approved'");
-
-    // 5. Eksekusi Data
+    // =========================================================================
+    // 5. Select & Execution
+    // =========================================================================
+    // PENTING: Ambil part_no dan part_name dari alias 'p' (hasil expand), bukan 'p_ref'
     $rowsDb = $query->select([
-        'c.code as customer',
-        'm.name as model',
-        'p.part_no',
-        'p.part_name',
-        'dtg.name as doctype',
-        'dsc.name as category',
+        'c.code as customer', 
+        'm.name as model', 
+        'p.part_no',         // <-- Diambil dari product hasil expand group
+        'p.part_name',       // <-- Diambil dari product hasil expand group
+        'dtg.name as doctype', 
+        'dsc.name as category', 
         'pg.code_part_group as part_group',
-        'dpr.created_at as upload_date',
-        'dpr.receipt_date as receipt_date',
-        'dpr.ecn_no as ecn_no',
-        'dpr.revision_no as revision_no',
-        'dpr.is_finish as is_finish'
+        'dpr.created_at as upload_date', 
+        'dpr.receipt_date', 
+        'dpr.ecn_no', 
+        'dpr.revision_no', 
+        'dpr.is_finish'
     ])
+    // Urutkan berdasarkan Part No agar yang satu grup berkumpul
     ->orderBy('c.code')
     ->orderBy('m.name')
-    ->orderBy('p.part_no')
+    ->orderBy('p.part_no') 
     ->orderBy('dpr.revision_no', 'asc')
     ->get();
 
-    $generatedAt = \Carbon\Carbon::now();
-    $rows = [];
-
-    // 6. Logika Penentuan Baris Terakhir (Highest Revision) per Part
+    // =========================================================================
+    // 6. Mapping Data (Logic Penandaan Revisi Terakhir)
+    // =========================================================================
     $highestRevisionMap = [];
     foreach ($rowsDb as $index => $r) {
+        // Buat unique key untuk menentukan revisi tertinggi per dokumen unik
         $key = $r->part_no . '|' . $r->doctype . '|' . $r->category;
         $highestRevisionMap[$key] = $index;
     }
 
-    // 7. Iterasi Data ke Baris Excel
+    $rows = [];
     foreach ($rowsDb as $index => $r) {
         $key = $r->part_no . '|' . $r->doctype . '|' . $r->category;
         
-        // Logika F/Good: Hanya tampil '1' jika ini adalah revisi terbaru dari part tersebut
-        $isFinish = '0';
+        $isFinishStatus = '0';
+        // Logic: Jika index ini adalah index terakhir untuk key tersebut, ambil status finish aslinya
         if ($index === $highestRevisionMap[$key]) {
-            $isFinish = ($r->is_finish == 1) ? '1' : '0';
+            $isFinishStatus = ($r->is_finish == 1) ? '1' : '0';
         }
 
         $rows[] = [
-            $index + 1, // Kolom No (A)
-            $r->customer,
-            $r->model,
-            $r->part_no,
-            $r->part_name,
-            $r->doctype,
-            $r->category,
-            $r->ecn_no ?? '',
-            $r->revision_no ?? '',
-            $r->part_group,
-            $r->receipt_date ? \Carbon\Carbon::parse($r->receipt_date)->format('Y-m-d') : '',
-            $r->upload_date ? \Carbon\Carbon::parse($r->upload_date)->format('Y-m-d') : '',
-            $isFinish,
+            'customer'     => $r->customer,
+            'model'        => $r->model,
+            'part_no'      => $r->part_no,
+            'part_name'    => $r->part_name,
+            'doctype'      => $r->doctype,
+            'category'     => $r->category,
+            'ecn_no'       => $r->ecn_no ?? '-',
+            'revision_no'  => $r->revision_no ?? '0',
+            'part_group'   => $r->part_group ?? '-',
+            'receipt_date' => $r->receipt_date ? Carbon::parse($r->receipt_date)->format('Y-m-d') : '-',
+            'upload_date'  => $r->upload_date ? Carbon::parse($r->upload_date)->format('Y-m-d') : '-',
+            'is_finish'    => $isFinishStatus,
         ];
     }
 
-    $export = new ApprovalSummaryExport($rows, $generatedAt->format('Y-m-d H:i'));
-    $filename = 'approval-summary-' . $generatedAt->format('Ymd_His') . '.xlsx';
-
-    return \Maatwebsite\Excel\Facades\Excel::download($export, $filename);
+    // =========================================================================
+    // 7. Export Excel
+    // =========================================================================
+    return Excel::download(
+        new ApprovalSummaryExport($rows, now()->format('Y-m-d H:i')), 
+        'approval-summary-' . now()->format('Ymd_His') . '.xlsx'
+    );
 }
 
 

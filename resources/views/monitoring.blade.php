@@ -140,18 +140,20 @@
                     <span>Phase Status</span>
                 </div>
                 <div x-data="{ tooltipVisible: false }" class="relative">
-                    <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-xs cursor-pointer mt-1"></i>
+                    <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-md cursor-pointer mt-1"></i>
                     <div x-show="tooltipVisible"
-                         x-transition:enter="transition ease-out duration-200"
-                         x-transition:enter-start="opacity-0 translate-y-2"
-                         x-transition:enter-end="opacity-100 translate-y-0"
-                         x-transition:leave="transition ease-in duration-150"
-                         x-transition:leave-start="opacity-100 translate-y-0"
-                         x-transition:leave-end="opacity-0 translate-y-2"
-                         style="display: none;"
-                         class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 translate-y-2"
+                        style="display: none;"
+                        class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
                         <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 right-2"></div>
-                        <p class="text-gray-200 dark:text-gray-300">Shows the distribution of document statuses (e.g., Mass Pro, Development, Pilot) based on the current filters.</p>
+                        <p class="text-gray-200 dark:text-gray-300">1. Feasibility status : Drawing for phase initial study, costing, and no LOI yet <br>
+                            2. New Project : Drawing for phase Product & Tooling development <br>
+                            3. Regular : Drawing for phase Mass production.</p>
                     </div>
                 </div>
             </h3>
@@ -169,16 +171,16 @@
                     <i class="fa-solid fa-arrow-trend-up text-purple-500"></i>
                     <span>Trend Upload & Download</span>
                     <div x-data="{ tooltipVisible: false }" class="relative">
-                        <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-xs cursor-pointer"></i>
+                        <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-md cursor-pointer"></i>
                         <div x-show="tooltipVisible"
-                             x-transition:enter="transition ease-out duration-200"
-                             x-transition:enter-start="opacity-0 translate-y-2"
-                             x-transition:enter-end="opacity-100 translate-y-0"
-                             x-transition:leave="transition ease-in duration-150"
-                             x-transition:leave-start="opacity-100 translate-y-0"
-                             x-transition:leave-end="opacity-0 translate-y-2"
-                             style="display: none;"
-                             class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full left-0 mt-2">
+                            x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0 translate-y-2"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-150"
+                            x-transition:leave-start="opacity-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 translate-y-2"
+                            style="display: none;"
+                            class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full left-0 mt-2">
                             <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 left-2"></div>
                             <p class="text-gray-200 dark:text-gray-300">Shows the monthly trend of document uploads and downloads for the selected year.</p>
                         </div>
@@ -250,16 +252,16 @@
                     <span>Eco Impact</span>
                 </div>
                 <div x-data="{ tooltipVisible: false }" class="relative">
-                    <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-xs cursor-pointer mt-1"></i>
+                    <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-md cursor-pointer mt-1"></i>
                     <div x-show="tooltipVisible"
-                         x-transition:enter="transition ease-out duration-200"
-                         x-transition:enter-start="opacity-0 translate-y-2"
-                         x-transition:enter-end="opacity-100 translate-y-0"
-                         x-transition:leave="transition ease-in duration-150"
-                         x-transition:leave-start="opacity-100 translate-y-0"
-                         x-transition:leave-end="opacity-0 translate-y-2"
-                         style="display: none;"
-                         class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 translate-y-2"
+                        style="display: none;"
+                        class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
                         <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 right-2"></div>
                         <p class="text-gray-200 dark:text-gray-300">Eco Impact is calculated based on the number of documents uploaded to the system, representing the estimated environmental savings from not printing these documents.</p>
                     </div>
@@ -270,18 +272,18 @@
 
                 <div class="relative w-36 h-36 flex-shrink-0 flex items-center justify-center mx-auto lg:mx-0">
                     <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="8" fill="transparent"
+                        <circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="10" fill="transparent"
                             class="text-emerald-50 dark:text-emerald-900/20" stroke-dasharray="264" stroke-dashoffset="0"
                             stroke-linecap="round" />
-                        <circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="8" fill="transparent"
-                            class="text-emerald-500" stroke-dasharray="264" stroke-dashoffset="261.36"
+                        <circle id="ecoProgressCircle" cx="50" cy="50" r="42" stroke="currentColor" stroke-width="10" fill="transparent"
+                            class="text-emerald-500 transition-all duration-1000 ease-out" stroke-dasharray="264" stroke-dashoffset="264"
                             stroke-linecap="round" />
                     </svg>
                     <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-                        <span class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 leading-tight mb-1">1%<br>towards 1 Tree</span>
+                        <span id="ecoTreePercent" class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 leading-tight mb-1">0%<br>towards 1 Tree</span>
                         <i class="fa-solid fa-seedling text-3xl text-emerald-600 dark:text-emerald-400 my-1 filter drop-shadow-sm"></i>
                         <div class="flex flex-col leading-tight mt-1">
-                            <span class="text-sm font-bold text-gray-800 dark:text-gray-100">0.00098</span>
+                            <span id="ecoTrees" class="text-sm font-bold text-gray-800 dark:text-gray-100">0</span>
                             <span class="text-[9px] text-gray-400 uppercase tracking-wide">Trees Saved</span>
                         </div>
                     </div>
@@ -289,32 +291,32 @@
 
                 <div class="flex flex-col gap-3 w-full lg:flex-1 justify-center">
 
-                    <div class="flex items-center p-1 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800">
+                    <div class="flex items-center p-1.5 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800">
                         <div class="w-10 h-10 flex-shrink-0 rounded-lg flex items-center justify-center text-green-600 dark:text-green-300">
                             <i class="fa-solid fa-scroll text-lg"></i>
                         </div>
                         <div class="flex items-center gap-2 min-w-0 flex-1 ml-2">
-                            <span class="text-base font-bold text-gray-800 dark:text-gray-100">78</span>
+                            <span id="ecoPaper" class="text-base font-bold text-gray-800 dark:text-gray-100">0</span>
                             <span class="text-xs text-green-700 dark:text-green-400 font-medium">Paper</span>
                         </div>
                     </div>
 
-                    <div class="flex items-center p-1 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800">
+                    <div class="flex items-center p-1.5 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800">
                         <div class="w-10 h-10 flex-shrink-0 rounded-lg flex items-center justify-center text-yellow-500 dark:text-yellow-300">
                             <i class="fa-solid fa-coins text-lg"></i>
                         </div>
                         <div class="flex items-center gap-2 min-w-0 flex-1 ml-2">
-                            <span class="text-base font-bold text-gray-800 dark:text-gray-100">Rp 14.5K</span>
+                            <span class="text-base font-bold text-gray-800 dark:text-gray-100">Rp <span id="ecoCost">0</span></span>
                             <span class="text-xs text-yellow-700 dark:text-yellow-400 font-medium">Cost Save</span>
                         </div>
                     </div>
 
-                    <div class="flex items-center p-1 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-100 dark:border-cyan-800">
+                    <div class="flex items-center p-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-100 dark:border-cyan-800">
                         <div class="w-10 h-10 flex-shrink-0 rounded-lg flex items-center justify-center text-cyan-600 dark:text-cyan-300">
                             <i class="fa-solid fa-wind text-lg"></i>
                         </div>
                         <div class="flex items-center gap-2 min-w-0 flex-1 ml-2">
-                            <span class="text-base font-bold text-gray-800 dark:text-gray-100">0.02 Kg</span>
+                            <span id="ecoCO2" class="text-base font-bold text-gray-800 dark:text-gray-100">0 Kg</span>
                             <span class="text-xs text-cyan-700 dark:text-cyan-400 font-medium">CO2</span>
                         </div>
                     </div>
@@ -330,16 +332,16 @@
                     <span>Activity Log</span>
                 </div>
                 <div x-data="{ tooltipVisible: false }" class="relative">
-                    <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-xs cursor-pointer mt-1"></i>
+                    <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-md cursor-pointer mt-1"></i>
                     <div x-show="tooltipVisible"
-                         x-transition:enter="transition ease-out duration-200"
-                         x-transition:enter-start="opacity-0 translate-y-2"
-                         x-transition:enter-end="opacity-100 translate-y-0"
-                         x-transition:leave="transition ease-in duration-150"
-                         x-transition:leave-start="opacity-100 translate-y-0"
-                         x-transition:leave-end="opacity-0 translate-y-2"
-                         style="display: none;"
-                         class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 translate-y-2"
+                        style="display: none;"
+                        class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
                         <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 right-2"></div>
                         <p class="text-gray-200 dark:text-gray-300">Displays recent user activities in the system, such as uploads, approvals, and shares, based on the current filters.</p>
                     </div>
@@ -531,6 +533,8 @@
             try {
                 const params = this.getFilterParams();
                 const response = await fetch(`{{ route('api.get-save-env') }}?${params.toString()}`);
+                if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
+                
                 const data = await response.json();
 
                 const getVal = (val) => {
@@ -539,43 +543,74 @@
                     return 0;
                 };
 
-                const elPaper = document.getElementById('ecoPaper');
-                if (elPaper) {
-                    this.animateCount(elPaper, getVal(data.paper), '', 0);
-                }
+                // Get values from data
+                const paperVal = getVal(data.paper);
+                const costVal = getVal(data.harga);
+                const treeVal = getVal(data.save_tree);
+                const co2Val = getVal(data.co2_reduced);
 
+                // 1. Update Paper
+                const elPaper = document.getElementById('ecoPaper');
+                if (elPaper) this.animateCount(elPaper, paperVal, '', 0);
+
+                // 2. Update Cost
                 const elCost = document.getElementById('ecoCost');
                 if (elCost) {
-                    let harga = getVal(data.harga);
-                    let displayVal = harga;
+                    let displayVal = costVal;
                     let suffix = '';
                     let dec = 0;
 
-                    if (harga >= 1000000) {
-                        displayVal = harga / 1000000;
+                    if (costVal >= 1000000000) {
+                        displayVal = costVal / 1000000000;
+                        suffix = ' M';
+                        dec = 2;
+                    } else if (costVal >= 1000000) {
+                        displayVal = costVal / 1000000;
                         suffix = 'Jt';
-                        dec = 1;
-                    } else if (harga >= 1000) {
-                        displayVal = harga / 1000;
+                        dec = 2;
+                    } else if (costVal >= 1000) {
+                        displayVal = costVal / 1000;
                         suffix = 'K';
                         dec = 1;
                     }
-
                     this.animateCount(elCost, displayVal, suffix, dec);
                 }
 
+                // 3. Update Trees Saved
                 const elTrees = document.getElementById('ecoTrees');
-                if (elTrees) {
-                    this.animateCount(elTrees, getVal(data.save_tree), '', 5);
-                }
+                if (elTrees) this.animateCount(elTrees, treeVal, '', 5);
 
+                // 4. Update CO2 Reduced
                 const elCO2 = document.getElementById('ecoCO2');
-                if (elCO2) {
-                    this.animateCount(elCO2, getVal(data.co2_reduced), '', 3);
+                if (elCO2) this.animateCount(elCO2, co2Val, ' Kg', 3);
+
+                // 5. Update Progress Circle & Percentage
+                const elTreePercent = document.getElementById('ecoTreePercent');
+                const elProgressCircle = document.getElementById('ecoProgressCircle');
+                if (elTreePercent && elProgressCircle) {
+                    const treeProgress = Math.min(treeVal, 1); // Cap at 1 tree (100%)
+                    const percentage = treeProgress * 100;
+                    
+                    elTreePercent.innerHTML = `${percentage.toFixed(1)}%<br>towards 1 Tree`;
+
+                    const circumference = 264;
+                    const offset = circumference * (1 - treeProgress);
+                    
+                    elProgressCircle.style.transition = 'stroke-dashoffset 1.5s ease-out';
+                    requestAnimationFrame(() => {
+                        elProgressCircle.setAttribute('stroke-dashoffset', offset);
+                    });
                 }
 
             } catch (error) {
                 console.error("Failed to load environment stats", error);
+                // Reset to 0 on error
+                document.getElementById('ecoPaper').textContent = '0';
+                document.getElementById('ecoCost').textContent = '0';
+                document.getElementById('ecoTrees').textContent = '0';
+                document.getElementById('ecoCO2').textContent = '0 Kg';
+                document.getElementById('ecoTreePercent').innerHTML = '0%<br>towards 1 Tree';
+                document.getElementById('ecoProgressCircle').setAttribute('stroke-dashoffset', 264);
             }
         }
 
