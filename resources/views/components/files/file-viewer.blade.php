@@ -404,7 +404,7 @@
                     </div>
                     <h4 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">Image Loading Failed</h4>
                     <p class="text-[11px] text-gray-500 dark:text-gray-400 mb-4 max-w-[240px] leading-relaxed line-clamp-2" x-text="imgError"></p>
-                    <button @click="loadFile(selectedFile)" 
+                    <button @click="loadFile(selectedFile, true)" 
                         class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-md text-[11px] font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-all shadow-sm">
                         <i class="fa-solid fa-rotate-right"></i> Try Again
                     </button>
@@ -543,7 +543,7 @@
                     </div>
                     <h4 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">PDF Loading Failed</h4>
                     <p class="text-[11px] text-gray-500 dark:text-gray-400 mb-4 max-w-[240px] leading-relaxed line-clamp-2" x-text="pdfError"></p>
-                    <button @click="loadFile(selectedFile)" 
+                    <button @click="loadFile(selectedFile, true)" 
                         class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-md text-[11px] font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-all shadow-sm">
                         <i class="fa-solid fa-rotate-right"></i> Try Again
                     </button>
@@ -682,7 +682,7 @@
                     </div>
                     <h4 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">TIFF Loading Failed</h4>
                     <p class="text-[11px] text-gray-500 dark:text-gray-400 mb-4 max-w-[240px] leading-relaxed line-clamp-2" x-text="tifError"></p>
-                    <button @click="loadFile(selectedFile)" 
+                    <button @click="loadFile(selectedFile, true)" 
                         class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-md text-[11px] font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-all shadow-sm">
                         <i class="fa-solid fa-rotate-right"></i> Try Again
                     </button>
@@ -793,7 +793,7 @@
                     </div>
                     <h4 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">HPGL Rendering Failed</h4>
                     <p class="text-[11px] text-gray-500 dark:text-gray-400 mb-4 max-w-[240px] leading-relaxed line-clamp-2" x-text="hpglError"></p>
-                    <button @click="loadFile(selectedFile)" 
+                    <button @click="loadFile(selectedFile, true)" 
                         class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-md text-[11px] font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-all shadow-sm">
                         <i class="fa-solid fa-rotate-right"></i> Try Again
                     </button>

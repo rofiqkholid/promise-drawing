@@ -282,12 +282,15 @@ function fileViewerComponent(config = {}) {
         },
 
         // ===== FILE LOADING =====
-        loadFile(file) {
+        loadFile(file, force = false) {
             if (!file) return;
 
+            // Check if there are any active errors
+            const hasAnyError = this.imgError || this.pdfError || this.tifError || this.hpglError || (this.iges && this.iges.error);
+
             // Prevent redundant loading if it's the same file
-            // This also fixes the issue where imgLoading gets stuck because @load doesn't fire for identical src
-            if (this.lastLoadedUrl === file.url) {
+            // Unless forced or recovering from an error
+            if (!force && !hasAnyError && this.lastLoadedUrl === file.url) {
                 // If mirroring data from file to component (like blocks/masks), do it here without full reset
                 if (this.enableMasking) {
                     this.initBlocksForFile(file);

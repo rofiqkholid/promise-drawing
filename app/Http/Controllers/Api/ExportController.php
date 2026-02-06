@@ -538,6 +538,7 @@ class ExportController extends Controller
                 return [
                     'id'   => str_replace('=', '-', encrypt($rev->id)),
                     'revision' => "Rev-{$rev->revision_no}{$labelText}",
+                    'revision_no' => $rev->revision_no,
                     'is_obsolete' => (bool)($rev->is_obsolete ?? 0)
                 ];
             });
@@ -564,6 +565,10 @@ class ExportController extends Controller
             )
             ->first();
 
+        if (!$package) {
+            abort(404, 'Package details incomplete or not found.');
+        }
+
         $receiptDate = $revision->receipt_date
             ? Carbon::parse($revision->receipt_date)
             : null;
@@ -588,11 +593,18 @@ class ExportController extends Controller
                 'd.code as dept_name'
             ]);
 
+        $obsoleteDateText = null;
+        if ($obsoleteDate) {
+            try {
+                $obsoleteDateText = $obsoleteDate->toSaiStampFormat();
+            } catch (\Exception $e) {
+                $obsoleteDateText = $obsoleteDate->format('M d, Y');
+            }
+        }
+
         $obsoleteStampInfo = [
             'date_raw'  => $obsoleteDate?->toDateString(),
-            'date_text' => $obsoleteDate
-                ? $obsoleteDate->toSaiStampFormat()
-                : null,
+            'date_text' => $obsoleteDateText,
             'name' => $revision->obsolete_name
                 ?? optional($lastApproval)->approver_name
                 ?? '-',
@@ -645,6 +657,7 @@ class ExportController extends Controller
             ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
         $detail = [
+            'revision_no' => $revision->revision_no,
             'note' => $revision->note ?? null,
             'metadata' => [
                 'customer' => $package->customer,
@@ -741,6 +754,7 @@ class ExportController extends Controller
                 return [
                     'id'   => str_replace('=', '-', encrypt($rev->id)),
                     'revision' => "Rev-{$rev->revision_no}{$labelText}",
+                    'revision_no' => $rev->revision_no,
                     'is_obsolete' => (bool)($rev->is_obsolete ?? 0)
                 ];
             });
@@ -791,11 +805,18 @@ class ExportController extends Controller
                 'd.code as dept_name'
             ]);
 
+        $obsoleteDateText = null;
+        if ($obsoleteDate) {
+            try {
+                $obsoleteDateText = $obsoleteDate->toSaiStampFormat();
+            } catch (\Exception $e) {
+                $obsoleteDateText = $obsoleteDate->format('M d, Y');
+            }
+        }
+
         $obsoleteStampInfo = [
             'date_raw'  => $obsoleteDate?->toDateString(),
-            'date_text' => $obsoleteDate
-                ? $obsoleteDate->toSaiStampFormat()
-                : null,
+            'date_text' => $obsoleteDateText,
             'name' => $revision->obsolete_name
                 ?? optional($lastApproval)->approver_name
                 ?? '-',
@@ -847,7 +868,12 @@ class ExportController extends Controller
             })
             ->mapWithKeys(fn($items, $key) => [strtolower($key) => $items]);
 
+        if (!$package) {
+            return response()->json(['success' => false, 'message' => 'Package details incomplete or not found.'], 500);
+        }
+
         $detail = [
+            'revision_no' => $revision->revision_no,
             'note' => $revision->note ?? null,
             'metadata' => [
                 'customer' => $package->customer,

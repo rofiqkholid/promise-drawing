@@ -294,7 +294,8 @@
 
             initRevisionSelector() {
                 const $sel = $(this.$refs.revisionSelector);
-                const currentId = this.pkg?.id;
+                // Use revision_no for stable matching, as IDs are encrypted and change per request
+                const currentRevNo = this.pkg?.revision_no; 
                 const history = this.pkg?.revisionHistory || [];
 
                 // If no history data, don't initialize yet
@@ -302,13 +303,17 @@
                     console.warn('[ExportDetail] No revision history available');
                     return;
                 }
+                
+                // Find the history item that matches currentRevNo
+                const matchedItem = history.find(h => h.revision_no == currentRevNo);
+                const currentId = matchedItem ? matchedItem.id : null;
 
                 try {
                 $sel.select2({
                     width: '100%',
                     data: history.map((h, idx) => ({
                         id: h.id,
-                        text: `${h.revision} ${h.id == currentId ? '(Current)' : ''}`,
+                        text: h.revision,
                         revision: h.revision,
                         isLatest: idx === 0,
                         isObsolete: h.is_obsolete
@@ -338,21 +343,23 @@
                         $sel.val(history[0].id).trigger('change');
                     }
                     
-                    $sel.on('select2:select', (e) => this.switchRevision(e.params.data.id));
+                    $sel.off('select2:select').on('select2:select', (e) => this.switchRevision(e.params.data.id));
                 } catch (error) {
                     console.error('[ExportDetail] Error initializing Select2:', error);
                 }
             },
 
             async switchRevision(id) {
-                if (id == this.pkg?.id) return;
+                if (id == this.pkg?.id || this.isLoadingRevision) return;
                 
                 this.isLoadingRevision = true;
                 const url = `{{ route('api.export.revision-detail', ['id' => ':id']) }}`.replace(':id', id);
                 
                 try {
                     const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-                    if (!res.ok) throw new Error('Failed to fetch revision data');
+                    if (!res.ok) {
+                        throw new Error(`Failed to fetch revision data: ${res.status} ${res.statusText}`);
+                    }
                     
                     const response = await res.json();
                     
