@@ -275,6 +275,7 @@
             userDeptCode: @js($userDeptCode ?? null),
             userName: @js($userName ?? null),
             isEngineering: @js($isEngineering ?? false),
+            stampCopyBottomLine: 'Downloaded By {{ $userName ?? "--" }}'
         });
 
         return {

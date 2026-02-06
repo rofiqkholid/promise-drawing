@@ -702,7 +702,8 @@
       userName: @js($userName ?? null),
       isEngineering: @js($isEngineering ?? false),
       stampFormat: @js($stampFormats[0] ?? null),
-      enableMasking: true
+      enableMasking: true,
+      stampCopyBottomLine: 'External - Distributed To Supplier'
     });
 
     return {

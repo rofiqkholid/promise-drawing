@@ -853,13 +853,18 @@ class ShareController extends Controller
             ->orderBy('id')
             ->get();
 
-        $isEngineering = false;
+        $userDeptCode = null;
+        $userName = null;
         
-        // Cek user login (jika ada) untuk menentukan warna stamp
-        if (Auth::check() && Auth::user()->id_dept) {
-            $dept = DB::table('departments')->where('id', Auth::user()->id_dept)->first();
-            if ($dept) {
-                $isEngineering = (bool) ($dept->is_eng ?? false);
+        if (Auth::check()) {
+            $user = Auth::user();
+            $userName = $user->name;
+            if ($user->id_dept) {
+                $dept = DB::table('departments')->where('id', $user->id_dept)->first();
+                if ($dept) {
+                    $userDeptCode = $dept->code;
+                    $isEngineering = (bool) ($dept->is_eng ?? false);
+                }
             }
         }
 
@@ -869,6 +874,8 @@ class ShareController extends Controller
             'detail'        => $detail,
             'stampFormats'  => $stampFormats,
             'isEngineering' => $isEngineering,
+            'userDeptCode'  => $userDeptCode,
+            'userName'      => $userName,
         ]);
     }
 

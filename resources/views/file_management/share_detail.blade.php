@@ -460,12 +460,24 @@
 
     /* ========== Alpine Component ========== */
     function shareDetail() {
+      // Get supplier code for stamp
+      const shares = @js($detail['shares'] ?? []);
+      const suppCode = (Array.isArray(shares) && shares.length > 0) 
+        ? (shares[0].supplier_code || '--') 
+        : (typeof shares === 'object' && Object.keys(shares).length > 0)
+            ? (Object.values(shares)[0].supplier_code || '--')
+            : '--';
+
       // Initialize viewer from mixin
       const viewer = fileViewerComponent({
             pkg: @js($detail),
             stampFormat: @js($detail['stamp_formats'] ?? []),
             showStampConfig: true,
-            enableMasking: true
+            enableMasking: true,
+            userDeptCode: @js($userDeptCode ?? null),
+            userName: @js($userName ?? null),
+            isEngineering: @js($isEngineering ?? false),
+            stampCopyBottomLine: `External - Distributed To Supplier ${suppCode}`
       });
 
       return {
