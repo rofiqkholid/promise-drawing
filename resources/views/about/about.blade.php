@@ -20,7 +20,7 @@
     </div>
 
     {{-- CARD CONTAINER --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden min-h-[500px]">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden min-h-[500px]">
 
         {{-- TAB NAVIGATION --}}
         <div class="border-b border-gray-200 bg-gray-50/50">
@@ -28,7 +28,7 @@
                 <button type="button"
                     class="tab-btn group inline-flex items-center py-5 px-1 border-b-2 font-medium text-sm transition-all duration-200 border-blue-600 text-blue-600"
                     onclick="showTab('overview', this)">
-                    <span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center mr-3 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                    <span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center mr-3">
                         <i class="fa-solid fa-layer-group"></i>
                     </span>
                     Overview
@@ -37,7 +37,7 @@
                 <button type="button"
                     class="tab-btn group inline-flex items-center py-5 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-all duration-200"
                     onclick="showTab('logo', this)">
-                    <span class="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center mr-3 group-hover:bg-gray-600 group-hover:text-white transition-colors">
+                    <span class="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center mr-3">
                         <i class="fa-solid fa-image"></i>
                     </span>
                     Logo & Identity
@@ -46,7 +46,7 @@
                 <button type="button"
                     class="tab-btn group inline-flex items-center py-5 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-all duration-200"
                     onclick="showTab('help', this)">
-                    <span class="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center mr-3 group-hover:bg-gray-600 group-hover:text-white transition-colors">
+                    <span class="w-8 h-8 rounded-lg bg-gray-100 text-gray-500 flex items-center justify-center mr-3">
                         <i class="fa-solid fa-life-ring"></i>
                     </span>
                     Help Center
@@ -95,7 +95,7 @@
 
                     {{-- Left Side: Main Content --}}
                     <div class="xl:col-span-8 space-y-10">
-                        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+                        <div class="bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
                             <label class="text-xs font-bold text-gray-400 uppercase tracking-wider">
                                 Application Name
                             </label>
@@ -125,7 +125,7 @@
                         </div> -->
 
 
-                        <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+                        <div class="bg-white border border-gray-200 rounded-lg p-8 shadow-sm">
                             <label class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 block">
                                 System Description
                             </label>
