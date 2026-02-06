@@ -305,12 +305,12 @@ $(function () {
       },
       order: [[ 8, 'desc' ]],
       language: {
-          info: `<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100/50 dark:border-indigo-800/50 shadow-sm transition-all hover:bg-indigo-50 dark:hover:bg-indigo-900/40">
-                    <i class="fa-solid fa-database text-indigo-500 text-[10px]"></i>
+          info: `<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100/50 dark:border-blue-800/50 shadow-sm transition-all hover:bg-blue-50 dark:hover:bg-blue-900/40">
+                    <i class="fa-solid fa-database text-blue-500 text-[10px]"></i>
                     <span class="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase tracking-tight">Records</span>
                     <span class="text-gray-900 dark:text-gray-100 text-[11px] font-black font-mono">_START_-_END_</span>
                     <span class="text-gray-300 dark:text-gray-600">/</span>
-                    <span class="text-indigo-600 dark:text-indigo-400 text-[11px] font-black font-mono">_TOTAL_</span>
+                    <span class="text-blue-600 dark:text-blue-400 text-[11px] font-black font-mono">_TOTAL_</span>
                  </div>`,
           infoEmpty: "No Records Found",
           infoFiltered: "",
@@ -373,7 +373,7 @@ $(function () {
                
                 let labelBadges = '';
                 if(row.revision_label_name) {
-                    labelBadges = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 mr-1 whitespace-nowrap">${row.revision_label_name}</span>`;
+                    labelBadges = `<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800 mr-1 whitespace-nowrap">${row.revision_label_name}</span>`;
                 }
                 
                 return `
@@ -945,7 +945,7 @@ $(function () {
                     title = 'Downloaded';
                 } else if (code.includes('SHARE')) {
                     icon = 'fa-share-nodes';
-                    colorClass = 'bg-indigo-100 text-indigo-600';
+                    colorClass = 'bg-blue-100 text-blue-600';
                     title = 'Shared';
                 } else if (code === 'REVISE_CONFIRM') {
                     icon = 'fa-pen-to-square';
@@ -1195,7 +1195,7 @@ $(function () {
                   </div>
 
                   <div class="p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-                      <button id="pkg-close-btn-2" class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600">
+                      <button id="pkg-close-btn-2" class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600">
                           <i class="fa-solid fa-xmark"></i>
                           Close
                       </button>

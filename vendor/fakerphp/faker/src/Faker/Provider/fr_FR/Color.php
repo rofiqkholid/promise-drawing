@@ -23,7 +23,7 @@ class Color extends \Faker\Provider\Color
         'Chaudron', 'Chocolat', 'Cinabre', 'Citrouille', "Coquille d'œuf", 'Corail', 'Cramoisi', 'Cuisse de nymphe', 'Cuivre',
         'Cyan', 'Écarlate', 'Écru', 'Émeraude', 'Fauve', 'Flave', 'Fraise', 'Fraise écrasée', 'Framboise', 'Fuchsia', 'Fumée',
         'Garance (pigment)', 'Glauque', 'Glycine', 'Grège', 'Grenadine', 'Grenat', 'Gris acier', 'Gris de Payne', 'Gris fer',
-        'Gris perle', 'Gris souris', 'Groseille', 'Gueules', 'Héliotrope', 'Incarnat', 'Indigo', 'Indigo', 'Isabelle',
+        'Gris perle', 'Gris souris', 'Groseille', 'Gueules', 'Héliotrope', 'Incarnat', 'blue', 'blue', 'Isabelle',
         'Jaune canari', 'Jaune citron', "Jaune d'or", 'Jaune de cobalt', 'Jaune de Mars', 'Jaune de Naples', 'Jaune impérial',
         'Jaune mimosa', 'Lapis-lazuli', 'Lavallière', 'Lavande', 'Lie de vin', 'Lilas', 'Lime ou vert citron', 'Lin', 'Magenta',
         'Maïs', 'Malachite', 'Mandarine', 'Marron', 'Mastic', 'Mauve', 'Menthe', 'Moutarde', 'Nacarat', 'Nankin', 'Noisette',

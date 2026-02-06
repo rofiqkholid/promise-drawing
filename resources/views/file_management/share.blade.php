@@ -37,7 +37,7 @@
     {{-- KPI Row (Full Width Top) --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         @foreach([
-            ['id' => 'totalShared',   'label' => 'Total Shared',  'icon' => 'fa-share-nodes',    'color' => 'indigo'],
+            ['id' => 'totalShared',   'label' => 'Total Shared',  'icon' => 'fa-share-nodes',    'color' => 'blue'],
             ['id' => 'totalActive',   'label' => 'Active',        'icon' => 'fa-check-circle',   'color' => 'green'],
             ['id' => 'totalExpired',  'label' => 'Expired',       'icon' => 'fa-clock-rotate-left', 'color' => 'red'],
             ['id' => 'totalRequest',  'label' => 'Pending Request','icon' => 'fa-envelope-open-text', 'color' => 'blue']
@@ -60,10 +60,10 @@
             <div class="bg-white dark:bg-gray-800 p-5 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm sticky top-24">
                 <div class="flex items-center justify-between mb-5 border-b border-gray-100 dark:border-gray-700 pb-3">
                     <div class="flex items-center gap-2">
-                        <div class="w-1 h-4 bg-indigo-500 rounded-full"></div>
+                        <div class="w-1 h-4 bg-blue-500 rounded-full"></div>
                         <h3 class="font-bold text-gray-900 dark:text-gray-100 text-[11px] uppercase tracking-wider">Activity Log</h3>
                     </div>
-                    <button onclick="loadHistory()" class="text-[10px] text-gray-400 hover:text-indigo-500 transition-colors">
+                    <button onclick="loadHistory()" class="text-[10px] text-gray-400 hover:text-blue-500 transition-colors">
                         <i class="fa-solid fa-arrows-rotate"></i>
                     </button>
                 </div>
@@ -85,7 +85,7 @@
                         <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 px-0.5">Search Package</label>
                         <div class="relative group">
                             <input type="text" id="custom-share-search" 
-                                class="block w-full pl-9 pr-4 py-2 bg-gray-50/50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600 rounded-md text-xs font-semibold focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all dark:text-gray-100 group-hover:border-indigo-300 dark:group-hover:border-indigo-500/50 placeholder:font-normal"
+                                class="block w-full pl-9 pr-4 py-2 bg-gray-50/50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600 rounded-md text-xs font-semibold focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all dark:text-gray-100 group-hover:border-blue-300 dark:group-hover:border-blue-500/50 placeholder:font-normal"
                                 placeholder="ECN, Part No, or Model...">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i id="share-search-icon" class="fa-solid fa-magnifying-glass text-gray-400 text-[10px]"></i>
@@ -106,7 +106,7 @@
                     @endforeach
 
                     <div class="flex-shrink-0 mb-0.5">
-                        <button id="btnResetFilters" class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-md transition-all h-[34px] w-[34px] flex items-center justify-center border border-transparent hover:border-indigo-100 dark:hover:border-indigo-500/30" title="Reset Filters">
+                        <button id="btnResetFilters" class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-all h-[34px] w-[34px] flex items-center justify-center border border-transparent hover:border-blue-100 dark:hover:border-blue-500/30" title="Reset Filters">
                             <i class="fa-solid fa-rotate-left text-xs"></i>
                         </button>
                     </div>
@@ -485,7 +485,7 @@
                             const json = JSON.stringify(data).replace(/"/g, '&quot;');
                             return `
                                 <button type="button" 
-                                    class="btn-view-shares inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-900/30 rounded-md hover:bg-indigo-600 hover:text-white transition-all border border-indigo-100 dark:border-indigo-800"
+                                    class="btn-view-shares inline-flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-900/30 rounded-md hover:bg-blue-600 hover:text-white transition-all border border-blue-100 dark:border-blue-800"
                                     data-shares="${json}">
                                     <i class="fa-solid fa-eye text-[8px]"></i> ${data.length} Recipients
                                 </button>
@@ -501,7 +501,7 @@
                             return `
                                 <button 
                                     type="button" 
-                                    class="btn-share p-2 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 rounded-full transition-colors"
+                                    class="btn-share p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/40 rounded-full transition-colors"
                                     data-id="${packageId}" 
                                     title="Share package">
                                     <i class="fa-solid fa-share-nodes"></i>
@@ -540,12 +540,12 @@
             $('#custom-share-search').on('keyup', function() {
                 clearTimeout(searchTimer);
                 const $icon = $('#share-search-icon');
-                $icon.removeClass('fa-magnifying-glass').addClass('fa-spinner fa-spin text-indigo-500');
+                $icon.removeClass('fa-magnifying-glass').addClass('fa-spinner fa-spin text-blue-500');
                 
                 searchTimer = setTimeout(() => {
                     table.ajax.reload();
                     loadKpis();
-                    $icon.removeClass('fa-spinner fa-spin text-indigo-500').addClass('fa-magnifying-glass');
+                    $icon.removeClass('fa-spinner fa-spin text-blue-500').addClass('fa-magnifying-glass');
                 }, 500);
             });
         }
@@ -597,10 +597,10 @@
                     
                     const node = `
                         <div class="relative pl-6 pb-6 border-l border-gray-100 dark:border-gray-700 last:pb-0">
-                            <div class="absolute left-0 top-1 -translate-x-1/2 w-2 h-2 rounded-full bg-indigo-500 ring-4 ring-white dark:ring-gray-800"></div>
+                            <div class="absolute left-0 top-1 -translate-x-1/2 w-2 h-2 rounded-full bg-blue-500 ring-4 ring-white dark:ring-gray-800"></div>
                             <div class="flex flex-col gap-1.5">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-tight">${log.user}</span>
+                                    <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tight">${log.user}</span>
                                     <span class="text-[9px] text-gray-400 font-medium" title="${log.full_time}">${log.time}</span>
                                 </div>
                                 
@@ -687,7 +687,7 @@
                 const item = `
                     <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold text-[10px] border border-indigo-100 dark:border-indigo-800">
+                            <div class="w-8 h-8 rounded bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-[10px] border border-blue-100 dark:border-blue-800">
                                 ${initials}
                             </div>
                             <div>

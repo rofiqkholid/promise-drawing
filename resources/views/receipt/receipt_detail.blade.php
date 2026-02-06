@@ -71,7 +71,7 @@
                              <div class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-sm">
                                 <span x-text="pkg.metadata?.revision || 'Rev —'"></span>
                              </div>
-                             <div x-show="pkg.metadata?.ecn_no" class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shadow-sm">
+                             <div x-show="pkg.metadata?.ecn_no" class="inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800 shadow-sm">
                                 <span x-text="pkg.metadata?.ecn_no"></span>
                              </div>
                         </div>
@@ -145,7 +145,7 @@
             <div class="grid grid-cols-1 gap-6">
                 <template x-for="section in [
                     {key: '2d', title: '2D Drawings', icon: 'fa-drafting-compass', color: 'blue'},
-                    {key: '3d', title: '3D Models', icon: 'fa-cubes', color: 'indigo'},
+                    {key: '3d', title: '3D Models', icon: 'fa-cubes', color: 'blue'},
                     {key: 'ecn', title: 'ECN / Documents', icon: 'fa-file-lines', color: 'amber'}
                 ]" :key="section.key">
                     
@@ -265,7 +265,7 @@
                         'xls': 'fa-file-excel text-green-600', 'xlsx': 'fa-file-excel text-green-600',
                         'doc': 'fa-file-word text-blue-500', 'docx': 'fa-file-word text-blue-500',
                         'zip': 'fa-file-zipper text-gray-500', 'rar': 'fa-file-zipper text-gray-500',
-                        'dwg': 'fa-file-pen text-blue-500', 'step': 'fa-cube text-indigo-500', 'stp': 'fa-cube text-indigo-500'
+                        'dwg': 'fa-file-pen text-blue-500', 'step': 'fa-cube text-blue-500', 'stp': 'fa-cube text-blue-500'
                     };
                     return map[ext] || 'fa-file text-gray-400';
                 },

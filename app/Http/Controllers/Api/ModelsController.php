@@ -30,7 +30,7 @@ class ModelsController extends Controller
             });
         }
 
-        // (Opsional) filter status_id langsung dari dropdown
+        // (Optional) filter status_id directly from dropdown
         if ($request->filled('status_id')) {
             $query->where('models.status_id', $request->status_id);
         }
@@ -44,7 +44,7 @@ class ModelsController extends Controller
         $sortName = $columns[$sortBy]['name'] ?? null;
         $sortKey  = $sortName === 'customer' ? 'customer' : $sortData;
 
-        // allowlist mapping supaya aman
+        // allowlist mapping for security
         $sortMap = [
             'name'          => 'models.name',
             'customer'      => 'customers.code',
@@ -54,7 +54,7 @@ class ModelsController extends Controller
         ];
         $sortColumn = $sortMap[$sortKey] ?? 'models.name';
 
-        // join dinamis hanya bila perlu
+        // dynamic join only when needed
         if (str_starts_with($sortColumn, 'customers.')) {
             $query->leftJoin('customers', 'models.customer_id', '=', 'customers.id')
                   ->select('models.*');
@@ -72,7 +72,7 @@ class ModelsController extends Controller
         $draw    = (int) $request->get('draw', 1);
 
         $totalRecords    = Models::count();
-        // penting: distinct untuk menghindari duplikasi dari join
+        // important: distinct to avoid duplication from joins
         $filteredRecords = (clone $query)->distinct('models.id')->count('models.id');
         $models          = $query->skip($start)->take($perPage)->get();
 
@@ -88,7 +88,7 @@ class ModelsController extends Controller
      *  Select2 server-side (AJAX)
      *  ========================= */
 
-    // Customer: label = code saja, value = id
+    // Customer: label = code only, value = id
     public function customersSelect2(Request $request)
     {
         $q       = trim($request->get('q', ''));
@@ -136,14 +136,14 @@ class ModelsController extends Controller
     }
 
     /*** =========================
-     *  Endpoint lama (opsional)
+     *  Old endpoint (optional)
      *  ========================= */
 
     public function getCustomers()
     {
         $customers = Customers::select('id','code')->get()->map(fn($c) => [
             'id'   => $c->id,
-            'name' => $c->code, // tampilkan code saja
+            'name' => $c->code, // show code only
         ]);
         return response()->json($customers);
     }
@@ -172,7 +172,7 @@ class ModelsController extends Controller
         return response()->json(['success' => true, 'message' => 'Model created successfully.']);
     }
 
-    // Kembalikan field tambahan untuk prefill modal edit
+    // Return additional fields to prefill edit modal
     public function show(Models $model)
     {
         $model->load(['customer','status']);
@@ -181,9 +181,9 @@ class ModelsController extends Controller
             'id'            => $model->id,
             'name'          => $model->name,
             'customer_id'   => $model->customer_id,
-            'customer_code' => $model->customer?->code,   // label Select2 saat edit (code saja)
+            'customer_code' => $model->customer?->code,   // Select2 label on edit (code only)
             'status_id'     => $model->status_id,
-            'status_name'   => $model->status?->name,     // label Select2 status
+            'status_name'   => $model->status?->name,     // Select2 status label
             'planning'      => $model->planning,          // integer
         ]);
     }

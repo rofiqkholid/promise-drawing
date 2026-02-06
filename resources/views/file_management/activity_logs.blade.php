@@ -321,7 +321,7 @@
                 'REJECT': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
                 'DOWNLOAD': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
                 'SUBMIT_APPROVAL': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-                'SHARE_PACKAGE': 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300',
+                'SHARE_PACKAGE': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
                 'SHARE_INTERNAL': 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300',
                 'ROLLBACK': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
                 'REVISE_CONFIRM': 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300',
@@ -420,7 +420,7 @@
 
                 return `
                         <div class="flex flex-col">
-                            <span class="${mainTextClass} text-indigo-600 dark:text-indigo-400">
+                            <span class="${mainTextClass} text-blue-600 dark:text-blue-400">
                                 <i class="fa-solid fa-share-nodes mr-1"></i> Shared Package
                             </span>
                             <div class="${subTextClass}" title="${target}">

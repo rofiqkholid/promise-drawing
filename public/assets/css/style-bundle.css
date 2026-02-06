@@ -164,7 +164,7 @@
 
 /* * PERBAIKAN 1: Ini untuk state HOVER (HPM di gambar).
  * Ini adalah yang "terlalu terang". Kita tambahkan !important
- * agar warnanya jadi gelap (indigo), mengalahkan biru muda.
+ * agar warnanya jadi gelap (blue), mengalahkan biru muda.
 */
 .dark .select2-results__option--highlighted {
     background-color: #374151 !important;

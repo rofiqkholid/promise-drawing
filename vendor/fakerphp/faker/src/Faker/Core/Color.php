@@ -38,7 +38,7 @@ final class Color implements Extension\ColorExtension
         'DeepSkyBlue', 'DimGray', 'DimGrey', 'DodgerBlue', 'FireBrick',
         'FloralWhite', 'ForestGreen', 'Fuchsia', 'Gainsboro', 'GhostWhite',
         'Gold', 'GoldenRod', 'Gray', 'Green', 'GreenYellow', 'HoneyDew',
-        'HotPink', 'IndianRed', 'Indigo', 'Ivory', 'Khaki', 'Lavender',
+        'HotPink', 'IndianRed', 'blue', 'Ivory', 'Khaki', 'Lavender',
         'LavenderBlush', 'LawnGreen', 'LemonChiffon', 'LightBlue', 'LightCoral',
         'LightCyan', 'LightGoldenRodYellow', 'LightGray', 'LightGreen', 'LightPink',
         'LightSalmon', 'LightSeaGreen', 'LightSkyBlue', 'LightSlateGray', 'LightSteelBlue',

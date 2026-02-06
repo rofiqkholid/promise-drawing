@@ -188,7 +188,7 @@ class FileExtensionsController extends Controller
 
 
     /**
-     * Memperbarui data yang ada.
+     * Update existing data.
      */
     public function update(Request $request, FileExtensions $fileExtension)
     {

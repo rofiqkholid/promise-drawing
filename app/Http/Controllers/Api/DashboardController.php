@@ -418,7 +418,7 @@ class DashboardController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Terjadi kesalahan pada server.',
+                'message' => 'An error occurred on the server.',
                 'error_detail' => $e->getMessage()
             ], 500);
         }

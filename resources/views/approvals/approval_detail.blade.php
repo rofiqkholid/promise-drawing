@@ -198,7 +198,7 @@
                     <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-download text-gray-600 text-xs"></i></div>
                   </template>
                   <template x-if="item.action.includes('share')">
-                    <div class="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-share-nodes text-indigo-600 text-xs"></i></div>
+                    <div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-share-nodes text-blue-600 text-xs"></i></div>
                   </template>
                   <template x-if="item.action === 'revise_confirm'">
                     <div class="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center ring-4 ring-white dark:ring-gray-800 z-10 relative"><i class="fa-solid fa-pen-to-square text-purple-600 text-xs"></i></div>

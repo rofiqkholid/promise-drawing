@@ -14,7 +14,7 @@ use App\Models\RoleMenu;
 class RoleMenuController extends Controller
 {
     /**
-     * Ambil seluruh menu + status permission untuk 1 user.
+     * Get all menus + permission status for 1 user.
      * GET /role-menu/by-user/{user}
      *
      * Response:
@@ -50,7 +50,7 @@ class RoleMenuController extends Controller
     }
 
     /**
-     * Sinkronkan seluruh akses menu user.
+     * Synchronize all user menu access.
      * POST /role-menu/by-user/{user}
      *
      * Body JSON:
@@ -78,12 +78,12 @@ class RoleMenuController extends Controller
         $keepIds = $enabled->pluck('menu_id')->map(fn ($v) => (int) $v)->values()->all();
 
         DB::transaction(function () use ($user, $enabled, $keepIds) {
-            // Hapus mapping yang tidak dikirim (dibersihkan)
+            // Delete mappings that are not sent (cleaned up)
             RoleMenu::where('user_id', $user->id)
                 ->when(count($keepIds) > 0, fn ($q) => $q->whereNotIn('menu_id', $keepIds))
                 ->delete();
 
-            // Upsert yang aktif — pakai Eloquent agar created_at & updated_at otomatis
+            // Upsert active ones — use Eloquent so created_at & updated_at are automatic
             foreach ($enabled as $it) {
                 RoleMenu::updateOrCreate(
                     [
@@ -104,7 +104,7 @@ class RoleMenuController extends Controller
     }
 
     /* ============================================================
-     *  ----  LEGACY (per-role) DIBUAT STUB/NOT USED  ----
+     *  ----  LEGACY (per-role) MADE AS STUB/NOT USED  ----
      * ============================================================ */
     public function dropdowns()      { return response()->json(['message' => 'Use /role-menu/by-user/{user} endpoints.'], 405); }
     public function data(Request $r) { return response()->json(['message' => 'Use /role-menu/by-user/{user} endpoints.'], 405); }

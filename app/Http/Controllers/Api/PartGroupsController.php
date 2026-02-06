@@ -39,7 +39,7 @@ class PartGroupsController extends Controller
                     ->orWhereHas('model', function ($mq) use ($search) {
                         $mq->where('name', 'like', "%{$search}%");
                     })
-                    ->orWhereHas('model.status', function ($sq) use ($search) { // search status juga
+                    ->orWhereHas('model.status', function ($sq) use ($search) { // search status too
                         $sq->where('name', 'like', "%{$search}%");
                     });
             });
@@ -86,8 +86,8 @@ class PartGroupsController extends Controller
                 return [
                     'id'                  => $pg->id,
                     'customer_code'       => optional($pg->customer)->code ?? '-',
-                    'model_name'          => $modelName,    // ⬅ hanya nama model
-                    'model_status'        => $statusName,   // ⬅ status dipisah
+                    'model_name'          => $modelName,    // ⬅ model name only
+                    'model_status'        => $statusName,   // ⬅ status separated
                     'code_part_group'     => $pg->code_part_group,
                     'planning'            => $pg->planning,
                     'code_part_group_desc' => $pg->code_part_group_desc,
@@ -115,7 +115,7 @@ class PartGroupsController extends Controller
     }
 
     /**
-     * Show (untuk modal edit) — kirim juga label supaya Select2 langsung tampilkan text.
+     * Show (for edit modal) — also send label so Select2 displays text directly.
      */
     public function show(PartGroups $partGroup)
     {
@@ -160,7 +160,7 @@ class PartGroupsController extends Controller
     }
 
     /**
-     * (Opsional lama) dropdown dependent.
+     * (Old optional) dependent dropdown.
      */
     public function getModelsByCustomer(Request $request)
     {

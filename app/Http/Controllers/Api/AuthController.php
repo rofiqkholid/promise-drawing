@@ -51,7 +51,7 @@ class AuthController extends Controller
 
             if (empty($allowed_menu_ids)) {
                 Auth::logout();
-                return back()->withErrors(['nik' => 'Akun Anda tidak memiliki hak akses.'])->onlyInput('nik');
+                return back()->withErrors(['nik' => 'Your account does not have access rights.'])->onlyInput('nik');
             }
 
             $allowed_menus = DB::table('menus')
@@ -69,11 +69,11 @@ class AuthController extends Controller
             }
             if (is_null($redirectUrl)) {
                 Auth::logout();
-                return back()->withErrors(['nik' => 'Akun Anda tidak memiliki akses ke halaman yang valid.'])->onlyInput('nik');
+                return back()->withErrors(['nik' => 'Your account does not have access to a valid page.'])->onlyInput('nik');
             }
             return redirect()->intended($redirectUrl);
         }
-        return back()->withErrors(['nik' => 'NIK atau Password yang Anda masukkan salah.'])->onlyInput('nik');
+        return back()->withErrors(['nik' => 'The NIK or Password you entered is incorrect.'])->onlyInput('nik');
     }
 
 
@@ -82,7 +82,7 @@ class AuthController extends Controller
         $allowed_menu_ids = session('allowed_menus');
         if (empty($allowed_menu_ids)) {
             Auth::logout();
-            return redirect()->route('login')->withErrors(['nik' => 'Akun Anda tidak memiliki hak akses.']);
+            return redirect()->route('login')->withErrors(['nik' => 'Your account does not have access rights.']);
         }
 
         $allowed_menus = DB::table('menus')
@@ -96,7 +96,7 @@ class AuthController extends Controller
             }
         }
         Auth::logout();
-        return redirect()->route('login')->withErrors(['nik' => 'Akun Anda tidak memiliki akses ke halaman yang valid.']);
+        return redirect()->route('login')->withErrors(['nik' => 'Your account does not have access to a valid page.']);
     }
 
     public function logout(Request $request)

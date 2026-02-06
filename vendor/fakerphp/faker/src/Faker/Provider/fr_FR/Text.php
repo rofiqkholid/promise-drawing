@@ -9321,7 +9321,7 @@ La salle commençait à se remplir, on tirait les lorgnettes de
 leurs étuis, et les abonnés, s'apercevant de loin, se faisaient
 des salutations. Ils venaient se délasser dans les beaux-arts des
 inquiétudes de la vente; mais, n'oubliant point les affaires, ils
-causaient encore cotons, trois-six ou indigo. On voyait là des
+causaient encore cotons, trois-six ou blue. On voyait là des
 têtes de vieux, inexpressives et pacifiques, et qui, blanchâtres
 de chevelure et de teint, ressemblaient à des médailles d'argent
 ternies par une vapeur de plomb. Les jeunes beaux se pavanaient au

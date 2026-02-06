@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class UserRole extends Model
 {
     protected $table = 'user_roles';
-    public $incrementing = false; // karena PK komposit
+    public $incrementing = false; // because of composite PK
     protected $primaryKey = null;
 
     protected $fillable = [
@@ -17,7 +17,7 @@ class UserRole extends Model
     ];
 
     /**
-     * Relasi ke user.
+     * Relation to user.
      */
     public function user(): BelongsTo
     {
@@ -25,7 +25,7 @@ class UserRole extends Model
     }
 
     /**
-     * Relasi ke role.
+     * Relation to role.
      */
     public function role(): BelongsTo
     {

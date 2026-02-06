@@ -178,7 +178,7 @@ class CustomerRevisionLabelController extends Controller
             'sort_order'  => ['nullable', 'integer'],
             'is_active'   => ['nullable'],
         ], [
-            'label.unique' => 'Label sudah dipakai untuk customer tersebut.',
+            'label.unique' => 'The label is already in use for this customer.',
         ]);
     }
 }

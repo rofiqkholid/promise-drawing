@@ -16,17 +16,17 @@ class UserMaintenanceController extends Controller
      */
     public function data(Request $request)
     {
-        // 🔹 JOIN ke departments supaya bisa ambil code department
+        // 🔹 JOIN to departments to get department code
         $query = User::query()
-            ->leftJoin('departments as d', 'users.id_dept', '=', 'd.id') // <-- BARU
+            ->leftJoin('departments as d', 'users.id_dept', '=', 'd.id') // <-- NEW
             ->select([
                 'users.id',
                 'users.name',
                 'users.email',
                 'users.nik',
                 'users.is_active',
-                'users.id_dept',                // <-- BARU (FK)
-                'd.code as department_code',    // <-- BARU (yang nanti ditampilkan di tabel)
+                'users.id_dept',                // <-- NEW (FK)
+                'd.code as department_code',    // <-- NEW (to be displayed in the table)
             ]);
 
         // Frontend mengirim d.search = d.search.value (string)
@@ -36,7 +36,7 @@ class UserMaintenanceController extends Controller
                 $q->where('users.name', 'like', "%{$s}%")
                   ->orWhere('users.email', 'like', "%{$s}%")
                   ->orWhere('users.nik', 'like', "%{$s}%")
-                  ->orWhere('d.code', 'like', "%{$s}%"); // <-- BARU: cari juga berdasarkan kode dept
+                  ->orWhere('d.code', 'like', "%{$s}%"); // <-- NEW: also search by dept code
             });
         }
 
@@ -46,12 +46,12 @@ class UserMaintenanceController extends Controller
         $columns = $request->input('columns', []);
         $sortColumn = $columns[$sortBy]['data'] ?? 'name';
 
-        // tambahkan department_code ke whitelist
+        // add department_code to whitelist
         if (!in_array($sortColumn, ['name','email','nik','is_active','department_code'], true)) { // <-- EDIT
             $sortColumn = 'name';
         }
 
-        // pakai mapping supaya tidak ambigu (karena sudah join)
+        // use mapping to avoid ambiguity (due to join)
         switch ($sortColumn) {
             case 'email':
                 $query->orderBy('users.email', $sortDir);
@@ -62,7 +62,7 @@ class UserMaintenanceController extends Controller
             case 'is_active':
                 $query->orderBy('users.is_active', $sortDir);
                 break;
-            case 'department_code':                              // <-- BARU
+            case 'department_code':                              // <-- NEW
                 $query->orderBy('d.code', $sortDir);
                 break;
             case 'name':
@@ -93,8 +93,8 @@ class UserMaintenanceController extends Controller
      */
     public function show(User $user)
     {
-        // 🔹 load relasi department dari model User
-        $user->load('department'); // <-- BARU
+        // 🔹 load department relation from User model
+        $user->load('department'); // <-- NEW
 
         return response()->json([
             'id'              => $user->id,
@@ -102,8 +102,8 @@ class UserMaintenanceController extends Controller
             'email'           => $user->email,
             'nik'             => $user->nik,
             'is_active'       => $user->is_active,
-            'id_dept'         => $user->id_dept,                 // <-- BARU
-            'department_code' => optional($user->department)->code, // <-- BARU (kode dept)
+            'id_dept'         => $user->id_dept,                 // <-- NEW
+            'department_code' => optional($user->department)->code, // <-- NEW (dept code)
         ]);
     }
 
@@ -119,17 +119,17 @@ class UserMaintenanceController extends Controller
             'nik'       => ['required','string','max:20','unique:users,nik'],
             'password'  => ['required','string','min:6','max:255'],
             'is_active' => ['required','boolean'],
-            'id_dept'   => ['required','integer','exists:departments,id'], // <-- BARU
+            'id_dept'   => ['required','integer','exists:departments,id'], // <-- NEW
         ]);
 
-        // pastikan boolean -> 1/0
+        // ensure boolean -> 1/0
         $validated['is_active'] = $request->boolean('is_active') ? 1 : 0;
         $validated['password']  = Hash::make($validated['password']);
 
         $user = User::create($validated);
-        $user->load('department'); // <-- BARU
+        $user->load('department'); // <-- NEW
 
-        // penting: kirim id & data untuk dipakai membuka panel User Roles
+        // important: send id & data to be used to open the User Roles panel
         return response()->json([
             'success' => true,
             'id'      => $user->id,
@@ -139,8 +139,8 @@ class UserMaintenanceController extends Controller
                 'email'           => $user->email,
                 'nik'             => $user->nik,
                 'is_active'       => $user->is_active,
-                'id_dept'         => $user->id_dept,                 // <-- BARU
-                'department_code' => optional($user->department)->code, // <-- BARU
+                'id_dept'         => $user->id_dept,                 // <-- NEW
+                'department_code' => optional($user->department)->code, // <-- NEW
             ],
         ]);
     }
@@ -151,7 +151,7 @@ class UserMaintenanceController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        // ===== Roles-only mode (tanpa ubah field user) =====
+        // ===== Roles-only mode (without changing user fields) =====
         if ($request->has('role_ids') && !$request->has('name')) {
             $data = $request->validate([
                 'role_ids'   => ['array'],
@@ -159,13 +159,13 @@ class UserMaintenanceController extends Controller
             ]);
 
             $ids = collect($data['role_ids'] ?? [])->map(fn($v)=>(int)$v)->unique()->values()->all();
-            // withTimestamps() di relasi akan mengisi created_at & updated_at pivot
+            // withTimestamps() in relation will fill pivot's created_at & updated_at
             $user->roles()->sync($ids);
 
             return response()->json(['success' => true]);
         }
 
-        // ===== Mode update biasa (nama/email/nik/dll) =====
+        // ===== Normal update mode (name/email/nik/etc) =====
         $validated = $request->validate([
             'name'      => ['required','string','max:50'],
             'email'     => [
@@ -178,7 +178,7 @@ class UserMaintenanceController extends Controller
             ],
             'password'  => ['nullable','string','min:6','max:255'],
             'is_active' => ['required','boolean'],
-            'id_dept'   => ['required','integer','exists:departments,id'], // <-- BARU
+            'id_dept'   => ['required','integer','exists:departments,id'], // <-- NEW
         ]);
 
         $validated['is_active'] = $request->boolean('is_active') ? 1 : 0;
@@ -189,7 +189,7 @@ class UserMaintenanceController extends Controller
         }
 
         $user->update($validated);
-        $user->load('department'); // <-- BARU
+        $user->load('department'); // <-- NEW
 
         return response()->json([
             'success' => true,
@@ -199,8 +199,8 @@ class UserMaintenanceController extends Controller
                 'email'           => $user->email,
                 'nik'             => $user->nik,
                 'is_active'       => $user->is_active,
-                'id_dept'         => $user->id_dept,                 // <-- BARU
-                'department_code' => optional($user->department)->code, // <-- BARU
+                'id_dept'         => $user->id_dept,                 // <-- NEW
+                'department_code' => optional($user->department)->code, // <-- NEW
             ],
         ]);
     }
@@ -245,4 +245,3 @@ class UserMaintenanceController extends Controller
         ]);
     }
 }
-

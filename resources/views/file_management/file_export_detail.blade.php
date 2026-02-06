@@ -84,7 +84,7 @@
                                 <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Linked Partners</span>
                                 <div class="flex flex-wrap gap-1.5">
                                     <template x-for="partner in pkg.metadata.linked_partners" :key="partner">
-                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-400 dark:border-indigo-800">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
                                             <i class="fa-solid fa-link mr-1.5 text-[9px] opacity-70"></i>
                                             <span x-text="partner"></span>
                                         </span>

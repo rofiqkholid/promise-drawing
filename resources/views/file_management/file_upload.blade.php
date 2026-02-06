@@ -30,7 +30,7 @@
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Control and monitor your drawing submissions.</p>
         </div>
         <a href="{{ route('drawing.upload') }}"
-            class="inline-flex items-center gap-2 justify-center px-6 py-3 border border-transparent text-sm font-bold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all">
+            class="inline-flex items-center gap-2 justify-center px-6 py-3 border border-transparent text-sm font-bold rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
             <i class="fa-solid fa-plus-circle text-lg"></i>
             <span>Upload New Drawing</span>
         </a>
@@ -41,7 +41,7 @@
         <aside class="w-full lg:w-72 flex-shrink-0 space-y-6">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-md border border-gray-200 dark:border-gray-700 sticky top-24">
                 <div class="flex items-center gap-2 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
-                    <i class="fa-solid fa-filter text-indigo-500"></i>
+                    <i class="fa-solid fa-filter text-blue-500"></i>
                     <h3 class="font-bold text-gray-900 dark:text-gray-100 text-sm">Quick Filters</h3>
                 </div>
 
@@ -50,11 +50,11 @@
                         <label class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Search</label>
                         <div class="relative">
                             <input type="text" id="custom-upload-search" 
-                                class="block w-full pl-4 pr-10 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-md text-xs focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all dark:text-gray-100"
+                                class="block w-full pl-4 pr-10 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-md text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-gray-100"
                                 placeholder="Part No, ECN...">
                             <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                 <i id="search-icon-static" class="fa-solid fa-magnifying-glass text-gray-400 text-[10px]"></i>
-                                <i id="search-icon-loading" class="fa-solid fa-spinner fa-spin text-indigo-500 text-[10px] opacity-0 absolute"></i>
+                                <i id="search-icon-loading" class="fa-solid fa-spinner fa-spin text-blue-500 text-[10px] opacity-0 absolute"></i>
                             </div>
                         </div>
                     </div>
@@ -80,7 +80,7 @@
                     </div>
 
                     <div class="col-span-2 lg:col-span-1 pt-2 border-t border-gray-50 dark:border-gray-700/50 lg:border-none">
-                        <button id="btnResetUploadFilters" class="w-full py-2.5 text-xs font-semibold text-gray-500 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2">
+                        <button id="btnResetUploadFilters" class="w-full py-2.5 text-xs font-semibold text-gray-500 hover:text-blue-600 transition-colors flex items-center justify-center gap-2">
                             <i class="fa-solid fa-rotate-left"></i>
                             Reset All Filters
                         </button>
@@ -94,7 +94,7 @@
             {{-- KPI Row - Horizontal Scroll on Mobile --}}
             <div class="flex overflow-x-auto pb-4 lg:pb-0 gap-4 lg:grid lg:grid-cols-4 no-scrollbar">
                 @foreach([
-                    ['id' => 'totalUpload',  'label' => 'Total',    'icon' => 'fa-cloud-arrow-up',  'color' => 'indigo'],
+                    ['id' => 'totalUpload',  'label' => 'Total',    'icon' => 'fa-cloud-arrow-up',  'color' => 'blue'],
                     ['id' => 'totalDraft',   'label' => 'Draft',    'icon' => 'fa-file-pen',        'color' => 'blue'],
                     ['id' => 'totalPending', 'label' => 'Pending',  'icon' => 'fa-hourglass-start', 'color' => 'yellow'],
                     ['id' => 'totalRejected','label' => 'Rejected', 'icon' => 'fa-ban',             'color' => 'red']
@@ -116,10 +116,10 @@
                 <div class="px-6 border-b border-gray-100 dark:border-gray-700 flex items-center gap-6 overflow-x-auto no-scrollbar" id="status-tabs-container">
                     @foreach(['All' => 'All Files', 'draft' => 'Draft', 'pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected'] as $val => $text)
                     <button type="button" 
-                        class="status-tab relative py-4 text-sm font-semibold transition-all whitespace-nowrap {{ $val === 'All' ? 'text-indigo-600 active-tab' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300' }}"
+                        class="status-tab relative py-4 text-sm font-semibold transition-all whitespace-nowrap {{ $val === 'All' ? 'text-blue-600 active-tab' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300' }}"
                         data-status="{{ $val }}">
                         {{ $text }}
-                        <span class="absolute bottom-0 left-0 w-full h-1 bg-indigo-600 rounded-t-full tab-indicator {{ $val === 'All' ? 'opacity-100' : 'opacity-0' }} transition-opacity duration-200"></span>
+                        <span class="absolute bottom-0 left-0 w-full h-1 bg-blue-600 rounded-t-full tab-indicator {{ $val === 'All' ? 'opacity-100' : 'opacity-0' }} transition-opacity duration-200"></span>
                     </button>
                     @endforeach
                 </div>
@@ -190,10 +190,10 @@
         if(urlParams.get('status')) {
             currentStatus = urlParams.get('status');
             // Update tab UI
-            $('.status-tab').removeClass('text-indigo-600 active-tab').addClass('text-gray-400');
+            $('.status-tab').removeClass('text-blue-600 active-tab').addClass('text-gray-400');
             $('.tab-indicator').removeClass('opacity-100').addClass('opacity-0');
             const $activeTab = $(`.status-tab[data-status="${currentStatus}"]`);
-            $activeTab.removeClass('text-gray-400').addClass('text-indigo-600 active-tab');
+            $activeTab.removeClass('text-gray-400').addClass('text-blue-600 active-tab');
             $activeTab.find('.tab-indicator').removeClass('opacity-0').addClass('opacity-100');
         }
 
@@ -239,12 +239,12 @@
             },
             order: [[6, "desc"]], 
             language: {
-                info: `<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100/50 dark:border-indigo-800/50 shadow-sm transition-all hover:bg-indigo-50 dark:hover:bg-indigo-900/40">
-                          <i class="fa-solid fa-database text-indigo-500 text-[10px]"></i>
+                info: `<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100/50 dark:border-blue-800/50 shadow-sm transition-all hover:bg-blue-50 dark:hover:bg-blue-900/40">
+                          <i class="fa-solid fa-database text-blue-500 text-[10px]"></i>
                           <span class="text-gray-500 dark:text-gray-400 text-[10px] font-bold uppercase tracking-tight">Records</span>
                           <span class="text-gray-900 dark:text-gray-100 text-[11px] font-black font-mono">_START_-_END_</span>
                           <span class="text-gray-300 dark:text-gray-600">/</span>
-                          <span class="text-indigo-600 dark:text-indigo-400 text-[11px] font-black font-mono">_TOTAL_</span>
+                          <span class="text-blue-600 dark:text-blue-400 text-[11px] font-black font-mono">_TOTAL_</span>
                        </div>`,
                 infoEmpty: "No Records Found",
                 infoFiltered: "",
@@ -253,7 +253,7 @@
             dom: 't<"flex flex-col sm:flex-row justify-between items-center p-6 border-t border-gray-50 dark:border-gray-800 gap-4" <"flex-1"i> <"flex justify-end"p>>',
             
             createdRow: function(row, data, dataIndex) {
-                 $(row).addClass('hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-colors cursor-pointer border-b border-gray-50 dark:border-gray-800 last:border-0 text-gray-900 dark:text-gray-100');
+                 $(row).addClass('hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors cursor-pointer border-b border-gray-50 dark:border-gray-800 last:border-0 text-gray-900 dark:text-gray-100');
                  $('td', row).addClass('py-4 px-4 align-middle');
             },
 
@@ -302,7 +302,7 @@
                     render: function(data, type, row) {
                         let labelBadges = '';
                         if(row.revision_label_name) {
-                            labelBadges = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 mr-1 whitespace-nowrap">${row.revision_label_name}</span>`;
+                            labelBadges = `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800 mr-1 whitespace-nowrap">${row.revision_label_name}</span>`;
                         }
                         return `
                             <div class="flex items-center">
@@ -383,7 +383,7 @@
                     render: function(data, type, row) {
                         return `
                         <button type="button" onclick="openPackageDetails('${row.id}')" 
-                            class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-indigo-50 text-indigo-600 dark:text-indigo-400 dark:hover:bg-gray-700 transition-all mx-auto border border-transparent hover:border-indigo-100" 
+                            class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-blue-50 text-blue-600 dark:text-blue-400 dark:hover:bg-gray-700 transition-all mx-auto border border-transparent hover:border-blue-100" 
                             title="Manage Files">
                             <i class="fa-solid fa-up-right-from-square text-sm"></i>
                         </button>`;
@@ -397,11 +397,11 @@
             const $container = $('#status-tabs-container');
             
             // 1. Reset all tabs
-            $container.find('.status-tab').removeClass('text-indigo-600 active-tab').addClass('text-gray-400');
+            $container.find('.status-tab').removeClass('text-blue-600 active-tab').addClass('text-gray-400');
             $container.find('.tab-indicator').removeClass('opacity-100').addClass('opacity-0');
             
             // 2. Activate clicked tab
-            $(this).removeClass('text-gray-400').addClass('text-indigo-600 active-tab');
+            $(this).removeClass('text-gray-400').addClass('text-blue-600 active-tab');
             $(this).find('.tab-indicator').removeClass('opacity-0').addClass('opacity-100');
 
             currentStatus = $(this).data('status');
@@ -718,7 +718,7 @@
                 title = 'Downloaded';
             } else if (code.includes('SHARE')) {
                 icon = 'fa-share-nodes';
-                colorClass = 'bg-indigo-100 text-indigo-600';
+                colorClass = 'bg-blue-100 text-blue-600';
                 title = 'Shared';
             } else if (code === 'REVISE_CONFIRM') {
                 icon = 'fa-pen-to-square';
@@ -987,7 +987,7 @@
                         </div>
 
                         <div class="p-4 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-                            <button id="pkg-close-btn-2" class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600">
+                            <button id="pkg-close-btn-2" class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600">
                                 <i class="fa-solid fa-xmark"></i>
                                 Close
                             </button>

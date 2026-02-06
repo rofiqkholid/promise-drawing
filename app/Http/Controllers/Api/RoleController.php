@@ -11,14 +11,14 @@ use Illuminate\Validation\Rule;
 class RoleController extends Controller
 {
     /**
-     * Listing untuk DataTables.
+     * Listing for DataTables.
      */
    public function data(Request $request)
 {
     $query = Role::query()->from('roles')
         ->select(['roles.id','roles.role_name']);
 
-    // jika dikirim user_id, ikutkan info selected
+    // if user_id is sent, include selected info
     if ($request->filled('user_id')) {
         $uid = (int) $request->user_id;
         $query->leftJoin('user_roles as ur', function($j) use ($uid){
@@ -28,13 +28,13 @@ class RoleController extends Controller
         $query->addSelect(DB::raw('0 AS selected'));
     }
 
-    // optional search sederhana
+    // optional simple search
     if ($request->filled('search')) {
         $s = $request->search;
         $query->where('roles.role_name','like',"%{$s}%");
     }
 
-    // sorting aman (DataTables/Non-DataTables)
+    // safe sorting (DataTables/Non-DataTables)
     $sortBy    = (int) $request->input('order.0.column', 1);
     $sortDir   = $request->input('order.0.dir', 'asc');
     $columns   = $request->input('columns', []);
@@ -44,7 +44,7 @@ class RoleController extends Controller
     $sortCol   = in_array($candidate,$allowed,true) ? $candidate : 'role_name';
     $query->orderBy($sortCol, $sortDir);
 
-    // pagination aman
+    // safe pagination
     $perPage   = (int) $request->input('length', 1000);
     $start     = (int) $request->input('start', 0);
     $draw      = (int) $request->input('draw', 1);
@@ -63,8 +63,8 @@ class RoleController extends Controller
 
 
     /**
-     * Simpel: return semua role (kalau butuh dropdown).
-     * Opsional: hapus jika tidak diperlukan.
+     * Simple: return all roles (if dropdown is needed).
+     * Optional: delete if not needed.
      */
     public function all()
     {
@@ -72,7 +72,7 @@ class RoleController extends Controller
     }
 
     /**
-     * Store role baru.
+     * Store new role.
      */
     public function store(Request $request)
     {
@@ -85,18 +85,18 @@ class RoleController extends Controller
             ],
         ]);
 
-        // timestamps akan terisi otomatis jika $timestamps = true di model
+        // timestamps will be filled automatically if $timestamps = true in model
         Role::create($validated);
 
         return response()->json([
             'success' => true,
-            'message' => 'Role berhasil dibuat.',
+            'message' => 'Role created successfully.',
         ]);
     }
 
     /**
-     * Tampilkan 1 role (untuk edit).
-     * Gunakan route model binding: /roles/{role}
+     * Show 1 role (for editing).
+     * Use route model binding: /roles/{role}
      */
     public function show(Role $role)
     {
@@ -121,12 +121,12 @@ class RoleController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Role berhasil diperbarui.',
+            'message' => 'Role updated successfully.',
         ]);
     }
 
     /**
-     * Hapus role.
+     * Delete role.
      */
     public function destroy(Role $role)
     {
@@ -134,7 +134,7 @@ class RoleController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Role berhasil dihapus.',
+            'message' => 'Role deleted successfully.',
         ]);
     }
 }

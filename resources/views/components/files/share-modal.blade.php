@@ -75,7 +75,7 @@
             {{-- Package Context --}}
             <div class="p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-md">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                    <div class="w-8 h-8 rounded bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
                         <i class="fa-solid fa-file-shield text-xs"></i>
                     </div>
                     <div class="min-w-0">
@@ -106,7 +106,7 @@
                     </template>
 
                     <template x-for="supplier in selectedSuppliers" :key="supplier.id">
-                        <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm group hover:border-indigo-300 dark:hover:border-indigo-700 transition-all">
+                        <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm group hover:border-blue-300 dark:hover:border-blue-700 transition-all">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 font-bold text-[10px] border border-gray-100 dark:border-gray-600"
                                      x-text="getInitials(supplier.code)">
@@ -132,7 +132,7 @@
             </button>
             <button type="button" @click="submitShare()" 
                     :disabled="isSending"
-                    class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-bold rounded-md shadow-sm transition-all uppercase tracking-wide flex items-center gap-2">
+                    class="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[11px] font-bold rounded-md shadow-sm transition-all uppercase tracking-wide flex items-center gap-2">
                 <template x-if="isSending">
                     <i class="fa-solid fa-spinner fa-spin text-[10px]"></i>
                 </template>

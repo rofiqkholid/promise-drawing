@@ -356,25 +356,25 @@ final class Color
 
     public const BLUE_900 = '#1e3a8a';
 
-    public const INDIGO_50 = '#eef2ff';
+    public const blue_50 = '#eef2ff';
 
-    public const INDIGO_100 = '#e0e7ff';
+    public const blue_100 = '#e0e7ff';
 
-    public const INDIGO_200 = '#c7d2fe';
+    public const blue_200 = '#c7d2fe';
 
-    public const INDIGO_300 = '#a5b4fc';
+    public const blue_300 = '#a5b4fc';
 
-    public const INDIGO_400 = '#818cf8';
+    public const blue_400 = '#818cf8';
 
-    public const INDIGO_500 = '#6366f1';
+    public const blue_500 = '#6366f1';
 
-    public const INDIGO_600 = '#4f46e5';
+    public const blue_600 = '#4f46e5';
 
-    public const INDIGO_700 = '#4338ca';
+    public const blue_700 = '#4338ca';
 
-    public const INDIGO_800 = '#3730a3';
+    public const blue_800 = '#3730a3';
 
-    public const INDIGO_900 = '#312e81';
+    public const blue_900 = '#312e81';
 
     public const VIOLET_50 = '#f5f3ff';
 

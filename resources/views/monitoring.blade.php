@@ -263,7 +263,7 @@
                         style="display: none;"
                         class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
                         <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 right-2"></div>
-                        <p class="text-gray-200 dark:text-gray-300">Eco Impact is calculated based on the number of documents uploaded to the system, representing the estimated environmental savings from not printing these documents.</p>
+                        <p class="text-gray-200 dark:text-gray-300">This calculation shows that each digital document download saves the equivalent of 1/80,000 of a tree and reduces carbon emissions by approximately 0.000275 kg of CO₂, making a tangible contribution to environmental protection.</p>
                     </div>
                 </div>
             </h3>
