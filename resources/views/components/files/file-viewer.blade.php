@@ -464,7 +464,8 @@
                         </template>
 
                         {{-- STAMP ORIGINAL --}}
-                        <div x-show="pkg.stamp && !pdfError" class="absolute" :class="stampPositionClass('original')">
+                        <div x-show="pkg.stamp && !pdfError && !isStampBurned" class="absolute" :class="stampPositionClass('original')"
+                            :key="`stamp-pdf-original-${stampConfig.original}`">
                             <div class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                 :class="[
                                 stampOriginClass('original'),
@@ -487,44 +488,8 @@
                         </div>
 
                         {{-- STAMP COPY --}}
-                        <div x-show="pkg.stamp && !pdfError" class="absolute" :class="stampPositionClass('copy')">
-                            <div :class="stampOriginClass('copy')"
-                                class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                                style="transform: scale(0.45);">
-                                <div
-                                    class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
-                                    <span x-text="stampTopLine('copy')"></span>
-                                </div>
-                                <div class="flex-1 flex items-center justify-center">
-                                    <span class="text-xs font-extrabold uppercase text-blue-700 px-2"
-                                        x-text="stampCenterCopy()"></span>
-                                </div>
-                                <div
-                                    class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
-                        <div x-show="pkg.stamp && !pdfError && !isStampBurned" class="absolute" :class="stampPositionClass('original')">
-                            <div class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                                :class="[
-                                stampOriginClass('original'),
-                                isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
-                            ]" style="transform: scale(0.45);">
-                                <div class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
-                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
-                                    <span x-text="stampTopLine('original')"></span>
-                                </div>
-                                <div class="flex-1 flex items-center justify-center">
-                                    <span class="text-xs font-extrabold uppercase px-2"
-                                        :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
-                                        x-text="stampCenterOriginal()"></span>
-                                </div>
-                                <div class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
-                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
-                                    <span x-text="stampBottomLine('original')"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- STAMP COPY --}}
-                        <div x-show="pkg.stamp && !pdfError && !isStampBurned" class="absolute" :class="stampPositionClass('copy')">
+                        <div x-show="pkg.stamp && !pdfError && !isStampBurned" class="absolute" :class="stampPositionClass('copy')"
+                            :key="`stamp-pdf-copy-${stampConfig.copy}`">
                             <div :class="stampOriginClass('copy')"
                                 class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                 style="transform: scale(0.45);">
@@ -544,7 +509,8 @@
                         </div>
 
                         {{-- STAMP OBSOLETE --}}
-                        <div x-show="pkg.stamp?.is_obsolete && !pdfError && !isStampBurned" class="absolute" :class="stampPositionClass('obsolete')">
+                        <div x-show="pkg.stamp?.is_obsolete && !pdfError && !isStampBurned" class="absolute" :class="stampPositionClass('obsolete')"
+                            :key="`stamp-pdf-obsolete-${stampConfig.obsolete}`">
                             <div :class="stampOriginClass('obsolete')"
                                 class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                 style="transform: scale(0.45);">
