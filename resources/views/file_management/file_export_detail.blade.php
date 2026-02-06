@@ -271,7 +271,10 @@
             pkg: @js($detail),
             stampFormat: @js($detail['stamp_formats'] ?? []),
             showStampConfig: true,
-            enableMasking: true
+            enableMasking: true,
+            userDeptCode: @js($userDeptCode ?? null),
+            userName: @js($userName ?? null),
+            isEngineering: @js($isEngineering ?? false),
         });
 
         return {
@@ -350,7 +353,8 @@
             },
 
             async switchRevision(id) {
-                if (id == this.pkg?.id || this.isLoadingRevision) return;
+                const targetRev = this.pkg?.revisionHistory?.find(r => r.id === id);
+                if ((targetRev && targetRev.revision_no == this.pkg?.revision_no) || this.isLoadingRevision) return;
                 
                 this.isLoadingRevision = true;
                 const url = `{{ route('api.export.revision-detail', ['id' => ':id']) }}`.replace(':id', id);
@@ -371,7 +375,6 @@
                     this.selectedFile = null;
                     this.pkg = response.pkg;
                     
-                    // Reinitialize revision selector with new data
                     // Reinitialize revision selector with new data
                     const $sel = $(this.$refs.revisionSelector);
                     if ($sel.data('select2')) {

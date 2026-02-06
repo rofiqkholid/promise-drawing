@@ -214,6 +214,9 @@
             </div>
         </div>
     </div>
+    
+    {{-- Shared Download Zip Modal --}}
+    <x-files.download-zip-modal />
 </div>
 @endsection
 
@@ -308,44 +311,15 @@
 
                 downloadPackage() {
                     if (!this.exportId) return;
-                    const isDark = document.documentElement.classList.contains('dark');
-                    Swal.fire({
-                        title: 'Execute Download',
-                        text: "Compile package bundle into ZIP?",
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Download',
-                        confirmButtonColor: '#2563eb',
-                        cancelButtonColor: '#94a3b8',
-                        background: isDark ? '#1e293b' : '#fff',
-                        color: isDark ? '#f3f4f6' : '#111827'
-                    }).then((result) => { if (result.isConfirmed) this.executeZipDownload(); });
-                },
-                executeZipDownload() {
-                    const isDark = document.documentElement.classList.contains('dark');
-                    Swal.fire({ 
-                        title: 'Compiling...', 
-                        html: '<div class="text-[10px] font-bold uppercase tracking-widest text-blue-600 animate-pulse mt-4">Preparing Cluster Objects</div>',
-                        allowOutsideClick: false, 
-                        background: isDark ? '#1e293b' : '#fff',
-                        color: isDark ? '#f3f4f6' : '#111827',
-                        didOpen: () => Swal.showLoading() 
-                    });
                     
-                    fetch(`/api/receipts/prepare-zip/${this.exportId.toString().replace(/=/g, '-')}`, {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') 
+                    // Dispatch event to open the shared modal
+                    window.dispatchEvent(new CustomEvent('open-download-zip', {
+                        detail: {
+                            count: this.getTotalFiles(),
+                            size: this.getTotalSize(),
+                            url: `/api/receipts/prepare-zip/${this.exportId.toString().replace(/=/g, '-')}`
                         }
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        Swal.close();
-                        if (data.success) window.location.href = data.download_url;
-                        else throw new Error(data.message);
-                    })
-                    .catch(e => Swal.fire('Error', e.message, 'error'));
+                    }));
                 }
             };
         }

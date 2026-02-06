@@ -151,55 +151,9 @@
       </div>
 
 
-      <!-- ===== File Groups (2D / 3D / ECN) ===== -->
-      @php
-      function renderFileGroup($title, $icon, $category) {
-      @endphp
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <button @click="toggleSection('{{$category}}')" class="w-full p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between focus:outline-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200" :aria-expanded="openSections.includes('{{$category}}')">
-          <div class="flex items-center">
-            <i class="fa-solid {{$icon}} mr-3 text-gray-500 dark:text-gray-400"></i>
-            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ $title }}</span>
-          </div>
-          <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full" x-text="`${(pkg.files['{{$category}}']?.length || 0)} files`"></span>
-          <i class="fa-solid fa-chevron-down text-gray-400 dark:text-gray-500 transition-transform" :class="{'rotate-180': openSections.includes('{{$category}}')}"></i>
-        </button>
-        <div x-show="openSections.includes('{{$category}}')" x-collapse>
-          <div class="p-2 max-h-72 overflow-y-auto">
-            <template x-for="file in (pkg.files['{{$category}}'] || [])" :key="file.name">
-              <div
-                @click="selectFile(file)"
-                :class="{'bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-medium': selectedFile && selectedFile.name === file.name}"
-                class="flex items-center p-3 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                role="button" tabindex="0" @keydown.enter="selectFile(file)">
-
-                <!-- ICON DARI MASTER FILE EXTENSION -->
-                <template x-if="file.icon_src">
-                  <img :src="file.icon_src"
-                    alt=""
-                    class="w-5 h-5 mr-3 object-contain" />
-                </template>
-
-                <!-- FALLBACK KALAU TIDAK ADA ICON DI MASTER -->
-                <template x-if="!file.icon_src">
-                  <i class="fa-solid fa-file text-gray-500 dark:text-gray-400 mr-3 transition-colors group-hover:text-blue-500"></i>
-                </template>
-
-                <span class="text-sm text-gray-900 dark:text-gray-100 truncate" x-text="file.name" :title="file.name"></span>
-              </div>
-            </template>
-
-            <template x-if="(pkg.files['{{$category}}'] || []).length === 0">
-              <p class="p-3 text-center text-xs text-gray-500 dark:text-gray-400">No files available.</p>
-            </template>
-          </div>
-        </div>
-      </div>
-      @php } @endphp
-
-      {{ renderFileGroup('2D Drawings', 'fa-drafting-compass', '2d') }}
-      {{ renderFileGroup('3D Models', 'fa-cubes', '3d') }}
-      {{ renderFileGroup('ECN / Documents', 'fa-file-lines', 'ecn') }}
+      <x-files.file-group-list title="2D Drawings" icon="fa-drafting-compass" category="2d" />
+      <x-files.file-group-list title="3D Models" icon="fa-cubes" category="3d" />
+      <x-files.file-group-list title="ECN / Documents" icon="fa-file-lines" category="ecn" />
 
       <!-- ===== Activity Log (below ECN) ===== -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -362,605 +316,29 @@
 
     <!-- ================= RIGHT COLUMN (lg:span 8) Preview ================= -->
     <div class="lg:col-span-8">
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <!-- No File Selected -->
-        <div x-show="!selectedFile" x-cloak class="flex flex-col items-center justify-center h-96 p-6 bg-gray-50 dark:bg-gray-900/50 text-center">
-          <i class="fa-solid fa-hand-pointer text-5xl text-gray-400 dark:text-gray-500"></i>
-          <h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">Select a File</h3>
-          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Please choose a file from the left panel to review.</p>
-        </div>
-
-        <!-- File Preview -->
-        <div x-show="selectedFile" x-transition.opacity x-cloak class="p-6">
-          <!-- Header with Open in new tab -->
-          <div class="mb-4 flex items-center justify-between">
-            <div>
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate" x-text="selectedFile?.name"></h3>
-              <p
-                class="text-xs text-gray-500 dark:text-gray-400"
-                x-text="fileSizeInfo()">
-              </p>
-              <!-- <p class="text-xs text-gray-500 dark:text-gray-400">Last updated: {{ now()->format('M d, Y H:i') }}</p> -->
-            </div>
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col" style="min-height: 600px;">
+        <template x-if="selectedFile">
+           <div class="flex-1 flex flex-col">
+            @include('components.files.file-viewer', [
+                'enableMasking' => true,
+                'showStampConfig' => true,
+            ])
+           </div>
+        </template>
+        
+        <template x-if="!selectedFile">
+          <div class="flex-1 flex flex-col items-center justify-center p-6 bg-gray-50 dark:bg-gray-900/50 text-center">
+             <i class="fa-solid fa-hand-pointer text-5xl text-gray-400 dark:text-gray-500 mb-4"></i>
+             <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Select a File</h3>
+             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Please choose a file from the left panel to review.</p>
           </div>
-
-          <!-- STAMP POSITION PER FILE -->
-          <div class="mb-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm">
-
-            <div x-show="!isCad(selectedFile?.name)" class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-              <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                  <i class="fa-solid fa-stamp"></i> Stamp Configuration
-                </span>
-
-                <!-- Tombol Apply to All -->
-                <button
-                  type="button"
-                  @click="applyStampToAll()"
-                  :disabled="applyToAllProcessing"
-                  class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-blue-500
-                        text-[11px] font-medium text-blue-600 bg-blue-50
-                        hover:bg-blue-100 disabled:opacity-60 disabled:cursor-not-allowed">
-                  <span x-show="!applyToAllProcessing">
-                    <i class="fa-solid fa-layer-group mr-1"></i>
-                    Apply to All Files
-                  </span>
-                  <span x-show="applyToAllProcessing" class="inline-flex items-center gap-1">
-                    <i class="fa-solid fa-circle-notch fa-spin"></i>
-                    Applying...
-                  </span>
-                </button>
-              </div>
-
-
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-
-                <div>
-                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Position: Original</label>
-                  <div class="relative">
-                    <select x-model="stampConfig.original" @change="onStampChange()"
-                      class="block w-full pl-3 pr-8 py-2 text-xs text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:focus:ring-blue-500">
-                      <option value="top-left">Top Left</option>
-                      <option value="top-center">Top Center</option>
-                      <option value="top-right">Top Right</option>
-                      <option value="bottom-left">Bottom Left</option>
-                      <option value="bottom-center">Bottom Center</option>
-                      <option value="bottom-right">Bottom Right</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Position: Copy</label>
-                  <div class="relative">
-                    <select x-model="stampConfig.copy" @change="onStampChange()"
-                      class="block w-full pl-3 pr-8 py-2 text-xs text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:focus:ring-blue-500">
-                      <option value="top-left">Top Left</option>
-                      <option value="top-center">Top Center</option>
-                      <option value="top-right">Top Right</option>
-                      <option value="bottom-left">Bottom Left</option>
-                      <option value="bottom-center">Bottom Center</option>
-                      <option value="bottom-right">Bottom Right</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Position: Obsolete</label>
-                  <div class="relative">
-                    <select x-model="stampConfig.obsolete" @change="onStampChange()"
-                      class="block w-full pl-3 pr-8 py-2 text-xs text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:focus:ring-blue-500">
-                      <option value="top-left">Top Left</option>
-                      <option value="top-center">Top Center</option>
-                      <option value="top-right">Top Right</option>
-                      <option value="bottom-left">Bottom Left</option>
-                      <option value="bottom-center">Bottom Center</option>
-                      <option value="bottom-right">Bottom Right</option>
-                    </select>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
-            <div x-show="isImage(selectedFile?.name) || isTiff(selectedFile?.name) || isHpgl(selectedFile?.name) || isPdf(selectedFile?.name)"
-              class="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-end gap-3 border-t border-gray-100 dark:border-gray-700">
-
-              <div class="flex items-center bg-white dark:bg-gray-700 rounded-md border border-gray-300 dark:border-gray-600 shadow-sm">
-                <button @click="zoomOut()" class="p-1.5 px-3 text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-600 rounded-l-md transition-colors" title="Zoom Out">
-                  <i class="fa-solid fa-minus fa-xs"></i>
-                </button>
-                <span class="px-2 text-xs font-mono font-semibold text-gray-600 dark:text-gray-300 border-l border-r border-gray-200 dark:border-gray-600 min-w-[3.5rem] text-center"
-                  x-text="Math.round(imageZoom * 100) + '%'"></span>
-                <button @click="zoomIn()" class="p-1.5 px-3 text-gray-600 dark:text-gray-300 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors" title="Zoom In">
-                  <i class="fa-solid fa-plus fa-xs"></i>
-                </button>
-                <button @click="resetZoom()" class="p-1.5 px-3 text-gray-500 dark:text-gray-400 hover:text-blue-600 hover:bg-gray-50 dark:hover:bg-gray-600 border-l border-gray-200 dark:border-gray-600 rounded-r-md transition-colors" title="Reset Fit">
-                  <i class="fa-solid fa-compress fa-xs"></i>
-                </button>
-              </div>
-
-              <div x-show="isPdf(selectedFile?.name)" class="flex items-center gap-2 pl-3 border-l border-gray-300 dark:border-gray-600">
-                <button @click="prevPdfPage()" :disabled="pdfPageNum <= 1"
-                  class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
-                  <i class="fa-solid fa-chevron-left"></i>
-                </button>
-                <span class="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap min-w-[3rem] text-center">
-                  <span x-text="pdfPageNum"></span> / <span x-text="pdfNumPages"></span>
-                </span>
-                <button @click="nextPdfPage()" :disabled="pdfPageNum >= pdfNumPages"
-                  class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
-                  <i class="fa-solid fa-chevron-right"></i>
-                </button>
-              </div>
-              <div x-show="isTiff(selectedFile?.name) && tifNumPages > 1"
-                class="flex items-center gap-2 pl-3 border-l border-gray-300 dark:border-gray-600">
-                <button @click="prevTifPage()" :disabled="tifPageNum <= 1"
-                  class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
-                  <i class="fa-solid fa-chevron-left"></i>
-                </button>
-                <span class="text-xs font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap min-w-[3rem] text-center">
-                  <span x-text="tifPageNum"></span> / <span x-text="tifNumPages"></span>
-                </span>
-                <button @click="nextTifPage()" :disabled="tifPageNum >= tifNumPages"
-                  class="p-1.5 text-gray-500 hover:text-blue-600 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors">
-                  <i class="fa-solid fa-chevron-right"></i>
-                </button>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- PREVIEW AREA (image/pdf/tiff/cad) -->
-          <div class="preview-area bg-gray-100 dark:bg-gray-900/50 rounded-lg p-4 min-h-[20rem] flex items-center justify-center w-full relative">
-
-            <!-- IMAGE (JPG/PNG/...) -->
-            <template x-if="isImage(selectedFile?.name)">
-              <div class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
-                @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
-                <div class="w-full h-full flex items-center justify-center">
-                  <div class="relative inline-block" :style="imageTransformStyle()">
-                    <img :src="selectedFile?.url" alt="File Preview"
-                      class="block pointer-events-none select-none max-w-full max-h-[70vh]"
-                      loading="lazy">
-
-                    <!-- STAMP ORIGINAL -->
-                    <div x-show="pkg.stamp" class="absolute"
-                      :class="stampPositionClass('original')">
-                      <div :class="[
-                          stampOriginClass('original'),
-                          isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
-                        ]"
-                        class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                        style="transform: scale(0.45);">
-                        <div
-                          class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
-                          :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
-                          <span x-text="stampTopLine('original')"></span>
-                        </div>
-                        <div class="flex-1 flex items-center justify-center">
-                          <span
-                            class="text-xs font-extrabold uppercase px-2"
-                            :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
-                            x-text="stampCenterOriginal()"></span>
-                        </div>
-                        <div
-                          class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
-                          :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
-                          <span x-text="stampBottomLine('original')"></span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- STAMP COPY -->
-                    <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
-                      <div :class="stampOriginClass('copy')"
-                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                        style="transform: scale(0.45);">
-                        <div
-                          class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
-                          <span x-text="stampTopLine('copy')"></span>
-                        </div>
-                        <div class="flex-1 flex items-center justify-center">
-                          <span
-                            class="text-xs font-extrabold uppercase text-blue-700 px-2"
-                            x-text="stampCenterCopy()"></span>
-                        </div>
-                        <div
-                          class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
-                          <span x-text="stampBottomLine('copy')"></span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- STAMP OBSOLETE -->
-                    <div x-show="pkg.stamp?.is_obsolete"
-                      class="absolute"
-                      :class="stampPositionClass('obsolete')">
-                      <div
-                        :class="stampOriginClass('obsolete')"
-                        class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                        style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
-                          <span x-text="stampTopLine('obsolete')"></span>
-                        </div>
-
-                        <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold text-red-700 uppercase px-2"
-                            x-text="stampCenterObsolete()"></span>
-                        </div>
-
-                        <div class="w-full border-t-2 border-red-600 flex font-semibold tracking-tight">
-                          <div class="flex-1 border-r-2 border-red-600 text-center py-0.5 px-2">
-                            Name : <span x-text="obsoleteName()"></span>
-                          </div>
-                          <div class="flex-1 text-center py-0.5 px-2">
-                            Dept. : <span x-text="obsoleteDept()"></span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </template>
-
-            <template x-if="isPdf(selectedFile?.name)">
-              <div class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
-                @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
-                <div class="w-full h-full flex items-center justify-center">
-                  <div class="relative inline-block" :style="imageTransformStyle()">
-                    <canvas x-ref="pdfCanvas"
-                      class="block pointer-events-none select-none max-w-full max-h-[70vh]">
-                    </canvas>
-
-                    <!-- STAMP ORIGINAL -->
-                    <div x-show="pkg.stamp" class="absolute"
-                      :class="stampPositionClass('original')">
-                      <div :class="[
-                          stampOriginClass('original'),
-                          isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
-                        ]"
-                        class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                        style="transform: scale(0.45);">
-                        <div
-                          class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
-                          :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
-                          <span x-text="stampTopLine('original')"></span>
-                        </div>
-                        <div class="flex-1 flex items-center justify-center">
-                          <span
-                            class="text-xs font-extrabold uppercase px-2"
-                            :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
-                            x-text="stampCenterOriginal()"></span>
-                        </div>
-                        <div
-                          class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
-                          :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
-                          <span x-text="stampBottomLine('original')"></span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- STAMP COPY -->
-                    <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
-                      <div :class="stampOriginClass('copy')"
-                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                        style="transform: scale(0.45);">
-                        <div
-                          class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
-                          <span x-text="stampTopLine('copy')"></span>
-                        </div>
-                        <div class="flex-1 flex items-center justify-center">
-                          <span
-                            class="text-xs font-extrabold uppercase text-blue-700 px-2"
-                            x-text="stampCenterCopy()"></span>
-                        </div>
-                        <div
-                          class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
-                          <span x-text="stampBottomLine('copy')"></span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- STAMP OBSOLETE -->
-                    <div x-show="pkg.stamp?.is_obsolete"
-                      class="absolute"
-                      :class="stampPositionClass('obsolete')">
-                      <div
-                        :class="stampOriginClass('obsolete')"
-                        class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                        style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
-                          <span x-text="stampTopLine('obsolete')"></span>
-                        </div>
-
-                        <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold text-red-700 uppercase px-2"
-                            x-text="stampCenterObsolete()"></span>
-                        </div>
-
-                        <div class="w-full border-t-2 border-red-600 flex font-semibold tracking-tight">
-                          <div class="flex-1 border-r-2 border-red-600 text-center py-0.5 px-2">
-                            Name : <span x-text="obsoleteName()"></span>
-                          </div>
-                          <div class="flex-1 text-center py-0.5 px-2">
-                            Dept. : <span x-text="obsoleteDept()"></span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div x-show="pdfLoading"
-                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
-                  Rendering PDF…
-                </div>
-                <div x-show="pdfError"
-                  class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
-                  x-text="pdfError"></div>
-              </div>
-            </template>
-
-
-            <template x-if="isTiff(selectedFile?.name)">
-              <div class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
-                @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
-                <div class="w-full h-full flex items-center justify-center">
-                  <div class="relative inline-block" :style="imageTransformStyle()">
-                    <img x-ref="tifImg" alt="TIFF Preview"
-                      class="block pointer-events-none select-none max-w-full max-h-[70vh]" />
-
-                    <!-- STAMP ORIGINAL -->
-                    <div x-show="pkg.stamp" class="absolute"
-                      :class="stampPositionClass('original')">
-                      <div :class="[
-                          stampOriginClass('original'),
-                          isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
-                        ]"
-                        class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                        style="transform: scale(0.45);">
-                        <div
-                          class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
-                          :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
-                          <span x-text="stampTopLine('original')"></span>
-                        </div>
-                        <div class="flex-1 flex items-center justify-center">
-                          <span
-                            class="text-xs font-extrabold uppercase px-2"
-                            :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
-                            x-text="stampCenterOriginal()"></span>
-                        </div>
-                        <div
-                          class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
-                          :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
-                          <span x-text="stampBottomLine('original')"></span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- STAMP COPY -->
-                    <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
-                      <div :class="stampOriginClass('copy')"
-                        class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                        style="transform: scale(0.45);">
-                        <div
-                          class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
-                          <span x-text="stampTopLine('copy')"></span>
-                        </div>
-                        <div class="flex-1 flex items-center justify-center">
-                          <span
-                            class="text-xs font-extrabold uppercase text-blue-700 px-2"
-                            x-text="stampCenterCopy()"></span>
-                        </div>
-                        <div
-                          class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
-                          <span x-text="stampBottomLine('copy')"></span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- STAMP OBSOLETE -->
-                    <div x-show="pkg.stamp?.is_obsolete"
-                      class="absolute"
-                      :class="stampPositionClass('obsolete')">
-                      <div
-                        :class="stampOriginClass('obsolete')"
-                        class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                        style="transform: scale(0.45);">
-                        <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
-                          <span x-text="stampTopLine('obsolete')"></span>
-                        </div>
-
-                        <div class="flex-1 flex items-center justify-center">
-                          <span class="text-xs font-extrabold text-red-700 uppercase px-2"
-                            x-text="stampCenterObsolete()"></span>
-                        </div>
-
-                        <div class="w-full border-t-2 border-red-600 flex font-semibold tracking-tight">
-                          <div class="flex-1 border-r-2 border-red-600 text-center py-0.5 px-2">
-                            Name : <span x-text="obsoleteName()"></span>
-                          </div>
-                          <div class="flex-1 text-center py-0.5 px-2">
-                            Dept. : <span x-text="obsoleteDept()"></span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div x-show="tifLoading"
-                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
-                  Rendering TIFF…
-                </div>
-                <div x-show="tifError"
-                  class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
-                  x-text="tifError">
-                </div>
-              </div>
-            </template>
-
-
-            <template x-if="isHpgl(selectedFile?.name)">
-              <div class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
-                @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
-                <div class="relative w-full h-full flex items-center justify-center"
-                  :style="imageTransformStyle()">
-
-                  <!-- Wrapper with relative positioning for stamps -->
-                  <div class="relative inline-block">
-                    <canvas x-ref="hpglCanvas" class="pointer-events-none select-none"></canvas>
-
-                    <!-- Stamp overlay positioned exactly over the drawing area -->
-                    <div class="absolute pointer-events-none"
-                      :style="`left: ${hpglDrawingBounds.left}px; top: ${hpglDrawingBounds.top}px; width: ${hpglDrawingBounds.width}px; height: ${hpglDrawingBounds.height}px;`">
-
-                      <!-- STAMP ORIGINAL -->
-                      <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
-                        <div :class="[
-                            stampOriginClass('original'), 
-                            isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
-                          ]"
-                          class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                          style="transform: scale(0.45);">
-                          <div
-                            class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
-                            :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
-                            <span x-text="stampTopLine('original')"></span>
-                          </div>
-                          <div class="flex-1 flex items-center justify-center">
-                            <span
-                              class="text-xs font-extrabold uppercase px-2"
-                              :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
-                              x-text="stampCenterOriginal()"></span>
-                          </div>
-                          <div
-                            class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
-                            :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
-                            <span x-text="stampBottomLine('original')"></span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- STAMP COPY -->
-                      <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
-                        <div :class="stampOriginClass('copy')"
-                          class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                          style="transform: scale(0.45);">
-                          <div
-                            class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
-                            <span x-text="stampTopLine('copy')"></span>
-                          </div>
-                          <div class="flex-1 flex items-center justify-center">
-                            <span
-                              class="text-xs font-extrabold uppercase text-blue-700 px-2"
-                              x-text="stampCenterCopy()"></span>
-                          </div>
-                          <div
-                            class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
-                            <span x-text="stampBottomLine('copy')"></span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- STAMP OBSOLETE -->
-                      <div x-show="pkg.stamp?.is_obsolete"
-                        class="absolute"
-                        :class="stampPositionClass('obsolete')">
-                        <div
-                          :class="stampOriginClass('obsolete')"
-                          class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
-                          style="transform: scale(0.45);">
-                          <div class="w-full text-center border-b-2 border-red-600 py-0.5 px-4 font-semibold tracking-tight">
-                            <span x-text="stampTopLine('obsolete')"></span>
-                          </div>
-
-                          <div class="flex-1 flex items-center justify-center">
-                            <span class="text-xs font-extrabold text-red-700 uppercase px-2"
-                              x-text="stampCenterObsolete()"></span>
-                          </div>
-
-                          <div class="w-full border-t-2 border-red-600 flex font-semibold tracking-tight">
-                            <div class="flex-1 border-r-2 border-red-600 text-center py-0.5 px-2">
-                              Name : <span x-text="obsoleteName()"></span>
-                            </div>
-                            <div class="flex-1 text-center py-0.5 px-2">
-                              Dept. : <span x-text="obsoleteDept()"></span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-
-                <div x-show="hpglLoading"
-                  class="absolute bottom-3 right-3 text-xs text-gray-700 dark:text-gray-200 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded">
-                  Rendering HPGL…
-                </div>
-                <div x-show="hpglError"
-                  class="absolute bottom-3 left-3 text-xs text-red-600 bg-white/80 dark:bg-gray-900/80 px-2 py-1 rounded"
-                  x-text="hpglError">
-                </div>
-              </div>
-            </template>
-
-            <!-- CAD: IGES / STEP via occt-import-js -->
-            <template x-if="isCad(selectedFile?.name)">
-              <div class="w-full">
-                <div x-ref="igesWrap" class="w-full h-[70vh] rounded border border-gray-200 dark:border-gray-700 bg-black/5"></div>
-
-                <!-- TOOLBAR -->
-                <div class="mt-3 flex flex-wrap items-center gap-2">
-                  <div class="inline-flex rounded-md shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700" @click="setDisplayStyle('shaded')">Shaded</button>
-                  </div>
-                  <div class="inline-flex rounded-md shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700" @click="setDisplayStyle('shaded-edges')">Shaded+Edges</button>
-                  </div>
-
-                  <div class="inline-flex items-center gap-2 ml-2">
-                    <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      :class="{'bg-blue-50 dark:bg-blue-900/30': iges.measure.enabled}"
-                      @click="toggleMeasure()">
-                      Measure
-                    </button>
-                    <button class="px-2 py-1 text-xs text-gray-900 dark:text-gray-100 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      @click="clearMeasurements()">
-                      Clear
-                    </button>
-                  </div>
-                </div>
-
-                <div x-show="iges.loading" class="text-xs text-gray-500 mt-2">Loading CAD…</div>
-                <div x-show="iges.error" class="text-xs text-red-600 mt-2" x-text="iges.error"></div>
-              </div>
-            </template>
-
-            <!-- FALLBACK -->
-            <template
-              x-if="
-                !isImage(selectedFile?.name)
-                && !isPdf(selectedFile?.name)
-                && !isTiff(selectedFile?.name)
-                && !isCad(selectedFile?.name)
-                && !isHpgl(selectedFile?.name)
-              ">
-              <div class="text-center">
-                <i class="fa-solid fa-file text-6xl text-gray-400 dark:text-gray-500"></i>
-                <p class="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400">Preview Unavailable</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400">This file type is not supported for preview.</p>
-              </div>
-            </template>
-
-          </div>
-          <!-- /PREVIEW AREA -->
-        </div>
+        </template>
       </div>
     </div>
+    <div x-show="false">
+
+
+
     <!-- ================= /RIGHT COLUMN ================= -->
   </div>
   <!-- ================= /MAIN LAYOUT ================= -->
@@ -1199,6 +577,8 @@
 <!-- OCCT: parser STEP/IGES (WASM) -->
 <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
 
+<script src="{{ asset('assets/js/file-viewer-alpine.js') }}"></script>
+
 <script>
   /* ========== Toast Utilities ========== */
   function detectTheme() {
@@ -1315,471 +695,109 @@
 
   /* ========== Alpine Component ========== */
   function approvalDetail() {
-    // <- private variable, tidak ikut diproxy Alpine
-    let pdfDoc = null;
-    return {
-      approvalId: @js($approvalId),
+    const viewer = fileViewerComponent({
       pkg: @js($detail),
-      stampFormats: @js($stampFormats),
+      showStampConfig: true,
       userDeptCode: @js($userDeptCode ?? null),
       userName: @js($userName ?? null),
       isEngineering: @js($isEngineering ?? false),
+      stampFormat: @js($stampFormats[0] ?? null),
+      enableMasking: true
+    });
+
+    return {
+      ...viewer,
+      approvalId: @js($approvalId),
       approvalLevel: @js($approvalLevel ?? 0),
 
 
-      // URL template update posisi stamp per file
+      /* ===== State & Modal ===== */
       updateStampUrlTemplate: `{{ route('approvals.files.updateStamp', ['fileId' => '__FILE_ID__']) }}`,
-
-      // ==== KONFIGURASI POSISI STAMP ====
-      stampDefaults: {
-        original: 'bottom-left',
-        copy: 'bottom-center',
-        obsolete: 'bottom-right',
-      },
-      stampPerFile: {}, // { [fileKey]: { original, copy, obsolete } }
-      stampConfig: {
-        original: 'bottom-left',
-        copy: 'bottom-center',
-        obsolete: 'bottom-right',
-      },
-
-
-      selectedFile: null,
-      openSections: [],
-
-      // modal
       showApproveModal: false,
       showRejectModal: false,
+      showRollbackModal: false,
+      showShareModal: false,
       processing: false,
       rejectNote: '',
       rejectNoteError: false,
-      showRollbackModal: false,
-      showShareModal: false,
       shareNote: '',
       shareNoteError: false,
       shareProcessing: false,
-
-
-      // Apply stamp ke semua file
-      applyToAllProcessing: false,
-
-      // TIFF state
-      tifLoading: false,
-      tifError: '',
-      tifPageNum: 1,
-      tifNumPages: 1,
-      tifIfds: [],
-      tifDecoder: null,
-
-      // HPGL state
-      hpglLoading: false,
-      hpglError: '',
-      // HPGL drawing bounds in CSS pixels (for stamp positioning)
-      hpglDrawingBounds: {
-        left: 0,
-        top: 0,
-        width: 0,
-        height: 0
-      },
-
-      // PDF state
-      pdfLoading: false,
-      pdfError: '',
-      pdfPageNum: 1,
-      pdfNumPages: 1,
-      pdfScale: 1.0,
+      openSections: [],
 
 
 
-      // ZOOM + PAN untuk image / TIFF / HPGL / PDF
-      imageZoom: 1,
-      minZoom: 0.5,
-      maxZoom: 5,
-      zoomStep: 0.25,
-      panX: 0,
-      panY: 0,
-      isPanning: false,
-      panStartX: 0,
-      panStartY: 0,
-      panOriginX: 0,
-      panOriginY: 0,
-
-      zoomIn() {
-        this.imageZoom = Math.min(this.imageZoom + this.zoomStep, this.maxZoom);
-      },
-      zoomOut() {
-        this.imageZoom = Math.max(this.imageZoom - this.zoomStep, this.minZoom);
-      },
-      resetZoom() {
-        this.imageZoom = 1;
-        this.panX = 0;
-        this.panY = 0;
-      },
-      onWheelZoom(e) {
-        const delta = e.deltaY;
-        const step = this.zoomStep;
-
-        if (delta < 0) {
-          this.imageZoom = Math.min(this.imageZoom + step, this.maxZoom);
-        } else if (delta > 0) {
-          this.imageZoom = Math.max(this.imageZoom - step, this.minZoom);
-        }
-      },
-      startPan(e) {
-        this.isPanning = true;
-        this.panStartX = e.clientX;
-        this.panStartY = e.clientY;
-        this.panOriginX = this.panX;
-        this.panOriginY = this.panY;
-      },
-      onPan(e) {
-        if (!this.isPanning) return;
-        const dx = e.clientX - this.panStartX;
-        const dy = e.clientY - this.panStartY;
-        this.panX = this.panOriginX + dx;
-        this.panY = this.panOriginY + dy;
-      },
-      endPan() {
-        this.isPanning = false;
-      },
-      imageTransformStyle() {
-        return `transform: translate(${this.panX}px, ${this.panY}px) scale(${this.imageZoom}); transform-origin: center center;`;
-      },
-      // mapping dari integer DB -> key string
-      // mapping dari integer DB -> key string (0-5)
-      positionIntToKey(pos) {
-        switch (Number(pos)) {
-          case 0:
-            return 'bottom-left';
-          case 1:
-            return 'bottom-center';
-          case 2:
-            return 'bottom-right';
-          case 3:
-            return 'top-left';
-          case 4:
-            return 'top-center';
-          case 5:
-            return 'top-right';
-          default:
-            return 'bottom-left'; // Default to bottom-left for original stamp
-        }
-      },
-
-      // mapping dari key string -> integer DB (0-5)
+      /* ===== Stamp Management Overrides ===== */
       positionKeyToInt(key) {
         switch (key) {
-          case 'bottom-left':
-            return 0;
-          case 'bottom-center':
-            return 1;
-          case 'bottom-right':
-            return 2;
-          case 'top-left':
-            return 3;
-          case 'top-center':
-            return 4;
-          case 'top-right':
-            return 5;
-          default:
-            return 0;
+          case 'bottom-left': return 0;
+          case 'bottom-center': return 1;
+          case 'bottom-right': return 2;
+          case 'top-left': return 3;
+          case 'top-center': return 4;
+          case 'top-right': return 5;
+          default: return 0;
         }
       },
 
 
-      // CAD viewer state
-      iges: {
-        renderer: null,
-        scene: null,
-        camera: null,
-        controls: null,
-        animId: 0,
-        loading: false,
-        error: '',
-        rootModel: null,
-        THREE: null,
-        measure: {
-          enabled: false,
-          group: null,
-          p1: null,
-          p2: null
+
+
+
+
+
+
+
+
+
+      /* ===== Lifecycle Override ===== */
+      init() {
+        if (typeof viewer !== 'undefined' && viewer.init) {
+          viewer.init.call(this);
         }
-      },
-      _onIgesResize: null,
-
-      /* ===== Helpers jenis file ===== */
-      extOf(name) {
-        const i = (name || '').lastIndexOf('.');
-        return i > -1 ? (name || '').slice(i + 1).toLowerCase() : '';
-      },
-      isImage(name) {
-        return ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'].includes(this.extOf(name));
-      },
-      isPdf(name) {
-        return this.extOf(name) === 'pdf';
-      },
-      isTiff(name) {
-        return ['tif', 'tiff'].includes(this.extOf(name));
-      },
-      isHpgl(name) {
-        return ['plt', 'hpgl', 'hpg', 'prn'].includes(this.extOf(name));
-      },
-      isCad(name) {
-        return ['igs', 'iges', 'stp', 'step'].includes(this.extOf(name));
-      },
-
-      findFileByNameInsensitive(name) {
-        if (!name) return null;
-        const target = name.toLowerCase();
-        const groups = this.pkg.files || {};
-
-        for (const key of Object.keys(groups)) {
-          const list = groups[key] || [];
-          for (const f of list) {
-            const n = (f.name || '').toLowerCase();
-            if (n === target || n.endsWith('/' + target) || n.endsWith('\\' + target)) {
-              return f;
-            }
+        window.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            this.showApproveModal = false;
+            this.showRejectModal = false;
+            this.showRollbackModal = false;
+            this.showShareModal = false;
           }
+        });
+        window.addEventListener('beforeunload', () => {
+          if (typeof this.disposeCad === 'function') this.disposeCad();
+        });
+      },
+
+      /* ===== UI Methods ===== */
+      toggleSection(c) {
+        const i = this.openSections.indexOf(c);
+        if (i > -1) this.openSections.splice(i, 1);
+        else this.openSections.push(c);
+      },
+
+      selectFile(file) {
+        if (this.selectedFile && typeof viewer !== 'undefined' && viewer.onStampChange) {
+          viewer.onStampChange.call(this);
         }
-        return null;
-      },
-
-      _findIgesSibling(mainFile) {
-        if (!mainFile) return null;
-        const name = mainFile.name || '';
-        const base = name.replace(/\.(stp|step)$/i, '');
-
-        const candidates = [];
-        if (base) {
-          candidates.push(base + '.igs', base + '.iges');
+        if (typeof this.isCad === 'function' && this.isCad(this.selectedFile?.name)) {
+          if (typeof this.disposeCad === 'function') this.disposeCad();
         }
-        candidates.push('temp.igs', 'temp.iges');
-
-        for (const cand of candidates) {
-          const f = this.findFileByNameInsensitive(cand);
-          if (f) return f;
-        }
-
-        const groups = this.pkg.files || {};
-        for (const key of Object.keys(groups)) {
-          const list = groups[key] || [];
-          const hit = list.find(f => /\.(igs|iges)$/i.test(f.name || ''));
-          if (hit) return hit;
-        }
-
-        return null;
+        this.selectedFile = { ...file };
       },
 
-      formatBytes(bytes) {
-        if (!bytes || bytes <= 0) return '-';
-        const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        let i = 0;
-        let value = bytes;
-        while (value >= 1024 && i < units.length - 1) {
-          value /= 1024;
-          i++;
-        }
-        const fixed = value >= 10 || i === 0 ? value.toFixed(0) : value.toFixed(1);
-        return `${fixed} ${units[i]}`;
-      },
-
-      fileSizeInfo() {
-        if (!this.selectedFile) return '';
-        const bytes = this.selectedFile.size ?? this.selectedFile.filesize ?? 0;
-        if (!bytes) return 'Size: -';
-        return 'Size: ' + this.formatBytes(bytes);
-      },
-
-      formatStampDate(dateString) {
-        if (!dateString) return '';
-        const d = new Date(dateString);
-        if (isNaN(d.getTime())) return dateString;
-
-        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        const monthName = months[d.getMonth()];
-        const day = d.getDate();
-        const year = d.getFullYear();
-
-        const j = day % 10,
-          k = day % 100;
-
-        let suffix = "ᵗʰ";
-        if (j == 1 && k != 11) {
-          suffix = "ˢᵗ";
-        } else if (j == 2 && k != 12) {
-          suffix = "ⁿᵈ";
-        } else if (j == 3 && k != 13) {
-          suffix = "ʳᵈ";
-        }
-        return `${monthName}.${day}${suffix} ${year}`;
-      },
-
-      // teks tengah stamp ORIGINAL
-      stampCenterOriginal() {
-        return 'SAI-DRAWING ORIGINAL';
-      },
-
-      // teks tengah stamp Control Copy
-      stampCenterCopy() {
-        return 'SAI-DRAWING CONTROLLED COPY';
-      },
-
-      // teks tengah stamp OBSOLETE
-      stampCenterObsolete() {
-        return 'SAI-DRAWING OBSOLETE';
-      },
-
-      getNormalFormat() {
-        const list = this.stampFormats || [];
-        if (Array.isArray(list) && list.length > 0) {
-          return list[0];
-        }
-        return {
-          prefix: 'DATE RECEIVED',
-          suffix: 'DATE UPLOADED'
-        };
-      },
-
-      getObsoleteFormat() {
-        const list = this.stampFormats || [];
-        if (Array.isArray(list) && list.length > 1) {
-          return list[1];
-        }
-        return {
-          prefix: 'DATE UPLOAD',
-          suffix: 'DATE OBSOLETE'
-        };
-      },
-
-      obsoleteName() {
-        const s = this.pkg?.stamp || {};
-        const info = s.obsolete_info || {};
-        return info.name || '';
-      },
-
-      obsoleteDept() {
-        const s = this.pkg?.stamp || {};
-        const info = s.obsolete_info || {};
-        return info.dept || '';
-      },
-
-      getObsoleteInfo() {
-        return this.pkg?.stamp?.obsolete_info || {};
-      },
-
-      stampTopLine(which = 'original') {
-        const s = this.pkg?.stamp || {};
-        let date;
-        let fmt;
-
-        if (which === 'obsolete') {
-          const info = this.getObsoleteInfo();
-          date = info.date_text || s.obsolete_date || s.upload_date || '';
-          return date ? `DATE : ${date}` : '';
-        } else if (which === 'original') {
-          fmt = this.getNormalFormat();
-          date = s.receipt_date || s.upload_date || '';
-          const label = fmt.prefix || 'DATE RECEIVED';
-          return date ? `${label} : ${this.formatStampDate(date)}` : '';
-        } else if (which === 'copy') {
-          const now = new Date();
-          const dateStr = this.formatStampDate(now.toISOString().split('T')[0]);
-
-          // Format Jam (HH:MM:SS)
-          const hours = String(now.getHours()).padStart(2, '0');
-          const minutes = String(now.getMinutes()).padStart(2, '0');
-          const seconds = String(now.getSeconds()).padStart(2, '0');
-          const timeStr = `${hours}:${minutes}:${seconds}`;
-
-          const deptCode = this.userDeptCode || '--';
-
-          return `SAI / ${deptCode} / ${dateStr} ${timeStr}`;
-
-        } else {
-          fmt = this.getNormalFormat();
-          date = s.receipt_date || s.upload_date || '';
-          const label = fmt.prefix || 'DATE RECEIVED';
-          return date ? `${label} : ${this.formatStampDate(date)}` : '';
-        }
-      },
-
-      stampBottomLine(which = 'original') {
-        const s = this.pkg?.stamp || {};
-        let fmt;
-
-        if (which === 'copy') {
-          const userName = this.userName || '--';
-          return `Downloaded By ${userName}`;
-        } else if (which === 'obsolete') {
-          fmt = this.getObsoleteFormat();
-          const info = this.getObsoleteInfo();
-          const name = info.name || '';
-          const dept = info.dept || '';
-          let value = '';
-          if (name && dept) {
-            value = `${name} / ${dept}`;
-          } else {
-            value = name || dept || '';
-          }
-          const label = fmt.suffix || 'By';
-          return value ? `${label} : ${value}` : '';
-        } else {
-          fmt = this.getNormalFormat();
-          const date = s.upload_date || '';
-          const label = fmt.suffix || 'Date Uploaded';
-          return date ? `${label} : ${this.formatStampDate(date)}` : '';
-        }
-      },
-
-      // ===== helper key per file (pakai id kalau ada) =====
-      getFileKey(file) {
-        return (file?.id ?? file?.name ?? '').toString();
-      },
-
-      // load konfigurasi posisi stamp untuk file tertentu (dari state / DB)
-      loadStampConfigFor(file) {
-        const key = this.getFileKey(file);
-        if (!key) {
-          this.stampConfig = {
-            ...this.stampDefaults
-          };
-          return;
-        }
-
-        if (!this.stampPerFile[key]) {
-          this.stampPerFile[key] = {
-            original: this.positionIntToKey(file.ori_position ?? 0),
-            copy: this.positionIntToKey(file.copy_position ?? 1),
-            obsolete: this.positionIntToKey(file.obslt_position ?? 2),
-          };
-        }
-
-        this.stampConfig = this.stampPerFile[key];
-      },
-
-
-      saveStampConfigForCurrent() {
-        const key = this.getFileKey(this.selectedFile);
-        if (!key) return;
-        this.stampPerFile[key] = {
-          ...this.stampConfig
-        };
-      },
-
+      /* ===== Stamp Management ===== */
       async onStampChange() {
-        // simpan ke memory di front-end
+        // Save to memory first (this triggers Alpine.js reactivity)
         this.saveStampConfigForCurrent();
+        
         if (!this.selectedFile?.id) return;
 
         const url = this.updateStampUrlTemplate.replace('__FILE_ID__', this.selectedFile.id);
-
         const payload = {
           ori_position: this.positionKeyToInt(this.stampConfig.original),
           copy_position: this.positionKeyToInt(this.stampConfig.copy),
           obslt_position: this.positionKeyToInt(this.stampConfig.obsolete),
         };
-
 
         try {
           const res = await fetch(url, {
@@ -1791,38 +809,22 @@
             },
             body: JSON.stringify(payload),
           });
-
-          const text = await res.text();
-          let json = {};
-          try {
-            json = JSON.parse(text);
-          } catch {}
-
-          if (!res.ok) {
-            throw new Error(json.message || 'Failed to save stamp position');
-          }
-
-          toastSuccess('Saved', json.message || 'Stamp position saved.');
+          if (!res.ok) throw new Error('Failed to save stamp position');
+          toastSuccess('Saved', 'Stamp position updated.');
         } catch (e) {
           console.error(e);
-          toastError('Error', e.message || 'Failed to save stamp position');
+          toastError('Error', 'Failed to save stamp position');
         }
       },
 
-      // ⬇⬇ TAMBAHKAN FUNGSI BARU INI ⬇⬇
       async applyStampToAll() {
         if (!this.selectedFile) {
-          toastWarning('Warning', 'Please select one file first to define the positions.');
+          toastWarning('Warning', 'Please select a file first.');
           return;
         }
-
         this.applyToAllProcessing = true;
-
-        const currentConfig = {
-          ...this.stampConfig
-        };
+        const currentConfig = { ...this.stampConfig };
         const groups = this.pkg.files || {};
-
         const payload = {
           ori_position: this.positionKeyToInt(currentConfig.original),
           copy_position: this.positionKeyToInt(currentConfig.copy),
@@ -1836,24 +838,8 @@
           for (const groupKey of Object.keys(groups)) {
             const list = groups[groupKey] || [];
             for (const file of list) {
-              const key = this.getFileKey(file);
-              if (!key) continue;
-
-              // update state front-end
-              this.stampPerFile[key] = {
-                ...currentConfig
-              };
-
-              // kalau fungsi preview baru dipanggil nanti, biar konsisten dengan DB
-              file.ori_position = payload.ori_position;
-              file.copy_position = payload.copy_position;
-              file.obslt_position = payload.obslt_position;
-
-              // kalau tidak ada id (misal file virtual), skip kirim ke server
               if (!file.id) continue;
-
               const url = this.updateStampUrlTemplate.replace('__FILE_ID__', file.id);
-
               try {
                 const res = await fetch(url, {
                   method: 'POST',
@@ -1864,957 +850,32 @@
                   },
                   body: JSON.stringify(payload),
                 });
-
-                const text = await res.text();
-                let json = {};
-                try {
-                  json = JSON.parse(text);
-                } catch {}
-
-                if (!res.ok) {
-                  failCount++;
-                  console.error('Failed update for file', file.id, json);
-                } else {
-                  successCount++;
-                }
-              } catch (err) {
-                failCount++;
-                console.error('Error update for file', file.id, err);
-              }
+                if (res.ok) successCount++;
+                else failCount++;
+              } catch (err) { failCount++; }
             }
           }
-
-          if (successCount > 0 && failCount === 0) {
-            toastSuccess('Saved', `Stamp positions applied to ${successCount} file(s).`);
-          } else if (successCount > 0 && failCount > 0) {
-            toastWarning(
-              'Partial Success',
-              `Applied to ${successCount} file(s), but failed on ${failCount} file(s).`
-            );
-          } else {
-            toastError('Error', 'Failed to apply stamp positions to files.');
-          }
+          if (successCount > 0) toastSuccess('Saved', `Applied to ${successCount} files.`);
+          if (failCount > 0) toastWarning('Warning', `Failed on ${failCount} files.`);
         } finally {
           this.applyToAllProcessing = false;
         }
       },
 
-      stampPositionClass(which = 'original') {
-        // Use stampConfig if it has a valid (non-null) value, otherwise use stampDefaults
-        const configVal = this.stampConfig && this.stampConfig[which];
-        const pos = configVal || this.stampDefaults[which] || 'bottom-left';
-
-        switch (pos) {
-          case 'top-left':
-            return 'top-4 left-4';
-          case 'top-center':
-            return 'top-4 left-1/2 -translate-x-1/2';
-          case 'top-right':
-            return 'top-4 right-4';
-          case 'bottom-left':
-            return 'bottom-4 left-4';
-          case 'bottom-center':
-            return 'bottom-4 left-1/2 -translate-x-1/2';
-          case 'bottom-right':
-            return 'bottom-4 right-4';
-          default:
-            // Fallback based on stamp type
-            if (which === 'original') return 'bottom-4 left-4';
-            if (which === 'copy') return 'bottom-4 left-1/2 -translate-x-1/2';
-            if (which === 'obsolete') return 'bottom-4 right-4';
-            return 'bottom-4 left-4';
-        }
-      },
-      stampOriginClass(which = 'original') {
-        const configVal = this.stampConfig && this.stampConfig[which];
-        const pos = configVal || this.stampDefaults[which] || 'bottom-left';
-
-        switch (pos) {
-          case 'top-left':
-            return 'origin-top-left';
-          case 'top-center':
-            return 'origin-top';
-          case 'top-right':
-            return 'origin-top-right';
-          case 'bottom-left':
-            return 'origin-bottom-left';
-          case 'bottom-center':
-            return 'origin-bottom';
-          case 'bottom-right':
-            return 'origin-bottom-right';
-          default:
-            // Fallback based on stamp type
-            if (which === 'original') return 'origin-bottom-left';
-            if (which === 'copy') return 'origin-bottom';
-            if (which === 'obsolete') return 'origin-bottom-right';
-            return 'origin-bottom-left';
-        }
-      },
-
-
-
-      /* ===== TIFF renderer ===== */
-      /* ===== TIFF renderer (multi-page) ===== */
-      async renderTiff(url) {
-        if (!url || typeof window.UTIF === 'undefined') return;
-
-        this.tifLoading = true;
-        this.tifError = '';
-        this.tifIfds = [];
-        this.tifDecoder = null;
-        this.tifPageNum = 1;
-        this.tifNumPages = 1;
-
-        try {
-          const resp = await fetch(url, {
-            cache: 'no-store',
-            credentials: 'same-origin'
-          });
-          if (!resp.ok) throw new Error('Failed to fetch TIFF file');
-          const buf = await resp.arrayBuffer();
-
-          const U =
-            (window.UTIF && typeof window.UTIF.decode === 'function') ? window.UTIF :
-            (window.UTIF && window.UTIF.UTIF && typeof window.UTIF.UTIF.decode === 'function') ? window.UTIF.UTIF :
-            null;
-
-          if (!U) throw new Error('UTIF library is not compatible (decode() not found)');
-
-          const ifds = U.decode(buf);
-          if (!ifds || !ifds.length) throw new Error('TIFF file does not contain any frame');
-
-          // decode semua frame
-          if (typeof U.decodeImages === 'function') {
-            U.decodeImages(buf, ifds);
-          } else if (typeof U.decodeImage === 'function') {
-            ifds.forEach(ifd => U.decodeImage(buf, ifd));
-          }
-
-          // simpan ke state untuk multi-page
-          this.tifDecoder = U;
-          this.tifIfds = ifds;
-          this.tifNumPages = ifds.length;
-          this.tifPageNum = 1;
-
-          await this.renderTiffPage();
-        } catch (e) {
-          console.error(e);
-          this.tifError = e?.message || 'Failed to render TIFF';
-        } finally {
-          this.tifLoading = false;
-        }
-      },
-
-      async renderTiffPage() {
-        if (!this.tifDecoder || !this.tifIfds || !this.tifIfds.length) return;
-
-        const pageIndex = this.tifPageNum - 1;
-        const ifd = this.tifIfds[pageIndex];
-        if (!ifd) return;
-
-        try {
-          const U = this.tifDecoder;
-          const rgba = U.toRGBA8(ifd);
-          const w = ifd.width;
-          const h = ifd.height;
-
-          const off = document.createElement('canvas');
-          const ctx = off.getContext('2d');
-          off.width = w;
-          off.height = h;
-
-          const imgData = ctx.createImageData(w, h);
-          imgData.data.set(rgba);
-          ctx.putImageData(imgData, 0, 0);
-
-          const dataUrl = off.toDataURL('image/png');
-
-          await this.$nextTick();
-          const img = this.$refs.tifImg;
-          if (img) img.src = dataUrl;
-        } catch (e) {
-          console.error(e);
-          this.tifError = e?.message || 'Failed to render TIFF page';
-        }
-      },
-
-      nextTifPage() {
-        if (this.tifPageNum >= this.tifNumPages) return;
-        this.tifPageNum++;
-        this.renderTiffPage();
-      },
-
-      prevTifPage() {
-        if (this.tifPageNum <= 1) return;
-        this.tifPageNum--;
-        this.renderTiffPage();
-      },
-
-
-
-      /* ===== PDF renderer (pdf.js) ===== */
-      async renderPdf(url) {
-        if (!url || !window['pdfjsLib']) return;
-
-        this.pdfLoading = true;
-        this.pdfError = '';
-        pdfDoc = null;
-        this.pdfPageNum = 1;
-        this.pdfScale = 1.0;
-
-        try {
-          await this.$nextTick();
-          const canvas = this.$refs.pdfCanvas;
-          if (!canvas) throw new Error('PDF canvas not found');
-
-          const loadingTask = window.pdfjsLib.getDocument(url);
-          const pdf = await loadingTask.promise;
-          pdfDoc = pdf;
-          this.pdfNumPages = pdf.numPages;
-
-          await this.renderPdfPage();
-        } catch (e) {
-          console.error(e);
-          this.pdfError = e?.message || 'Failed to render PDF';
-        } finally {
-          this.pdfLoading = false;
-        }
-      },
-
-      async renderPdfPage() {
-        if (!pdfDoc) return;
-        try {
-          const page = await pdfDoc.getPage(this.pdfPageNum);
-          const viewport = page.getViewport({
-            scale: this.pdfScale
-          });
-
-          await this.$nextTick();
-          const canvas = this.$refs.pdfCanvas;
-          if (!canvas) return;
-          const ctx = canvas.getContext('2d');
-
-          canvas.height = viewport.height;
-          canvas.width = viewport.width;
-
-          const renderContext = {
-            canvasContext: ctx,
-            viewport
-          };
-          await page.render(renderContext).promise;
-        } catch (e) {
-          console.error(e);
-          this.pdfError = e?.message || 'Failed to render PDF page';
-        }
-      },
-
-      nextPdfPage() {
-        if (!pdfDoc) return;
-        if (this.pdfPageNum >= this.pdfNumPages) return;
-        this.pdfPageNum++;
-        this.renderPdfPage();
-      },
-
-      prevPdfPage() {
-        if (!pdfDoc) return;
-        if (this.pdfPageNum <= 1) return;
-        this.pdfPageNum--;
-        this.renderPdfPage();
-      },
-
-
-      async renderHpgl(url) {
-        if (!url) return;
-
-        this.hpglLoading = true;
-        this.hpglError = '';
-
-        try {
-          const resp = await fetch(url, {
-            cache: 'no-store',
-            credentials: 'same-origin'
-          });
-          if (!resp.ok) throw new Error('Failed to fetch HPGL file');
-          const text = await resp.text();
-
-          // Standardize separators: replace newlines with ';', then split by ';'
-          let commands = text.replace(/[\r\n]+/g, ';').split(';');
-
-          // Many HPGL files concatenate commands without semicolons
-          // Use iterative parsing to avoid stack overflow on very long strings
-          const expandedCommands = [];
-          for (const cmd of commands) {
-            if (!cmd || !cmd.trim()) continue;
-
-            // For very long commands, split manually
-            if (cmd.length > 10000) {
-              let i = 0;
-              while (i < cmd.length) {
-                // Find next opcode (2 uppercase letters)
-                if (i + 1 < cmd.length && /[A-Z]/.test(cmd[i]) && /[A-Z]/.test(cmd[i + 1])) {
-                  const opcode = cmd.substring(i, i + 2);
-                  i += 2;
-
-                  // Collect arguments until next opcode or end
-                  let args = '';
-                  while (i < cmd.length && !(/[A-Z]/.test(cmd[i]) && i + 1 < cmd.length && /[A-Z]/.test(cmd[i + 1]))) {
-                    args += cmd[i];
-                    i++;
-                  }
-
-                  expandedCommands.push(opcode + args);
-                } else {
-                  i++;
-                }
-              }
-            } else {
-              // For shorter commands, use regex (faster)
-              const parts = cmd.match(/[A-Z]{2}[^A-Z]*/g);
-              if (parts && parts.length > 1) {
-                expandedCommands.push(...parts);
-              } else {
-                expandedCommands.push(cmd);
-              }
-            }
-          }
-
-          commands = expandedCommands;
-
-          let penDown = false;
-          let isRelative = false;
-          let x = 0,
-            y = 0;
-          const segments = [];
-          const unknownCommands = new Set();
-
-          // Parse coordinates
-          const parseCoords = (str) => {
-            if (!str || !str.trim()) return [];
-            return str.replace(/,/g, ' ').trim().split(/\s+/).map(Number).filter(v => !isNaN(v));
-          };
-
-          const addSegment = (x1, y1, x2, y2) => {
-            segments.push({
-              x1,
-              y1,
-              x2,
-              y2
-            });
-          };
-
-          // Helper to approximate arc/circle with line segments
-          const addArc = (cx, cy, radius, startAngle, endAngle, steps = 32) => {
-            const angleStep = (endAngle - startAngle) / steps;
-            let prevX = cx + radius * Math.cos(startAngle * Math.PI / 180);
-            let prevY = cy + radius * Math.sin(startAngle * Math.PI / 180);
-
-            for (let i = 1; i <= steps; i++) {
-              const angle = startAngle + angleStep * i;
-              const nx = cx + radius * Math.cos(angle * Math.PI / 180);
-              const ny = cy + radius * Math.sin(angle * Math.PI / 180);
-              addSegment(prevX, prevY, nx, ny);
-              prevX = nx;
-              prevY = ny;
-            }
-          };
-
-          for (const raw of commands) {
-            if (!raw || !raw.trim()) continue;
-
-            const cmd = raw.trim().toUpperCase();
-            const op = cmd.slice(0, 2);
-            const argsStr = cmd.slice(2);
-            const coords = parseCoords(argsStr);
-
-            const processMove = () => {
-              for (let i = 0; i < coords.length; i += 2) {
-                if (i + 1 >= coords.length) break;
-                let nx = coords[i];
-                let ny = coords[i + 1];
-
-                if (isRelative) {
-                  nx = x + nx;
-                  ny = y + ny;
-                }
-
-                if (penDown) {
-                  addSegment(x, y, nx, ny);
-                }
-
-                x = nx;
-                y = ny;
-              }
-            };
-
-            if (op === 'IN') {
-              penDown = false;
-              isRelative = false;
-              x = 0;
-              y = 0;
-            } else if (op === 'SP') {
-              // Select Pen - ignore
-            } else if (op === 'PU') {
-              penDown = false;
-              if (coords.length > 0) processMove();
-            } else if (op === 'PD') {
-              penDown = true;
-              if (coords.length > 0) processMove();
-            } else if (op === 'PA') {
-              isRelative = false;
-              if (coords.length > 0) processMove();
-            } else if (op === 'PR') {
-              isRelative = true;
-              if (coords.length > 0) processMove();
-            } else if (op === 'CI') {
-              // Circle: CI radius[,chord_angle]
-              if (coords.length >= 1) {
-                const radius = Math.abs(coords[0]);
-                addArc(x, y, radius, 0, 360, 64);
-              }
-            } else if (op === 'AA') {
-              // Arc Absolute: AA cx,cy,angle[,chord_angle]
-              if (coords.length >= 3) {
-                const cx = coords[0];
-                const cy = coords[1];
-                const sweepAngle = coords[2];
-                const radius = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-                const startAngle = Math.atan2(y - cy, x - cx) * 180 / Math.PI;
-                const endAngle = startAngle + sweepAngle;
-
-                addArc(cx, cy, radius, startAngle, endAngle, Math.max(16, Math.abs(sweepAngle) / 5));
-
-                // Update position to end of arc
-                x = cx + radius * Math.cos(endAngle * Math.PI / 180);
-                y = cy + radius * Math.sin(endAngle * Math.PI / 180);
-              }
-            } else if (op === 'AR') {
-              // Arc Relative: AR dx,dy,angle[,chord_angle]
-              if (coords.length >= 3) {
-                const cx = x + coords[0];
-                const cy = y + coords[1];
-                const sweepAngle = coords[2];
-                const radius = Math.sqrt(coords[0] ** 2 + coords[1] ** 2);
-                const startAngle = Math.atan2(-coords[1], -coords[0]) * 180 / Math.PI;
-                const endAngle = startAngle + sweepAngle;
-
-                addArc(cx, cy, radius, startAngle, endAngle, Math.max(16, Math.abs(sweepAngle) / 5));
-
-                x = cx + radius * Math.cos(endAngle * Math.PI / 180);
-                y = cy + radius * Math.sin(endAngle * Math.PI / 180);
-              }
-            } else if (op === 'LT') {
-              // Line Type - ignore for now (solid, dashed, dotted, etc.)
-              // We'll render everything as solid lines
-            } else if (op === 'PG') {
-              // Page Feed - ignore, continue rendering on same canvas
-              // Multi-page HPGL files will be rendered as one continuous drawing
-            } else {
-              // Track unknown commands
-              if (op && op.length === 2 && /^[A-Z]{2}$/.test(op)) {
-                unknownCommands.add(op);
-              }
-            }
-          }
-
-          if (!segments.length) {
-            throw new Error('No drawable content found in HPGL file');
-          }
-
-          // Calculate bounds ONLY from drawn segments to ensure tight fit
-          let minX = Infinity,
-            minY = Infinity,
-            maxX = -Infinity,
-            maxY = -Infinity;
-          for (const s of segments) {
-            if (s.x1 < minX) minX = s.x1;
-            if (s.x2 < minX) minX = s.x2;
-            if (s.x1 > maxX) maxX = s.x1;
-            if (s.x2 > maxX) maxX = s.x2;
-
-            if (s.y1 < minY) minY = s.y1;
-            if (s.y2 < minY) minY = s.y2;
-            if (s.y1 > maxY) maxY = s.y1;
-            if (s.y2 > maxY) maxY = s.y2;
-          }
-
-          // Prevent race condition
-          const currentHpglName = this.findFileByNameInsensitive(this.extOf(url))?.name;
-          const selectedName = this.selectedFile?.name;
-          if (this.selectedFile && currentHpglName && selectedName &&
-            this.extOf(currentHpglName) === this.extOf(selectedName) &&
-            currentHpglName !== selectedName) {
-            return;
-          }
-
-          // Reset Render State
-          this.hpglError = '';
-          this.imageZoom = 1; // Always start at 100% (value)
-          this.panX = 0;
-          this.panY = 0;
-
-          await this.$nextTick();
-          await new Promise(r => setTimeout(r, 50));
-
-          const canvas = this.$refs.hpglCanvas;
-          if (!canvas) throw new Error('HPGL canvas not found');
-
-          // Find the correct viewport container (the one with h-[70vh])
-          // We need to traverse up from canvas to find a container with actual dimensions
-          let container = canvas.parentElement;
-          while (container && (container.clientWidth < 400 || container.clientHeight < 300)) {
-            container = container.parentElement;
-            if (!container || container === document.body) break;
-          }
-
-          // Use the found container, or fallback to reasonable defaults based on viewport
-          const viewW = Math.max(container?.clientWidth || window.innerWidth * 0.6, 800);
-          const viewH = Math.max(container?.clientHeight || window.innerHeight * 0.7, 500);
-
-          // Setup Canvas with High Resolution for Zooming
-          const dpr = window.devicePixelRatio || 1;
-          const zoomCapability = 5; // Support up to 5x zoom without blur
-          const totalScale = dpr * zoomCapability;
-
-          canvas.width = viewW * totalScale;
-          canvas.height = viewH * totalScale;
-          canvas.style.width = viewW + 'px';
-          canvas.style.height = viewH + 'px';
-
-          const ctx = canvas.getContext('2d');
-
-          // Reset and configure context
-          ctx.setTransform(1, 0, 0, 1, 0, 0);
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-          // Scale drawing context to match local coordinate system (CSS pixels)
-          ctx.scale(totalScale, totalScale);
-
-          // Line thickness configuration
-          // 0.2 CSS pixels for thin crisp lines like real plotter output
-          ctx.lineWidth = 0.2;
-          ctx.lineCap = 'butt';
-          ctx.lineJoin = 'miter';
-          ctx.strokeStyle = '#000';
-
-          const dx = maxX - minX || 1;
-          const dy = maxY - minY || 1;
-
-          // Calculate scale to fit viewport (98% fit)
-          const scale = 0.98 * Math.min(viewW / dx, viewH / dy);
-
-          // Center the drawing
-          const transX = viewW / 2 - (minX + dx / 2) * scale;
-          const transY = viewH / 2 + (minY + dy / 2) * scale;
-
-          ctx.beginPath();
-          // Render segments
-          for (const s of segments) {
-            const sx = s.x1 * scale + transX;
-            const sy = -s.y1 * scale + transY;
-            const ex = s.x2 * scale + transX;
-            const ey = -s.y2 * scale + transY;
-
-            ctx.moveTo(sx, sy);
-            ctx.lineTo(ex, ey);
-          }
-          ctx.stroke();
-
-          // Calculate actual drawing bounds in CSS pixels for stamp positioning
-          // The drawing occupies a specific region within the canvas
-          const drawingLeft = minX * scale + transX;
-          const drawingTop = -maxY * scale + transY; // Y is inverted
-          const drawingWidth = dx * scale;
-          const drawingHeight = dy * scale;
-
-          this.hpglDrawingBounds = {
-            left: drawingLeft,
-            top: drawingTop,
-            width: drawingWidth,
-            height: drawingHeight
-          };
-
-          this.viewportVersion++;
-        } catch (e) {
-          console.error(e);
-          this.hpglError = e?.message || 'Failed to render HPGL';
-        } finally {
-          this.hpglLoading = false;
-        }
-      },
-
-      /* ===== OCCT result -> THREE meshes ===== */
-      _buildThreeFromOcct(result, THREE) {
-        const group = new THREE.Group();
-        const meshes = result.meshes || [];
-
-        this.cadPartsList = [];
-
-        for (let i = 0; i < meshes.length; i++) {
-          const m = meshes[i];
-          const g = new THREE.BufferGeometry();
-          g.setAttribute('position', new THREE.Float32BufferAttribute(m.attributes.position.array, 3));
-          if (m.attributes.normal?.array) g.setAttribute('normal', new THREE.Float32BufferAttribute(m.attributes.normal.array, 3));
-          if (m.index?.array) g.setIndex(m.index.array);
-
-          if (g.attributes.position.count > 0) {
-            g.computeBoundsTree();
-          }
-
-          let color = 0xcccccc;
-          if (m.color && m.color.length === 3) color = (m.color[0] << 16) | (m.color[1] << 8) | (m.color[2]);
-
-          const mat = new THREE.MeshStandardMaterial({
-            color,
-            metalness: 0.3,
-            roughness: 0.7,
-            side: THREE.DoubleSide
-          });
-
-          const mesh = new THREE.Mesh(g, mat);
-          mesh.name = m.name || `Part ${i+1}`;
-          group.add(mesh);
-
-          this.cadPartsList.push({
-            uuid: mesh.uuid,
-            name: mesh.name,
-            visible: true
-          });
-        }
-        return group;
-      },
-
-      /* ===== Cleanup CAD ===== */
-      disposeCad() {
-        try {
-          cancelAnimationFrame(this.iges.animId || 0);
-          if (this._onIgesResize) window.removeEventListener('resize', this._onIgesResize);
-          const {
-            renderer,
-            scene,
-            controls
-          } = this.iges || {};
-          controls?.dispose?.();
-          scene?.traverse?.(o => {
-            o.geometry?.dispose?.();
-            if (o.material) {
-              const m = o.material;
-              Array.isArray(m) ? m.forEach(mm => mm.dispose?.()) : m.dispose?.();
-            }
-          });
-          renderer?.dispose?.();
-          const wrap = this.$refs.igesWrap;
-          if (wrap)
-            while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
-        } catch {}
-        this.iges = {
-          renderer: null,
-          scene: null,
-          camera: null,
-          controls: null,
-          animId: 0,
-          loading: false,
-          error: '',
-          rootModel: null,
-          THREE: null,
-          measure: {
-            enabled: false,
-            group: null,
-            p1: null,
-            p2: null
-          }
-        };
-        this._onIgesResize = null;
-      },
-
-      /* ===== Meta line formatter ===== */
+      /* ===== Helpers ===== */
       metaLine() {
         const m = this.pkg?.metadata || {};
         return [
-            m.customer,
-            m.model,
-            m.part_no,
-            m.part_group,
-            m.doc_type,
-            m.category,
-            m.ecn_no,
-            m.revision,
+            m.customer, m.model, m.part_no, m.part_group, m.doc_type, m.category, m.ecn_no, m.revision,
             this.pkg?.status
           ]
           .filter(v => v && String(v).trim().length > 0)
           .join(' - ');
       },
 
-      /* ===== Display Styles / Edges ===== */
-      _oriMats: new Map(),
-      _cacheOriginalMaterials(root, THREE) {
-        root.traverse(o => {
-          if (o.isMesh && !this._oriMats.has(o)) {
-            const m = o.material;
-            this._oriMats.set(o, Array.isArray(m) ? m.map(mm => mm.clone()) : m.clone());
-          }
-        });
-      },
-      _restoreMaterials(root) {
-        root.traverse(o => {
-          if (!o.isMesh) return;
-          const m = this._oriMats.get(o);
-          if (!m) return;
-          o.material = Array.isArray(m) ? m.map(mm => mm.clone()) : m.clone();
-        });
-        this._setWireframe(root, false);
-        this._toggleEdges(root, false);
-        this._setPolygonOffset(root, false);
-      },
-      _setWireframe(root, on = true) {
-        root.traverse(o => {
-          if (!o.isMesh) return;
-          (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m.wireframe = on);
-        });
-      },
-      _setPolygonOffset(root, on = true, factor = 1, units = 1) {
-        root.traverse(o => {
-          if (!o.isMesh) return;
-          (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => {
-            m.polygonOffset = on;
-            m.polygonOffsetFactor = factor;
-            m.polygonOffsetUnits = units;
-          });
-        });
-      },
-      _addEdges(mesh, THREE, threshold = 30) {
-        if (mesh.userData.edges) return mesh.userData.edges;
-        const edgesGeo = new THREE.EdgesGeometry(mesh.geometry, threshold);
-        const edgesMat = new THREE.LineBasicMaterial({
-          transparent: true,
-          opacity: 0.6,
-          depthTest: false
-        });
-        const edges = new THREE.LineSegments(edgesGeo, edgesMat);
-        edges.renderOrder = 999;
-        mesh.add(edges);
-        mesh.userData.edges = edges;
-        return edges;
-      },
-      _toggleEdges(root, on = true, color = 0x000000) {
-        const THREE = this.iges.THREE;
-        root.traverse(o => {
-          if (!o.isMesh) return;
-          if (on) {
-            const e = this._addEdges(o, THREE, 30);
-            e.material.color = new THREE.Color(color);
-          } else if (o.userData.edges) {
-            o.remove(o.userData.edges);
-            o.userData.edges.geometry.dispose();
-            o.userData.edges.material.dispose();
-            o.userData.edges = null;
-          }
-        });
-      },
-      setDisplayStyle(mode) {
-        const root = this.iges.rootModel;
-        if (!root) return;
-        this._restoreMaterials(root);
-        if (mode === 'shaded') return;
-        if (mode === 'shaded-edges') {
-          this._setPolygonOffset(root, true, 1, 1);
-          this._toggleEdges(root, true, 0x000000);
-        }
-      },
-
-      /* ===== Measure (2-click) ===== */
-      toggleMeasure() {
-        const M = this.iges.measure;
-        M.enabled = !M.enabled;
-        if (M.enabled && !M.group) {
-          const THREE = this.iges.THREE;
-          M.group = new THREE.Group();
-          this.iges.scene.add(M.group);
-          this._bindMeasureEvents(true);
-        }
-        if (!M.enabled) {
-          this._bindMeasureEvents(false);
-          M.p1 = M.p2 = null;
-        }
-      },
-      clearMeasurements() {
-        const g = this.iges.measure.group;
-        if (!g) return;
-        (g.children || []).forEach(ch => ch.userData?.dispose?.());
-        g.clear();
-      },
-      _bindMeasureEvents(on) {
-        const canvas = this.iges.renderer?.domElement;
-        if (!canvas) return;
-        if (on) {
-          this._onMeasureDblClick = (ev) => {
-            if (!this.iges.measure.enabled) return;
-            const p = this._pickPoint(ev);
-            if (!p) return;
-            const M = this.iges.measure;
-            if (!M.p1) {
-              M.p1 = p;
-              return;
-            }
-            M.p2 = p;
-            this._drawMeasurement(M.p1, M.p2);
-            M.p1 = M.p2 = null;
-          };
-          canvas.addEventListener('dblclick', this._onMeasureDblClick);
-        } else {
-          canvas.removeEventListener('dblclick', this._onMeasureDblClick);
-        }
-      },
-      _pickPoint(ev) {
-        const {
-          THREE,
-          camera,
-          rootModel
-        } = this.iges;
-        const rect = this.iges.renderer.domElement.getBoundingClientRect();
-        const mouse = new THREE.Vector2(
-          ((ev.clientX - rect.left) / rect.width) * 2 - 1,
-          -((ev.clientY - rect.top) / rect.height) * 2 + 1
-        );
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(mouse, camera);
-        const hits = raycaster.intersectObjects(rootModel.children, true);
-        if (!hits.length) return null;
-        return hits[0].point.clone();
-      },
-      _drawMeasurement(a, b) {
-        const THREE = this.iges.THREE;
-        const group = new THREE.Group();
-
-        const geom = new THREE.BufferGeometry().setFromPoints([a, b]);
-        const line = new THREE.Line(geom, new THREE.LineBasicMaterial({}));
-        group.add(line);
-
-        const s = Math.max(0.4, a.distanceTo(b) / 160);
-        const sg = new THREE.SphereGeometry(s, 16, 16);
-        const sm = new THREE.MeshBasicMaterial({});
-        const s1 = new THREE.Mesh(sg, sm);
-        s1.position.copy(a);
-        group.add(s1);
-        const s2 = new THREE.Mesh(sg, sm);
-        s2.position.copy(b);
-        group.add(s2);
-
-        const wrap = this.$refs.igesWrap;
-        const lbl = document.createElement('div');
-        lbl.className = 'measure-label';
-        lbl.style.position = 'absolute';
-        lbl.style.pointerEvents = 'none';
-        lbl.style.font = '12px/1.2 monospace';
-        lbl.style.padding = '2px 6px';
-        lbl.style.background = 'rgba(0,0,0,.75)';
-        lbl.style.color = '#fff';
-        lbl.style.borderRadius = '4px';
-        lbl.style.zIndex = '20';
-        wrap.appendChild(lbl);
-
-        const updateLabel = () => {
-          const mid = a.clone().add(b).multiplyScalar(0.5).project(this.iges.camera);
-          const w = wrap.clientWidth,
-            h = wrap.clientHeight;
-          const x = (mid.x * 0.5 + 0.5) * w;
-          const y = (-mid.y * 0.5 + 0.5) * h;
-          lbl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
-          lbl.textContent = `${a.distanceTo(b).toFixed(2)} mm`;
-        };
-
-        group.userData.update = updateLabel;
-        group.userData.dispose = () => lbl.remove();
-        updateLabel();
-
-        this.iges.measure.group.add(group);
-      },
-
-      /* ===== Lifecycle ===== */
-      init() {
-        window.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape') {
-            if (this.showApproveModal) this.closeApproveModal();
-            if (this.showRejectModal) this.closeRejectModal();
-            if (this.showRollbackModal) this.closeRollbackModal();
-          }
-        });
-        window.addEventListener('beforeunload', () => this.disposeCad());
-      },
-
-      /* ===== UI ===== */
-      toggleSection(c) {
-        const i = this.openSections.indexOf(c);
-        if (i > -1) this.openSections.splice(i, 1);
-        else this.openSections.push(c);
-      },
-
-      selectFile(file) {
-        // simpan posisi stamp file sebelumnya
-        if (this.selectedFile) {
-          this.saveStampConfigForCurrent();
-        }
-
-        if (this.isCad(this.selectedFile?.name)) this.disposeCad();
-
-        if (this.isTiff(this.selectedFile?.name)) {
-          this.tifError = '';
-          this.tifLoading = false;
-          this.tifIfds = [];
-          this.tifDecoder = null;
-          this.tifPageNum = 1;
-          this.tifNumPages = 1;
-          if (this.$refs.tifImg) this.$refs.tifImg.src = '';
-        }
-
-        if (this.isHpgl(this.selectedFile?.name)) {
-          this.hpglError = '';
-          this.hpglLoading = false;
-          if (this.$refs.hpglCanvas) {
-            const c = this.$refs.hpglCanvas;
-            const ctx = c.getContext('2d');
-            ctx && ctx.clearRect(0, 0, c.width, c.height);
-          }
-        }
-        if (this.isPdf(this.selectedFile?.name)) {
-          this.pdfError = '';
-          this.pdfLoading = false;
-          pdfDoc = null;
-          if (this.$refs.pdfCanvas) {
-            const c = this.$refs.pdfCanvas;
-            const ctx = c.getContext('2d');
-            ctx && ctx.clearRect(0, 0, c.width, c.height);
-          }
-        }
-
-        this.imageZoom = 1;
-        this.panX = 0;
-        this.panY = 0;
-
-        this.selectedFile = {
-          ...file
-        };
-
-        // load konfigurasi posisi stamp untuk file yang dipilih
-        this.loadStampConfigFor(this.selectedFile);
-
-        this.$nextTick(() => {
-          if (this.isTiff(file?.name)) {
-            this.renderTiff(file.url);
-          } else if (this.isCad(file?.name)) {
-            this.renderCadOcct(file);
-          } else if (this.isHpgl(file?.name)) {
-            this.renderHpgl(file.url);
-          } else if (this.isPdf(file?.name)) {
-            this.renderPdf(file.url);
-          }
-        });
-      },
-
       addPkgActivity(action, user, note = '') {
         this.pkg.activityLogs.unshift({
-          action,
-          user,
-          note: note || '',
+          action, user, note: note || '',
           time: new Date().toLocaleString()
         });
       },
@@ -2824,16 +885,13 @@
         const s = (this.pkg.status || '').toLowerCase();
         return s === 'waiting l1' || s === 'waiting l2' || s === 'waiting l3';
       },
-
       isApproved() {
         return (this.pkg.status || '').toLowerCase() === 'approved';
       },
       isFinished() {
-        // baca dari root detail: { status, is_finish, metadata, ... }
         const flag = this.pkg?.is_finish ?? this.pkg?.metadata?.is_finish ?? 0;
         return Number(flag) === 1 || flag === true;
       },
-
       currentWaitingLevel() {
         const s = (this.pkg.status || '').toLowerCase();
         if (s === 'waiting l1') return 1;
@@ -2841,40 +899,22 @@
         if (s === 'waiting l3') return 3;
         return 0;
       },
-
       canAct() {
         return this.isWaiting() && this.approvalLevel === this.currentWaitingLevel();
       },
       canRollback() {
-  const s = (this.pkg.status || '').toLowerCase();
+        const s = (this.pkg.status || '').toLowerCase();
+        if (s === 'waiting l2') return this.approvalLevel === 1;
+        if (s === 'waiting l3') return this.approvalLevel === 2;
+        if (s === 'approved' || s === 'rejected') return this.approvalLevel === 3;
+        return false;
+      },
+      canShare() {
+        const s = (this.pkg.status || '').toLowerCase();
+        return s === 'approved';
+      },
 
-  // Waiting L2 → rollback oleh L1
-  if (s === 'waiting l2') {
-    return this.approvalLevel === 1;
-  }
-
-  // Waiting L3 → rollback oleh L2
-  if (s === 'waiting l3') {
-    return this.approvalLevel === 2;
-  }
-
-  // Approved / Rejected → rollback oleh L3
-  if (s === 'approved' || s === 'rejected') {
-    return this.approvalLevel === 3;
-  }
-
-  return false;
-},
-canShare() {
-  const s = (this.pkg.status || '').toLowerCase();
-  return s === 'approved';
-},
-
-
-
-
-
-      /* ===== approve / reject / rollback ===== */
+      /* ===== Actions ===== */
       approvePackage() {
         this.showApproveModal = true;
       },
@@ -2886,7 +926,6 @@ canShare() {
       rollbackPackage() {
         this.showRollbackModal = true;
       },
-
       closeApproveModal() {
         if (!this.processing) this.showApproveModal = false;
       },
@@ -3135,160 +1174,6 @@ canShare() {
 
 
 
-      async renderCadOcct(fileObj) {
-        const url = fileObj?.url;
-        if (!url) return;
-
-        this.disposeCad();
-        this.iges.loading = true;
-        this.iges.error = '';
-
-        try {
-          const THREE = await import('three');
-          const {
-            OrbitControls
-          } = await import('three/addons/controls/OrbitControls.js');
-          const bvh = await import('three-mesh-bvh');
-
-          THREE.Mesh.prototype.raycast = bvh.acceleratedRaycast;
-          THREE.BufferGeometry.prototype.computeBoundsTree = bvh.computeBoundsTree;
-          THREE.BufferGeometry.prototype.disposeBoundsTree = bvh.disposeBoundsTree;
-
-          const scene = new THREE.Scene();
-          scene.background = null;
-
-          const wrap = this.$refs.igesWrap;
-          const width = wrap?.clientWidth || 800;
-          const height = wrap?.clientHeight || 500;
-
-          const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 10000);
-          camera.position.set(250, 200, 250);
-
-          const renderer = new THREE.WebGLRenderer({
-            antialias: true,
-            alpha: true
-          });
-          renderer.setPixelRatio(window.devicePixelRatio || 1);
-          renderer.setSize(width, height);
-          wrap.appendChild(renderer.domElement);
-          wrap.style.position = 'relative';
-          wrap.style.overflow = 'hidden';
-
-          const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
-          hemi.position.set(0, 200, 0);
-          scene.add(hemi);
-
-          const dir = new THREE.DirectionalLight(0xffffff, 0.9);
-          dir.position.set(150, 200, 100);
-          scene.add(dir);
-
-          const controls = new OrbitControls(camera, renderer.domElement);
-          controls.enableDamping = true;
-
-          const resp = await fetch(url, {
-            cache: 'no-store',
-            credentials: 'same-origin'
-          });
-          if (!resp.ok) throw new Error('Failed to fetch CAD file');
-          const mainBuf = new Uint8Array(await resp.arrayBuffer());
-
-          console.log('CAD size (bytes):', mainBuf.byteLength);
-
-          const occt = await window.occtimportjs();
-          const ext = (url.split('?')[0].split('#')[0].split('.').pop() || '').toLowerCase();
-          const params = {
-            linearUnit: 'millimeter',
-            linearDeflectionType: 'bounding_box_ratio',
-            linearDeflection: 0.1,
-            angularDeflection: 0.1,
-          };
-
-          let res = null;
-
-          if (ext === 'stp' || ext === 'step') {
-            res = occt.ReadStepFile(mainBuf, params);
-            console.log('OCCT STEP result:', res);
-
-            if (!res || !res.success) {
-              console.warn('STEP failed, trying IGES fallback...');
-              const igesFile = this._findIgesSibling(fileObj);
-              if (igesFile?.url) {
-                console.log('Fallback IGES file:', igesFile.name, igesFile.url);
-                const igResp = await fetch(igesFile.url, {
-                  cache: 'no-store',
-                  credentials: 'same-origin'
-                });
-                if (!igResp.ok) throw new Error('Failed to fetch fallback IGES file');
-                const igBuf = new Uint8Array(await igResp.arrayBuffer());
-                res = occt.ReadIgesFile(igBuf, params);
-                console.log('OCCT IGES fallback result:', res);
-              }
-            }
-          } else {
-            res = occt.ReadIgesFile(mainBuf, params);
-            console.log('OCCT IGES result:', res);
-          }
-
-          if (!res || !res.success) {
-            const msg = res?.error || res?.message || 'File is not a valid STEP/IGES or is not supported by OCCT.';
-            throw new Error('OCCT failed to parse file: ' + msg);
-          }
-
-          const group = this._buildThreeFromOcct(res, THREE);
-          scene.add(group);
-
-          this.iges.rootModel = group;
-          this.iges.scene = scene;
-          this.iges.camera = camera;
-          this.iges.renderer = renderer;
-          this.iges.controls = controls;
-          this.iges.THREE = THREE;
-
-          this._cacheOriginalMaterials(group, THREE);
-
-          const box = new THREE.Box3().setFromObject(group);
-          const size = new THREE.Vector3();
-          const center = new THREE.Vector3();
-          box.getSize(size);
-          box.getCenter(center);
-
-          const maxDim = Math.max(size.x, size.y, size.z) || 100;
-          const fitDist = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360));
-          camera.position.copy(
-            center.clone().add(new THREE.Vector3(1, 1, 1).normalize().multiplyScalar(fitDist * 1.6))
-          );
-          camera.near = Math.max(maxDim / 100, 0.1);
-          camera.far = Math.max(maxDim * 100, 1000);
-          camera.updateProjectionMatrix();
-          controls.target.copy(center);
-          controls.update();
-
-          const animate = () => {
-            controls.update();
-            renderer.render(scene, camera);
-            const g = this.iges.measure.group;
-            if (g) g.children.forEach(ch => ch.userData?.update?.());
-            this.iges.animId = requestAnimationFrame(animate);
-          };
-          animate();
-
-          this._onIgesResize = () => {
-            const w = this.$refs.igesWrap?.clientWidth || 800;
-            const h = this.$refs.igesWrap?.clientHeight || 500;
-            camera.aspect = w / h;
-            camera.updateProjectionMatrix();
-            renderer.setSize(w, h);
-          };
-          window.addEventListener('resize', this._onIgesResize);
-
-          this.setDisplayStyle('shaded-edges');
-        } catch (e) {
-          console.error(e);
-          this.iges.error = e?.message || 'Failed to render CAD file';
-        } finally {
-          this.iges.loading = false;
-        }
-      },
 
     }
   }

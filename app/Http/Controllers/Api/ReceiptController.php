@@ -1502,14 +1502,20 @@ class ReceiptController extends Controller
 
             $calculatedWidth = max($widthTop, $widthBot, $widthCen) + $paddingHorizontal;
             $canvasWidth = (int) max($minWidth, $calculatedWidth);
-            $canvasHeight = 120;
+            // $canvasHeight = 120; // OLD FIXED HEIGHT
+            $canvasHeight = (int) ($canvasWidth * 0.35); // NEW DYNAMIC HEIGHT (Ratio 0.35 matches frontend)
+
+            // Calculate Row Height (1/3 of total)
+            $rowH = $canvasHeight / 3;
 
             // --- 2. SETUP KANVAS ---
             $stamp = new \Imagick();
-            $stamp->newImage($canvasWidth, $canvasHeight, new \ImagickPixel('transparent'));
+            // OPACITY UPDATE: 0.3 to match frontend
+            $bgOpacity = 0.3; 
+            $stamp->newImage($canvasWidth, $canvasHeight, new \ImagickPixel("rgba(255, 255, 255, $bgOpacity)"));
             $stamp->setImageFormat('png');
 
-            $opacity = 0.4;
+            $opacity = 0.4; // Match frontend (0.4)
             if ($colorMode === 'red') {
                 $borderColor = new \ImagickPixel("rgba(220, 38, 38, $opacity)");
                 $textColor   = new \ImagickPixel("rgba(185, 28, 28, $opacity)");
@@ -1529,13 +1535,15 @@ class ReceiptController extends Controller
             // Gambar Border Luar
             $draw->roundRectangle(2, 2, $canvasWidth - 2, $canvasHeight - 2, 2, 2);
             // Garis Horizontal
-            $draw->line(2, 36, $canvasWidth - 2, 36);
-            $draw->line(2, 84, $canvasWidth - 2, 84);
+            $line1Y = $rowH;
+            $line2Y = $rowH * 2;
+            $draw->line(2, $line1Y, $canvasWidth - 2, $line1Y);
+            $draw->line(2, $line2Y, $canvasWidth - 2, $line2Y);
 
             // LOGIKA KHUSUS ARRAY (GARIS VERTIKAL)
             if (is_array($bottomLine)) {
-                $midX = $canvasWidth / 2;
-                $draw->line($midX, 84, $midX, 118);
+                $splitX = $canvasWidth * 0.65; // 65% split
+                $draw->line($splitX, $line2Y, $splitX, $canvasHeight - 2);
             }
 
             $stamp->drawImage($draw);
@@ -1546,35 +1554,78 @@ class ReceiptController extends Controller
 
             $x_center_canvas = $canvasWidth / 2;
 
-            // Teks Atas (Center)
+            // Teks Atas (Center) - Posisi Center Vertikal Row 1
             $draw->setTextAlignment(\Imagick::ALIGN_CENTER);
-            $draw->setFontSize(16);
+            $fontSizeTop = $rowH * 0.45;
+            $draw->setFontSize($fontSizeTop);
             $draw->setFontWeight(600);
-            $stamp->annotateImage($draw, $x_center_canvas, 24, 0, $topLine);
+            $yTop = ($rowH / 2) + ($rowH * 0.15); 
+            $stamp->annotateImage($draw, $x_center_canvas, $yTop, 0, $topLine);
 
-            // Teks Tengah (Center)
-            $draw->setFontSize(21);
-            $draw->setFontWeight(900);
+            // Teks Tengah (Center) - Posisi Center Vertikal Row 2
+            $fontSizeCenter = $rowH * 0.65;
+            $draw->setFontSize($fontSizeCenter);
+            $draw->setFontWeight(800);
+            
+            // Auto-scale font size if text matches canvas width (Simulate maxWidth)
+            $metricsCen = $stamp->queryFontMetrics($draw, $centerText);
+            $textWCen = $metricsCen['textWidth'];
+            $maxWCen = $canvasWidth - 20; // Padding
+            
+            if ($textWCen > $maxWCen) {
+                $scaleFactor = $maxWCen / $textWCen;
+                $fontSizeCenter = $fontSizeCenter * $scaleFactor;
+                $draw->setFontSize($fontSizeCenter);
+            }
+
             $draw->setStrokeColor($textColor);
             $draw->setStrokeWidth(0.75);
-            $stamp->annotateImage($draw, $x_center_canvas, 68, 0, $centerText);
+            $yCenter = ($rowH * 1.5) + ($rowH * 0.2); // Adjust center baseline
+            $stamp->annotateImage($draw, $x_center_canvas, $yCenter, 0, $centerText);
 
-            // Teks Bawah
+            // Teks Bawah - Posisi Center Vertikal Row 3
             $draw->setStrokeWidth(0);
-            $draw->setFontSize(16);
+            $fontSizeBottom = $rowH * 0.45;
+            $draw->setFontSize($fontSizeBottom);
             $draw->setFontWeight(400);
+            $yBottom = ($rowH * 2.5) + ($rowH * 0.15);
 
             if (is_array($bottomLine)) {
-                // --- MODE 2 KOLOM (Kiri & Kanan) ---
+                // --- MODE 2 KOLOM (Kiri & Kanan) - 65% / 35% ---
+                $splitRatio = 0.65;
+                $splitX = $canvasWidth * $splitRatio;
+                
+                $leftWidth = $splitX;
+                $rightWidth = $canvasWidth - $splitX;
 
-                $x_left = $canvasWidth * 0.25;
-                $stamp->annotateImage($draw, $x_left, 105, 0, $bottomLine[0]);
+                $maxColLeft = $leftWidth - 10;
+                $maxColRight = $rightWidth - 10;
+                
+                $baseFontSize = $rowH * 0.45;
 
-                $x_right = $canvasWidth * 0.75;
-                $stamp->annotateImage($draw, $x_right, 105, 0, $bottomLine[1]);
+                // 1. Render Left Column (Name) - 65%
+                $draw->setFontSize($baseFontSize);
+                $metricsLeft = $stamp->queryFontMetrics($draw, $bottomLine[0]);
+                if ($metricsLeft['textWidth'] > $maxColLeft) {
+                    $scale = $maxColLeft / $metricsLeft['textWidth'];
+                    $draw->setFontSize($baseFontSize * $scale);
+                }
+                $x_left = $leftWidth / 2; // Center of left part
+                $stamp->annotateImage($draw, $x_left, $yBottom, 0, $bottomLine[0]);
+
+                // 2. Render Right Column (Dept) - 35%
+                $draw->setFontSize($baseFontSize); // Reset to base size
+                $metricsRight = $stamp->queryFontMetrics($draw, $bottomLine[1]);
+                if ($metricsRight['textWidth'] > $maxColRight) {
+                    $scale = $maxColRight / $metricsRight['textWidth'];
+                    $draw->setFontSize($baseFontSize * $scale);
+                }
+                $x_right = $splitX + ($rightWidth / 2); // Center of right part
+                $stamp->annotateImage($draw, $x_right, $yBottom, 0, $bottomLine[1]);
+
             } else {
                 // --- MODE 1 KOLOM (Standar) ---
-                $stamp->annotateImage($draw, $x_center_canvas, 105, 0, $bottomLine);
+                $stamp->annotateImage($draw, $x_center_canvas, $yBottom, 0, $bottomLine);
             }
 
             // Cleanup
@@ -1756,9 +1807,9 @@ class ReceiptController extends Controller
             }
             $imagick->readImage($originalPath);
 
-            $marginPercent = 0.03;
+            $marginPercent = 0.04; // Increased margin to 4%
             $stampWidthPercent = 0.15;
-            $minStampWidth = 224;
+            $minStampWidth = 250; // Match frontend
 
             $processPage = function ($iteratorIndex) use (
                 $imagick,

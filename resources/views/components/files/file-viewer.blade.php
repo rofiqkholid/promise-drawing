@@ -52,7 +52,7 @@
 
 <div x-ref="refMainContainer" 
     class="transition-all duration-300 bg-white dark:bg-gray-900"
-    :class="isFullscreen ? 'fixed inset-0 z-[1000] overflow-y-auto p-4 md:p-8' : 'p-6'">
+    :class="isFullscreen ? 'fixed inset-0 z-[1000] flex flex-col p-4 md:p-8' : 'p-6'">
     {{-- File Header with Name and Size --}}
     <div class="mb-4 flex items-center justify-between">
         <div>
@@ -147,7 +147,7 @@
     <div x-show="isPreviewable2D(selectedFile?.name)"
         x-ref="ref2dContainer"
         class="flex flex-col transition-all duration-300 relative group"
-        :class="isFullscreen ? 'min-h-[70vh] rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-8' : ''">
+        :class="isFullscreen ? 'flex-1 min-h-0 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden' : ''">
 
         {{-- NEW FLOATING BLOCKS TOOLBAR (Figma-style) --}}
         @if($enableMasking)
@@ -267,18 +267,19 @@
  
         {{-- Preview Area --}}
         <div class="preview-area flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 flex items-center justify-center w-full relative transition-all duration-300"
-            :class="isFullscreen ? 'h-[75vh]' : 'min-h-[25rem] h-[82vh]'"
+            :class="isFullscreen ? 'h-full' : 'min-h-[25rem] h-[82vh]'"
             @mousedown="enableMasking ? deactivateMask() : null">
 
         {{-- IMAGE VIEWER (JPG, PNG, GIF, etc.) --}}
         <template x-if="isImage(selectedFile?.name)">
-            <div class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+            <div class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                :class="isFullscreen ? 'h-full' : 'h-[70vh]'"
                 @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
                 <div class="w-full h-full flex items-center justify-center">
                     <div class="relative inline-block" :style="imageTransformStyle()">
                         <img x-ref="mainImage" :src="selectedFile?.url" @load="onImageLoad()"
                             @@error="imgLoading = false; imgError = 'The image could not be loaded. Please check the file source.'" alt="Preview"
-                            class="block pointer-events-none select-none max-w-full max-h-[70vh]" loading="lazy">
+                            class="block pointer-events-none select-none max-w-full" :class="isFullscreen ? 'max-h-full' : 'max-h-[70vh]'" loading="lazy">
 
                         {{-- WHITE BLOCKS (Masking) --}}
                         <template x-if="enableMasking">
@@ -320,7 +321,8 @@
                         </template>
 
                         {{-- STAMP ORIGINAL --}}
-                        <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('original')">
+                        <div x-show="pkg.stamp && !isStampBurned" class="absolute" :class="stampPositionClass('original')" 
+                            :key="`stamp-original-${stampConfig.original}`">
                             <div class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                 :class="[
                                 stampOriginClass('original'),
@@ -343,7 +345,8 @@
                         </div>
 
                         {{-- STAMP COPY --}}
-                        <div x-show="pkg.stamp" class="absolute" :class="stampPositionClass('copy')">
+                        <div x-show="pkg.stamp && !isStampBurned" class="absolute" :class="stampPositionClass('copy')" 
+                            :key="`stamp-copy-${stampConfig.copy}`">
                             <div :class="stampOriginClass('copy')"
                                 class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                 style="transform: scale(0.45);">
@@ -363,7 +366,8 @@
                         </div>
 
                         {{-- STAMP OBSOLETE --}}
-                        <div x-show="pkg.stamp?.is_obsolete" class="absolute" :class="stampPositionClass('obsolete')">
+                        <div x-show="pkg.stamp?.is_obsolete && !isStampBurned" class="absolute" :class="stampPositionClass('obsolete')" 
+                            :key="`stamp-obsolete-${stampConfig.obsolete}`">
                             <div :class="stampOriginClass('obsolete')"
                                 class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                 style="transform: scale(0.45);">
@@ -414,11 +418,13 @@
 
         {{-- PDF VIEWER --}}
         <template x-if="isPdf(selectedFile?.name)">
-            <div class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+            <div class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                :class="isFullscreen ? 'h-full' : 'h-[70vh]'"
                 @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
                 <div class="w-full h-full flex items-center justify-center">
                     <div class="relative inline-block" :style="imageTransformStyle()">
-                        <canvas x-ref="pdfCanvas" class="block pointer-events-none select-none max-w-full max-h-[70vh]">
+                        <canvas x-ref="pdfCanvas" class="block pointer-events-none select-none max-w-full"
+                            :class="isFullscreen ? 'max-h-full' : 'max-h-[70vh]'">
                         </canvas>
 
                         {{-- WHITE BLOCKS (Masking) --}}
@@ -495,13 +501,50 @@
                                 </div>
                                 <div
                                     class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
+                        <div x-show="pkg.stamp && !pdfError && !isStampBurned" class="absolute" :class="stampPositionClass('original')">
+                            <div class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                :class="[
+                                stampOriginClass('original'),
+                                isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
+                            ]" style="transform: scale(0.45);">
+                                <div class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
+                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
+                                    <span x-text="stampTopLine('original')"></span>
+                                </div>
+                                <div class="flex-1 flex items-center justify-center">
+                                    <span class="text-xs font-extrabold uppercase px-2"
+                                        :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
+                                        x-text="stampCenterOriginal()"></span>
+                                </div>
+                                <div class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
+                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
+                                    <span x-text="stampBottomLine('original')"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- STAMP COPY --}}
+                        <div x-show="pkg.stamp && !pdfError && !isStampBurned" class="absolute" :class="stampPositionClass('copy')">
+                            <div :class="stampOriginClass('copy')"
+                                class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                style="transform: scale(0.45);">
+                                <div
+                                    class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
+                                    <span x-text="stampTopLine('copy')"></span>
+                                </div>
+                                <div class="flex-1 flex items-center justify-center">
+                                    <span class="text-xs font-extrabold uppercase text-blue-700 px-2"
+                                        x-text="stampCenterCopy()"></span>
+                                </div>
+                                <div
+                                    class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
                                     <span x-text="stampBottomLine('copy')"></span>
                                 </div>
                             </div>
                         </div>
 
                         {{-- STAMP OBSOLETE --}}
-                        <div x-show="pkg.stamp?.is_obsolete && !pdfError" class="absolute" :class="stampPositionClass('obsolete')">
+                        <div x-show="pkg.stamp?.is_obsolete && !pdfError && !isStampBurned" class="absolute" :class="stampPositionClass('obsolete')">
                             <div :class="stampOriginClass('obsolete')"
                                 class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                 style="transform: scale(0.45);">
@@ -553,12 +596,14 @@
 
         {{-- TIFF VIEWER --}}
         <template x-if="isTiff(selectedFile?.name)">
-            <div class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+            <div class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                :class="isFullscreen ? 'h-full' : 'h-[70vh]'"
                 @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
                 <div class="w-full h-full flex items-center justify-center">
                     <div class="relative inline-block" :style="imageTransformStyle()">
                         <img x-ref="tifImg" alt="TIFF Preview" @load="onImageLoad()"
-                            class="block pointer-events-none select-none max-w-full max-h-[70vh]" />
+                            class="block pointer-events-none select-none max-w-full bg-white"
+                            :class="isFullscreen ? 'max-h-full' : 'max-h-[70vh]'" />
 
                         {{-- WHITE BLOCKS (Masking) --}}
                         <template x-if="enableMasking && !tifError">
@@ -596,8 +641,9 @@
                             </template>
                         </template>
 
-                        {{-- STAMP ORIGINAL --}}
-                        <div x-show="pkg.stamp && !tifError" class="absolute" :class="stampPositionClass('original')">
+                        {{-- STAMP ORIGINAL (Hidden if burned) --}}
+                        <div x-show="pkg.stamp && !isStampBurned" class="absolute" :class="stampPositionClass('original')" 
+                            :key="`stamp-tiff-original-${stampConfig.original}`">
                             <div class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                 :class="[
                                 stampOriginClass('original'),
@@ -619,8 +665,9 @@
                             </div>
                         </div>
 
-                        {{-- STAMP COPY --}}
-                        <div x-show="pkg.stamp && !tifError" class="absolute" :class="stampPositionClass('copy')">
+                        {{-- STAMP COPY (Hidden if burned) --}}
+                        <div x-show="pkg.stamp && !isStampBurned" class="absolute" :class="stampPositionClass('copy')" 
+                            :key="`stamp-tiff-copy-${stampConfig.copy}`">
                             <div :class="stampOriginClass('copy')"
                                 class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                 style="transform: scale(0.45);">
@@ -639,8 +686,9 @@
                             </div>
                         </div>
 
-                        {{-- STAMP OBSOLETE --}}
-                        <div x-show="pkg.stamp?.is_obsolete && !tifError" class="absolute" :class="stampPositionClass('obsolete')">
+                        {{-- STAMP OBSOLETE (Hidden if burned) --}}
+                        <div x-show="pkg.stamp?.is_obsolete && !isStampBurned" class="absolute" :class="stampPositionClass('obsolete')" 
+                            :key="`stamp-tiff-obsolete-${stampConfig.obsolete}`">
                             <div :class="stampOriginClass('obsolete')"
                                 class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                 style="transform: scale(0.45);">
@@ -692,7 +740,8 @@
 
         {{-- HPGL VIEWER --}}
         <template x-if="isHpgl(selectedFile?.name)">
-            <div class="relative w-full h-[70vh] overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+            <div class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                :class="isFullscreen ? 'h-full' : 'h-[70vh]'"
                 @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
                 <div class="relative w-full h-full flex items-center justify-center" :style="imageTransformStyle()">
 
@@ -705,7 +754,8 @@
                             :style="`left: ${hpglDrawingBounds.left}px; top: ${hpglDrawingBounds.top}px; width: ${hpglDrawingBounds.width}px; height: ${hpglDrawingBounds.height}px;`">
 
                             {{-- STAMP ORIGINAL --}}
-                            <div x-show="pkg.stamp && !hpglError" class="absolute" :class="stampPositionClass('original')">
+                            <div x-show="pkg.stamp && !hpglError && !isStampBurned" class="absolute" :class="stampPositionClass('original')" 
+                                :key="`stamp-hpgl-original-${stampConfig.original}`">
                                 <div :class="[
                                     stampOriginClass('original'),
                                     isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
@@ -728,7 +778,8 @@
                             </div>
 
                             {{-- STAMP COPY --}}
-                            <div x-show="pkg.stamp && !hpglError" class="absolute" :class="stampPositionClass('copy')">
+                            <div x-show="pkg.stamp && !hpglError && !isStampBurned" class="absolute" :class="stampPositionClass('copy')" 
+                                :key="`stamp-hpgl-copy-${stampConfig.copy}`">
                                 <div :class="stampOriginClass('copy')"
                                     class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                     style="transform: scale(0.45);">
@@ -748,8 +799,9 @@
                             </div>
 
                             {{-- STAMP OBSOLETE --}}
-                            <div x-show="pkg.stamp?.is_obsolete && !hpglError" class="absolute"
-                                :class="stampPositionClass('obsolete')">
+                            <div x-show="pkg.stamp?.is_obsolete && !hpglError && !isStampBurned" class="absolute"
+                                :class="stampPositionClass('obsolete')" 
+                                :key="`stamp-hpgl-obsolete-${stampConfig.obsolete}`">
                                 <div :class="stampOriginClass('obsolete')"
                                     class="min-w-65 w-auto h-20 border-2 border-red-600 rounded-sm text-[10px] text-red-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                     style="transform: scale(0.45);">

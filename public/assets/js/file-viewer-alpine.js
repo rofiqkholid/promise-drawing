@@ -154,6 +154,7 @@ function fileViewerComponent(config = {}) {
         autoRotate: false,
         headlight: { enabled: false, object: null },
         cameraMode: 'perspective',
+        isStampBurned: false, // Track if stamps are burned into canvas
 
         // ===== STAMP CONFIGURATION =====
         stampDefaults: {
@@ -168,6 +169,7 @@ function fileViewerComponent(config = {}) {
             obsolete: 'bottom-right',
         },
         applyToAllProcessing: false,
+        isLoadingStampConfig: false, // Flag to prevent infinite loop
 
         // ===== INITIALIZATION =====
         init() {
@@ -184,6 +186,16 @@ function fileViewerComponent(config = {}) {
                     this.loadFile(file);
                 }
             });
+
+            // Watch for stamp config changes and force re-render
+            this.$watch('stampConfig', () => {
+                // Skip if we're currently loading stamp config (prevent infinite loop)
+                if (this.isLoadingStampConfig) return;
+                if (!this.selectedFile) return;
+
+                // Force reload to re-render with new stamp positions
+                this.loadFile(this.selectedFile, true);
+            }, { deep: true });
 
             // Initialize masks from package
             if (this.pkg && this.pkg.white_blocks) {
@@ -281,6 +293,192 @@ function fileViewerComponent(config = {}) {
             return this.isImage(name) || this.isPdf(name) || this.isTiff(name) || this.isHpgl(name);
         },
 
+        // ===== STAMP HELPER METHODS =====
+        stampPositionClass(which = 'original') {
+            const configVal = this.stampConfig && this.stampConfig[which];
+            const pos = configVal || this.stampDefaults[which] || 'bottom-left';
+
+            switch (pos) {
+                case 'top-left': return 'top-4 left-4';
+                case 'top-center': return 'top-4 left-1/2 -translate-x-1/2';
+                case 'top-right': return 'top-4 right-4';
+                case 'bottom-left': return 'bottom-4 left-4';
+                case 'bottom-center': return 'bottom-4 left-1/2 -translate-x-1/2';
+                case 'bottom-right': return 'bottom-4 right-4';
+                default:
+                    if (which === 'original') return 'bottom-4 left-4';
+                    if (which === 'copy') return 'bottom-4 left-1/2 -translate-x-1/2';
+                    if (which === 'obsolete') return 'bottom-4 right-4';
+                    return 'bottom-4 left-4';
+            }
+        },
+
+        stampOriginClass(which = 'original') {
+            const configVal = this.stampConfig && this.stampConfig[which];
+            const pos = configVal || this.stampDefaults[which] || 'bottom-left';
+
+            switch (pos) {
+                case 'top-left': return 'origin-top-left';
+                case 'top-center': return 'origin-top';
+                case 'top-right': return 'origin-top-right';
+                case 'bottom-left': return 'origin-bottom-left';
+                case 'bottom-center': return 'origin-bottom';
+                case 'bottom-right': return 'origin-bottom-right';
+                default:
+                    if (which === 'original') return 'origin-bottom-left';
+                    if (which === 'copy') return 'origin-bottom';
+                    if (which === 'obsolete') return 'origin-bottom-right';
+                    return 'origin-bottom-left';
+            }
+        },
+
+        stampCenterOriginal() {
+            return 'SAI-DRAWING ORIGINAL';
+        },
+
+        stampCenterCopy() {
+            return 'SAI-DRAWING CONTROLLED COPY';
+        },
+
+        stampCenterObsolete() {
+            return 'SAI-DRAWING OBSOLETE';
+        },
+
+        stampTopLine(which = 'original') {
+            const s = this.pkg?.stamp || {};
+            if (which === 'obsolete') {
+                const info = s.obsolete_info || {};
+                const date = info.date_text || s.obsolete_date || s.upload_date || '';
+                return date ? `DATE : ${date}` : '';
+            } else if (which === 'copy') {
+                const now = new Date();
+                const dateStr = this.formatStampDate(now.toISOString().split('T')[0]);
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                const timeStr = `${hours}:${minutes}:${seconds}`;
+                const deptCode = this.userDeptCode || '--';
+                return `SAI / ${deptCode} / ${dateStr} ${timeStr}`;
+            } else {
+                const date = s.receipt_date || s.upload_date || '';
+                return date ? `DATE RECEIVED : ${this.formatStampDate(date)}` : '';
+            }
+        },
+
+        stampBottomLine(which = 'original') {
+            const s = this.pkg?.stamp || {};
+            if (which === 'copy') {
+                const userName = this.userName || '--';
+                return `Downloaded By ${userName}`;
+            } else if (which === 'obsolete') {
+                const info = s.obsolete_info || {};
+                const name = info.name || '';
+                const dept = info.dept || '';
+                let value = '';
+                if (name && dept) {
+                    value = `${name} / ${dept}`;
+                } else {
+                    value = name || dept || '';
+                }
+                return value ? `By : ${value}` : '';
+            } else {
+                const date = s.upload_date || '';
+                return date ? `Date Uploaded : ${this.formatStampDate(date)}` : '';
+            }
+        },
+
+        obsoleteName() {
+            const s = this.pkg?.stamp || {};
+            const info = s.obsolete_info || {};
+            return info.name || '';
+        },
+
+        obsoleteDept() {
+            const s = this.pkg?.stamp || {};
+            const info = s.obsolete_info || {};
+            return info.dept || '';
+        },
+
+        formatStampDate(dateStr) {
+            if (!dateStr) return '';
+            try {
+                const d = new Date(dateStr);
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                return `${day}.${month}.${year}`;
+            } catch {
+                return dateStr;
+            }
+        },
+
+        loadStampConfigFor(file) {
+            this.isLoadingStampConfig = true; // Prevent watcher from triggering
+
+            const key = (file?.id ?? file?.name ?? '').toString();
+            if (!key) {
+                this.stampConfig = { ...this.stampDefaults };
+                this.isLoadingStampConfig = false;
+                return;
+            }
+
+            if (!this.stampPerFile[key]) {
+                this.stampPerFile[key] = {
+                    original: this.positionIntToKey(file.ori_position ?? 0),
+                    copy: this.positionIntToKey(file.copy_position ?? 1),
+                    obsolete: this.positionIntToKey(file.obslt_position ?? 2),
+                };
+            }
+
+            this.stampConfig = { ...this.stampPerFile[key] };
+
+            // Use nextTick to ensure the config is set before clearing the flag
+            this.$nextTick(() => {
+                this.isLoadingStampConfig = false;
+            });
+        },
+
+        saveStampConfigForCurrent() {
+            const key = (this.selectedFile?.id ?? this.selectedFile?.name ?? '').toString();
+            if (!key) return;
+
+            // Save to stampPerFile
+            this.stampPerFile[key] = { ...this.stampConfig };
+
+            // Force Alpine.js reactivity by creating new object reference
+            this.stampConfig = { ...this.stampConfig };
+        },
+
+        positionIntToKey(int) {
+            switch (int) {
+                case 0: return 'bottom-left';
+                case 1: return 'bottom-center';
+                case 2: return 'bottom-right';
+                case 3: return 'top-left';
+                case 4: return 'top-center';
+                case 5: return 'top-right';
+                default: return 'bottom-left';
+            }
+        },
+
+        positionKeyToInt(key) {
+            switch (key) {
+                case 'bottom-left': return 0;
+                case 'bottom-center': return 1;
+                case 'bottom-right': return 2;
+                case 'top-left': return 3;
+                case 'top-center': return 4;
+                case 'top-right': return 5;
+                default: return 0;
+            }
+        },
+
+        // Default onStampChange (can be overridden by parent)
+        onStampChange() {
+            this.saveStampConfigForCurrent();
+        },
+
+
         // ===== FILE LOADING =====
         loadFile(file, force = false) {
             if (!file) return;
@@ -299,6 +497,12 @@ function fileViewerComponent(config = {}) {
             }
 
             this.lastLoadedUrl = file.url;
+
+            // Revoke active Image object URL if exists (for secure canvas rendering)
+            if (this._lastImageUrl) {
+                URL.revokeObjectURL(this._lastImageUrl);
+                this._lastImageUrl = null;
+            }
 
             // Reset states
             this.resetViewerStates();
@@ -348,7 +552,11 @@ function fileViewerComponent(config = {}) {
             this.pdfError = '';
             this.tifError = '';
             this.hpglError = '';
+            this.hpglError = '';
             this.iges.error = '';
+
+            // Reset burnt state
+            this.isStampBurned = false;
 
             // Reset page counters
             this.pdfPageNum = 1;
@@ -361,14 +569,76 @@ function fileViewerComponent(config = {}) {
                 Alpine.raw(this.pdfRenderTask).cancel();
                 this.pdfRenderTask = null;
             }
+
+            // Revoke active TIFF object URL if exists
+            if (this._lastTiffUrl) {
+                URL.revokeObjectURL(this._lastTiffUrl);
+                this._lastTiffUrl = null;
+            }
         },
 
         // ===== IMAGE VIEWER =====
         loadImage(file) {
-            // console.log('[FileViewer] Loading image:', file.name);
             this.imgLoading = true;
-            // Image loading is handled by browser's <img> tag
-            // Loading state will be cleared by @load event
+            this.imgError = '';
+
+            // SECURITY UPDATE: Render image to Canvas first to allow "Burning" the stamp
+            // This prevents users from deleting the stamp via Inspect Element
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+
+            img.onload = () => {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+
+                    // BURN STAMPS
+                    this._burnStampsToCanvas(ctx, img.width, img.height);
+
+                    // Convert to Blob URL
+                    canvas.toBlob((blob) => {
+                        const url = URL.createObjectURL(blob);
+
+                        // Cleanup previous URL
+                        if (this._lastImageUrl) {
+                            URL.revokeObjectURL(this._lastImageUrl);
+                        }
+                        this._lastImageUrl = url;
+
+                        // Display the burned image
+                        const displayImg = this.$refs.mainImage;
+                        if (displayImg) {
+                            displayImg.onload = () => {
+                                this.imgLoading = false;
+                                this.recalculateMasks();
+                            };
+                            displayImg.src = url;
+                        } else {
+                            this.imgLoading = false;
+                        }
+                    }, 'image/png'); // PNG preserves quality better than default
+
+                } catch (e) {
+                    console.error('[FileViewer] Image canvas security error:', e);
+                    // Fallback to direct load if canvas fails (e.g. CORS strict blocking)
+                    const displayImg = this.$refs.mainImage;
+                    if (displayImg) {
+                        displayImg.src = file.url;
+                        this.imgLoading = false;
+                    }
+                }
+            };
+
+            img.onerror = () => {
+                this.imgError = 'Failed to load image';
+                this.imgLoading = false;
+            };
+
+            img.src = file.url;
         },
 
         // ===== PDF VIEWER =====
@@ -431,11 +701,19 @@ function fileViewerComponent(config = {}) {
                 const page = await rawDoc.getPage(this.pdfPageNum);
                 const rawPage = Alpine.raw(page);
 
-                const viewport = rawPage.getViewport({ scale: this.pdfScale });
+                // Improve render quality: Use devicePixelRatio and a fidelity multiplier (1.5x)
+                // This ensures the PDF looks sharp ("real") on high-DPI screens and maintains quality when zoomed
+                const pixelRatio = window.devicePixelRatio || 1;
+                const fidelity = 1.5;
+                const finalScale = this.pdfScale * pixelRatio * fidelity;
+
+                const viewport = rawPage.getViewport({ scale: finalScale });
 
                 const context = canvas.getContext('2d');
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
+                // Ensure style width/height are NOT set fixed, letting CSS control display size
+                // while internal resolution remains high for sharpness.
 
                 const renderContext = {
                     canvasContext: context,
@@ -448,6 +726,9 @@ function fileViewerComponent(config = {}) {
 
                 await task.promise;
                 this.pdfRenderTask = null; // Clear task on success
+
+                // SECURITY: Burn stamps into the canvas pixel data
+                this._burnStampsToCanvas(context, canvas.width, canvas.height);
 
                 this.pdfLoading = false;
                 this.recalculateMasks();
@@ -563,10 +844,27 @@ function fileViewerComponent(config = {}) {
                 imageData.data.set(new Uint8ClampedArray(rgba));
                 ctx.putImageData(imageData, 0, 0);
 
-                img.src = canvas.toDataURL('image/png');
-                this.tifLoading = false;
+                // SECURITY: Burn stamps into the canvas pixel data
+                // This ensures that if the Blob URL is opened, the stamps are present
+                this._burnStampsToCanvas(ctx, w, h);
 
-                // console.log('[FileViewer] TIFF page rendered:', this.tifPageNum, `${w}x${h}`);
+                // Use toOblob instead of toDataURL for better memory efficiency with large files
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+
+                    // Cleanup previous URL
+                    if (this._lastTiffUrl) {
+                        URL.revokeObjectURL(this._lastTiffUrl);
+                    }
+                    this._lastTiffUrl = url;
+
+                    img.onload = () => {
+                        this.tifLoading = false;
+                        this.recalculateMasks();
+                        // console.log('[FileViewer] TIFF page rendered (Blob):', this.tifPageNum, `${w}x${h}`);
+                    };
+                    img.src = url;
+                }, 'image/png');
             } catch (error) {
                 console.error('[FileViewer] TIFF rendering error:', error);
                 this.tifError = 'Failed to render page: ' + error.message;
@@ -778,7 +1076,10 @@ function fileViewerComponent(config = {}) {
 
                 const ctx = canvas.getContext('2d');
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                // Set solid white background (paper look) instead of transparent
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
                 ctx.scale(totalScale, totalScale);
 
                 ctx.lineWidth = 0.2;
@@ -795,6 +1096,12 @@ function fileViewerComponent(config = {}) {
                     ctx.lineTo(s.x2 * fitScale + transX, -s.y2 * fitScale + transY);
                 }
                 ctx.stroke();
+
+                // SECURITY: Burn stamps into the canvas pixel data for HPGL/Plotter
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform to 1:1 for stamp drawing
+                this._burnStampsToCanvas(ctx, canvas.width, canvas.height);
+                ctx.restore();
 
                 this.hpglDrawingBounds = {
                     left: minX * fitScale + transX,
@@ -4489,6 +4796,163 @@ function fileViewerComponent(config = {}) {
         getCursorStyle(handle, rotation) {
             // Simplified cursor style
             return 'pointer';
+        },
+
+        // ===== STAMP BURNING (SECURITY) =====
+        _burnStampsToCanvas(ctx, width, height) {
+            if (!this.pkg.stamp) return;
+
+            const stampTypes = ['original', 'copy'];
+            if (this.pkg.stamp.is_obsolete) stampTypes.push('obsolete');
+
+            stampTypes.forEach(type => {
+                const position = this.stampConfig[type] || this.stampDefaults[type];
+                this._drawSingleStamp(ctx, width, height, type, position);
+            });
+
+            // Mark as burned so we can hide HTML overlays
+            this.$nextTick(() => {
+                this.isStampBurned = true;
+            });
+        },
+
+        _drawSingleStamp(ctx, w, h, type, position) {
+            // 1. Determine Scale & Size
+            // Scale stamp relative to canvas width, but clamp it to reasonable limits
+            // A base reference: on a 1000px wide image, stamp might be 200px wide.
+            // But for huge engineering drawings (5000px+), we don't want it wildly huge, nor too small.
+            // Let's use a percentage of width, clamped.
+            let stampW = Math.max(w * 0.15, 250); // Min 250px
+            stampW = Math.min(stampW, w * 0.4);   // Max 40% of page
+            const stampH = stampW * 0.35;         // Aspect ratio approx from CSS
+            const margin = Math.min(w, h) * 0.04; // 4% margin (Increased)
+
+            // 2. Determine Coordinates based on position (top-left, etc)
+            let x, y;
+            const [vPos, hPos] = position.split('-');
+
+            if (hPos === 'left') x = margin;
+            else if (hPos === 'center') x = (w - stampW) / 2;
+            else x = w - stampW - margin; // right
+
+            if (vPos === 'top') y = margin;
+            else y = h - stampH - margin; // bottom
+
+            // 3. Setup Styles based on Type
+            const isEng = this.isEngineering;
+            let color = '#6b7280'; // gray-600
+            let borderColor = '#6b7280';
+
+            if (type === 'original') {
+                if (isEng) { color = '#1d4ed8'; borderColor = '#2563eb'; } // blue-700/600
+            } else if (type === 'copy') {
+                color = '#1d4ed8'; borderColor = '#2563eb';
+            } else if (type === 'obsolete') {
+                color = '#b91c1c'; borderColor = '#dc2626'; // red-700/600
+            }
+
+            // 4. Draw Box & Background
+            ctx.save();
+            // Removed globalAlpha, using RGBA instead for separate control
+
+            // Helper to convert hex to rgba
+            const hexToRgba = (hex, alpha) => {
+                const r = parseInt(hex.slice(1, 3), 16);
+                const g = parseInt(hex.slice(3, 5), 16);
+                const b = parseInt(hex.slice(5, 7), 16);
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            };
+
+            // Draw white background (Opacity 0.3)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.fillRect(x, y, stampW, stampH);
+
+            // Draw Border (Opacity 0.4)
+            ctx.strokeStyle = hexToRgba(borderColor, 0.4);
+            ctx.lineWidth = Math.max(2, stampW * 0.008);
+            ctx.strokeRect(x, y, stampW, stampH);
+
+            // 5. Text Data
+            let topLineText = '';
+            let centerText = '';
+            let bottomLineText = '';
+
+            if (type === 'original') {
+                topLineText = this.stampTopLine('original');
+                centerText = this.stampCenterOriginal();
+                bottomLineText = this.stampBottomLine('original');
+            } else if (type === 'copy') {
+                topLineText = this.stampTopLine('copy');
+                centerText = this.stampCenterCopy();
+                bottomLineText = this.stampBottomLine('copy');
+            } else if (type === 'obsolete') {
+                topLineText = this.stampTopLine('obsolete');
+                centerText = this.stampCenterObsolete();
+                // Custom handling for obsolete bottom which is split
+            }
+
+            // Text Color (Opacity 0.4)
+            ctx.fillStyle = hexToRgba(color, 0.4);
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // 6. Draw CONTENT
+            const rowH = stampH / 3;
+            const cx = x + stampW / 2;
+            const textMaxWidth = stampW * 0.95; // 95% of width
+
+            // Top Line
+            ctx.font = `600 ${rowH * 0.45}px sans-serif`;
+            ctx.fillText(topLineText, cx, y + rowH * 0.5, textMaxWidth);
+
+            // Separator 1
+            ctx.lineWidth = Math.max(1, stampW * 0.005);
+            ctx.beginPath();
+            ctx.moveTo(x, y + rowH);
+            ctx.lineTo(x + stampW, y + rowH);
+            ctx.stroke();
+
+            // Center Line (BIG)
+            // Use condensed font if available or standard sans-serif
+            ctx.font = `800 ${rowH * 0.7}px "Arial Narrow", sans-serif`;
+            ctx.fillText(centerText, cx, y + rowH * 1.5, textMaxWidth);
+
+            // Separator 2
+            ctx.beginPath();
+            ctx.moveTo(x, y + rowH * 2);
+            ctx.lineTo(x + stampW, y + rowH * 2);
+            ctx.stroke();
+
+            // Bottom Line
+            if (type === 'obsolete') {
+                // Split bottom: Name | Dept (65% Name, 35% Dept)
+                const name = this.obsoleteName();
+                const dept = this.obsoleteDept();
+
+                const splitRatio = 0.65;
+                const splitX = stampW * splitRatio;
+                const leftCenter = splitX / 2;
+                const rightCenter = splitX + ((stampW - splitX) / 2);
+
+                ctx.font = `600 ${rowH * 0.4}px sans-serif`;
+
+                // Name (Left 65%)
+                ctx.fillText(`Name : ${name}`, x + leftCenter, y + rowH * 2.5, splitX * 0.95);
+
+                // Dept (Right 35%)
+                ctx.fillText(`Dept. : ${dept}`, x + rightCenter, y + rowH * 2.5, (stampW - splitX) * 0.95);
+
+                // Vertical Divider
+                ctx.beginPath();
+                ctx.moveTo(x + splitX, y + rowH * 2);
+                ctx.lineTo(x + splitX, y + stampH);
+                ctx.stroke();
+            } else {
+                ctx.font = `600 ${rowH * 0.45}px sans-serif`;
+                ctx.fillText(bottomLineText, cx, y + rowH * 2.5, textMaxWidth);
+            }
+
+            ctx.restore();
         }
     };
 }
