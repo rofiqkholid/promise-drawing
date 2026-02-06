@@ -244,86 +244,86 @@
             </div>
         </div>
 
-        <div class="w-full lg:w-[25%] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col p-5 h-full font-sans">
+        <div class="w-full lg:w-[25%] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col p-5 lg:p-3 xl:p-5 h-full font-sans transition-all duration-300">
 
-            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2 flex justify-between items-start flex-shrink-0">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-leaf text-emerald-500"></i>
-                    <span>Eco Impact</span>
-                </div>
-                <div x-data="{ tooltipVisible: false }" class="relative">
-                    <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-md cursor-pointer mt-1"></i>
-                    <div x-show="tooltipVisible"
-                        x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0 translate-y-2"
-                        x-transition:enter-end="opacity-100 translate-y-0"
-                        x-transition:leave="transition ease-in duration-150"
-                        x-transition:leave-start="opacity-100 translate-y-0"
-                        x-transition:leave-end="opacity-0 translate-y-2"
-                        style="display: none;"
-                        class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
-                        <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 right-2"></div>
-                        <p class="text-gray-200 dark:text-gray-300">This calculation shows that each digital document download saves the equivalent of 1/80,000 of a tree and reduces carbon emissions by approximately 0.000275 kg of CO₂, making a tangible contribution to environmental protection.</p>
-                    </div>
-                </div>
-            </h3>
+    <h3 class="text-lg lg:text-sm xl:text-lg font-bold text-gray-800 dark:text-gray-100 mb-2 lg:mb-1 xl:mb-2 flex justify-between items-start flex-shrink-0">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-leaf text-emerald-500"></i>
+            <span>Eco Impact</span>
+        </div>
+        <div x-data="{ tooltipVisible: false }" class="relative">
+            <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-md lg:text-xs xl:text-md cursor-pointer mt-1"></i>
+            <div x-show="tooltipVisible"
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 translate-y-2"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100 translate-y-0"
+                x-transition:leave-end="opacity-0 translate-y-2"
+                style="display: none;"
+                class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
+                <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 right-2"></div>
+                <p class="text-gray-200 dark:text-gray-300">This calculation shows that each digital document download saves the equivalent of 1/80,000 of a tree and reduces carbon emissions by approximately 0.000275 kg of CO₂, making a tangible contribution to environmental protection.</p>
+            </div>
+        </div>
+    </h3>
 
-            <div class="flex-1 w-full flex flex-col lg:flex-row items-center justify-center gap-4">
+    <div class="flex-1 w-full flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-2 xl:gap-4">
 
-                <div class="relative w-36 h-36 flex-shrink-0 flex items-center justify-center mx-auto lg:mx-0">
-                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                        <circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="10" fill="transparent"
-                            class="text-emerald-50 dark:text-emerald-900/20" stroke-dasharray="264" stroke-dashoffset="0"
-                            stroke-linecap="round" />
-                        <circle id="ecoProgressCircle" cx="50" cy="50" r="42" stroke="currentColor" stroke-width="10" fill="transparent"
-                            class="text-emerald-500 transition-all duration-1000 ease-out" stroke-dasharray="264" stroke-dashoffset="264"
-                            stroke-linecap="round" />
-                    </svg>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-                        <span id="ecoTreePercent" class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 leading-tight mb-1">0%<br>towards 1 Tree</span>
-                        <i class="fa-solid fa-seedling text-3xl text-emerald-600 dark:text-emerald-400 my-1 filter drop-shadow-sm"></i>
-                        <div class="flex flex-col leading-tight mt-1">
-                            <span id="ecoTrees" class="text-sm font-bold text-gray-800 dark:text-gray-100">0</span>
-                            <span class="text-[9px] text-gray-400 uppercase tracking-wide">Trees Saved</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex flex-col gap-3 w-full lg:flex-1 justify-center">
-
-                    <div class="flex items-center p-1.5 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800">
-                        <div class="w-10 h-10 flex-shrink-0 rounded-lg flex items-center justify-center text-green-600 dark:text-green-300">
-                            <i class="fa-solid fa-scroll text-lg"></i>
-                        </div>
-                        <div class="flex items-center gap-2 min-w-0 flex-1 ml-2">
-                            <span id="ecoPaper" class="text-base font-bold text-gray-800 dark:text-gray-100">0</span>
-                            <span class="text-xs text-green-700 dark:text-green-400 font-medium">Paper</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center p-1.5 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800">
-                        <div class="w-10 h-10 flex-shrink-0 rounded-lg flex items-center justify-center text-yellow-500 dark:text-yellow-300">
-                            <i class="fa-solid fa-coins text-lg"></i>
-                        </div>
-                        <div class="flex items-center gap-2 min-w-0 flex-1 ml-2">
-                            <span class="text-base font-bold text-gray-800 dark:text-gray-100">Rp <span id="ecoCost">0</span></span>
-                            <span class="text-xs text-yellow-700 dark:text-yellow-400 font-medium">Cost Save</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center p-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-100 dark:border-cyan-800">
-                        <div class="w-10 h-10 flex-shrink-0 rounded-lg flex items-center justify-center text-cyan-600 dark:text-cyan-300">
-                            <i class="fa-solid fa-wind text-lg"></i>
-                        </div>
-                        <div class="flex items-center gap-2 min-w-0 flex-1 ml-2">
-                            <span id="ecoCO2" class="text-base font-bold text-gray-800 dark:text-gray-100">0 Kg</span>
-                            <span class="text-xs text-cyan-700 dark:text-cyan-400 font-medium">CO2</span>
-                        </div>
-                    </div>
-
+        <div class="relative w-36 h-36 lg:w-24 lg:h-24 xl:w-32 xl:h-32 flex-shrink-0 flex items-center justify-center mx-auto lg:mx-0">
+            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="10" fill="transparent"
+                    class="text-emerald-50 dark:text-emerald-900/20" stroke-dasharray="264" stroke-dashoffset="0"
+                    stroke-linecap="round" />
+                <circle id="ecoProgressCircle" cx="50" cy="50" r="42" stroke="currentColor" stroke-width="10" fill="transparent"
+                    class="text-emerald-500 transition-all duration-1000 ease-out" stroke-dasharray="264" stroke-dashoffset="264"
+                    stroke-linecap="round" />
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span id="ecoTreePercent" class="text-[10px] lg:text-[8px] xl:text-[10px] font-semibold text-gray-400 dark:text-gray-500 leading-tight mb-1">0%<br>towards 1 Tree</span>
+                <i class="fa-solid fa-seedling text-3xl lg:text-xl xl:text-2xl text-emerald-600 dark:text-emerald-400 my-1 filter drop-shadow-sm"></i>
+                <div class="flex flex-col leading-tight mt-1">
+                    <span id="ecoTrees" class="text-sm lg:text-xs xl:text-sm font-bold text-gray-800 dark:text-gray-100">0</span>
+                    <span class="text-[9px] lg:text-[7px] xl:text-[8px] text-gray-400 uppercase tracking-wide">Trees Saved</span>
                 </div>
             </div>
         </div>
+
+        <div class="flex flex-col gap-3 lg:gap-2 xl:gap-3 w-full lg:flex-1 justify-center">
+
+            <div class="flex items-center p-1.5 lg:p-1 xl:p-1.5 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800">
+                <div class="w-10 h-10 lg:w-7 lg:h-7 xl:w-9 xl:h-9 flex-shrink-0 rounded-lg flex items-center justify-center text-green-600 dark:text-green-300">
+                    <i class="fa-solid fa-scroll text-lg lg:text-xs xl:text-base"></i>
+                </div>
+                <div class="flex items-center gap-2 lg:gap-1 xl:gap-2 min-w-0 flex-1 ml-2 lg:ml-1.5 xl:ml-2">
+                    <span id="ecoPaper" class="text-sm lg:text-[10px] xl:text-sm font-bold text-gray-800 dark:text-gray-100">0</span>
+                    <span class="text-xs lg:text-[9px] xl:text-xs text-green-700 dark:text-green-400 font-medium">Paper</span>
+                </div>
+            </div>
+
+            <div class="flex items-center p-1.5 lg:p-1 xl:p-1.5 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800">
+                <div class="w-10 h-10 lg:w-7 lg:h-7 xl:w-9 xl:h-9 flex-shrink-0 rounded-lg flex items-center justify-center text-yellow-500 dark:text-yellow-300">
+                    <i class="fa-solid fa-coins text-lg lg:text-xs xl:text-base"></i>
+                </div>
+                <div class="flex items-center gap-2 lg:gap-1 xl:gap-2 min-w-0 flex-1 ml-2 lg:ml-1.5 xl:ml-2">
+                    <span class="text-sm lg:text-[10px] xl:text-sm font-bold text-gray-800 dark:text-gray-100">Rp <span id="ecoCost">0</span></span>
+                    <span class="text-xs lg:text-[9px] xl:text-xs text-yellow-700 dark:text-yellow-400 font-medium">Cost Save</span>
+                </div>
+            </div>
+
+            <div class="flex items-center p-1.5 lg:p-1 xl:p-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-100 dark:border-cyan-800">
+                <div class="w-10 h-10 lg:w-7 lg:h-7 xl:w-9 xl:h-9 flex-shrink-0 rounded-lg flex items-center justify-center text-cyan-600 dark:text-cyan-300">
+                    <i class="fa-solid fa-wind text-lg lg:text-xs xl:text-base"></i>
+                </div>
+                <div class="flex items-center gap-2 lg:gap-1 xl:gap-2 min-w-0 flex-1 ml-2 lg:ml-1.5 xl:ml-2">
+                    <span id="ecoCO2" class="text-sm lg:text-[10px] xl:text-sm font-bold text-gray-800 dark:text-gray-100">0 Kg</span>
+                    <span class="text-xs lg:text-[9px] xl:text-xs text-cyan-700 dark:text-cyan-400 font-medium">CO2</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
 
         <div class="w-full lg:w-[30%] h-full bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
             <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex justify-between items-start">
