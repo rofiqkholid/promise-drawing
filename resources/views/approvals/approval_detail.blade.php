@@ -900,8 +900,18 @@
         return 0;
       },
       canAct() {
-        return this.isWaiting() && this.approvalLevel === this.currentWaitingLevel();
-      },
+    if (!this.isWaiting()) return false;
+    
+    const currentStage = this.currentWaitingLevel(); // 1, 2, atau 3
+
+    // Level 3 (ICT & APV 3) boleh Approve di stage mana saja (Bypass)
+    if (this.approvalLevel === 3) {
+        return true;
+    }
+
+    // Level 1 & 2 hanya boleh Approve di stage yang sesuai
+    return this.approvalLevel === currentStage;
+},
       canRollback() {
         const s = (this.pkg.status || '').toLowerCase();
         if (s === 'waiting l2') return this.approvalLevel === 1;
