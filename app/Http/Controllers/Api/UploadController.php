@@ -78,8 +78,13 @@ class UploadController extends Controller
             });
         }
 
-        $totalRecords = Cache::remember('upload_list_total_count', 600, function() {
-            return DB::table('doc_package_revisions')->count();
+        $totalRecords = Cache::remember('upload_list_total_count_v2', 600, function() {
+            return DB::table('doc_package_revisions as r')
+                ->join('doc_packages as p', 'r.package_id', '=', 'p.id')
+                ->join('products as pr', 'p.product_id', '=', 'pr.id')
+                ->where('p.is_delete', 0)
+                ->where('pr.is_delete', 0)
+                ->count();
         });
 
         $filteredRecords = $query->count();
@@ -141,13 +146,17 @@ class UploadController extends Controller
             ->get();
 
         // Include KPIs with a cache to minimize heavy count queries
-        $kpiStats = Cache::remember('drawing_upload_kpis_global', 60, function() {
-             $stats = DB::table('doc_package_revisions')
+        $kpiStats = Cache::remember('drawing_upload_kpis_v2', 60, function() {
+             $stats = DB::table('doc_package_revisions as r')
+                ->join('doc_packages as p', 'r.package_id', '=', 'p.id')
+                ->join('products as pr', 'p.product_id', '=', 'pr.id')
+                ->where('p.is_delete', 0)
+                ->where('pr.is_delete', 0)
                 ->selectRaw("
                     COUNT(*) as totalupload,
-                    SUM(CASE WHEN revision_status = 'draft' THEN 1 ELSE 0 END) as totaldraft,
-                    SUM(CASE WHEN revision_status = 'pending' THEN 1 ELSE 0 END) as totalpending,
-                    SUM(CASE WHEN revision_status = 'rejected' THEN 1 ELSE 0 END) as totalrejected
+                    SUM(CASE WHEN r.revision_status = 'draft' THEN 1 ELSE 0 END) as totaldraft,
+                    SUM(CASE WHEN r.revision_status = 'pending' THEN 1 ELSE 0 END) as totalpending,
+                    SUM(CASE WHEN r.revision_status = 'rejected' THEN 1 ELSE 0 END) as totalrejected
                 ")
                 ->first();
 
