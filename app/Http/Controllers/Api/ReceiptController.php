@@ -1216,14 +1216,21 @@ class ReceiptController extends Controller
 
         $filesAddedCount = 0;
         $tempFilesToDelete = [];
+        $missingFiles = []; // Track missing files for better error reporting
 
         foreach ($files as $file) {
-            $filePath = str_replace('/', DIRECTORY_SEPARATOR, Storage::disk('datacenter')->path($file->storage_path));
+            // Ensure no leading slashes double-up with root path
+            $cleanStoragePath = ltrim($file->storage_path, '/\\');
+            $rawPath = Storage::disk('datacenter')->path($cleanStoragePath);
+            
+            // Normalize separators: Replace multiple / or \ with single DIRECTORY_SEPARATOR
+            $filePath = preg_replace('#[\\\\/]+#', DIRECTORY_SEPARATOR, $rawPath);
 
             $fileToAdd = $filePath;
             $deleteAfterAdd = false;
             $ext = strtolower(pathinfo($file->filename, PATHINFO_EXTENSION));
 
+            // Apply stamp if applicable
             if ($canStamp && in_array($ext, $stampableTypes) && file_exists($filePath)) {
                 try {
                     // Kirim $stampContext ke _burnStamps
@@ -1233,19 +1240,27 @@ class ReceiptController extends Controller
                         $deleteAfterAdd = true;
                     }
                 } catch (\Exception $e) {
-                    Log::error('Imagick stamp burn failed for zip', ['error' => $e->getMessage()]);
+                    Log::error('Stamp application failed during zip creation', [
+                        'file_id' => $file->id,
+                        'filename' => $file->filename,
+                        'error' => $e->getMessage()
+                    ]);
                 }
             }
 
             if (file_exists($fileToAdd)) {
                 $category = strtolower(trim($file->category));
                 $folderInZip = 'ECN';
-                if ($category === '2d') $folderInZip = '2D';
-                elseif ($category === '3d') $folderInZip = '3D';
+                if ($category === '2d') {
+                    $folderInZip = '2D';
+                } elseif ($category === '3d') {
+                    $folderInZip = '3D';
+                }
 
-                $pathInZip = str_replace('/', DIRECTORY_SEPARATOR, $folderInZip . '/' . $file->filename);
+                $pathInZip = $folderInZip . '/' . $file->filename;
                 $zip->addFile($fileToAdd, $pathInZip);
 
+                // Optimize compression for already-compressed formats
                 $zip->setCompressionName($pathInZip, ZipArchive::CM_STORE);
                 $filesAddedCount++;
 
@@ -1253,7 +1268,12 @@ class ReceiptController extends Controller
                     $tempFilesToDelete[] = $fileToAdd;
                 }
             } else {
-                Log::warning('File skipped: ' . $filePath);
+                // Track missing file with context
+                $missingFiles[] = [
+                    'filename' => $file->filename,
+                    'expected_path' => $file->storage_path,
+                    'resolved_path' => $filePath
+                ];
             }
         }
 
@@ -1264,8 +1284,25 @@ class ReceiptController extends Controller
         }
 
         if ($filesAddedCount === 0) {
-            @unlink($zipFilePath);
-            return response()->json(['success' => false, 'message' => 'No physical files were found.'], 404);
+            if (file_exists($zipFilePath)) {
+                @unlink($zipFilePath);
+            }
+            
+            // Provide detailed error information
+            $errorMessage = 'No physical files were found to add to the zip package.';
+            if (!empty($missingFiles)) {
+                Log::error('Zip creation failed: All files missing', [
+                    'revision_id' => $decrypted_id,
+                    'missing_count' => count($missingFiles),
+                    'sample_missing' => array_slice($missingFiles, 0, 5) // Log first 5
+                ]);
+                
+                if (count($missingFiles) <= 3) {
+                    $errorMessage .= ' Missing: ' . implode(', ', array_column($missingFiles, 'filename'));
+                }
+            }
+            
+            return response()->json(['success' => false, 'message' => $errorMessage], 404);
         }
 
         $downloadUrl = URL::temporarySignedRoute(
@@ -1725,16 +1762,20 @@ class ReceiptController extends Controller
             // --- GENERATE MASTER GAMBAR ---
             // $projectStatusName & $isFeasibility already defined above
 
+            //  --- C. OBSOLETE STATUS CHECK ---
+            $isObsolete = (bool)($revision->is_obsolete ?? 0);
+
+            // --- GENERATE STAMP IMAGES ---
             if ($isFeasibility) {
                 $stampOriginal = null;
             } else {
+                // Original stamp is always gray for supplier view (ReceiptController)
                 $stampOriginal = $this->_createStampImage('SAI-DRAWING ORIGINAL', $topLine, $bottomLine, 'gray');
             }
 
-            $stampCopy     = $this->_createStampImage($centerTextCopy, $topLineCopy, $bottomLineCopy, 'blue');
+            // Use gray color for copy stamp if obsolete
+            $stampCopy     = $this->_createStampImage($centerTextCopy, $topLineCopy, $bottomLineCopy, $isObsolete ? 'gray' : 'blue');
             $stampObsolete = null;
-
-            $isObsolete = (bool)($revision->is_obsolete ?? 0);
             if ($isObsolete) {
                 $obsDateStr = $formatSaiDate($revision->obsolete_at);
                 $topLineObsolete = "Date : {$obsDateStr}";

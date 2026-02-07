@@ -515,7 +515,8 @@
             },
 
             async downloadPackage() {
-                const id = '{{ $exportId }}';
+                // Use the current pkg.id from Alpine state (updates when revision changes)
+                const id = this.pkg?.id || '{{ $exportId }}';
                 if (!id) return;
                 
                 const stats = this.getTotalPackageStats();

@@ -325,20 +325,20 @@
                             :key="`stamp-original-${stampConfig.original}`">
                             <div class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                 :class="[
-                                stampOriginClass('original'),
-                                isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
-                            ]" style="transform: scale(0.45);">
+                                    stampOriginClass('original'),
+                                    pkg.stamp?.is_obsolete ? 'border-gray-500 text-gray-600' : (isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600')
+                                ]" style="transform: scale(0.45);">
                                 <div class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
-                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
+                                    :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : (isEngineering ? 'border-blue-600' : 'border-gray-500')">
                                     <span x-text="stampTopLine('original')"></span>
                                 </div>
                                 <div class="flex-1 flex items-center justify-center">
                                     <span class="text-xs font-extrabold uppercase px-2"
-                                        :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
+                                        :class="pkg.stamp?.is_obsolete ? 'text-gray-600' : (isEngineering ? 'text-blue-700' : 'text-gray-600')"
                                         x-text="stampCenterOriginal()"></span>
                                 </div>
                                 <div class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
-                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
+                                    :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : (isEngineering ? 'border-blue-600'  : 'border-gray-500')">
                                     <span x-text="stampBottomLine('original')"></span>
                                 </div>
                             </div>
@@ -347,19 +347,25 @@
                         {{-- STAMP COPY --}}
                         <div x-show="pkg.stamp && !isStampBurned" class="absolute" :class="stampPositionClass('copy')" 
                             :key="`stamp-copy-${stampConfig.copy}`">
-                            <div :class="stampOriginClass('copy')"
-                                class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                            <div class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                :class="[
+                                    stampOriginClass('copy'),
+                                    pkg.stamp?.is_obsolete ? 'border-gray-500 text-gray-600' : 'border-blue-600 text-blue-700'
+                                ]"
                                 style="transform: scale(0.45);">
                                 <div
-                                    class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
+                                    class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
+                                    :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : 'border-blue-600'">
                                     <span x-text="stampTopLine('copy')"></span>
                                 </div>
                                 <div class="flex-1 flex items-center justify-center">
-                                    <span class="text-xs font-extrabold uppercase text-blue-700 px-2"
+                                    <span class="text-xs font-extrabold uppercase px-2"
+                                        :class="pkg.stamp?.is_obsolete ? 'text-gray-600' : 'text-blue-700'"
                                         x-text="stampCenterCopy()"></span>
                                 </div>
                                 <div
-                                    class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
+                                    class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
+                                    :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : 'border-blue-600'">
                                     <span x-text="stampBottomLine('copy')"></span>
                                 </div>
                             </div>
@@ -468,20 +474,20 @@
                             :key="`stamp-pdf-original-${stampConfig.original}`">
                             <div class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                 :class="[
-                                stampOriginClass('original'),
-                                isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
-                            ]" style="transform: scale(0.45);">
+                                    stampOriginClass('original'),
+                                    pkg.stamp?.is_obsolete ? 'border-gray-500 text-gray-600' : (isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600')
+                                ]" style="transform: scale(0.45);">
                                 <div class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
-                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
+                                    :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : (isEngineering ? 'border-blue-600' : 'border-gray-500')">
                                     <span x-text="stampTopLine('original')"></span>
                                 </div>
                                 <div class="flex-1 flex items-center justify-center">
                                     <span class="text-xs font-extrabold uppercase px-2"
-                                        :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
+                                        :class="pkg.stamp?.is_obsolete ? 'text-gray-600' : (isEngineering ? 'text-blue-700' : 'text-gray-600')"
                                         x-text="stampCenterOriginal()"></span>
                                 </div>
                                 <div class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
-                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
+                                    :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : (isEngineering ? 'border-blue-600' : 'border-gray-500')">
                                     <span x-text="stampBottomLine('original')"></span>
                                 </div>
                             </div>
@@ -490,19 +496,25 @@
                         {{-- STAMP COPY --}}
                         <div x-show="pkg.stamp && !pdfError && !isStampBurned" class="absolute" :class="stampPositionClass('copy')"
                             :key="`stamp-pdf-copy-${stampConfig.copy}`">
-                            <div :class="stampOriginClass('copy')"
-                                class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                            <div class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                :class="[
+                                    stampOriginClass('copy'),
+                                    pkg.stamp?.is_obsolete ? 'border-gray-500 text-gray-600' : 'border-blue-600 text-blue-700'
+                                ]"
                                 style="transform: scale(0.45);">
                                 <div
-                                    class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
+                                    class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
+                                    :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : 'border-blue-600'">
                                     <span x-text="stampTopLine('copy')"></span>
                                 </div>
                                 <div class="flex-1 flex items-center justify-center">
-                                    <span class="text-xs font-extrabold uppercase text-blue-700 px-2"
+                                    <span class="text-xs font-extrabold uppercase px-2"
+                                        :class="pkg.stamp?.is_obsolete ? 'text-gray-600' : 'text-blue-700'"
                                         x-text="stampCenterCopy()"></span>
                                 </div>
                                 <div
-                                    class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
+                                    class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
+                                    :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : 'border-blue-600'">
                                     <span x-text="stampBottomLine('copy')"></span>
                                 </div>
                             </div>
@@ -612,20 +624,20 @@
                             :key="`stamp-tiff-original-${stampConfig.original}`">
                             <div class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
                                 :class="[
-                                stampOriginClass('original'),
-                                isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
-                            ]" style="transform: scale(0.45);">
+                                    stampOriginClass('original'),
+                                    pkg.stamp?.is_obsolete ? 'border-gray-500 text-gray-600' : (isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600')
+                                ]" style="transform: scale(0.45);">
                                 <div class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
-                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
+                                    :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : (isEngineering ? 'border-blue-600' : 'border-gray-500')">
                                     <span x-text="stampTopLine('original')"></span>
                                 </div>
                                 <div class="flex-1 flex items-center justify-center">
                                     <span class="text-xs font-extrabold uppercase px-2"
-                                        :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
+                                        :class="pkg.stamp?.is_obsolete ? 'text-gray-600' : (isEngineering ? 'text-blue-700' : 'text-gray-600')"
                                         x-text="stampCenterOriginal()"></span>
                                 </div>
                                 <div class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
-                                    :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
+                                    :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : (isEngineering ? 'border-blue-600' : 'border-gray-500')">
                                     <span x-text="stampBottomLine('original')"></span>
                                 </div>
                             </div>
@@ -634,19 +646,25 @@
                         {{-- STAMP COPY (Hidden if burned) --}}
                         <div x-show="pkg.stamp && !isStampBurned" class="absolute" :class="stampPositionClass('copy')" 
                             :key="`stamp-tiff-copy-${stampConfig.copy}`">
-                            <div :class="stampOriginClass('copy')"
-                                class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                            <div class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                :class="[
+                                    stampOriginClass('copy'),
+                                    pkg.stamp?.is_obsolete ? 'border-gray-500 text-gray-600' : 'border-blue-600 text-blue-700'
+                                ]"
                                 style="transform: scale(0.45);">
                                 <div
-                                    class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
+                                    class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
+                                    :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : 'border-blue-600'">
                                     <span x-text="stampTopLine('copy')"></span>
                                 </div>
                                 <div class="flex-1 flex items-center justify-center">
-                                    <span class="text-xs font-extrabold uppercase text-blue-700 px-2"
+                                    <span class="text-xs font-extrabold uppercase px-2"
+                                        :class="pkg.stamp?.is_obsolete ? 'text-gray-600' : 'text-blue-700'"
                                         x-text="stampCenterCopy()"></span>
                                 </div>
                                 <div
-                                    class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
+                                    class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
+                                    :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : 'border-blue-600'">
                                     <span x-text="stampBottomLine('copy')"></span>
                                 </div>
                             </div>
@@ -722,22 +740,23 @@
                             {{-- STAMP ORIGINAL --}}
                             <div x-show="pkg.stamp && !hpglError && !isStampBurned" class="absolute" :class="stampPositionClass('original')" 
                                 :key="`stamp-hpgl-original-${stampConfig.original}`">
-                                <div :class="[
-                                    stampOriginClass('original'),
-                                    isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600'
-                                ]" class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                <div class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                    :class="[
+                                        stampOriginClass('original'),
+                                        pkg.stamp?.is_obsolete ? 'border-gray-500 text-gray-600' : (isEngineering ? 'border-blue-600 text-blue-700' : 'border-gray-500 text-gray-600')
+                                    ]"
                                     style="transform: scale(0.45);">
                                     <div class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
-                                        :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
+                                        :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : (isEngineering ? 'border-blue-600' : 'border-gray-500')">
                                         <span x-text="stampTopLine('original')"></span>
                                     </div>
                                     <div class="flex-1 flex items-center justify-center">
                                         <span class="text-xs font-extrabold uppercase px-2"
-                                            :class="isEngineering ? 'text-blue-700' : 'text-gray-600'"
+                                            :class="pkg.stamp?.is_obsolete ? 'text-gray-600' : (isEngineering ? 'text-blue-700' : 'text-gray-600')"
                                             x-text="stampCenterOriginal()"></span>
                                     </div>
                                     <div class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
-                                        :class="isEngineering ? 'border-blue-600' : 'border-gray-500'">
+                                        :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : (isEngineering ? 'border-blue-600' : 'border-gray-500')">
                                         <span x-text="stampBottomLine('original')"></span>
                                     </div>
                                 </div>
@@ -746,19 +765,25 @@
                             {{-- STAMP COPY --}}
                             <div x-show="pkg.stamp && !hpglError && !isStampBurned" class="absolute" :class="stampPositionClass('copy')" 
                                 :key="`stamp-hpgl-copy-${stampConfig.copy}`">
-                                <div :class="stampOriginClass('copy')"
-                                    class="min-w-65 w-auto h-20 border-2 border-blue-600 rounded-sm text-[10px] text-blue-700 opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                <div class="min-w-65 w-auto h-20 border-2 rounded-sm text-[10px] opacity-50 flex flex-col justify-between bg-transparent whitespace-nowrap"
+                                    :class="[
+                                        stampOriginClass('copy'),
+                                        pkg.stamp?.is_obsolete ? 'border-gray-500 text-gray-600' : 'border-blue-600 text-blue-700'
+                                    ]"
                                     style="transform: scale(0.45);">
                                     <div
-                                        class="w-full text-center border-b-2 border-blue-600 py-0.5 px-4 font-semibold tracking-tight">
+                                        class="w-full text-center border-b-2 py-0.5 px-4 font-semibold tracking-tight"
+                                        :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : 'border-blue-600'">
                                         <span x-text="stampTopLine('copy')"></span>
                                     </div>
                                     <div class="flex-1 flex items-center justify-center">
-                                        <span class="text-xs font-extrabold uppercase text-blue-700 px-2"
+                                        <span class="text-xs font-extrabold uppercase px-2"
+                                            :class="pkg.stamp?.is_obsolete ? 'text-gray-600' : 'text-blue-700'"
                                             x-text="stampCenterCopy()"></span>
                                     </div>
                                     <div
-                                        class="w-full border-t-2 border-blue-600 py-0.5 px-4 text-center font-semibold tracking-tight">
+                                        class="w-full border-t-2 py-0.5 px-4 text-center font-semibold tracking-tight"
+                                        :class="pkg.stamp?.is_obsolete ? 'border-gray-500' : 'border-blue-600'">
                                         <span x-text="stampBottomLine('copy')"></span>
                                     </div>
                                 </div>

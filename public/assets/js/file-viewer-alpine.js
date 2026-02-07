@@ -171,6 +171,10 @@ function fileViewerComponent(config = {}) {
         applyToAllProcessing: false,
         isLoadingStampConfig: false, // Flag to prevent infinite loop
 
+        // Custom labels for stamps
+        stampCopyTopLine: config.stampCopyTopLine || null,
+        stampCopyBottomLine: config.stampCopyBottomLine || null,
+
         // ===== INITIALIZATION =====
         init() {
             // console.log('[FileViewer] Component initialized', {
@@ -351,6 +355,9 @@ function fileViewerComponent(config = {}) {
                 const date = info.date_text || s.obsolete_date || s.upload_date || '';
                 return date ? `DATE : ${date}` : '';
             } else if (which === 'copy') {
+                if (this.stampCopyTopLine) {
+                    return this.stampCopyTopLine;
+                }
                 const now = new Date();
                 const dateStr = this.formatStampDate(now.toISOString().split('T')[0]);
                 const hours = String(now.getHours()).padStart(2, '0');
@@ -3501,6 +3508,7 @@ function fileViewerComponent(config = {}) {
                 const label = fmt.prefix || 'Date Received';
                 return date ? `${label} : ${this.formatStampDate(date)}` : '';
             } else if (which === 'copy') {
+                if (this.stampCopyTopLine) return this.stampCopyTopLine;
                 const now = new Date();
                 const dateStr = this.formatStampDate(now.toISOString().split('T')[0]);
                 const hours = String(now.getHours()).padStart(2, '0');
@@ -3518,6 +3526,7 @@ function fileViewerComponent(config = {}) {
             let fmt;
 
             if (which === 'copy') {
+                if (this.stampCopyBottomLine) return this.stampCopyBottomLine;
                 const userName = this.userName || '--';
                 return `Downloaded By ${userName}`;
             } else if (which === 'obsolete') {
@@ -4840,13 +4849,21 @@ function fileViewerComponent(config = {}) {
 
             // 3. Setup Styles based on Type
             const isEng = this.isEngineering;
-            let color = '#6b7280'; // gray-600
-            let borderColor = '#6b7280';
+            const isObsolete = !!(this.pkg?.stamp?.is_obsolete);
+
+            let color = '#4b5563';      // gray-600
+            let borderColor = '#6b7280'; // gray-500
 
             if (type === 'original') {
-                if (isEng) { color = '#1d4ed8'; borderColor = '#2563eb'; } // blue-700/600
+                // Original: Blue if Engineering AND Not Obsolete. Otherwise Gray.
+                if (isEng && !isObsolete) {
+                    color = '#1d4ed8'; borderColor = '#2563eb';
+                }
             } else if (type === 'copy') {
-                color = '#1d4ed8'; borderColor = '#2563eb';
+                // Copy: Blue unless Obsolete
+                if (!isObsolete) {
+                    color = '#1d4ed8'; borderColor = '#2563eb';
+                }
             } else if (type === 'obsolete') {
                 color = '#b91c1c'; borderColor = '#dc2626'; // red-700/600
             }
