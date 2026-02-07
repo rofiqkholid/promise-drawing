@@ -112,7 +112,16 @@
                 {{-- Quick Actions / Stats footer --}}
                 <div class="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
                     <div class="flex flex-col">
-                        <span class="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Content</span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Original Size</span>
+                            <div class="group relative inline-block">
+                                <i class="fa-solid fa-circle-info text-[10px] text-gray-400 cursor-help hover:text-blue-500 transition-colors"></i>
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg shadow-xl z-50 leading-relaxed font-normal normal-case">
+                                    Downloaded file size may be larger due to stamp processing and format conversion.
+                                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-200 mt-0.5">
                             <span x-text="getTotalPackageStats().count + ' Files'"></span>
                             <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>

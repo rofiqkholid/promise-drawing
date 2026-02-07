@@ -42,10 +42,16 @@
                         <span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Files</span>
                         <span class="text-lg font-bold text-slate-900 dark:text-white" x-text="stats.count"></span>
                     </div>
-                    <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
-                        <span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Size</span>
+                    <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
+                        <span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Original Size</span>
                         <span class="text-lg font-bold text-slate-900 dark:text-white" x-text="stats.size"></span>
                     </div>
+                </div>
+
+                <div class="mb-8 px-2">
+                    <p class="text-[10px] text-slate-400 font-medium leading-relaxed italic">
+                        * Note: Final ZIP size may be larger than individual file totals due to stamp processing.
+                    </p>
                 </div>
 
                 <div class="flex flex-col gap-3">

@@ -115,7 +115,16 @@
                         Download All
                     </button>
                     <div class="flex justify-between items-center mt-3 px-1">
-                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Content</div>
+                         <div class="flex items-center gap-1.5">
+                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Original Size</span>
+                            <div class="group relative inline-block">
+                                <i class="fa-solid fa-circle-info text-[9px] text-gray-400 cursor-help hover:text-blue-500 transition-colors"></i>
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-900 text-white text-[9px] rounded-lg shadow-xl z-50 leading-relaxed font-normal normal-case tracking-normal">
+                                    Downloaded files may be larger due to stamp processing.
+                                    <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                </div>
+                            </div>
+                         </div>
                          <div class="text-xs font-bold text-gray-700 dark:text-gray-200">
                             <span x-text="getTotalFiles() + ' Items'"></span>
                             <span class="mx-1 opacity-20">/</span>
@@ -180,10 +189,15 @@
                                                     <div class="w-10 h-10 rounded-lg bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-700 flex items-center justify-center transition-colors">
                                                         <i class="fa-solid text-xs" :class="getFileIcon(file.name)"></i>
                                                     </div>
-                                                    <div class="min-w-0 pr-4">
-                                                        <p class="text-xs font-black text-gray-800 dark:text-gray-100 truncate group-hover/item:text-blue-600 transition-colors" x-text="file.name"></p>
-                                                        <div class="flex items-center gap-2 mt-1">
-                                                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter" x-text="formatBytes(file.size)"></span>
+                                                     <div class="min-w-0 pr-4">
+                                                         <div class="marquee-wrapper">
+                                                            <p class="marquee-content text-xs font-black text-gray-800 dark:text-gray-100 group-hover/item:text-blue-600 transition-colors" x-text="file.name"></p>
+                                                         </div>
+                                                         <div class="flex items-center gap-2 mt-1">
+                                                         <div class="flex items-center mt-0.5 text-[9px] text-gray-400 dark:text-gray-500 uppercase tracking-tight">
+                                                             <span class="font-bold" x-text="formatBytes(file.size)"></span>
+                                                             <span class="font-normal ml-1">(Original)</span>
+                                                         </div>
                                                         </div>
                                                     </div>
                                                 </div>

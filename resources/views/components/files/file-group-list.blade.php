@@ -1,4 +1,41 @@
-@props(['title', 'icon', 'category', 'allowDownload' => false])
+@once
+<style>
+    /* Dynamic Precision Marquee - Refined Ping-Pong */
+    .marquee-wrapper {
+        display: block;
+        width: 100%;
+        container-type: inline-size; 
+        overflow: hidden;
+        white-space: nowrap;
+        position: relative;
+        /* Very subtle fade on the right, only 3% coverage */
+        mask-image: linear-gradient(to right, black 97%, transparent 100%);
+    }
+
+    .marquee-content {
+        display: inline-block;
+        width: fit-content;
+        will-change: transform;
+    }
+
+    /* Trigger on hover OR when the file is active/selected */
+    .group:hover .marquee-content,
+    .is-selected .marquee-content {
+        animation: marquee-dynamic 6s linear infinite;
+    }
+
+    @keyframes marquee-dynamic {
+        /* Longer initial pause (35%) */
+        0%, 35% { transform: translateX(0); }
+        /* Smooth slide to end */
+        70% { transform: translateX(min(0px, calc(-100% + 100cqw))); }
+        /* Stay at end briefly */
+        85% { transform: translateX(min(0px, calc(-100% + 100cqw))); }
+        /* Return to start */
+        100% { transform: translateX(0); }
+    }
+</style>
+@endonce
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden mb-4">
     <button @click="toggleSection('{{$category}}')"
@@ -30,11 +67,11 @@
         <div class="p-2 max-h-72 overflow-y-auto">
             <template x-for="file in (pkg.files['{{$category}}'] || [])" :key="file.name">
                 <div @click="selectFile(file)"
-                     :class="{'bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-medium': selectedFile && selectedFile.name === file.name}"
+                     :class="{'bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-medium is-selected': selectedFile && selectedFile.name === file.name}"
                      class="flex items-center {{ $allowDownload ? 'justify-between' : '' }} p-3 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 group"
                      role="button" tabindex="0" @keydown.enter="selectFile(file)">
 
-                    <div class="flex items-center min-w-0 pr-2">
+                    <div class="flex items-center min-w-0 pr-2 flex-1 overflow-hidden">
                         <template x-if="file.icon_src">
                             <img :src="file.icon_src" alt="" class="w-5 h-5 mr-3 object-contain" />
                         </template>
@@ -42,8 +79,16 @@
                         <template x-if="!file.icon_src">
                             <i class="fa-solid fa-file text-gray-500 dark:text-gray-400 mr-3 transition-colors group-hover:text-blue-500"></i>
                         </template>
-                        <span class="text-sm text-gray-900 dark:text-gray-100 truncate"
-                              x-text="file.name" :title="file.name"></span>
+                        <div class="flex flex-col min-w-0 flex-1 overflow-hidden pr-2">
+                            <div class="marquee-wrapper">
+                                <span class="marquee-content text-sm text-gray-900 dark:text-gray-100 font-medium"
+                                      x-text="file.name"></span>
+                            </div>
+                            <div class="flex items-center mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">
+                                <span class="font-semibold" x-text="formatBytes(file.size)"></span>
+                                <span class="font-normal ml-1">(Original)</span>
+                            </div>
+                        </div>
                     </div>
 
 
