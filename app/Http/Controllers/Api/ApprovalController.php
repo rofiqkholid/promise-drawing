@@ -1056,7 +1056,7 @@ END as status
                 })->toArray();
 
                 // URL (Gunakan key 'download_url' agar sesuai View Anda)
-                $approvalArray['download_url'] = route('approval.detail', ['id' => encrypt($revisionId)]);
+                $approvalArray['download_url'] = route('file-manager.export.detail', ['id' => str_replace('=', '-', encrypt($revisionId))]);
 
                 // 3. Loop Pengiriman
                 foreach ($recipients as $recipient) {
