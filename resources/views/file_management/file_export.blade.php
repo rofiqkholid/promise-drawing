@@ -278,7 +278,7 @@ $(function () {
       processing: true,
       serverSide: true,
       
-      autoWidth: false,
+      autoWidth: true, // Changed to true for proper width calculation
       responsive: false, 
       scrollX: true, 
       scrollCollapse: true,
@@ -530,6 +530,58 @@ $(function () {
         const num = i + 1 + info.start;
         cell.innerHTML = `<span class="text-[12px] font-black text-gray-500 dark:text-gray-400 tracking-tighter">${num}</span>`;
       });
+
+      // Force column width recalculation to fix header-body alignment
+      setTimeout(() => {
+        table.columns.adjust();
+      }, 50);
+
+      // --- Smart Empty State Logic ---
+      if (info.recordsDisplay === 0) {
+          const f = getCurrentFilters();
+          // Check if any filter is active (not 'All')
+          const hasActiveFilters = (
+              (f.customer && f.customer !== 'All') ||
+              (f.model && f.model !== 'All') ||
+              (f.doc_type && f.doc_type !== 'All') ||
+              (f.category && f.category !== 'All') ||
+              (f.project_status && f.project_status !== 'All')
+          );
+
+          if (hasActiveFilters) {
+              const $emptyRow = $('#exportTable tbody tr td.dataTables_empty').parent();
+              if ($emptyRow.length) {
+                  // Custom Empty State HTML
+                  const emptyHtml = `
+                      <td colspan="10" style="padding: 0 !important; border: none !important; text-align: center !important;">
+                          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; padding: 4rem 1rem; text-align: center !important;">
+                              <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-full mb-4 ring-1 ring-gray-100 dark:ring-gray-700 shadow-sm">
+                                  <i class="fa-solid fa-filter-circle-xmark text-4xl text-gray-400 dark:text-gray-500"></i>
+                              </div>
+                              <h3 style="text-align: center !important; font-weight: bold; font-size: 1.125rem; margin-bottom: 0.5rem; width: 100%;" class="text-gray-900 dark:text-gray-100">No results found with current filters</h3>
+                              <div style="text-align: center !important; color: #6b7280; font-size: 0.875rem; line-height: 1.625; max-width: 32rem; margin: 0 auto 1.5rem; padding: 0 1rem; width: 100%;" class="dark:text-gray-400">
+                                  We couldn't find any files matching your search criteria<br>within the selected filters. Try clearing the filters to see more results.
+                              </div>
+                              
+                              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; max-width: 48rem; padding: 0 1rem;">
+                                  ${f.customer !== 'All' ? '<span class="px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">Customer: ' + ($('#customer').select2('data')[0]?.text || 'Selected') + '</span>' : ''}
+                                  ${f.model !== 'All' ? '<span class="px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">Model: ' + ($('#model').select2('data')[0]?.text || 'Selected') + '</span>' : ''}
+                                  ${f.doc_type !== 'All' ? '<span class="px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">Type: ' + ($('#document-type').select2('data')[0]?.text || 'Selected') + '</span>' : ''}
+                                  ${f.category !== 'All' ? '<span class="px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">Category: ' + ($('#category').select2('data')[0]?.text || 'Selected') + '</span>' : ''}
+                                  ${f.project_status !== 'All' ? '<span class="px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-700 border border-gray-200 rounded-md dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700">Status: ' + ($('#project-status').select2('data')[0]?.text || 'Selected') + '</span>' : ''}
+                              </div>
+
+                              <button type="button" onclick="$('#btnResetFilters').click()" 
+                                  class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-bold rounded-lg shadow-sm transition-all focus:ring-4 focus:ring-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700">
+                                  <i class="fa-solid fa-rotate-left text-gray-500 dark:text-gray-400"></i> Clear All Filters
+                              </button>
+                          </div>
+                      </td>
+                  `;
+                  $emptyRow.html(emptyHtml);
+              }
+          }
+      }
     });
 
     $('#exportTable tbody').on('click', 'tr', function (e) {
@@ -537,6 +589,17 @@ $(function () {
       const data = table.row(this).data();
       if (!data || !data.id) return;
       window.location.href = `/file-manager.export/${encodeURIComponent(data.id)}`;
+    });
+
+    // Fix alignment on window resize
+    let resizeTimeout;
+    $(window).on('resize', function() {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(function() {
+        if (table) {
+          table.columns.adjust().draw(false);
+        }
+      }, 250);
     });
   }
 
@@ -689,25 +752,43 @@ $(function () {
 
     // --- End Persistence Logic ---
 
-    $inputSearch.on('keyup input', function () {
-        const val = this.value;
+    let lastSearchValue = ''; // Track last search to prevent duplicate requests
+
+    $inputSearch.on('input', function () {
+        const val = this.value.trim();
         const $iconStatic = $('#search-icon-static');
         const $iconLoading = $('#search-icon-loading');
         
         $btnClear.toggleClass('hidden', val.length === 0);
 
-        // Show Loading Icon
+        // Clear any pending timeout
+        clearTimeout(searchTimeout);
+
+        // Show Loading Icon immediately
         $iconStatic.addClass('opacity-0');
         $iconLoading.removeClass('opacity-0').addClass('opacity-100');
 
-        clearTimeout(searchTimeout);
+        // Set new timeout for search
         searchTimeout = setTimeout(function() {
+            // Only execute search if value has changed
+            if (val === lastSearchValue) {
+                // Hide loading icon if no actual search needed
+                $iconLoading.removeClass('opacity-100').addClass('opacity-0');
+                $iconStatic.removeClass('opacity-0');
+                return;
+            }
+
+            lastSearchValue = val;
+            
             syncUrlWithFilters();
             saveFilterState(); // Save on search
             if (val && val.length > 2) saveSearch(val);
-            if (table) table.search(val).draw();
             
-            // Revert to Static Icon
+            if (table) {
+                table.search(val).draw();
+            }
+            
+            // Revert to Static Icon after draw completes
             setTimeout(() => {
                 $iconLoading.removeClass('opacity-100').addClass('opacity-0');
                 $iconStatic.removeClass('opacity-0');
@@ -718,6 +799,7 @@ $(function () {
     $btnClear.on('click', function () {
         $inputSearch.val('').focus();
         $btnClear.addClass('hidden');
+        lastSearchValue = ''; // Reset tracker
         saveFilterState(); // Save on clear
         if (table) table.search('').draw();
     });

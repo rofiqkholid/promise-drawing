@@ -151,9 +151,9 @@
       </div>
 
 
-      <x-files.file-group-list title="2D Drawings" icon="fa-drafting-compass" category="2d" />
-      <x-files.file-group-list title="3D Models" icon="fa-cubes" category="3d" />
-      <x-files.file-group-list title="ECN / Documents" icon="fa-file-lines" category="ecn" />
+      <x-files.file-group-list title="2D Drawings" icon="fa-drafting-compass" category="2d" :allowDownload="false" />
+      <x-files.file-group-list title="3D Models" icon="fa-cubes" category="3d" :allowDownload="false" />
+      <x-files.file-group-list title="ECN / Documents" icon="fa-file-lines" category="ecn" :allowDownload="false" />
 
       <!-- ===== Activity Log (below ECN) ===== -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
