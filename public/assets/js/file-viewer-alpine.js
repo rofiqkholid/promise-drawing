@@ -59,6 +59,7 @@ function fileViewerComponent(config = {}) {
         minZoom: 0.5,
         maxZoom: 5,
         zoomStep: 0.25,
+        touchZoomDistance: 0,
         panX: 0,
         panY: 0,
         isPanning: false,
@@ -66,6 +67,7 @@ function fileViewerComponent(config = {}) {
         panStartY: 0,
         panOriginX: 0,
         panOriginY: 0,
+        panGap: 100, // Margin in pixels to allow panning beyond edges
 
         // ===== IMAGE STATE =====
         imgLoading: false,
@@ -255,7 +257,53 @@ function fileViewerComponent(config = {}) {
 
             // Setup mouse event listeners for pan
             document.addEventListener('mousemove', (e) => this.onPan(e));
+
+            document.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    this.isPanning = false; // Stop panning if second finger added
+                    this.touchZoomDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1 && this.isPanning) {
+                    this.onPan(e.touches[0]);
+                    if (e.cancelable) e.preventDefault();
+                } else if (e.touches.length === 2) {
+                    // Pinch zoom
+                    const dist = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+
+                    if (this.touchZoomDistance > 0) {
+                        const delta = dist - this.touchZoomDistance;
+                        const factor = 0.005;
+                        const targetZoom = this.imageZoom + delta * factor;
+                        const newZoom = Math.min(Math.max(targetZoom, this.minZoom), this.maxZoom);
+
+                        const focalX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                        const focalY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+
+                        this.applyZoom(newZoom, focalX, focalY);
+                    }
+                    this.touchZoomDistance = dist;
+                    if (e.cancelable) e.preventDefault();
+                }
+            }, { passive: false });
+
             document.addEventListener('mouseup', () => this.endPan());
+            document.addEventListener('touchend', () => {
+                this.endPan();
+                this.touchZoomDistance = 0;
+            });
+            document.addEventListener('touchcancel', () => {
+                this.endPan();
+                this.touchZoomDistance = 0;
+            });
 
             // Sync isFullscreen with native browser fullscreen state (for Esc key support)
             document.addEventListener('fullscreenchange', () => {
@@ -3385,13 +3433,73 @@ function fileViewerComponent(config = {}) {
             this.iges.transitionAnimId = requestAnimationFrame(animate);
         },
 
-        // ===== ZOOM & PAN =====
+        getContentSize() {
+            const el = this.$refs.mainImage || this.$refs.pdfCanvas || this.$refs.tifImg || this.$refs.hpglCanvas;
+            if (!el) return null;
+            return {
+                width: el.clientWidth || el.width || 0,
+                height: el.clientHeight || el.height || 0
+            };
+        },
+
+        applyZoom(newZoom, focalX, focalY) {
+            const oldZoom = this.imageZoom;
+            if (oldZoom === newZoom) return;
+
+            const container = this.$refs.viewport2d || this.$refs.ref2dContainer || this.$refs.refMainContainer;
+            if (!container) {
+                this.imageZoom = newZoom;
+                return;
+            }
+
+            const rect = container.getBoundingClientRect();
+
+            // Note: Auto-centering for <= 1.0 removed to allow panning flexibility.
+            // Constraints with panGap will handle the boundaries.
+
+            const mx = focalX - rect.left;
+            const my = focalY - rect.top;
+            const cw = rect.width;
+            const ch = rect.height;
+
+            const ratio = newZoom / oldZoom;
+            let targetX = (mx - cw / 2) - (mx - cw / 2 - this.panX) * ratio;
+            let targetY = (my - ch / 2) - (my - ch / 2 - this.panY) * ratio;
+
+            // Apply pan constraints during zoom
+            const content = this.getContentSize();
+            if (content) {
+                const zoomedW = content.width * newZoom;
+                const zoomedH = content.height * newZoom;
+                const maxPanX = Math.abs(zoomedW - cw) / 2 + this.panGap;
+                const maxPanY = Math.abs(zoomedH - ch) / 2 + this.panGap;
+                targetX = Math.min(maxPanX, Math.max(-maxPanX, targetX));
+                targetY = Math.min(maxPanY, Math.max(-maxPanY, targetY));
+            }
+
+            this.panX = targetX;
+            this.panY = targetY;
+            this.imageZoom = newZoom;
+        },
+
         zoomIn() {
-            this.imageZoom = Math.min(this.imageZoom + this.zoomStep, this.maxZoom);
+            const container = this.$refs.ref2dContainer || this.$refs.refMainContainer;
+            if (container) {
+                const rect = container.getBoundingClientRect();
+                this.applyZoom(Math.min(this.imageZoom + this.zoomStep, this.maxZoom), rect.left + rect.width / 2, rect.top + rect.height / 2);
+            } else {
+                this.imageZoom = Math.min(this.imageZoom + this.zoomStep, this.maxZoom);
+            }
         },
 
         zoomOut() {
-            this.imageZoom = Math.max(this.imageZoom - this.zoomStep, this.minZoom);
+            const container = this.$refs.ref2dContainer || this.$refs.refMainContainer;
+            if (container) {
+                const rect = container.getBoundingClientRect();
+                this.applyZoom(Math.max(this.imageZoom - this.zoomStep, this.minZoom), rect.left + rect.width / 2, rect.top + rect.height / 2);
+            } else {
+                this.imageZoom = Math.max(this.imageZoom - this.zoomStep, this.minZoom);
+            }
         },
 
         resetZoom() {
@@ -3403,12 +3511,17 @@ function fileViewerComponent(config = {}) {
         onWheelZoom(e) {
             const delta = e.deltaY;
             const step = this.zoomStep;
+            let targetZoom;
 
             if (delta < 0) {
-                this.imageZoom = Math.min(this.imageZoom + step, this.maxZoom);
+                targetZoom = Math.min(this.imageZoom + step, this.maxZoom);
             } else if (delta > 0) {
-                this.imageZoom = Math.max(this.imageZoom - step, this.minZoom);
+                targetZoom = Math.max(this.imageZoom - step, this.minZoom);
+            } else {
+                return;
             }
+
+            this.applyZoom(targetZoom, e.clientX, e.clientY);
         },
 
         startPan(e) {
@@ -3421,10 +3534,30 @@ function fileViewerComponent(config = {}) {
 
         onPan(e) {
             if (!this.isPanning) return;
+
             const dx = e.clientX - this.panStartX;
             const dy = e.clientY - this.panStartY;
-            this.panX = this.panOriginX + dx;
-            this.panY = this.panOriginY + dy;
+            let targetX = this.panOriginX + dx;
+            let targetY = this.panOriginY + dy;
+
+            // Pan constraints: Prevent image edges from leaving the container
+            const container = this.$refs.viewport2d || this.$refs.ref2dContainer || this.$refs.refMainContainer;
+            const content = this.getContentSize();
+
+            if (container && content) {
+                const rect = container.getBoundingClientRect();
+                const zoomedW = content.width * this.imageZoom;
+                const zoomedH = content.height * this.imageZoom;
+
+                const maxPanX = Math.abs(zoomedW - rect.width) / 2 + this.panGap;
+                const maxPanY = Math.abs(zoomedH - rect.height) / 2 + this.panGap;
+
+                targetX = Math.min(maxPanX, Math.max(-maxPanX, targetX));
+                targetY = Math.min(maxPanY, Math.max(-maxPanY, targetY));
+            }
+
+            this.panX = targetX;
+            this.panY = targetY;
         },
 
         endPan() {

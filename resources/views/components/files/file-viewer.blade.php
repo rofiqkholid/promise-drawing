@@ -272,9 +272,10 @@
 
         {{-- IMAGE VIEWER (JPG, PNG, GIF, etc.) --}}
         <template x-if="isImage(selectedFile?.name)">
-            <div class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+            <div x-ref="viewport2d" class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                style="touch-action: none;"
                 :class="isFullscreen ? 'h-full' : 'h-[70vh]'"
-                @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
+                @mousedown.prevent="startPan($event)" @touchstart="startPan($event.touches[0])" @wheel.prevent="onWheelZoom($event)">
                 <div class="w-full h-full flex items-center justify-center">
                     <div class="relative inline-block" :style="imageTransformStyle()">
                         <img x-ref="mainImage" :src="selectedFile?.url" @load="onImageLoad()"
@@ -424,9 +425,10 @@
 
         {{-- PDF VIEWER --}}
         <template x-if="isPdf(selectedFile?.name)">
-            <div class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+            <div x-ref="viewport2d" class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                style="touch-action: none;"
                 :class="isFullscreen ? 'h-full' : 'h-[70vh]'"
-                @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
+                @mousedown.prevent="startPan($event)" @touchstart="startPan($event.touches[0])" @wheel.prevent="onWheelZoom($event)">
                 <div class="w-full h-full flex items-center justify-center">
                     <div class="relative inline-block" :style="imageTransformStyle()">
                         <canvas x-ref="pdfCanvas" class="block pointer-events-none select-none max-w-full"
@@ -574,9 +576,10 @@
 
         {{-- TIFF VIEWER --}}
         <template x-if="isTiff(selectedFile?.name)">
-            <div class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+            <div x-ref="viewport2d" class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                style="touch-action: none;"
                 :class="isFullscreen ? 'h-full' : 'h-[70vh]'"
-                @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
+                @mousedown.prevent="startPan($event)" @touchstart="startPan($event.touches[0])" @wheel.prevent="onWheelZoom($event)">
                 <div class="w-full h-full flex items-center justify-center">
                     <div class="relative inline-block" :style="imageTransformStyle()">
                         <img x-ref="tifImg" alt="TIFF Preview" @load="onImageLoad()"
@@ -724,9 +727,10 @@
 
         {{-- HPGL VIEWER --}}
         <template x-if="isHpgl(selectedFile?.name)">
-            <div class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+            <div x-ref="viewport2d" class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
+                style="touch-action: none;"
                 :class="isFullscreen ? 'h-full' : 'h-[70vh]'"
-                @mousedown.prevent="startPan($event)" @wheel.prevent="onWheelZoom($event)">
+                @mousedown.prevent="startPan($event)" @touchstart="startPan($event.touches[0])" @wheel.prevent="onWheelZoom($event)">
                 <div class="relative w-full h-full flex items-center justify-center" :style="imageTransformStyle()">
 
                     {{-- Wrapper with relative positioning for stamps --}}
