@@ -364,7 +364,7 @@
             titleEl.innerText = data.title;
             contentEl.innerHTML = data.steps;
             const cleanUrl = videoUrl.split('?')[0];
-            iframe.src = `${cleanUrl}?autoplay=1&rel=0&modestbranding=1&showinfo=0`;
+            iframe.src = `${cleanUrl}?autoplay=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3`;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             document.body.style.overflow = 'hidden';
