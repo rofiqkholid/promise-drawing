@@ -20,18 +20,13 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // --- PERBAIKAN ISU REDIRECT IP ---
-        // Memaksa Laravel menggunakan URL yang ada di .env (APP_URL)
-        // Ini akan memperbaiki masalah redirect ke IP 127.0.0.1
         if (config('app.url')) {
             URL::forceRootUrl(config('app.url'));
         }
 
-        // Memaksa HTTPS jika APP_URL menggunakan https
         if (str_contains(config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }
-        // ---------------------------------
 
         View::composer('layouts.header', function ($view) {
 
