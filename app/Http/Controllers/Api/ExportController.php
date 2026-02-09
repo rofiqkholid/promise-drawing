@@ -1639,7 +1639,7 @@ class ExportController extends Controller
 
             // --- GENERATE STAMP IMAGES ---
             // For ExportController (Engineering view), Original stamp is blue unless obsolete
-            $stampOriginal = $this->_createStampImage('SAI-DRAWING ORIGINAL', $topLine, $bottomLine, $isObsolete ? 'gray' : 'blue');
+            $stampOriginal = $this->_createStampImage('SAI-DRAWING ORIGINAL', $topLine, $bottomLine, $isObsolete ? 'gray' : $originalStampColor);
             // Copy stamp is also blue unless obsolete
             $stampCopy     = $this->_createStampImage('SAI-DRAWING CONTROLLED COPY', $topLineCopy, $bottomLineCopy, $isObsolete ? 'gray' : 'blue');
             $stampObsolete = null;
