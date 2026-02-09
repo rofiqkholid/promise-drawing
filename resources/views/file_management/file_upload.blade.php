@@ -218,7 +218,7 @@
         let table = $('#fileTable').DataTable({
             processing: false,
             serverSide: true,
-            autoWidth: false,
+            autoWidth: true, // Changed to true for proper width calculation
             responsive: false,
             scrollX: true,
             scrollCollapse: true,
@@ -474,8 +474,24 @@
                 const num = i + 1 + info.start;
                 cell.innerHTML = `<span class="text-[12px] font-black text-gray-500 dark:text-gray-400 tracking-tighter">${num}</span>`;
             });
+
+            // Force column width recalculation to fix header-body alignment
+            setTimeout(() => {
+                table.columns.adjust();
+            }, 50);
         });
 
+
+        // Fix alignment on window resize
+        let resizeTimeout;
+        $(window).on('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                if (table) {
+                    table.columns.adjust().draw(false);
+                }
+            }, 250);
+        });
 
         $('#fileTable tbody').on('click', 'tr', function(e) {
             if ($(e.target).closest('button').length) return;
