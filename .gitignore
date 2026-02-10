@@ -2,3 +2,6 @@
 config/
 app/Http/Controllers/Api/FilePreviewController.php
 app/Providers/AppServiceProvider.php
+
+dist/
+build/
