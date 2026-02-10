@@ -853,7 +853,7 @@
         {{-- 3D CAD VIEWER (IGES, STEP, STL, OBJ) - ADVANCED FULL FEATURED --}}
         <template x-if="isCad(selectedFile?.name)">
             <div x-ref="ref3dContainer" class="w-full flex flex-col min-h-[500px] transition-all duration-300"
-                :class="isFullscreen ? 'h-[80vh] mb-8' : 'h-[85vh]'">
+                :class="isFullscreen ? 'flex-1' : 'h-[85vh]'">
 
                 <div
                     class="flex-1 relative border border-gray-200 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-900 overflow-hidden group">

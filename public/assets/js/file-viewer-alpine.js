@@ -1416,16 +1416,16 @@ function fileViewerComponent(config = {}) {
                 const fileSizeMB = mainBuf.byteLength / (1024 * 1024);
                 // console.log(`[FileViewer] CAD size: ${fileSizeMB.toFixed(2)} MB`);
 
-                // Adaptive Quality: If file is very large (>30MB), slightly relax tessellation 
-                // to prevent browser from freezing during render/rotation while maintaining resolution look.
+                // Adaptive Quality: Refined for better smoothness post-merging optimization.
                 const isLargeFile = fileSizeMB > 30;
-                const isVeryLargeFile = fileSizeMB > 50;
+                const isVeryLargeFile = fileSizeMB > 70; // Increased threshold
 
                 const params = {
                     linearUnit: 'millimeter',
                     linearDeflectionType: 'bounding_box_ratio',
-                    linearDeflection: isVeryLargeFile ? 0.08 : (isLargeFile ? 0.05 : 0.03),
-                    angularDeflection: isVeryLargeFile ? 0.15 : (isLargeFile ? 0.1 : 0.05),
+                    // Smoother settings: 0.01 is high quality, 0.04 is good enough for monsters
+                    linearDeflection: isVeryLargeFile ? 0.04 : (isLargeFile ? 0.02 : 0.01),
+                    angularDeflection: isVeryLargeFile ? 0.2 : (isLargeFile ? 0.15 : 0.1),
                 };
 
                 let res = null;
@@ -1655,9 +1655,10 @@ function fileViewerComponent(config = {}) {
                     materialCache[key] = new THREE.MeshStandardMaterial({
                         color: colorVal,
                         metalness: 0.1,
-                        roughness: 0.6,
+                        roughness: 0.5, // Slightly lower roughness to better define curves
                         side: THREE.DoubleSide,
-                        dithering: true
+                        dithering: true,
+                        flatShading: false // Ensure smooth shading is active
                     });
                 }
                 return materialCache[key];
@@ -1681,6 +1682,9 @@ function fileViewerComponent(config = {}) {
                     g.setAttribute('position', new THREE.Float32BufferAttribute(m.attributes.position.array, 3));
                     if (m.attributes.normal?.array) {
                         g.setAttribute('normal', new THREE.Float32BufferAttribute(m.attributes.normal.array, 3));
+                    } else {
+                        // If no normals from CAD, compute them for smoothness
+                        g.computeVertexNormals();
                     }
                     if (m.index?.array) {
                         g.setIndex(m.index.array);
