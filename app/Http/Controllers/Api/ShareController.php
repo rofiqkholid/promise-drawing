@@ -886,6 +886,9 @@ class ShareController extends Controller
 
         $validated = $request->validate([
             'page'               => 'nullable|integer|min:1',
+            'apply_to_all'       => 'nullable|boolean',
+            'append_mode'        => 'nullable|boolean',
+            'total_pages'        => 'nullable|integer|min:1',
             'blocks'             => 'nullable|array',
             'blocks.*.id'        => 'nullable|string',
             'blocks.*.u'         => 'required|numeric',
@@ -895,8 +898,11 @@ class ShareController extends Controller
             'blocks.*.rotation'  => 'nullable|numeric',
         ]);
 
-        $page      = (int)($validated['page'] ?? 1);
-        $rawBlocks = $validated['blocks'] ?? [];
+        $page         = (int)($validated['page'] ?? 1);
+        $applyToAll   = (bool)($validated['apply_to_all'] ?? false);
+        $appendMode    = (bool)($validated['append_mode'] ?? false);
+        $totalPages    = (int)($validated['total_pages'] ?? 0);
+        $rawBlocks    = $validated['blocks'] ?? [];
 
         // normalisasi & clamp 0..1 biar aman
         $blocks = [];
@@ -931,8 +937,56 @@ class ShareController extends Controller
             $existing = [];
         }
 
-        // Update hanya page yang sekarang
-        $existing[(string) $page] = $blocks;
+        if ($applyToAll && $totalPages > 0) {
+            // Terapkan ke semua halaman yang ditentukan
+            for ($p = 1; $p <= $totalPages; $p++) {
+                $pageKey = (string)$p;
+                
+                if ($appendMode) {
+                    $pageBlocks = $existing[$pageKey] ?? [];
+                    
+                    foreach ($blocks as $newBlock) {
+                        $found = false;
+                        foreach ($pageBlocks as $idx => $existingBlock) {
+                            if ($existingBlock['id'] === $newBlock['id']) {
+                                $pageBlocks[$idx] = $newBlock;
+                                $found = true;
+                                break;
+                            }
+                        }
+                        if (!$found) {
+                            $pageBlocks[] = $newBlock;
+                        }
+                    }
+                    $existing[$pageKey] = $pageBlocks;
+                } else {
+                    $existing[$pageKey] = $blocks;
+                }
+            }
+        } else {
+            // Update hanya page yang sekarang
+            if ($appendMode) {
+                $pageKey = (string)$page;
+                $pageBlocks = $existing[$pageKey] ?? [];
+                
+                foreach ($blocks as $newBlock) {
+                    $found = false;
+                    foreach ($pageBlocks as $idx => $existingBlock) {
+                        if ($existingBlock['id'] === $newBlock['id']) {
+                            $pageBlocks[$idx] = $newBlock;
+                            $found = true;
+                            break;
+                        }
+                    }
+                    if (!$found) {
+                        $pageBlocks[] = $newBlock;
+                    }
+                }
+                $existing[$pageKey] = $pageBlocks;
+            } else {
+                $existing[(string) $page] = $blocks;
+            }
+        }
 
         // Laravel akan simpan sebagai JSON
         $file->blocks_position = $existing;

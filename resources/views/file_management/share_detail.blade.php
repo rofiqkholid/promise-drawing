@@ -488,92 +488,163 @@
           init() {
                if (viewer.init) viewer.init.call(this);
 
-               window.addEventListener('masks-updated', (e) => {
-                   const blocks = Array.isArray(e.detail) ? e.detail : (e.detail.masks || e.detail);
-                   const p = this.currentPageForSelectedFile();
-                   this.saveBlocks(blocks, p);
-               });
-          },
+                window.addEventListener('masks-updated', (e) => {
+                    const blocks = Array.isArray(e.detail) ? e.detail : (e.detail.masks || e.detail);
+                    const p = this.currentPageForSelectedFile();
+                    this.saveBlocks(blocks, p);
+                });
 
-          toggleSection(id) {
-              if (this.openSections.includes(id)) {
-                  this.openSections = this.openSections.filter(s => s !== id);
-              } else {
-                  this.openSections.push(id);
+                window.addEventListener('masks-applied-to-all', (e) => {
+                    const blocks = Array.isArray(e.detail) ? e.detail : (e.detail.masks || e.detail);
+                    const isAppend = e.detail.append_mode || false;
+                    this.saveBlocksToAllPages(blocks, isAppend);
+                });
+           },
+
+           toggleSection(id) {
+               if (this.openSections.includes(id)) {
+                   this.openSections = this.openSections.filter(s => s !== id);
+               } else {
+                   this.openSections.push(id);
+               }
+           },
+
+           selectFile(file) {
+               this.selectedFile = file;
+           },
+
+           downloadFile(file) {
+               if (!file.url) return;
+               const link = document.createElement('a');
+               link.href = file.url;
+               link.download = file.name;
+               document.body.appendChild(link);
+               link.click();
+               document.body.removeChild(link);
+           },
+
+           updateStampUrlTemplate: `{{ route('approvals.files.updateStamp', ['fileId' => '__FILE_ID__']) }}`,
+           updateBlocksUrlTemplate: `{{ route('share.files.updateBlocks', ['fileId' => '__FILE_ID__']) }}`,
+           
+           metaLine() {
+               const m = this.pkg?.metadata || {};
+               return [
+                   m.customer, m.model, m.part_no, m.part_group,
+                   m.doc_type, m.category, m.ecn_no, m.revision,
+                   this.pkg?.status
+               ].filter(v => v && String(v).trim().length > 0).join(' - ');
+           },
+           
+           currentPageForSelectedFile() {
+              if (!this.selectedFile) return 1;
+              const name = this.selectedFile.name || '';
+              if (this.isPdf(name)) return this.pdfPageNum;
+              if (this.isTiff(name)) return this.tifPageNum;
+              return 1;
+           },
+
+           async saveBlocks(blocks, page) {
+              if (!this.selectedFile?.id) return;
+              
+              const url = this.updateBlocksUrlTemplate.replace('__FILE_ID__', this.selectedFile.id);
+              
+              try {
+                  const res = await fetch(url, {
+                      method: 'POST',
+                      headers: {
+                          'Content-Type': 'application/json',
+                          'Accept': 'application/json',
+                          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                      },
+                      body: JSON.stringify({ 
+                          page: page,
+                          blocks: blocks 
+                      })
+                  });
+                  
+                  const json = await res.json();
+                  if (!res.ok) throw new Error(json.message || 'Failed to save blocks');
+
+                   // Update local state
+                   if (this.selectedFile) {
+                     if (typeof this.selectedFile.blocks_position !== 'object' || this.selectedFile.blocks_position === null) {
+                         this.selectedFile.blocks_position = {};
+                     }
+                     const cleanBlocks = Array.isArray(blocks) ? blocks : [];
+                     this.selectedFile.blocks_position[String(page)] = cleanBlocks;
+                   }
+                  
+                  toastSuccess('Saved', 'Blocks saved successfully');
+              } catch (e) {
+                  console.error(e);
+                  toastError('Error', e.message);
               }
           },
 
-          selectFile(file) {
-              this.selectedFile = file;
-          },
+          async saveBlocksToAllPages(blocks, isAppend = false) {
+              if (!this.selectedFile?.id) return;
 
-          downloadFile(file) {
-              if (!file.url) return;
-              const link = document.createElement('a');
-              link.href = file.url;
-              link.download = file.name;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-          },
+              let totalPages = 1;
+              const name = this.selectedFile.name || '';
+              if (this.isPdf(name)) totalPages = this.pdfNumPages;
+              else if (this.isTiff(name)) totalPages = this.tifNumPages;
 
-          updateStampUrlTemplate: `{{ route('approvals.files.updateStamp', ['fileId' => '__FILE_ID__']) }}`,
-          updateBlocksUrlTemplate: `{{ route('share.files.updateBlocks', ['fileId' => '__FILE_ID__']) }}`,
-          
-          metaLine() {
-              const m = this.pkg?.metadata || {};
-              return [
-                  m.customer, m.model, m.part_no, m.part_group,
-                  m.doc_type, m.category, m.ecn_no, m.revision,
-                  this.pkg?.status
-              ].filter(v => v && String(v).trim().length > 0).join(' - ');
-          },
-          
-          currentPageForSelectedFile() {
-             if (!this.selectedFile) return 1;
-             const name = this.selectedFile.name || '';
-             if (this.isPdf(name)) return this.pdfPageNum;
-             if (this.isTiff(name)) return this.tifPageNum;
-             return 1;
-          },
+              if (totalPages <= 1) {
+                  return this.saveBlocks(blocks, 1);
+              }
 
-          async saveBlocks(blocks, page) {
-             if (!this.selectedFile?.id) return;
-             
-             const url = this.updateBlocksUrlTemplate.replace('__FILE_ID__', this.selectedFile.id);
-             
-             try {
-                 const res = await fetch(url, {
-                     method: 'POST',
-                     headers: {
-                         'Content-Type': 'application/json',
-                         'Accept': 'application/json',
-                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                     },
-                     body: JSON.stringify({ 
-                         page: page,
-                         blocks: blocks 
-                     })
-                 });
-                 
-                 const json = await res.json();
-                 if (!res.ok) throw new Error(json.message || 'Failed to save blocks');
+              const url = this.updateBlocksUrlTemplate.replace('__FILE_ID__', this.selectedFile.id);
 
-                  // Update local state
-                  if (this.selectedFile) {
-                    if (typeof this.selectedFile.blocks_position !== 'object' || this.selectedFile.blocks_position === null) {
-                        this.selectedFile.blocks_position = {};
-                    }
-                    const cleanBlocks = Array.isArray(blocks) ? blocks : [];
-                    this.selectedFile.blocks_position[String(page)] = cleanBlocks;
-                  }
-                 
-                 toastSuccess('Saved', 'Blocks saved successfully');
-             } catch (e) {
-                 console.error(e);
-                 toastError('Error', e.message);
-             }
-         }
+              try {
+                  const res = await fetch(url, {
+                      method: 'POST',
+                      headers: {
+                          'Content-Type': 'application/json',
+                          'Accept': 'application/json',
+                          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                      },
+                      body: JSON.stringify({ 
+                          apply_to_all: true,
+                          append_mode: isAppend,
+                          total_pages: totalPages,
+                          blocks: blocks 
+                      })
+                  });
+
+                  const json = await res.json();
+                  if (!res.ok) throw new Error(json.message || 'Failed to save blocks');
+
+                   // Update local state for all pages
+                   if (this.selectedFile) {
+                     if (typeof this.selectedFile.blocks_position !== 'object' || this.selectedFile.blocks_position === null) {
+                         this.selectedFile.blocks_position = {};
+                     }
+                     
+                     const cleanBlocks = Array.isArray(blocks) ? blocks : [];
+                     for (let p = 1; p <= totalPages; p++) {
+                        const pageKey = String(p);
+                        if (isAppend) {
+                            let pageBlocks = this.selectedFile.blocks_position[pageKey] || [];
+                            // Merge
+                            cleanBlocks.forEach(nb => {
+                                let foundIdx = pageBlocks.findIndex(ob => ob.id === nb.id);
+                                if (foundIdx >= 0) pageBlocks[foundIdx] = nb;
+                                else pageBlocks.push(nb);
+                            });
+                            this.selectedFile.blocks_position[pageKey] = pageBlocks;
+                        } else {
+                            this.selectedFile.blocks_position[pageKey] = cleanBlocks;
+                        }
+                     }
+                   }
+
+                  const msg = isAppend ? 'Block applied to all pages' : 'All blocks applied to all pages';
+                  toastSuccess('Success', msg);
+              } catch (e) {
+                  console.error(e);
+                  toastError('Error', e.message);
+              }
+          }
       };
     }
     // ========== SHARE TRIGGER FOR DETAIL PAGE ==========

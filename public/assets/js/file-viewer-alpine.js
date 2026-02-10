@@ -154,6 +154,7 @@ function fileViewerComponent(config = {}) {
         enableMasking: config.enableMasking || false,
         masks: [],
         activeMask: null,
+        isMaskInteracting: false,
         isFullscreen: false,
         autoRotate: false,
         headlight: { enabled: false, object: null },
@@ -308,9 +309,18 @@ function fileViewerComponent(config = {}) {
                 this.touchZoomDistance = 0;
             });
 
+            // Watch for fullscreen changes to recalculate block positions
+            window.addEventListener('resize', () => {
+                this.recalculateMasks();
+            });
+
             // Sync isFullscreen with native browser fullscreen state (for Esc key support)
             document.addEventListener('fullscreenchange', () => {
                 this.isFullscreen = !!document.fullscreenElement;
+                // Wait for CSS transitions (usually 300ms) to finish before recalculating
+                setTimeout(() => {
+                    this.recalculateMasks();
+                }, 350);
             });
 
             // Watchers for 3D state changes to trigger render
@@ -318,6 +328,14 @@ function fileViewerComponent(config = {}) {
             this.$watch('iges.exploded.factor', () => { this.cadNeedsRender = true; });
             this.$watch('partOpacity', () => { this.cadNeedsRender = true; });
             this.$watch('activeMaterial', () => { this.cadNeedsRender = true; });
+
+            // Watch for fullscreen changes to recalculate block positions
+            this.$watch('isFullscreen', (val) => {
+                // Recalculate multiple times to catch transition frames
+                this.recalculateMasks();
+                setTimeout(() => this.recalculateMasks(), 100);
+                setTimeout(() => this.recalculateMasks(), 350);
+            });
         },
 
         // ===== FILE TYPE DETECTION =====
@@ -3368,17 +3386,23 @@ function fileViewerComponent(config = {}) {
             const el = this.$refs.refMainContainer;
             if (!el) return;
 
+            // Reset pan and zoom to prevent coordinate drift during transition
+            this.imageZoom = 1;
+            this.panX = 0;
+            this.panY = 0;
+
             if (!document.fullscreenElement) {
                 el.requestFullscreen().then(() => {
                     this.isFullscreen = true;
+                    this.recalculateMasks();
                 }).catch(err => {
                     console.error(`Error fullscreen: ${err.message}`);
-                    // Fallback for Safari/older browsers
                     if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
                 });
             } else {
                 document.exitFullscreen().then(() => {
                     this.isFullscreen = false;
+                    this.recalculateMasks();
                 });
             }
         },
@@ -3758,9 +3782,19 @@ function fileViewerComponent(config = {}) {
         },
 
         startPan(e) {
+            if (!e || this.isMaskInteracting) return;
+            // Detect if the target is a mask or a handle to prevent background panning
+            const target = e.target || (e.touches && e.touches[0] ? e.touches[0].target : null);
+            if (target && (target.closest('.mask-element') || target.closest('.mask-handle'))) {
+                return;
+            }
+
+            const input = e.touches ? e.touches[0] : e;
+            if (!input || input.clientX === undefined) return;
+
             this.isPanning = true;
-            this.panStartX = e.clientX;
-            this.panStartY = e.clientY;
+            this.panStartX = input.clientX;
+            this.panStartY = input.clientY;
             this.panOriginX = this.panX;
             this.panOriginY = this.panY;
         },
@@ -4925,6 +4959,7 @@ function fileViewerComponent(config = {}) {
                 visible: true
             });
             this.activeMask = this.masks[this.masks.length - 1];
+            this.normalizeMask(this.activeMask);
         },
 
         activateMask(mask) {
@@ -4933,6 +4968,21 @@ function fileViewerComponent(config = {}) {
                 if (m) m.active = (m.id === mask.id);
             });
             this.activeMask = mask;
+        },
+
+        selectAvailableMask() {
+            if (!this.enableMasking || this.masks.length === 0) return;
+
+            // If no mask is active, select the first one
+            if (!this.activeMask) {
+                this.activateMask(this.masks[0]);
+                return;
+            }
+
+            // If one is active, cycle to the next one
+            const currentIndex = this.masks.findIndex(m => m.id === this.activeMask.id);
+            const nextIndex = (currentIndex + 1) % this.masks.length;
+            this.activateMask(this.masks[nextIndex]);
         },
 
         deactivateMask() {
@@ -4988,108 +5038,328 @@ function fileViewerComponent(config = {}) {
             return maskData;
         },
 
+        applyMaskToAll() {
+            if (this.masks.length === 0) return;
+
+            const img = this.$refs.mainImage || this.$refs.pdfCanvas || this.$refs.tifImg || this.$refs.hpglCanvas;
+            let displayW = 1;
+            let displayH = 1;
+
+            if (img) {
+                displayW = img.clientWidth || img.width || 1;
+                displayH = img.clientHeight || img.height || 1;
+            }
+
+            const maskData = this.masks.map(m => ({
+                id: String(m.id),
+                x: m.x,
+                y: m.y,
+                width: m.width,
+                height: m.height,
+                rotation: m.rotation,
+                u: m.x / displayW,
+                v: m.y / displayH,
+                w: m.width / displayW,
+                h: m.height / displayH
+            }));
+
+            window.dispatchEvent(new CustomEvent('masks-applied-to-all', {
+                detail: maskData
+            }));
+        },
+
+        applyActiveMaskToAll() {
+            if (!this.activeMask) return;
+
+            const img = this.$refs.mainImage || this.$refs.pdfCanvas || this.$refs.tifImg || this.$refs.hpglCanvas;
+            let displayW = 1;
+            let displayH = 1;
+
+            if (img) {
+                displayW = img.clientWidth || img.width || 1;
+                displayH = img.clientHeight || img.height || 1;
+            }
+
+            const activeMaskData = [{
+                id: String(this.activeMask.id),
+                x: this.activeMask.x,
+                y: this.activeMask.y,
+                width: this.activeMask.width,
+                height: this.activeMask.height,
+                rotation: this.activeMask.rotation,
+                u: this.activeMask.x / displayW,
+                v: this.activeMask.y / displayH,
+                w: this.activeMask.width / displayW,
+                h: this.activeMask.height / displayH
+            }];
+
+            window.dispatchEvent(new CustomEvent('masks-applied-to-all', {
+                detail: {
+                    masks: activeMaskData,
+                    append_mode: true
+                }
+            }));
+        },
+
+        getCurrentZoomLevel() {
+            return this.imageZoom || 1;
+        },
+
         maskStyle(mask) {
             if (!mask) return {};
+            const cx = (mask.x || 0) + (mask.width || 0) / 2;
+            const cy = (mask.y || 0) + (mask.height || 0) / 2;
             return {
-                left: (mask.x || 0) + 'px',
-                top: (mask.y || 0) + 'px',
+                left: '0px',
+                top: '0px',
                 width: (mask.width || 0) + 'px',
                 height: (mask.height || 0) + 'px',
-                transform: `rotate(${mask.rotation || 0}deg)`,
-                position: 'absolute'
+                // Use translate3d to move the position into the GPU layer for much smoother rendering
+                transform: `translate3d(${cx}px, ${cy}px, 0) translate(-50%, -50%) rotate(${mask.rotation || 0}deg)`,
+                transformOrigin: 'center center',
+                position: 'absolute',
+                willChange: 'transform, width, height',
+                backfaceVisibility: 'hidden'
             };
         },
 
         onMaskMouseDown(e, mask) {
             if (!mask || !mask.editable) return;
+            this.isMaskInteracting = true;
+            this.isPanning = false; // Kill any background panning immediately
+
+            const wasActive = mask.active;
             this.activateMask(mask);
 
-            const startX = e.clientX;
-            const startY = e.clientY;
+            // If it wasn't active before this click/touch, we only activate it.
+            // This prevents accidental movement on first selection.
+            if (!wasActive) {
+                // We still need to clear the interacting flag on end
+                const onSelectEnd = () => {
+                    this.isMaskInteracting = false;
+                    window.removeEventListener('mouseup', onSelectEnd);
+                    window.removeEventListener('touchend', onSelectEnd);
+                };
+                window.addEventListener('mouseup', onSelectEnd);
+                window.addEventListener('touchend', onSelectEnd);
+                return;
+            }
+
+            const isTouch = e.type.startsWith('touch');
+            const startX = isTouch ? e.touches[0].clientX : e.clientX;
+            const startY = isTouch ? e.touches[0].clientY : e.clientY;
             const initialX = mask.x;
             const initialY = mask.y;
             const currentZoom = this.getCurrentZoomLevel();
 
-            const onMouseMove = (ev) => {
-                const dx = (ev.clientX - startX) / currentZoom;
-                const dy = (ev.clientY - startY) / currentZoom;
-                mask.x = initialX + dx;
-                mask.y = initialY + dy;
+            let rafId = null;
+            const onMove = (ev) => {
+                const isT = ev.type.startsWith('touch');
+                const currentX = isT ? ev.touches[0].clientX : ev.clientX;
+                const currentY = isT ? ev.touches[0].clientY : ev.clientY;
+
+                if (isT) ev.preventDefault(); // Lock browser scrolling
+
+                if (rafId) return;
+                rafId = requestAnimationFrame(() => {
+                    const dx = (currentX - startX) / currentZoom;
+                    const dy = (currentY - startY) / currentZoom;
+                    mask.x = Math.round(initialX + dx);
+                    mask.y = Math.round(initialY + dy);
+                    rafId = null;
+                });
             };
 
-            const onMouseUp = () => {
-                window.removeEventListener('mousemove', onMouseMove);
-                window.removeEventListener('mouseup', onMouseUp);
+            const onEnd = () => {
+                if (rafId) cancelAnimationFrame(rafId);
+                this.isMaskInteracting = false;
+                this.normalizeMask(mask);
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onEnd);
+                window.removeEventListener('touchmove', onMove);
+                window.removeEventListener('touchend', onEnd);
             };
 
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onMouseUp);
+            if (isTouch) {
+                window.addEventListener('touchmove', onMove, { passive: false });
+                window.addEventListener('touchend', onEnd);
+            } else {
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onEnd);
+            }
         },
 
         startMaskResize(e, handle, mask) {
             if (!mask.editable) return;
+            this.isMaskInteracting = true;
+            this.isPanning = false;
 
-            const startX = e.clientX;
-            const startY = e.clientY;
+            const isTouch = e.type.startsWith('touch');
+            const startX = isTouch ? e.touches[0].clientX : e.clientX;
+            const startY = isTouch ? e.touches[0].clientY : e.clientY;
+
             const startWidth = mask.width;
             const startHeight = mask.height;
             const startLeft = mask.x;
             const startTop = mask.y;
-            const rotationRad = mask.rotation * (Math.PI / 180);
+            const rotDeg = parseFloat(mask.rotation) || 0;
+            const rotRad = rotDeg * (Math.PI / 180);
             const currentZoom = this.getCurrentZoomLevel();
 
-            const onMouseMove = (ev) => {
-                let dx = (ev.clientX - startX) / currentZoom;
-                let dy = (ev.clientY - startY) / currentZoom;
+            const cosA = Math.cos(rotRad);
+            const sinA = Math.sin(rotRad);
 
-                const localDx = dx * Math.cos(-rotationRad) - dy * Math.sin(-rotationRad);
-                const localDy = dx * Math.sin(-rotationRad) + dy * Math.cos(-rotationRad);
+            let anchorNormX = 0;
+            let anchorNormY = 0;
 
-                if (handle.includes('e')) mask.width = Math.max(20, startWidth + localDx);
-                if (handle.includes('s')) mask.height = Math.max(20, startHeight + localDy);
-                if (handle.includes('w')) {
-                    const newWidth = Math.max(20, startWidth - localDx);
-                    if (mask.rotation === 0) mask.x = startLeft + localDx;
-                    else {
-                        // Approximate x/y shift for rotation
-                        mask.width = newWidth;
-                        // This part is imperfect for rotation without full matrix math, 
-                        // but acceptable for 0-rotation which is 99% usage.
-                    }
-                    if (mask.rotation === 0) mask.width = newWidth;
-                }
-                if (handle.includes('n')) {
-                    const newHeight = Math.max(20, startHeight - localDy);
-                    if (mask.rotation === 0) mask.y = startTop + localDy;
-                    if (mask.rotation === 0) mask.height = newHeight;
-                }
+            if (handle.includes('w')) anchorNormX = 0.5;
+            if (handle.includes('e')) anchorNormX = -0.5;
+            if (handle.includes('n')) anchorNormY = 0.5;
+            if (handle.includes('s')) anchorNormY = -0.5;
+
+            const startCenterX = startLeft + startWidth / 2;
+            const startCenterY = startTop + startHeight / 2;
+
+            const anchorWorldX = startCenterX + (anchorNormX * startWidth * cosA - anchorNormY * startHeight * sinA);
+            const anchorWorldY = startCenterY + (anchorNormX * startWidth * sinA + anchorNormY * startHeight * cosA);
+
+            let rafId = null;
+            const onMove = (ev) => {
+                const isT = ev.type.startsWith('touch');
+                const currentX = isT ? ev.touches[0].clientX : ev.clientX;
+                const currentY = isT ? ev.touches[0].clientY : ev.clientY;
+
+                if (isT) ev.preventDefault(); // Lock browser scrolling
+
+                if (rafId) return;
+                rafId = requestAnimationFrame(() => {
+                    const dx = (currentX - startX) / currentZoom;
+                    const dy = (currentY - startY) / currentZoom;
+
+                    const localDx = dx * cosA + dy * sinA;
+                    const localDy = -dx * sinA + dy * cosA;
+
+                    let newWidth = startWidth;
+                    let newHeight = startHeight;
+
+                    if (handle.includes('e')) newWidth = Math.max(10, startWidth + localDx);
+                    else if (handle.includes('w')) newWidth = Math.max(10, startWidth - localDx);
+
+                    if (handle.includes('s')) newHeight = Math.max(10, startHeight + localDy);
+                    else if (handle.includes('n')) newHeight = Math.max(10, startHeight - localDy);
+
+                    const roundedW = Math.round(newWidth);
+                    const roundedH = Math.round(newHeight);
+
+                    const newCenterX = anchorWorldX - (anchorNormX * roundedW * cosA - anchorNormY * roundedH * sinA);
+                    const newCenterY = anchorWorldY - (anchorNormX * roundedW * sinA + anchorNormY * roundedH * cosA);
+
+                    mask.width = roundedW;
+                    mask.height = roundedH;
+                    mask.x = newCenterX - roundedW / 2;
+                    mask.y = newCenterY - roundedH / 2;
+                    rafId = null;
+                });
             };
 
-            const onMouseUp = () => {
-                window.removeEventListener('mousemove', onMouseMove);
-                window.removeEventListener('mouseup', onMouseUp);
+            const onEnd = () => {
+                if (rafId) cancelAnimationFrame(rafId);
+                this.isMaskInteracting = false;
+                this.normalizeMask(mask);
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onEnd);
+                window.removeEventListener('touchmove', onMove);
+                window.removeEventListener('touchend', onEnd);
             };
 
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onMouseUp);
+            if (isTouch) {
+                window.addEventListener('touchmove', onMove, { passive: false });
+                window.addEventListener('touchend', onEnd);
+            } else {
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onEnd);
+            }
         },
 
         startMaskRotate(e, mask) {
-            const startX = e.clientX;
-            const startRotation = mask.rotation;
+            if (!mask.editable) return;
+            this.isMaskInteracting = true;
+            this.isPanning = false;
 
-            const onMouseMove = (ev) => {
-                const dx = ev.clientX - startX;
-                mask.rotation = (startRotation + dx) % 360;
+            const isTouch = e.type.startsWith('touch');
+            const startX = isTouch ? e.touches[0].clientX : e.clientX;
+            const startY = isTouch ? e.touches[0].clientY : e.clientY;
+
+            const img = this.$refs.mainImage || this.$refs.pdfCanvas || this.$refs.tifImg || this.$refs.hpglCanvas;
+            if (!img) return;
+            const rect = img.getBoundingClientRect();
+            const currentZoom = this.getCurrentZoomLevel();
+
+            const centerX = rect.left + (mask.x + mask.width / 2) * currentZoom;
+            const centerY = rect.top + (mask.y + mask.height / 2) * currentZoom;
+
+            const startMouseAngle = Math.atan2(startY - centerY, startX - centerX);
+            const startRotation = parseFloat(mask.rotation) || 0;
+
+            let rafId = null;
+            const onMove = (ev) => {
+                const isT = ev.type.startsWith('touch');
+                const currentX = isT ? ev.touches[0].clientX : ev.clientX;
+                const currentY = isT ? ev.touches[0].clientY : ev.clientY;
+
+                if (isT) ev.preventDefault(); // Lock browser scrolling
+
+                if (rafId) return;
+                rafId = requestAnimationFrame(() => {
+                    const currentMouseAngle = Math.atan2(currentY - centerY, currentX - centerX);
+                    const deltaDeg = (currentMouseAngle - startMouseAngle) * (180 / Math.PI);
+
+                    mask.rotation = Math.round((startRotation + deltaDeg) % 360);
+                    rafId = null;
+                });
             };
 
-            const onMouseUp = () => {
-                window.removeEventListener('mousemove', onMouseMove);
-                window.removeEventListener('mouseup', onMouseUp);
+            const onEnd = () => {
+                if (rafId) cancelAnimationFrame(rafId);
+                this.isMaskInteracting = false;
+                this.normalizeMask(mask);
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onEnd);
+                window.removeEventListener('touchmove', onMove);
+                window.removeEventListener('touchend', onEnd);
             };
 
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onMouseUp);
+            if (isTouch) {
+                window.addEventListener('touchmove', onMove, { passive: false });
+                window.addEventListener('touchend', onEnd);
+            } else {
+                window.addEventListener('mousemove', onMove);
+                window.addEventListener('mouseup', onEnd);
+            }
+        },
+
+        _dispatchMasksUpdated() {
+            const img = this.$refs.mainImage || this.$refs.pdfCanvas || this.$refs.tifImg || this.$refs.hpglCanvas;
+            if (!img) return;
+            const displayW = img.clientWidth || img.width || 1;
+            const displayH = img.clientHeight || img.height || 1;
+
+            this.masks.forEach(m => {
+                m.u = m.x / displayW;
+                m.v = m.y / displayH;
+                m.w = m.width / displayW;
+                m.h = m.height / displayH;
+            });
+
+            // Dispatch event for specialized persistence listeners
+            window.dispatchEvent(new CustomEvent('masks-updated', {
+                detail: this.masks.map(m => ({
+                    id: m.id,
+                    x: m.x, y: m.y, width: m.width, height: m.height,
+                    rotation: m.rotation,
+                    u: m.u, v: m.v, w: m.w, h: m.h
+                }))
+            }));
         },
 
         getCurrentZoomLevel() {
@@ -5126,24 +5396,53 @@ function fileViewerComponent(config = {}) {
         },
 
         recalculateMasks() {
+            if (!this.isPreviewable2D(this.selectedFile?.name)) return;
+
             const img = this.$refs.mainImage || this.$refs.pdfCanvas || this.$refs.tifImg || this.$refs.hpglCanvas;
             if (!img) return;
 
             const displayW = img.clientWidth || img.width || 0;
             const displayH = img.clientHeight || img.height || 0;
 
-            if (displayW === 0 || displayH === 0) return;
+            // If dimensions are not yet available (e.g., during transition), retry shortly
+            if (displayW === 0 || displayH === 0) {
+                if (!this._recalcRetryCount) this._recalcRetryCount = 0;
+                if (this._recalcRetryCount < 10) {
+                    this._recalcRetryCount++;
+                    requestAnimationFrame(() => this.recalculateMasks());
+                }
+                return;
+            }
+            this._recalcRetryCount = 0;
 
             this.masks.forEach(m => {
                 if (!m) return;
-                // If we have normalized coordinates and no pixel coordinates yet (or we want to refresh)
+                // Use normalized coordinates as the absolute source of truth
                 if (m.u !== undefined && m.v !== undefined) {
-                    m.x = m.u * displayW;
-                    m.y = m.v * displayH;
-                    m.width = (m.w || 0) * displayW;
-                    m.height = (m.h || 0) * displayH;
+                    m.x = Math.round(m.u * displayW);
+                    m.y = Math.round(m.v * displayH);
+                    m.width = Math.round((m.w || 0) * displayW);
+                    m.height = Math.round((m.h || 0) * displayH);
                 }
             });
+        },
+
+        normalizeMask(mask) {
+            if (!mask) return;
+            const img = this.$refs.mainImage || this.$refs.pdfCanvas || this.$refs.tifImg || this.$refs.hpglCanvas;
+            if (!img) return;
+
+            const displayW = img.clientWidth || img.width || 1;
+            const displayH = img.clientHeight || img.height || 1;
+
+            if (displayW > 0) {
+                mask.u = mask.x / displayW;
+                mask.w = mask.width / displayW;
+            }
+            if (displayH > 0) {
+                mask.v = mask.y / displayH;
+                mask.h = mask.height / displayH;
+            }
         },
 
         onImageLoad() {
@@ -5169,8 +5468,30 @@ function fileViewerComponent(config = {}) {
         },
 
         getCursorStyle(handle, rotation) {
-            // Simplified cursor style
-            return 'pointer';
+            // 1. Refined Rotation Cursor (Smaller 18x18, Professional Black/White)
+            if (handle === 'rotate') {
+                return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8M21 3v5h-5' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8M21 3v5h-5' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") 9 9, auto`;
+            }
+
+            // 2. Professional Resize Cursors (Diagonal Arrows)
+            const handleAngles = {
+                'n': 0, 'ne': 45, 'e': 90, 'se': 135,
+                's': 180, 'sw': 225, 'w': 270, 'nw': 315
+            };
+
+            const baseAngle = handleAngles[handle] !== undefined ? handleAngles[handle] : 0;
+            const rot = parseFloat(rotation) || 0;
+            const effectiveAngle = (baseAngle + rot + 360) % 360;
+
+            // Snap to nearest 45 degree to decide which cursor to show
+            const snappedAngle = Math.round(effectiveAngle / 45) * 45 % 180;
+
+            if (snappedAngle === 0) return 'ns-resize';
+            if (snappedAngle === 45) return 'nesw-resize';
+            if (snappedAngle === 90) return 'ew-resize';
+            if (snappedAngle === 135) return 'nwse-resize';
+
+            return 'crosshair';
         },
 
         // ===== STAMP BURNING (SECURITY) =====

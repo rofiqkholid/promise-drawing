@@ -146,48 +146,74 @@
 
     <div x-show="isPreviewable2D(selectedFile?.name)"
         x-ref="ref2dContainer"
+        @transitionend="recalculateMasks()"
         class="flex flex-col transition-all duration-300 relative group"
         :class="isFullscreen ? 'flex-1 min-h-0 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden' : ''">
 
         {{-- NEW FLOATING BLOCKS TOOLBAR (Figma-style) --}}
         @if($enableMasking)
-        <div x-show="enableMasking" x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0 translate-y-4"
+        <div x-show="enableMasking && !imgLoading && !pdfLoading && !tifLoading && !hpglLoading && !iges.loading && !imgError && !pdfError && !tifError && !hpglError && !iges.error" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 -translate-y-4"
              x-transition:enter-end="opacity-100 translate-y-0"
-             class="absolute top-6 left-6 z-20 flex items-center bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl p-1.5 gap-1.5 transition-all duration-300 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100"
-             :class="isFullscreen ? 'translate-y-0 opacity-100' : ''">
+             class="absolute top-10 left-1/2 -translate-x-1/2 z-30 flex items-center bg-white/30 dark:bg-black/30 backdrop-blur-2xl border border-white/40 dark:border-white/10 rounded-2xl shadow-lg ring-1 ring-black/5 dark:ring-white/5 p-1.5 gap-1 transition-all duration-300 group-hover:opacity-100"
+             :class="isFullscreen ? 'translate-y-4 opacity-100' : 'translate-y-2 opacity-0'">
             
-            <div class="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-xl mr-1 border border-gray-100 dark:border-gray-700">
-                <i class="fa-solid fa-layer-group text-blue-600 text-xs"></i>
-                <span class="text-[10px] font-extrabold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Block Manager</span>
-                <span x-show="masks.length > 0" 
-                      class="flex items-center justify-center px-1.5 h-4 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-full text-[9px] font-black" 
-                      x-text="masks.length"></span>
+            {{-- SEGMENT 1: STATUS & NAVIGATION --}}
+            <div @click="selectAvailableMask()" 
+                 class="flex items-center gap-2.5 px-3 py-2 bg-gray-900/5 dark:bg-white/5 rounded-xl mr-1 border border-transparent hover:border-blue-500/30 hover:bg-blue-500/5 transition-all cursor-pointer group/status">
+                <div class="relative">
+                    <i class="fa-solid fa-layer-group text-blue-600 dark:text-blue-400 text-xs"></i>
+                    <span x-show="masks.length > 0" 
+                          class="absolute -top-1.5 -right-1.5 flex items-center justify-center w-3.5 h-3.5 bg-blue-600 text-white rounded-full text-[8px] font-bold ring-2 ring-white dark:ring-gray-900" 
+                          x-text="masks.length"></span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.1em] leading-none mb-0.5 whitespace-nowrap">Manager</span>
+                    <span class="text-[10px] font-bold text-gray-700 dark:text-gray-200 leading-none whitespace-nowrap">Block List</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-[8px] text-gray-400 group-hover/status:translate-x-0.5 transition-transform"></i>
             </div>
 
+            <div class="w-px h-6 bg-gray-200 dark:bg-gray-700/50 mx-1"></div>
+
+            {{-- SEGMENT 2: GLOBAL ACTIONS --}}
             <div class="flex items-center gap-1">
                 <button type="button" @click.stop="addMask()" title="Add New Block"
-                    class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-green-600 hover:text-white transition-all duration-200 active:scale-90 group">
-                    <i class="fa-solid fa-plus text-[10px]"></i>
-                    <span class="text-[10px] font-bold">New Block</span>
+                    class="flex items-center gap-2 px-3 py-2 rounded-xl text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all duration-200 active:scale-95 font-bold group/btn">
+                    <i class="fa-solid fa-plus text-[10px] group-hover/btn:rotate-90 transition-transform"></i>
+                    <span class="text-[10px] whitespace-nowrap uppercase tracking-tighter">New Block</span>
                 </button>
                 
                 <button type="button" @click="saveCurrentMask()" title="Save Changes"
-                    class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-blue-600 hover:text-white transition-all duration-200 active:scale-90 group">
-                    <i class="fa-solid fa-floppy-disk text-[10px]"></i>
-                    <span class="text-[10px] font-bold">Save All</span>
+                    class="flex items-center gap-2 px-3 py-2 rounded-xl text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white transition-all duration-200 active:scale-95 font-bold">
+                    <i class="fa-solid fa-check-double text-[10px]"></i>
+                    <span class="text-[10px] whitespace-nowrap uppercase tracking-tighter">Save All</span>
                 </button>
-
-                <template x-if="getActiveMask()">
-                    <div class="flex items-center gap-1">
-                        <div class="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-1"></div>
-                        <button type="button" @click.stop="removeActiveMask()" title="Delete Selected Block"
-                            class="w-9 h-9 flex items-center justify-center rounded-xl text-red-500 hover:bg-red-600 hover:text-white transition-all duration-200 active:scale-90 group">
-                            <i class="fa-solid fa-trash-can text-xs"></i>
-                        </button>
-                    </div>
-                </template>
             </div>
+
+            {{-- SEGMENT 3: SELECTION CONTEXT (Hanya muncul jika ada blok aktif) --}}
+            <template x-if="getActiveMask()">
+                <div class="flex items-center gap-1 ml-1 pl-1 border-l border-gray-200 dark:border-gray-700/50"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100">
+                    
+                    <template x-if="(isPdf(selectedFile?.name) && pdfNumPages > 1) || (isTiff(selectedFile?.name) && tifNumPages > 1)">
+                        <button type="button" @click.stop="applyActiveMaskToAll()" 
+                            class="flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all duration-200 active:scale-95 font-bold border border-indigo-100 dark:border-indigo-500/20 shadow-sm">
+                            <i class="fa-solid fa-clone text-[10px]"></i>
+                            <span class="text-[10px] whitespace-nowrap uppercase tracking-tighter">Apply to All Pages</span>
+                        </button>
+                    </template>
+
+                    <button type="button" @click.stop="removeActiveMask()" 
+                        class="w-9 h-9 flex items-center justify-center rounded-xl text-red-500 hover:bg-red-600 hover:text-white transition-all duration-200 active:scale-95 border border-transparent hover:border-red-600 shadow-sm transition-colors"
+                        title="Delete Selected Block">
+                        <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                </div>
+            </template>
         </div>
         @endif
 
@@ -196,7 +222,7 @@
              :class="isFullscreen ? 'translate-y-0 opacity-100' : ''">
             
             {{-- Tool Hub --}}
-            <div class="flex items-center bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl p-1.5 gap-1.5">
+            <div class="flex items-center bg-white/30 dark:bg-black/30 backdrop-blur-2xl shadow-lg border border-white/40 dark:border-white/10 rounded-2xl ring-1 ring-black/5 dark:ring-white/5 p-1.5 gap-1.5">
                 
                 {{-- Zoom Group --}}
                 <div class="flex items-center gap-1">
@@ -275,7 +301,7 @@
             <div x-ref="viewport2d" class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
                 style="touch-action: none;"
                 :class="isFullscreen ? 'h-full' : 'h-[70vh]'"
-                @mousedown.prevent="startPan($event)" @touchstart="startPan($event.touches[0])" @wheel.prevent="onWheelZoom($event)">
+                @mousedown.prevent="startPan($event)" @touchstart="startPan($event)" @wheel.prevent="onWheelZoom($event)">
                 <div class="w-full h-full flex items-center justify-center">
                     <div class="relative inline-block" :style="imageTransformStyle()">
                         <img x-ref="mainImage" :src="selectedFile?.url" @load="onImageLoad()"
@@ -287,33 +313,37 @@
                              <template x-for="mask in masks" :key="mask.id">
                                 <template x-if="mask">
                                     <div x-show="mask.visible" x-cloak :style="maskStyle(mask)"
-                                        class="absolute bg-white/100 shadow-sm cursor-move"
-                                        :class="{ 'z-50': mask.active, 'z-10': !mask.active }"
-                                        @mousedown.stop.prevent="onMaskMouseDown($event, mask)" @click.stop="activateMask(mask)">
+                                        class="absolute bg-white cursor-move border border-gray-200/80 select-none touch-none mask-element"
+                                        :class="{ 'z-20': mask.active, 'z-10': !mask.active }"
+                                        @mousedown.stop.prevent="onMaskMouseDown($event, mask)" 
+                                        @touchstart.stop.prevent="onMaskMouseDown($event, mask)"
+                                        @click.stop="activateMask(mask)">
 
                                         <!-- BORDER & HANDLES (Active Only) -->
                                         <div x-show="mask.active" x-cloak class="absolute inset-0 border border-blue-500 pointer-events-none"></div>
 
-                                        <!-- ROTATE HANDLE -->
-                                        <div x-show="mask.active && mask.editable" x-cloak>
-                                            <div class="absolute left-1/2 -translate-x-1/2 -top-8 w-5 h-5 bg-white/80 rounded-full shadow-md border border-gray-200 flex items-center justify-center cursor-alias z-10"
-                                                @mousedown.stop.prevent="startMaskRotate($event, mask)">
-                                                <i class="fa-solid fa-rotate text-blue-600 text-[10px]"></i>
+                                        <!-- ROTATE HANDLES (At Corners) -->
+                                        <template x-if="mask.active && mask.editable">
+                                            <div class="pointer-events-auto">
+                                                <div class="absolute -left-4 -top-4 w-6 h-6 z-10 mask-handle" :style="{ cursor: getCursorStyle('rotate', mask.rotation) }" @mousedown.stop.prevent="startMaskRotate($event, mask)" @touchstart.stop.prevent="startMaskRotate($event, mask)"></div>
+                                                <div class="absolute -right-4 -top-4 w-6 h-6 z-10 mask-handle" :style="{ cursor: getCursorStyle('rotate', mask.rotation) }" @mousedown.stop.prevent="startMaskRotate($event, mask)" @touchstart.stop.prevent="startMaskRotate($event, mask)"></div>
+                                                <div class="absolute -left-4 -bottom-4 w-6 h-6 z-10 mask-handle" :style="{ cursor: getCursorStyle('rotate', mask.rotation) }" @mousedown.stop.prevent="startMaskRotate($event, mask)" @touchstart.stop.prevent="startMaskRotate($event, mask)"></div>
+                                                <div class="absolute -right-4 -bottom-4 w-6 h-6 z-10 mask-handle" :style="{ cursor: getCursorStyle('rotate', mask.rotation) }" @mousedown.stop.prevent="startMaskRotate($event, mask)" @touchstart.stop.prevent="startMaskRotate($event, mask)"></div>
                                             </div>
-                                        </div>
+                                        </template>
 
                                         <!-- RESIZE HANDLES -->
                                         <template x-if="mask.active && mask.editable">
                                             <div>
-                                                <div class="absolute inset-x-3 top-0 h-2" :style="{ cursor: getCursorStyle('n', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
-                                                <div class="absolute inset-x-3 bottom-0 h-2" :style="{ cursor: getCursorStyle('s', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
-                                                <div class="absolute inset-y-3 left-0 w-2" :style="{ cursor: getCursorStyle('w', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
-                                                <div class="absolute inset-y-3 right-0 w-2" :style="{ cursor: getCursorStyle('e', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
+                                                <div class="absolute inset-x-3 -top-2 h-4 z-10 mask-handle" :style="{ cursor: getCursorStyle('n', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'n', mask)" @touchstart.stop.prevent="startMaskResize($event, 'n', mask)"></div>
+                                                <div class="absolute inset-x-3 -bottom-2 h-4 z-10 mask-handle" :style="{ cursor: getCursorStyle('s', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 's', mask)" @touchstart.stop.prevent="startMaskResize($event, 's', mask)"></div>
+                                                <div class="absolute -left-2 inset-y-3 w-4 z-10 mask-handle" :style="{ cursor: getCursorStyle('w', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'w', mask)" @touchstart.stop.prevent="startMaskResize($event, 'w', mask)"></div>
+                                                <div class="absolute -right-2 inset-y-3 w-4 z-10 mask-handle" :style="{ cursor: getCursorStyle('e', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'e', mask)" @touchstart.stop.prevent="startMaskResize($event, 'e', mask)"></div>
                                                 
-                                                <div class="absolute left-0 top-0 w-3 h-3" :style="{ cursor: getCursorStyle('nw', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
-                                                <div class="absolute right-0 top-0 w-3 h-3" :style="{ cursor: getCursorStyle('ne', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
-                                                <div class="absolute left-0 bottom-0 w-3 h-3" :style="{ cursor: getCursorStyle('sw', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
-                                                <div class="absolute right-0 bottom-0 w-3 h-3" :style="{ cursor: getCursorStyle('se', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
+                                                <div class="absolute -left-1 -top-1 w-2 h-2 bg-white border border-blue-500 z-20 mask-handle" :style="{ cursor: getCursorStyle('nw', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)" @touchstart.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
+                                                <div class="absolute -right-1 -top-1 w-2 h-2 bg-white border border-blue-500 z-20 mask-handle" :style="{ cursor: getCursorStyle('ne', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)" @touchstart.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
+                                                <div class="absolute -left-1 -bottom-1 w-2 h-2 bg-white border border-blue-500 z-20 mask-handle" :style="{ cursor: getCursorStyle('sw', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)" @touchstart.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
+                                                <div class="absolute -right-1 -bottom-1 w-2 h-2 bg-white border border-blue-500 z-20 mask-handle" :style="{ cursor: getCursorStyle('se', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'se', mask)" @touchstart.stop.prevent="startMaskResize($event, 'se', mask)"></div>
                                             </div>
                                         </template>
                                     </div>
@@ -400,7 +430,7 @@
                 </div>
                 {{-- Solid Loading Overlay (Image) --}}
                 <div x-show="imgLoading" x-transition.opacity
-                    class="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-20 rounded-lg">
+                    class="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-40 rounded-lg">
                     <div class="flex flex-col items-center">
                         <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600 mb-4"></i>
                         <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Loading Preview</span>
@@ -409,7 +439,7 @@
 
                 {{-- Solid Error Overlay (Image) --}}
                 <div x-show="imgError" x-transition.opacity
-                    class="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-30 rounded-lg p-6 text-center">
+                    class="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-50 rounded-lg p-6 text-center">
                     <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mb-4">
                         <i class="fa-solid fa-circle-exclamation text-xl"></i>
                     </div>
@@ -428,7 +458,7 @@
             <div x-ref="viewport2d" class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
                 style="touch-action: none;"
                 :class="isFullscreen ? 'h-full' : 'h-[70vh]'"
-                @mousedown.prevent="startPan($event)" @touchstart="startPan($event.touches[0])" @wheel.prevent="onWheelZoom($event)">
+                @mousedown.prevent="startPan($event)" @touchstart="startPan($event)" @wheel.prevent="onWheelZoom($event)">
                 <div class="w-full h-full flex items-center justify-center">
                     <div class="relative inline-block" :style="imageTransformStyle()">
                         <canvas x-ref="pdfCanvas" class="block pointer-events-none select-none max-w-full"
@@ -440,30 +470,35 @@
                              <template x-for="mask in masks" :key="mask.id">
                                 <template x-if="mask">
                                     <div x-show="mask.visible" x-cloak :style="maskStyle(mask)"
-                                        class="absolute bg-white/100 shadow-sm cursor-move"
-                                        :class="{ 'z-50': mask.active, 'z-10': !mask.active }"
-                                        @mousedown.stop.prevent="onMaskMouseDown($event, mask)" @click.stop="activateMask(mask)">
+                                        class="absolute bg-white cursor-move border border-gray-200/80 select-none touch-none mask-element"
+                                        :class="{ 'z-20': mask.active, 'z-10': !mask.active }"
+                                        @mousedown.stop.prevent="onMaskMouseDown($event, mask)"
+                                        @touchstart.stop.prevent="onMaskMouseDown($event, mask)"
+                                        @click.stop="activateMask(mask)">
 
                                         <div x-show="mask.active" x-cloak class="absolute inset-0 border border-blue-500 pointer-events-none"></div>
 
-                                        <div x-show="mask.active && mask.editable" x-cloak>
-                                            <div class="absolute left-1/2 -translate-x-1/2 -top-8 w-5 h-5 bg-white/80 rounded-full shadow-md border border-gray-200 flex items-center justify-center cursor-alias z-10"
-                                                @mousedown.stop.prevent="startMaskRotate($event, mask)">
-                                                <i class="fa-solid fa-rotate text-blue-600 text-[10px]"></i>
+                                        <!-- ROTATE HANDLES (At Corners) -->
+                                        <template x-if="mask.active && mask.editable">
+                                            <div class="pointer-events-auto">
+                                                <div class="absolute -left-4 -top-4 w-6 h-6 z-10 mask-handle" :style="{ cursor: getCursorStyle('rotate', mask.rotation) }" @mousedown.stop.prevent="startMaskRotate($event, mask)" @touchstart.stop.prevent="startMaskRotate($event, mask)"></div>
+                                                <div class="absolute -right-4 -top-4 w-6 h-6 z-10 mask-handle" :style="{ cursor: getCursorStyle('rotate', mask.rotation) }" @mousedown.stop.prevent="startMaskRotate($event, mask)" @touchstart.stop.prevent="startMaskRotate($event, mask)"></div>
+                                                <div class="absolute -left-4 -bottom-4 w-6 h-6 z-10 mask-handle" :style="{ cursor: getCursorStyle('rotate', mask.rotation) }" @mousedown.stop.prevent="startMaskRotate($event, mask)" @touchstart.stop.prevent="startMaskRotate($event, mask)"></div>
+                                                <div class="absolute -right-4 -bottom-4 w-6 h-6 z-10 mask-handle" :style="{ cursor: getCursorStyle('rotate', mask.rotation) }" @mousedown.stop.prevent="startMaskRotate($event, mask)" @touchstart.stop.prevent="startMaskRotate($event, mask)"></div>
                                             </div>
-                                        </div>
+                                        </template>
 
                                         <template x-if="mask.active && mask.editable">
                                             <div>
-                                                <div class="absolute inset-x-3 top-0 h-2" :style="{ cursor: getCursorStyle('n', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
-                                                <div class="absolute inset-x-3 bottom-0 h-2" :style="{ cursor: getCursorStyle('s', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
-                                                <div class="absolute inset-y-3 left-0 w-2" :style="{ cursor: getCursorStyle('w', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
-                                                <div class="absolute inset-y-3 right-0 w-2" :style="{ cursor: getCursorStyle('e', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
+                                                <div class="absolute inset-x-3 -top-2 h-4 z-10 mask-handle" :style="{ cursor: getCursorStyle('n', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'n', mask)" @touchstart.stop.prevent="startMaskResize($event, 'n', mask)"></div>
+                                                <div class="absolute inset-x-3 -bottom-2 h-4 z-10 mask-handle" :style="{ cursor: getCursorStyle('s', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 's', mask)" @touchstart.stop.prevent="startMaskResize($event, 's', mask)"></div>
+                                                <div class="absolute -left-2 inset-y-3 w-4 z-10 mask-handle" :style="{ cursor: getCursorStyle('w', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'w', mask)" @touchstart.stop.prevent="startMaskResize($event, 'w', mask)"></div>
+                                                <div class="absolute -right-2 inset-y-3 w-4 z-10 mask-handle" :style="{ cursor: getCursorStyle('e', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'e', mask)" @touchstart.stop.prevent="startMaskResize($event, 'e', mask)"></div>
                                                 
-                                                <div class="absolute left-0 top-0 w-3 h-3" :style="{ cursor: getCursorStyle('nw', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
-                                                <div class="absolute right-0 top-0 w-3 h-3" :style="{ cursor: getCursorStyle('ne', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
-                                                <div class="absolute left-0 bottom-0 w-3 h-3" :style="{ cursor: getCursorStyle('sw', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
-                                                <div class="absolute right-0 bottom-0 w-3 h-3" :style="{ cursor: getCursorStyle('se', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
+                                                <div class="absolute -left-1 -top-1 w-2 h-2 bg-white border border-blue-500 z-20 mask-handle" :style="{ cursor: getCursorStyle('nw', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)" @touchstart.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
+                                                <div class="absolute -right-1 -top-1 w-2 h-2 bg-white border border-blue-500 z-20 mask-handle" :style="{ cursor: getCursorStyle('ne', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)" @touchstart.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
+                                                <div class="absolute -left-1 -bottom-1 w-2 h-2 bg-white border border-blue-500 z-20 mask-handle" :style="{ cursor: getCursorStyle('sw', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)" @touchstart.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
+                                                <div class="absolute -right-1 -bottom-1 w-2 h-2 bg-white border border-blue-500 z-20 mask-handle" :style="{ cursor: getCursorStyle('se', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'se', mask)" @touchstart.stop.prevent="startMaskResize($event, 'se', mask)"></div>
                                             </div>
                                         </template>
                                     </div>
@@ -551,7 +586,7 @@
 
                 {{-- Solid Loading Overlay (PDF) --}}
                 <div x-show="pdfLoading" x-transition.opacity
-                    class="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-20 rounded-lg">
+                    class="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-40 rounded-lg">
                     <div class="flex flex-col items-center">
                         <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600 mb-4"></i>
                         <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Rendering PDF</span>
@@ -579,7 +614,7 @@
             <div x-ref="viewport2d" class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
                 style="touch-action: none;"
                 :class="isFullscreen ? 'h-full' : 'h-[70vh]'"
-                @mousedown.prevent="startPan($event)" @touchstart="startPan($event.touches[0])" @wheel.prevent="onWheelZoom($event)">
+                @mousedown.prevent="startPan($event)" @touchstart="startPan($event)" @wheel.prevent="onWheelZoom($event)">
                 <div class="w-full h-full flex items-center justify-center">
                     <div class="relative inline-block" :style="imageTransformStyle()">
                         <img x-ref="tifImg" alt="TIFF Preview" @load="onImageLoad()"
@@ -591,30 +626,35 @@
                              <template x-for="mask in masks" :key="mask.id">
                                 <template x-if="mask">
                                     <div x-show="mask.visible" x-cloak :style="maskStyle(mask)"
-                                        class="absolute bg-white/100 shadow-sm cursor-move"
+                                        class="absolute bg-white cursor-move border border-gray-200/80 mask-element"
                                         :class="{ 'z-50': mask.active, 'z-10': !mask.active }"
-                                        @mousedown.stop.prevent="onMaskMouseDown($event, mask)" @click.stop="activateMask(mask)">
+                                        @mousedown.stop.prevent="onMaskMouseDown($event, mask)" 
+                                        @touchstart.stop.prevent="onMaskMouseDown($event, mask)"
+                                        @click.stop="activateMask(mask)">
 
                                         <div x-show="mask.active" x-cloak class="absolute inset-0 border border-blue-500 pointer-events-none"></div>
 
-                                        <div x-show="mask.active && mask.editable" x-cloak>
-                                            <div class="absolute left-1/2 -translate-x-1/2 -top-8 w-5 h-5 bg-white/80 rounded-full shadow-md border border-gray-200 flex items-center justify-center cursor-alias z-10"
-                                                @mousedown.stop.prevent="startMaskRotate($event, mask)">
-                                                <i class="fa-solid fa-rotate text-blue-600 text-[10px]"></i>
+                                        <!-- ROTATE HANDLES (At Corners) -->
+                                        <template x-if="mask.active && mask.editable">
+                                            <div class="pointer-events-auto">
+                                                <div class="absolute -left-4 -top-4 w-6 h-6 z-10 mask-handle" :style="{ cursor: getCursorStyle('rotate', mask.rotation) }" @mousedown.stop.prevent="startMaskRotate($event, mask)" @touchstart.stop.prevent="startMaskRotate($event, mask)"></div>
+                                                <div class="absolute -right-4 -top-4 w-6 h-6 z-10 mask-handle" :style="{ cursor: getCursorStyle('rotate', mask.rotation) }" @mousedown.stop.prevent="startMaskRotate($event, mask)" @touchstart.stop.prevent="startMaskRotate($event, mask)"></div>
+                                                <div class="absolute -left-4 -bottom-4 w-6 h-6 z-10 mask-handle" :style="{ cursor: getCursorStyle('rotate', mask.rotation) }" @mousedown.stop.prevent="startMaskRotate($event, mask)" @touchstart.stop.prevent="startMaskRotate($event, mask)"></div>
+                                                <div class="absolute -right-4 -bottom-4 w-6 h-6 z-10 mask-handle" :style="{ cursor: getCursorStyle('rotate', mask.rotation) }" @mousedown.stop.prevent="startMaskRotate($event, mask)" @touchstart.stop.prevent="startMaskRotate($event, mask)"></div>
                                             </div>
-                                        </div>
+                                        </template>
 
                                         <template x-if="mask.active && mask.editable">
                                             <div>
-                                                <div class="absolute inset-x-3 top-0 h-2" :style="{ cursor: getCursorStyle('n', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'n', mask)"></div>
-                                                <div class="absolute inset-x-3 bottom-0 h-2" :style="{ cursor: getCursorStyle('s', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 's', mask)"></div>
-                                                <div class="absolute inset-y-3 left-0 w-2" :style="{ cursor: getCursorStyle('w', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'w', mask)"></div>
-                                                <div class="absolute inset-y-3 right-0 w-2" :style="{ cursor: getCursorStyle('e', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'e', mask)"></div>
+                                                <div class="absolute inset-x-3 -top-2 h-4 z-10 mask-handle" :style="{ cursor: getCursorStyle('n', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'n', mask)" @touchstart.stop.prevent="startMaskResize($event, 'n', mask)"></div>
+                                                <div class="absolute inset-x-3 -bottom-2 h-4 z-10 mask-handle" :style="{ cursor: getCursorStyle('s', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 's', mask)" @touchstart.stop.prevent="startMaskResize($event, 's', mask)"></div>
+                                                <div class="absolute -left-2 inset-y-3 w-4 z-10 mask-handle" :style="{ cursor: getCursorStyle('w', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'w', mask)" @touchstart.stop.prevent="startMaskResize($event, 'w', mask)"></div>
+                                                <div class="absolute -right-2 inset-y-3 w-4 z-10 mask-handle" :style="{ cursor: getCursorStyle('e', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'e', mask)" @touchstart.stop.prevent="startMaskResize($event, 'e', mask)"></div>
                                                 
-                                                <div class="absolute left-0 top-0 w-3 h-3" :style="{ cursor: getCursorStyle('nw', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
-                                                <div class="absolute right-0 top-0 w-3 h-3" :style="{ cursor: getCursorStyle('ne', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
-                                                <div class="absolute left-0 bottom-0 w-3 h-3" :style="{ cursor: getCursorStyle('sw', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
-                                                <div class="absolute right-0 bottom-0 w-3 h-3" :style="{ cursor: getCursorStyle('se', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'se', mask)"></div>
+                                                <div class="absolute -left-1 -top-1 w-2 h-2 bg-white border border-blue-500 z-20 mask-handle" :style="{ cursor: getCursorStyle('nw', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'nw', mask)" @touchstart.stop.prevent="startMaskResize($event, 'nw', mask)"></div>
+                                                <div class="absolute -right-1 -top-1 w-2 h-2 bg-white border border-blue-500 z-20 mask-handle" :style="{ cursor: getCursorStyle('ne', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'ne', mask)" @touchstart.stop.prevent="startMaskResize($event, 'ne', mask)"></div>
+                                                <div class="absolute -left-1 -bottom-1 w-2 h-2 bg-white border border-blue-500 z-20 mask-handle" :style="{ cursor: getCursorStyle('sw', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'sw', mask)" @touchstart.stop.prevent="startMaskResize($event, 'sw', mask)"></div>
+                                                <div class="absolute -right-1 -bottom-1 w-2 h-2 bg-white border border-blue-500 z-20 mask-handle" :style="{ cursor: getCursorStyle('se', mask.rotation) }" @mousedown.stop.prevent="startMaskResize($event, 'se', mask)" @touchstart.stop.prevent="startMaskResize($event, 'se', mask)"></div>
                                             </div>
                                         </template>
                                     </div>
@@ -730,7 +770,7 @@
             <div x-ref="viewport2d" class="relative w-full overflow-hidden bg-black/5 rounded cursor-grab active:cursor-grabbing"
                 style="touch-action: none;"
                 :class="isFullscreen ? 'h-full' : 'h-[70vh]'"
-                @mousedown.prevent="startPan($event)" @touchstart="startPan($event.touches[0])" @wheel.prevent="onWheelZoom($event)">
+                @mousedown.prevent="startPan($event)" @touchstart="startPan($event)" @wheel.prevent="onWheelZoom($event)">
                 <div class="relative w-full h-full flex items-center justify-center" :style="imageTransformStyle()">
 
                     {{-- Wrapper with relative positioning for stamps --}}
@@ -825,7 +865,7 @@
 
                 {{-- Solid Loading Overlay (HPGL) --}}
                 <div x-show="hpglLoading" x-transition.opacity
-                    class="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-20 rounded-lg">
+                    class="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-[150] rounded-lg">
                     <div class="flex flex-col items-center">
                         <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600 mb-4"></i>
                         <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Plotting File</span>
@@ -1096,7 +1136,7 @@
                         x-transition:enter="transition ease-out duration-300"
                         x-transition:enter-start="opacity-0 translate-x-4"
                         x-transition:enter-end="opacity-100 translate-x-0"
-                        class="absolute bottom-1/2 translate-y-1/2 right-6 flex flex-col items-center bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-2xl p-1.5 z-10 gap-1.5">
+                        class="absolute bottom-1/2 translate-y-1/2 right-6 flex flex-col items-center bg-white/30 dark:bg-black/30 backdrop-blur-2xl rounded-2xl border border-white/40 dark:border-white/10 shadow-lg ring-1 ring-black/5 dark:ring-white/5 p-1.5 z-10 gap-1.5">
 
                         <button @click="zoom3d(1.25)"
                             class="w-9 h-9 flex items-center justify-center rounded-xl text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 transition-all active:scale-75"

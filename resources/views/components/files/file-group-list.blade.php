@@ -1,3 +1,9 @@
+@props([
+    'title' => '',
+    'icon' => '',
+    'category' => '',
+    'allowDownload' => false
+])
 @once
 <style>
     /* Dynamic Precision Marquee - Refined Ping-Pong */
