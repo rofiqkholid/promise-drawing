@@ -1069,10 +1069,11 @@
 
                     {{-- Solid Loading Overlay (CAD) --}}
                     <div x-show="iges.loading"
-                        class="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-20 rounded-lg">
-                        <div class="flex flex-col items-center">
-                            <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-600 mb-4"></i>
-                            <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Processing Geometry</span>
+                        class="absolute inset-0 flex flex-col items-center justify-center bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm z-20 rounded-lg">
+                        <div class="flex flex-col items-center max-w-[280px] text-center">
+                            <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-600 mb-6"></i>
+                            <span class="text-[12px] font-black text-gray-900 dark:text-gray-100 uppercase tracking-widest mb-2" x-text="iges.loadingMessage || 'Processing Geometry'"></span>
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium leading-relaxed">Please wait, this process may take a moment for large files.</p>
                         </div>
                     </div>
 

@@ -103,6 +103,8 @@ function fileViewerComponent(config = {}) {
             controls: null,
             animId: 0,
             loading: false,
+            loadingProgress: 0,
+            loadingMessage: '',
             error: '',
             rootModel: null,
             THREE: null,
@@ -157,6 +159,7 @@ function fileViewerComponent(config = {}) {
         headlight: { enabled: false, object: null },
         cameraMode: 'perspective',
         isStampBurned: false, // Track if stamps are burned into canvas
+        fps: 0, // FPS counter state
 
         // ===== STAMP CONFIGURATION =====
         stampDefaults: {
@@ -309,6 +312,12 @@ function fileViewerComponent(config = {}) {
             document.addEventListener('fullscreenchange', () => {
                 this.isFullscreen = !!document.fullscreenElement;
             });
+
+            // Watchers for 3D state changes to trigger render
+            this.$watch('iges.clipping', () => { this.cadNeedsRender = true; }, { deep: true });
+            this.$watch('iges.exploded.factor', () => { this.cadNeedsRender = true; });
+            this.$watch('partOpacity', () => { this.cadNeedsRender = true; });
+            this.$watch('activeMaterial', () => { this.cadNeedsRender = true; });
         },
 
         // ===== FILE TYPE DETECTION =====
@@ -630,6 +639,11 @@ function fileViewerComponent(config = {}) {
                 URL.revokeObjectURL(this._lastTiffUrl);
                 this._lastTiffUrl = null;
             }
+        },
+
+        // Optimization: Helper to request a render frame
+        _forceRender() {
+            this.cadNeedsRender = true;
         },
 
         // ===== IMAGE VIEWER =====
@@ -1199,6 +1213,9 @@ function fileViewerComponent(config = {}) {
             this.iges.loading = true;
             this.iges.error = '';
 
+            // Optimization flag: Only render when scene changes
+            this.cadNeedsRender = true;
+
             // Reset tool states
             if (this.iges.exploded) {
                 this.iges.exploded.enabled = false;
@@ -1243,33 +1260,102 @@ function fileViewerComponent(config = {}) {
                 camera.position.set(250, 200, 250);
 
                 // Create renderer
+                // Optimization: Smart antialias (only needed on standard DPI)
+                // If DPR is high (>1), hardware AA is redundant and expensive.
                 const renderer = new THREE.WebGLRenderer({
-                    antialias: true,
+                    antialias: true, // Force AA even on high DPI screens for smoother edges
                     alpha: true,
                     preserveDrawingBuffer: true,
-                    // logarithmicDepthBuffer: true,
-                    powerPreference: 'high-performance'
+                    powerPreference: 'high-performance',
+                    depth: true,
+                    precision: 'highp' // Force high precision mainly for smooth gradients
                 });
-                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+                // Smart pixel ratio: Cap at 2.0 (Retina standard) instead of 1.5
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.0));
+
                 renderer.setSize(width, height);
                 renderer.localClippingEnabled = true;
                 renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+                // Quality: Tone Mapping & Shadows for "Premium" look
+                renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                renderer.toneMappingExposure = 1.0;
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
                 wrap.appendChild(renderer.domElement);
                 wrap.style.position = 'relative';
                 wrap.style.overflow = 'hidden';
 
+                // Create FPS counter element
+                const fpsDiv = document.createElement('div');
+                fpsDiv.style.position = 'absolute';
+                fpsDiv.style.top = '10px'; // Top
+                fpsDiv.style.left = '50%'; // Center horizontal
+                fpsDiv.style.transform = 'translateX(-50%)'; // Perfectly center
+                fpsDiv.style.padding = '6px 12px';
+                fpsDiv.style.background = 'rgba(20, 20, 30, 0.7)';
+                fpsDiv.style.backdropFilter = 'blur(4px)';
+                fpsDiv.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+                fpsDiv.style.color = '#4ade80';
+                fpsDiv.style.borderRadius = '20px';
+                fpsDiv.style.fontFamily = 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+                fpsDiv.style.fontSize = '11px';
+                fpsDiv.style.fontWeight = '600';
+                fpsDiv.style.letterSpacing = '0.5px';
+                fpsDiv.style.pointerEvents = 'none';
+                fpsDiv.style.zIndex = '5'; // Lower layer to avoid overlapping loading screen
+                fpsDiv.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+                fpsDiv.innerText = 'FPS: 0';
+                wrap.appendChild(fpsDiv);
+
+                // Bind FPS update to this element
+                this.$watch('fps', (val) => {
+                    if (val === 0) {
+                        fpsDiv.innerText = 'FPS: IDLE';
+                        fpsDiv.style.color = '#60a5fa'; // Blue-400 for Idle (Cool/Sleep)
+                    } else {
+                        fpsDiv.innerText = `FPS: ${val}`;
+                        fpsDiv.style.color = val < 30 ? '#f87171' : '#4ade80'; // Red (<30) vs Green (30+)
+                    }
+                });
+
                 // Add lights
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+                // Add lights with Shadows
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // Slightly brighter ambient
                 scene.add(ambientLight);
+
+                // Group lights that follow camera
+                const camLightGroup = new THREE.Group();
+                camera.add(camLightGroup);
                 scene.add(camera);
 
-                const keyLight = new THREE.DirectionalLight(0xffffff, 0.7);
-                keyLight.position.set(50, 50, 100);
-                camera.add(keyLight);
+                const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
+                keyLight.position.set(50, 100, 100);
+                // Enable shadows on key light
+                keyLight.castShadow = true;
+                keyLight.shadow.mapSize.width = 2048; // Optimized to 2K (sufficient since receiveShadow is off)
+                keyLight.shadow.mapSize.height = 2048;
+                keyLight.shadow.bias = -0.00005; // Reduced bias
+                keyLight.shadow.normalBias = 0.02; // Use normalBias to fix "shadow acne" (striping on curves)
 
-                const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+                // Adjust shadow camera for typical CAD view
+                const d = 500;
+                keyLight.shadow.camera.left = -d;
+                keyLight.shadow.camera.right = d;
+                keyLight.shadow.camera.top = d;
+                keyLight.shadow.camera.bottom = -d;
+                keyLight.shadow.camera.far = 2000;
+
+                camLightGroup.add(keyLight);
+
+                // Store light for later updates
+                this.iges.keyLight = keyLight;
+
+                const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
                 fillLight.position.set(-50, -50, 100);
-                camera.add(fillLight);
+                camLightGroup.add(fillLight);
 
                 // Create controls
                 const controls = new OrbitControls(camera, renderer.domElement);
@@ -1279,6 +1365,11 @@ function fileViewerComponent(config = {}) {
                 controls.enableRotate = true;
                 controls.enableZoom = true;
                 controls.enablePan = true;
+
+                // Optimization: Only render when user interacts
+                controls.addEventListener('change', () => {
+                    this.cadNeedsRender = true;
+                });
 
                 // console.log('[FileViewer] OrbitControls created');
 
@@ -1304,6 +1395,7 @@ function fileViewerComponent(config = {}) {
                 );
 
                 // Fetch CAD file
+                this.iges.loadingMessage = 'Downloading CAD file...';
                 const resp = await fetch(file.url, {
                     cache: 'no-store',
                     credentials: 'same-origin'
@@ -1311,19 +1403,29 @@ function fileViewerComponent(config = {}) {
                 if (!resp.ok) throw new Error('Failed to fetch CAD file');
                 const mainBuf = new Uint8Array(await resp.arrayBuffer());
 
-                // console.log('[FileViewer] CAD file loaded');
-
-                // Parse CAD file with OCCT
+                this.iges.loadingMessage = 'Preparing OCCT module...';
                 const occt = await window.occtimportjs();
                 const fileName = file?.name || '';
                 const ext = this.extOf(fileName);
+
+                this.iges.loadingMessage = 'Processing geometry (Intensive)...';
+                // Yield to ensure UI updates before parsing
+                await new Promise(r => setTimeout(r, 100));
                 // console.log('[FileViewer] Extension detected:', ext);
+
+                const fileSizeMB = mainBuf.byteLength / (1024 * 1024);
+                // console.log(`[FileViewer] CAD size: ${fileSizeMB.toFixed(2)} MB`);
+
+                // Adaptive Quality: If file is very large (>30MB), slightly relax tessellation 
+                // to prevent browser from freezing during render/rotation while maintaining resolution look.
+                const isLargeFile = fileSizeMB > 30;
+                const isVeryLargeFile = fileSizeMB > 50;
 
                 const params = {
                     linearUnit: 'millimeter',
                     linearDeflectionType: 'bounding_box_ratio',
-                    linearDeflection: 0.1,
-                    angularDeflection: 0.1,
+                    linearDeflection: isVeryLargeFile ? 0.08 : (isLargeFile ? 0.05 : 0.03),
+                    angularDeflection: isVeryLargeFile ? 0.15 : (isLargeFile ? 0.1 : 0.05),
                 };
 
                 let res = null;
@@ -1360,7 +1462,7 @@ function fileViewerComponent(config = {}) {
                 }
 
                 // Build Three.js meshes from OCCT result
-                const group = this._buildThreeFromOcct(res, THREE);
+                const { group, box } = await this._buildThreeFromOcct(res, THREE);
                 scene.add(group);
 
                 // Save references
@@ -1371,11 +1473,9 @@ function fileViewerComponent(config = {}) {
                 this.iges.controls = controls;
                 this.iges.THREE = THREE;
 
-                // Cache original materials
-                this._cacheOriginalMaterials(group, THREE);
+                // (Material caching moved into _buildThreeFromOcct for performance)
 
-                // Calculate bounding box and auto-fit camera
-                const box = new THREE.Box3().setFromObject(group);
+                // Calculate size and center from pre-calculated box
                 const size = new THREE.Vector3();
                 box.getSize(size);
                 const center = new THREE.Vector3();
@@ -1386,12 +1486,29 @@ function fileViewerComponent(config = {}) {
 
                 // Auto-fit camera
                 const maxDim = Math.max(size.x, size.y, size.z) || 100;
+
+                // Update shadow camera to fit model tightly (maximizes shadow resolution)
+                if (this.iges.keyLight) {
+                    const sCam = this.iges.keyLight.shadow.camera;
+                    const d = maxDim * 0.8; // Tight fit
+                    sCam.left = -d;
+                    sCam.right = d;
+                    sCam.top = d;
+                    sCam.bottom = -d;
+                    sCam.far = maxDim * 4;
+                    sCam.updateProjectionMatrix();
+
+                    // Stronger bias for curves to prevent "wave/acne" artifacts
+                    this.iges.keyLight.shadow.bias = -0.0001;
+                    this.iges.keyLight.shadow.normalBias = 0.05;
+                }
+
                 const fitDist = maxDim / (2 * Math.tan((camera.fov * Math.PI) / 360));
                 const viewDirection = new THREE.Vector3(1, 1, 1).normalize();
 
                 camera.position.copy(viewDirection.multiplyScalar(fitDist * 1.6));
-                camera.near = 0.1;
-                camera.far = 100000;
+                camera.near = maxDim / 100; // Smart near clipping to prevent z-fighting
+                camera.far = maxDim * 100;
                 camera.updateProjectionMatrix();
 
                 controls.target.set(0, 0, 0);
@@ -1404,8 +1521,20 @@ function fileViewerComponent(config = {}) {
                 // console.log('[FileViewer] Animation loop starting');
 
                 let frameCount = 0;
+                let lastFrameTime = performance.now();
+                let isIdle = true;
+                // Simple moving average for stable yet responsive FPS
+                let fpsSum = 0;
+                let fpsCount = 0;
+
                 const animate = () => {
                     try {
+                        const now = performance.now();
+                        // FPS calculation moved to render block for accuracy
+                        if (isIdle && now - lastFrameTime > 500) {
+                            this.fps = 0;
+                        }
+
                         // Use local controls variable directly (not from this.iges)
                         if (!controls) {
                             console.error('[FileViewer] Controls is null in animation loop!');
@@ -1415,23 +1544,37 @@ function fileViewerComponent(config = {}) {
                         controls.update();
 
                         frameCount++;
-                        // if (frameCount % 60 === 0) {
-                        //     console.log('[FileViewer] Animation frame:', frameCount);
-                        // }
 
-                        // Use Alpine.raw to avoid reactivity issues
-                        const rawRenderer = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(renderer) : renderer;
-                        const rawScene = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(scene) : scene;
-                        let activeCam = this.iges.camera;
-                        if (typeof Alpine !== 'undefined' && Alpine.raw) {
-                            activeCam = Alpine.raw(activeCam);
+                        const isExploding = this.iges.exploded && (this.iges.exploded.animating || (this.iges.exploded.factor > 0 && this.iges.exploded.factor < 1));
+
+                        if (this.cadNeedsRender || isExploding || frameCount < 10) {
+                            isIdle = false;
+
+                            const delta = now - lastFrameTime;
+                            lastFrameTime = now;
+
+                            if (delta > 0) {
+                                this.fps = Math.round(1000 / delta);
+                            }
+
+                            // Use Alpine.raw to avoid reactivity issues
+                            const rawRenderer = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(renderer) : renderer;
+                            const rawScene = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(scene) : scene;
+                            let activeCam = this.iges.camera;
+                            if (typeof Alpine !== 'undefined' && Alpine.raw) {
+                                activeCam = Alpine.raw(activeCam);
+                            }
+
+                            if (activeCam && rawRenderer && rawScene) {
+                                rawRenderer.render(rawScene, activeCam);
+                            }
+
+                            // Clear flag after render
+                            this.cadNeedsRender = false;
+                        } else {
+                            isIdle = true;
                         }
 
-                        if (activeCam && rawRenderer && rawScene) {
-                            rawRenderer.render(rawScene, activeCam);
-                        }
-
-                        // Update measurement labels
                         const g = this.iges.measure.group;
                         if (g) {
                             const rawGroup = (typeof Alpine !== 'undefined' && Alpine.raw) ? Alpine.raw(g) : g;
@@ -1472,6 +1615,7 @@ function fileViewerComponent(config = {}) {
 
                     if (renderer) {
                         renderer.setSize(w, h);
+                        this.cadNeedsRender = true; // Request render on resize
                     }
                 });
 
@@ -1491,51 +1635,143 @@ function fileViewerComponent(config = {}) {
         },
 
         // Build Three.js meshes from OCCT result
-        _buildThreeFromOcct(result, THREE) {
+        async _buildThreeFromOcct(result, THREE) {
             const group = new THREE.Group();
             const meshes = result.meshes || [];
+            const box = new THREE.Box3();
 
             this.cadPartsList = [];
+            this._oriMats = new Map();
+            this.iges.loadingMessage = `Building 3D view (0/${meshes.length})...`;
 
-            for (let i = 0; i < meshes.length; i++) {
-                const m = meshes[i];
-
-                const g = new THREE.BufferGeometry();
-                g.setAttribute('position', new THREE.Float32BufferAttribute(m.attributes.position.array, 3));
-                if (m.attributes.normal?.array) {
-                    g.setAttribute('normal', new THREE.Float32BufferAttribute(m.attributes.normal.array, 3));
+            const materialCache = {};
+            const getMaterial = (colorArr) => {
+                const key = colorArr ? colorArr.join(',') : 'default';
+                if (!materialCache[key]) {
+                    let colorVal = 0xcccccc;
+                    if (colorArr && colorArr.length === 3) {
+                        colorVal = (colorArr[0] << 16) | (colorArr[1] << 8) | (colorArr[2]);
+                    }
+                    materialCache[key] = new THREE.MeshStandardMaterial({
+                        color: colorVal,
+                        metalness: 0.1,
+                        roughness: 0.6,
+                        side: THREE.DoubleSide,
+                        dithering: true
+                    });
                 }
-                if (m.index?.array) {
-                    g.setIndex(m.index.array);
+                return materialCache[key];
+            };
+
+            // PERFORMANCE RULE: If too many meshes, merge them by material to reduce Draw Calls
+            const DRAW_CALL_THRESHOLD = 500;
+            const useMerging = meshes.length > DRAW_CALL_THRESHOLD;
+            const shouldCastShadow = meshes.length < 500; // Disable shadows for high-component counts
+
+            if (useMerging) {
+                this.iges.loadingMessage = `Optimizing ${meshes.length} components...`;
+                const groupsByColor = {};
+
+                for (let i = 0; i < meshes.length; i++) {
+                    const m = meshes[i];
+                    const key = m.color ? m.color.join(',') : 'default';
+                    if (!groupsByColor[key]) groupsByColor[key] = [];
+
+                    const g = new THREE.BufferGeometry();
+                    g.setAttribute('position', new THREE.Float32BufferAttribute(m.attributes.position.array, 3));
+                    if (m.attributes.normal?.array) {
+                        g.setAttribute('normal', new THREE.Float32BufferAttribute(m.attributes.normal.array, 3));
+                    }
+                    if (m.index?.array) {
+                        g.setIndex(m.index.array);
+                    }
+                    groupsByColor[key].push(g);
+
+                    // Restore Part List (Metadata only)
+                    this.cadPartsList.push({
+                        uuid: 'merged-' + i,
+                        name: m.name || `Part ${i + 1}`,
+                        isMerged: true
+                    });
+
+                    if (i > 0 && i % 200 === 0) {
+                        this.iges.loadingMessage = `Preparing batches (${i}/${meshes.length})...`;
+                        await new Promise(r => setTimeout(r, 0));
+                    }
                 }
 
-                if (g.attributes.position.count > 0) {
-                    g.computeBoundsTree();
+                // Actually merge them
+                const BufferGeometryUtils = await import('three/addons/utils/BufferGeometryUtils.js');
+
+                let colorIdx = 0;
+                const totalColors = Object.keys(groupsByColor).length;
+
+                for (const colorKey of Object.keys(groupsByColor)) {
+                    colorIdx++;
+                    this.iges.loadingMessage = `Optimizing Draw Calls (Batch ${colorIdx}/${totalColors})...`;
+
+                    const geoms = groupsByColor[colorKey];
+                    // USE FALSE for speed: We already grouped by color, so no need for internal groups
+                    const mergedGeom = BufferGeometryUtils.mergeGeometries(geoms, false);
+
+                    const colorArr = colorKey === 'default' ? null : colorKey.split(',').map(Number);
+                    const mat = getMaterial(colorArr);
+                    const mesh = new THREE.Mesh(mergedGeom, mat);
+                    mesh.name = `Merged Batch ${colorIdx}`;
+
+                    mesh.matrixAutoUpdate = false;
+                    mesh.updateMatrix();
+                    mesh.castShadow = false;
+                    mesh.receiveShadow = false;
+
+                    group.add(mesh);
+                    box.expandByObject(mesh);
+                    this._oriMats.set(mesh, mat.clone());
+
+                    // Cleanup individual geometries from memory immediately
+                    geoms.forEach(g => g.dispose());
+
+                    await new Promise(r => setTimeout(r, 10));
                 }
 
-                let color = 0xcccccc;
-                if (m.color && m.color.length === 3) {
-                    color = (m.color[0] << 16) | (m.color[1] << 8) | (m.color[2]);
+                this.iges.loadingMessage = `Optimization Complete!`;
+            } else {
+                // Individual meshes (Standard Mode)
+                const BATCH_SIZE = 30;
+                for (let i = 0; i < meshes.length; i++) {
+                    if (i > 0 && i % BATCH_SIZE === 0) {
+                        this.iges.loadingMessage = `Building 3D view (${i}/${meshes.length})...`;
+                        await new Promise(resolve => setTimeout(resolve, 15));
+                    }
+
+                    const m = meshes[i];
+                    const g = new THREE.BufferGeometry();
+                    g.setAttribute('position', new THREE.Float32BufferAttribute(m.attributes.position.array, 3));
+                    if (m.attributes.normal?.array) {
+                        g.setAttribute('normal', new THREE.Float32BufferAttribute(m.attributes.normal.array, 3));
+                    }
+                    if (m.index?.array) {
+                        g.setIndex(m.index.array);
+                    }
+
+                    if (g.attributes.position.count > 0) {
+                        g.computeBoundsTree();
+                    }
+
+                    const mat = getMaterial(m.color);
+                    const mesh = new THREE.Mesh(g, mat);
+                    mesh.name = m.name || `Part ${i + 1}`;
+                    mesh.castShadow = shouldCastShadow;
+                    mesh.receiveShadow = false;
+
+                    group.add(mesh);
+                    this._oriMats.set(mesh, Array.isArray(mat) ? mat.map(mm => mm.clone()) : mat.clone());
+                    box.expandByObject(mesh);
+                    this.cadPartsList.push({ uuid: mesh.uuid, name: mesh.name });
                 }
-
-                const mat = new THREE.MeshStandardMaterial({
-                    color,
-                    metalness: 0,
-                    roughness: 1,
-                    side: THREE.DoubleSide
-                });
-
-                const mesh = new THREE.Mesh(g, mat);
-                mesh.name = m.name || `Part ${i + 1}`;
-                group.add(mesh);
-
-                this.cadPartsList.push({
-                    uuid: mesh.uuid,
-                    name: mesh.name
-                });
             }
 
-            return group;
+            return { group, box };
         },
 
         // Find IGES sibling file for STEP fallback
@@ -1606,7 +1842,6 @@ function fileViewerComponent(config = {}) {
             }
 
             try {
-                // console.log('[FileViewer] === disposeCad START ===');
 
                 // Cancel Tour Interval
                 if (this.iges.tourInterval) {
@@ -1614,9 +1849,7 @@ function fileViewerComponent(config = {}) {
                     this.iges.tourInterval = null;
                 }
 
-                // CRITICAL: Cancel animation BEFORE resetting iges
                 const currentAnimId = this.iges?.animId || 0;
-                // console.log('[FileViewer] Canceling animation frame:', currentAnimId);
                 if (currentAnimId) {
                     cancelAnimationFrame(currentAnimId);
                 }
@@ -1636,23 +1869,14 @@ function fileViewerComponent(config = {}) {
                     this._mouseListeners = [];
                 }
 
-                // Unbind measurement events if active
                 if (this.iges.measure?.enabled) {
                     this._bindMeasureEvents(false);
                 }
 
                 const { renderer, scene, controls } = this.iges || {};
-                // console.log('[FileViewer] Cleanup state:', {
-                //     hasRenderer: !!renderer,
-                //     hasScene: !!scene,
-                //     hasControls: !!controls,
-                //     mouseListeners: this._mouseListeners?.length || 0,
-                //     animIdWas: currentAnimId
-                // });
 
                 if (controls) {
                     try {
-                        // console.log('[FileViewer] Disposing controls');
                         controls.dispose();
                     } catch (e) {
                         console.error('[FileViewer] Controls dispose error:', e);
@@ -1886,6 +2110,8 @@ function fileViewerComponent(config = {}) {
                     });
                 }
             });
+
+            this.cadNeedsRender = true;
         },
 
         updatePartOpacity() {
@@ -1905,6 +2131,7 @@ function fileViewerComponent(config = {}) {
                     });
                 }
             });
+            this.cadNeedsRender = true;
         },
 
 
@@ -2289,11 +2516,13 @@ function fileViewerComponent(config = {}) {
                 scale = this.iges.camera.position.distanceTo(position) * 0.007;
             }
             this.snapMarker.scale.set(scale, scale, scale);
+            this.cadNeedsRender = true; // Trigger render for snap marker movement
         },
 
 
         // Draw point-to-point or edge measurement
         _drawMeasurement(a, b, measureType = 'point') {
+            this.cadNeedsRender = true;
             const THREE = this.iges.THREE;
             const group = new THREE.Group();
 
