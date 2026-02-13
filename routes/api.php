@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\ApiPromiseController;
 
 Route::get('/active-users-count', [DashboardController::class, 'getActiveUsersCount']);
 Route::get('/upload-count', [DashboardController::class, 'getUploadCount']);
@@ -17,6 +18,7 @@ Route::get('/get-save-env', [DashboardController::class, 'getSaveEnv'])->name('a
 
 
 
+Route::post('/get-api-partnum-project', [ApiPromiseController::class, 'apiPartNumProject'])->name('api.get-api-partnum-project');
 
 
 

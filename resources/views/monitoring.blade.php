@@ -4,61 +4,78 @@
 
 @section('content')
 
-<div id="dashboardWrapper" class="flex flex-col gap-2 h-[calc(100vh-70px)] w-full overflow-hidden">
+{{-- 
+    WRAPPER UTAMA:
+    - Mobile: h-auto, overflow-y-auto, padding bawah lebih kecil.
+    - Desktop: h-[calc(100vh-70px)] (fixed), overflow-hidden.
+--}}
+<div id="dashboardWrapper" class="flex flex-col gap-2 w-full h-auto overflow-y-auto lg:h-[calc(100vh-70px)] lg:overflow-hidden custom-scrollbar pb-20 lg:pb-0">
 
-    <div class="flex-none grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+    {{-- BARIS 1: KARTU STATISTIK --}}
+    <div class="flex-none grid grid-cols-2 lg:grid-cols-5 gap-2">
+        {{-- Total Files --}}
         <div class="relative bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
-                <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-500 dark:text-blue-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
-                    <i class="fa-solid fa-file-lines fa-xl"></i>
+                {{-- Icon: Mobile lebih kecil (h-10 w-10), Desktop normal (lg:h-12 lg:w-12) --}}
+                <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-500 dark:text-blue-400 rounded-lg p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
+                    <i class="fa-solid fa-file-lines fa-lg lg:fa-xl"></i>
                 </div>
                 <div>
-                    <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Total Files</h3>
-                    <p id="docCount" class="text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                    {{-- Font: Mobile text-xs/text-base, Desktop text-base/text-xl --}}
+                    <h3 class="text-gray-500 dark:text-gray-400 text-xs lg:text-base font-medium">Total Files</h3>
+                    <p id="docCount" class="text-base lg:text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
                 </div>
             </div>
         </div>
+        
+        {{-- Upload --}}
         <div class="relative bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
-                <div class="bg-green-100 dark:bg-green-900/50 text-green-500 dark:text-green-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
-                    <i class="fa-solid fa-cloud-arrow-up fa-xl"></i>
+                <div class="bg-green-100 dark:bg-green-900/50 text-green-500 dark:text-green-400 rounded-lg p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
+                    <i class="fa-solid fa-cloud-arrow-up fa-lg lg:fa-xl"></i>
                 </div>
                 <div>
-                    <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Upload</h3>
-                    <p id="uploadCount" class="text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                    <h3 class="text-gray-500 dark:text-gray-400 text-xs lg:text-base font-medium">Upload</h3>
+                    <p id="uploadCount" class="text-base lg:text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
                 </div>
             </div>
         </div>
+
+        {{-- Download --}}
         <div class="relative bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
-                <div class="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-500 dark:text-yellow-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
-                    <i class="fa-solid fa-cloud-arrow-down fa-xl"></i>
+                <div class="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-500 dark:text-yellow-400 rounded-lg p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
+                    <i class="fa-solid fa-cloud-arrow-down fa-lg lg:fa-xl"></i>
                 </div>
                 <div>
-                    <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Download</h3>
-                    <p id="downloadCount" class="text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                    <h3 class="text-gray-500 dark:text-gray-400 text-xs lg:text-base font-medium">Download</h3>
+                    <p id="downloadCount" class="text-base lg:text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
                 </div>
             </div>
         </div>
+
+        {{-- User Active --}}
         <div class="relative bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
-                <div class="bg-red-100 dark:bg-red-900/50 text-red-500 dark:text-red-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
-                    <i class="fa-solid fa-users fa-xl"></i>
+                <div class="bg-red-100 dark:bg-red-900/50 text-red-500 dark:text-red-400 rounded-lg p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
+                    <i class="fa-solid fa-users fa-lg lg:fa-xl"></i>
                 </div>
                 <div>
-                    <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">User Active</h3>
-                    <p id="activeUserCount" class="text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                    <h3 class="text-gray-500 dark:text-gray-400 text-xs lg:text-base font-medium">User Active</h3>
+                    <p id="activeUserCount" class="text-base lg:text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
                 </div>
             </div>
         </div>
-        <div class="relative bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+
+        {{-- Server Storage (Full width on mobile grid to look balanced) --}}
+        <div class="col-span-2 lg:col-span-1 relative bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="flex items-center">
-                <div class="bg-purple-100 dark:bg-purple-900/50 text-purple-500 dark:text-purple-400 rounded-lg p-3 mr-4 flex items-center justify-center h-12 w-12 flex-shrink-0">
-                    <i class="fa-solid fa-hard-drive fa-xl"></i>
+                <div class="bg-purple-100 dark:bg-purple-900/50 text-purple-500 dark:text-purple-400 rounded-lg p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
+                    <i class="fa-solid fa-hard-drive fa-lg lg:fa-xl"></i>
                 </div>
                 <div>
-                    <h3 class="text-gray-500 dark:text-gray-400 text-base font-medium">Server Storage</h3>
-                    <p class="text-md font-bold text-gray-800 dark:text-gray-100">
+                    <h3 class="text-gray-500 dark:text-gray-400 text-xs lg:text-base font-medium">Server Storage</h3>
+                    <p class="text-sm lg:text-md font-bold text-gray-800 dark:text-gray-100">
                         <span id="usedSpace">...</span> / <span id="totalSpace">...</span>
                     </p>
                 </div>
@@ -66,50 +83,45 @@
         </div>
     </div>
 
-    <div id="filterCard" style="display: none;" class="flex-none bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-        <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
+    {{-- FILTER SECTION --}}
+    <div id="filterCard" style="display: none;" class="flex-none bg-white dark:bg-gray-800 p-2 lg:p-3 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+        <h3 class="text-xs lg:text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
             <i class="fa-solid fa-filter mr-2 text-gray-500"></i> Filter Data
         </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 items-start">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 lg:gap-3 items-start">
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Date Range</label>
+                <label class="block text-xs lg:text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Date Range</label>
                 <div class="relative">
                     <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <i class="fa-solid fa-calendar-days text-gray-400"></i>
+                        <i class="fa-solid fa-calendar-days text-gray-400 text-xs lg:text-base"></i>
                     </div>
-                    <input type="text" id="date_range_input" class="block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:ring-0 focus:outline-none sm:text-sm py-2 pl-10 pr-3">
+                    {{-- Input font size adjusted --}}
+                    <input type="text" id="date_range_input" class="block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 focus:ring-0 focus:outline-none text-xs lg:text-sm py-1.5 lg:py-2 pl-8 lg:pl-10 pr-3">
                 </div>
             </div>
+            @foreach(['Customer', 'Model', 'Part Group', 'Status'] as $label)
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Customer</label>
+                <label class="block text-xs lg:text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">{{ $label }}</label>
                 <div class="relative">
-                    <select id="customer_input" class="w-full"></select>
+                    {{-- Select ID mapping --}}
+                    @php 
+                        $idMap = [
+                            'Customer' => 'customer_input', 
+                            'Model' => 'model_input', 
+                            'Part Group' => 'part_group_multi_input', 
+                            'Status' => 'project_status'
+                        ];
+                    @endphp
+                    <select id="{{ $idMap[$label] }}" class="w-full text-xs lg:text-sm"></select>
                 </div>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Model</label>
-                <div class="relative">
-                    <select id="model_input" class="w-full"></select>
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Part Group</label>
-                <div class="relative">
-                    <select id="part_group_multi_input" class="w-full"></select>
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Status</label>
-                <div class="relative">
-                    <select id="project_status" class="w-full"></select>
-                </div>
-            </div>
+            @endforeach
         </div>
-        <div class="w-full flex justify-between items-center mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
-            <div id="filterPillContainer" class="flex-grow pr-6"></div>
-            <div class="flex space-x-3">
-                <button type="button" id="btnReset" class="px-3 py-1.5 text-xs font-medium border rounded hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300">Reset</button>
-                <button type="button" id="btnApply" class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 min-w-[120px]">
+        <div class="w-full flex justify-between items-center mt-2 lg:mt-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+            <div id="filterPillContainer" class="flex-grow pr-6 text-xs lg:text-sm"></div>
+            <div class="flex space-x-2 lg:space-x-3">
+                <button type="button" id="btnReset" class="px-2 lg:px-3 py-1 lg:py-1.5 text-[10px] lg:text-xs font-medium border rounded hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300">Reset</button>
+                <button type="button" id="btnApply" class="px-2 lg:px-3 py-1 lg:py-1.5 text-[10px] lg:text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 min-w-[100px] lg:min-w-[120px]">
                     <span id="btnApplyText"><i class="fa-solid fa-check mr-2"></i> Apply Filter</span>
                     <span id="btnApplyLoader" style="display:none;"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
                 </button>
@@ -117,11 +129,15 @@
         </div>
     </div>
 
-    {{-- BARIS 2: MONITORING & PHASE --}}
-    <div class="flex-1 min-h-0 flex flex-col lg:flex-row gap-2 items-stretch">
-        <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
+    {{-- BARIS 2: MONITORING & PHASE STATUS --}}
+    <div class="flex-none h-auto lg:flex-1 lg:min-h-0 flex flex-col lg:flex-row gap-2 items-stretch">
+        
+        {{-- Chart Monitoring --}}
+        {{-- Padding Mobile: p-3, Desktop: p-4 --}}
+        <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col h-[400px] lg:h-auto">
             <div class="flex-none flex justify-between items-center mb-2">
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
+                {{-- Header Font: text-sm (Mobile), text-lg (Desktop) --}}
+                <h3 class="text-sm lg:text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                     <i class="fa-solid fa-chart-simple mr-2 text-blue-500"></i> Upload Monitoring
                 </h3>
                 <button type="button" id="toggleFilterBtn" class="text-gray-500 text-xs p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700" title="Toggle Filter">
@@ -133,21 +149,16 @@
             </div>
         </div>
 
-        <div class="w-full lg:w-[30%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col">
-            <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex justify-between items-start">
+        {{-- Chart Phase Status --}}
+        <div class="w-full lg:w-[30%] bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col h-[350px] lg:h-auto">
+            <h3 class="flex-none text-sm lg:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex justify-between items-start">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-chart-pie text-orange-500"></i>
                     <span>Phase Status</span>
                 </div>
                 <div x-data="{ tooltipVisible: false }" class="relative">
-                    <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-md cursor-pointer mt-1"></i>
+                    <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-sm lg:text-md cursor-pointer mt-1"></i>
                     <div x-show="tooltipVisible"
-                        x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0 translate-y-2"
-                        x-transition:enter-end="opacity-100 translate-y-0"
-                        x-transition:leave="transition ease-in duration-150"
-                        x-transition:leave-start="opacity-100 translate-y-0"
-                        x-transition:leave-end="opacity-0 translate-y-2"
                         style="display: none;"
                         class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
                         <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 right-2"></div>
@@ -164,29 +175,26 @@
     </div>
 
 
-    <div class="h-[35vh] flex-none flex flex-col lg:flex-row gap-2 items-stretch mb-2">
-        <div class="w-full lg:w-[45%] bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-visible">
+    {{-- BARIS 3: TREND, ECO, ACTIVITY --}}
+    <div class="flex-none h-auto lg:h-[35vh] flex flex-col lg:flex-row gap-2 items-stretch mb-2">
+        
+        {{-- Trend Chart --}}
+        <div class="w-full lg:w-[45%] bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-visible h-[350px] lg:h-full">
             <div class="flex-none flex justify-between items-center mb-2">
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                <h3 class="text-sm lg:text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
                     <i class="fa-solid fa-arrow-trend-up text-purple-500"></i>
-                    <span>Trend Upload & Download</span>
+                    <span>Trend</span> {{-- Mobile shortened text --}}
+                    <span class="hidden lg:inline">Upload & Download</span>
                     <div x-data="{ tooltipVisible: false }" class="relative">
-                        <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-md cursor-pointer"></i>
-                        <div x-show="tooltipVisible"
-                            x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0 translate-y-2"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-150"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 translate-y-2"
-                            style="display: none;"
-                            class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full left-0 mt-2">
+                        <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-sm lg:text-md cursor-pointer"></i>
+                        <div x-show="tooltipVisible" style="display: none;" class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full left-0 mt-2">
                             <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 left-2"></div>
                             <p class="text-gray-200 dark:text-gray-300">Shows the monthly trend of document uploads and downloads for the selected year.</p>
                         </div>
                     </div>
                 </h3>
 
+                {{-- Year Picker --}}
                 <div x-data="{
                             open: false,
                             selected: '{{ date('Y') }}',
@@ -198,40 +206,25 @@
                                 input.dispatchEvent(new Event('change'));
                             }
                         }"
-                    class="relative w-28 z-20">
+                    class="relative w-24 lg:w-28 z-20">
 
                     <input type="hidden" id="trendYearInput" value="{{ date('Y') }}">
 
                     <button @click="open = !open" @click.outside="open = false" type="button"
-                        class="flex items-center justify-between w-full px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none">
+                        class="flex items-center justify-between w-full px-2 lg:px-3 py-1 lg:py-1.5 text-xs lg:text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none">
                         <span x-text="selected"></span>
-                        <i class="fa-solid fa-chevron-down text-xs text-gray-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                        <i class="fa-solid fa-chevron-down text-[10px] lg:text-xs text-gray-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
                     </button>
 
-                    <div x-show="open"
-                        x-transition:enter="transition ease-out duration-100"
-                        x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
-                        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                        x-transition:leave="transition ease-in duration-75"
-                        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-                        x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
-                        style="display: none;"
-                        class="absolute right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-100 dark:border-gray-600 py-1 z-50 max-h-48 overflow-y-auto custom-scrollbar">
-
-                        @php
-                        $currentYear = date('Y');
-                        $startYear = $currentYear - 5;
-                        @endphp
-
+                    <div x-show="open" style="display: none;" class="absolute right-0 mt-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-100 dark:border-gray-600 py-1 z-50 max-h-48 overflow-y-auto custom-scrollbar">
+                        @php $currentYear = date('Y'); $startYear = $currentYear - 5; @endphp
                         @for ($i = $currentYear; $i >= $startYear; $i--)
                         <button @click="select('{{ $i }}')" type="button"
-                            class="group flex items-center justify-between w-full px-4 py-2 text-sm text-left hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-150">
-
+                            class="group flex items-center justify-between w-full px-3 lg:px-4 py-1.5 lg:py-2 text-xs lg:text-sm text-left hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-150">
                             <span class="text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 font-medium"
                                 :class="selected == '{{ $i }}' ? 'text-blue-600 dark:text-blue-400 font-bold' : ''">
                                 {{ $i }}
                             </span>
-
                             <i x-show="selected == '{{ $i }}'" class="fa-solid fa-check text-blue-600 dark:text-blue-400 text-xs"></i>
                         </button>
                         @endfor
@@ -244,110 +237,94 @@
             </div>
         </div>
 
-        <div class="w-full lg:w-[25%] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col p-5 lg:p-3 xl:p-5 h-full font-sans transition-all duration-300">
+        {{-- Eco Impact --}}
+        <div class="w-full lg:w-[25%] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col p-3 lg:p-5 h-auto lg:h-full font-sans transition-all duration-300">
 
-    <h3 class="text-lg lg:text-sm xl:text-lg font-bold text-gray-800 dark:text-gray-100 mb-2 lg:mb-1 xl:mb-2 flex justify-between items-start flex-shrink-0">
-        <div class="flex items-center gap-2">
-            <i class="fa-solid fa-leaf text-emerald-500"></i>
-            <span>Eco Impact</span>
-        </div>
-        <div x-data="{ tooltipVisible: false }" class="relative">
-            <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-md lg:text-xs xl:text-md cursor-pointer mt-1"></i>
-            <div x-show="tooltipVisible"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 translate-y-2"
-                x-transition:enter-end="opacity-100 translate-y-0"
-                x-transition:leave="transition ease-in duration-150"
-                x-transition:leave-start="opacity-100 translate-y-0"
-                x-transition:leave-end="opacity-0 translate-y-2"
-                style="display: none;"
-                class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
-                <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 right-2"></div>
-                <p class="text-gray-200 dark:text-gray-300">This calculation shows that each digital document download saves the equivalent of 1/80,000 of a tree and reduces carbon emissions by approximately 0.000275 kg of CO₂, making a tangible contribution to environmental protection.</p>
-            </div>
-        </div>
-    </h3>
+            <h3 class="text-sm lg:text-sm xl:text-lg font-bold text-gray-800 dark:text-gray-100 mb-2 lg:mb-1 xl:mb-2 flex justify-between items-start flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-leaf text-emerald-500"></i>
+                    <span>Eco Impact</span>
+                </div>
+                <div x-data="{ tooltipVisible: false }" class="relative">
+                    <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-sm lg:text-xs xl:text-md cursor-pointer mt-1"></i>
+                    <div x-show="tooltipVisible" style="display: none;" class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
+                        <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 right-2"></div>
+                        <p class="text-gray-200 dark:text-gray-300">This calculation shows that each digital document download saves the equivalent of 1/80,000 of a tree and reduces carbon emissions by approximately 0.000275 kg of CO₂, making a tangible contribution to environmental protection.</p>
+                    </div>
+                </div>
+            </h3>
 
-    <div class="flex-1 w-full flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-2 xl:gap-4">
+            <div class="flex-1 w-full flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-2 xl:gap-4 py-2 lg:py-0">
+                <div class="relative w-28 h-28 lg:w-24 lg:h-24 xl:w-32 xl:h-32 flex-shrink-0 flex items-center justify-center mx-auto lg:mx-0">
+                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="10" fill="transparent"
+                            class="text-emerald-50 dark:text-emerald-900/20" stroke-dasharray="264" stroke-dashoffset="0"
+                            stroke-linecap="round" />
+                        <circle id="ecoProgressCircle" cx="50" cy="50" r="42" stroke="currentColor" stroke-width="10" fill="transparent"
+                            class="text-emerald-500 transition-all duration-1000 ease-out" stroke-dasharray="264" stroke-dashoffset="264"
+                            stroke-linecap="round" />
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                        <span id="ecoTreePercent" class="text-[9px] lg:text-[8px] xl:text-[10px] font-semibold text-gray-400 dark:text-gray-500 leading-tight mb-1">0%<br>towards 1 Tree</span>
+                        <i class="fa-solid fa-seedling text-2xl lg:text-xl xl:text-2xl text-emerald-600 dark:text-emerald-400 my-1 filter drop-shadow-sm"></i>
+                        <div class="flex flex-col leading-tight mt-1">
+                            <span id="ecoTrees" class="text-xs lg:text-xs xl:text-sm font-bold text-gray-800 dark:text-gray-100">0</span>
+                            <span class="text-[8px] lg:text-[7px] xl:text-[8px] text-gray-400 uppercase tracking-wide">Trees Saved</span>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="relative w-36 h-36 lg:w-24 lg:h-24 xl:w-32 xl:h-32 flex-shrink-0 flex items-center justify-center mx-auto lg:mx-0">
-            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="10" fill="transparent"
-                    class="text-emerald-50 dark:text-emerald-900/20" stroke-dasharray="264" stroke-dashoffset="0"
-                    stroke-linecap="round" />
-                <circle id="ecoProgressCircle" cx="50" cy="50" r="42" stroke="currentColor" stroke-width="10" fill="transparent"
-                    class="text-emerald-500 transition-all duration-1000 ease-out" stroke-dasharray="264" stroke-dashoffset="264"
-                    stroke-linecap="round" />
-            </svg>
-            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span id="ecoTreePercent" class="text-[10px] lg:text-[8px] xl:text-[10px] font-semibold text-gray-400 dark:text-gray-500 leading-tight mb-1">0%<br>towards 1 Tree</span>
-                <i class="fa-solid fa-seedling text-3xl lg:text-xl xl:text-2xl text-emerald-600 dark:text-emerald-400 my-1 filter drop-shadow-sm"></i>
-                <div class="flex flex-col leading-tight mt-1">
-                    <span id="ecoTrees" class="text-sm lg:text-xs xl:text-sm font-bold text-gray-800 dark:text-gray-100">0</span>
-                    <span class="text-[9px] lg:text-[7px] xl:text-[8px] text-gray-400 uppercase tracking-wide">Trees Saved</span>
+                <div class="flex flex-col gap-2 lg:gap-2 xl:gap-3 w-full lg:flex-1 justify-center">
+                    {{-- Eco Item 1 --}}
+                    <div class="flex items-center p-1.5 lg:p-1 xl:p-1.5 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800">
+                        <div class="w-8 h-8 lg:w-7 lg:h-7 xl:w-9 xl:h-9 flex-shrink-0 rounded-lg flex items-center justify-center text-green-600 dark:text-green-300">
+                            <i class="fa-solid fa-scroll text-sm lg:text-xs xl:text-base"></i>
+                        </div>
+                        <div class="flex items-center gap-1.5 lg:gap-1 xl:gap-2 min-w-0 flex-1 ml-2 lg:ml-1.5 xl:ml-2">
+                            <span id="ecoPaper" class="text-xs lg:text-[10px] xl:text-sm font-bold text-gray-800 dark:text-gray-100">0</span>
+                            <span class="text-[10px] lg:text-[9px] xl:text-xs text-green-700 dark:text-green-400 font-medium">Paper</span>
+                        </div>
+                    </div>
+                    {{-- Eco Item 2 --}}
+                    <div class="flex items-center p-1.5 lg:p-1 xl:p-1.5 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800">
+                        <div class="w-8 h-8 lg:w-7 lg:h-7 xl:w-9 xl:h-9 flex-shrink-0 rounded-lg flex items-center justify-center text-yellow-500 dark:text-yellow-300">
+                            <i class="fa-solid fa-coins text-sm lg:text-xs xl:text-base"></i>
+                        </div>
+                        <div class="flex items-center gap-1.5 lg:gap-1 xl:gap-2 min-w-0 flex-1 ml-2 lg:ml-1.5 xl:ml-2">
+                            <span class="text-xs lg:text-[10px] xl:text-sm font-bold text-gray-800 dark:text-gray-100">Rp <span id="ecoCost">0</span></span>
+                            <span class="text-[10px] lg:text-[9px] xl:text-xs text-yellow-700 dark:text-yellow-400 font-medium">Cost</span>
+                        </div>
+                    </div>
+                    {{-- Eco Item 3 --}}
+                    <div class="flex items-center p-1.5 lg:p-1 xl:p-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-100 dark:border-cyan-800">
+                        <div class="w-8 h-8 lg:w-7 lg:h-7 xl:w-9 xl:h-9 flex-shrink-0 rounded-lg flex items-center justify-center text-cyan-600 dark:text-cyan-300">
+                            <i class="fa-solid fa-wind text-sm lg:text-xs xl:text-base"></i>
+                        </div>
+                        <div class="flex items-center gap-1.5 lg:gap-1 xl:gap-2 min-w-0 flex-1 ml-2 lg:ml-1.5 xl:ml-2">
+                            <span id="ecoCO2" class="text-xs lg:text-[10px] xl:text-sm font-bold text-gray-800 dark:text-gray-100">0 Kg</span>
+                            <span class="text-[10px] lg:text-[9px] xl:text-xs text-cyan-700 dark:text-cyan-400 font-medium">CO2</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="flex flex-col gap-3 lg:gap-2 xl:gap-3 w-full lg:flex-1 justify-center">
-
-            <div class="flex items-center p-1.5 lg:p-1 xl:p-1.5 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800">
-                <div class="w-10 h-10 lg:w-7 lg:h-7 xl:w-9 xl:h-9 flex-shrink-0 rounded-lg flex items-center justify-center text-green-600 dark:text-green-300">
-                    <i class="fa-solid fa-scroll text-lg lg:text-xs xl:text-base"></i>
-                </div>
-                <div class="flex items-center gap-2 lg:gap-1 xl:gap-2 min-w-0 flex-1 ml-2 lg:ml-1.5 xl:ml-2">
-                    <span id="ecoPaper" class="text-sm lg:text-[10px] xl:text-sm font-bold text-gray-800 dark:text-gray-100">0</span>
-                    <span class="text-xs lg:text-[9px] xl:text-xs text-green-700 dark:text-green-400 font-medium">Paper</span>
-                </div>
-            </div>
-
-            <div class="flex items-center p-1.5 lg:p-1 xl:p-1.5 rounded-xl bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-800">
-                <div class="w-10 h-10 lg:w-7 lg:h-7 xl:w-9 xl:h-9 flex-shrink-0 rounded-lg flex items-center justify-center text-yellow-500 dark:text-yellow-300">
-                    <i class="fa-solid fa-coins text-lg lg:text-xs xl:text-base"></i>
-                </div>
-                <div class="flex items-center gap-2 lg:gap-1 xl:gap-2 min-w-0 flex-1 ml-2 lg:ml-1.5 xl:ml-2">
-                    <span class="text-sm lg:text-[10px] xl:text-sm font-bold text-gray-800 dark:text-gray-100">Rp <span id="ecoCost">0</span></span>
-                    <span class="text-xs lg:text-[9px] xl:text-xs text-yellow-700 dark:text-yellow-400 font-medium">Cost Save</span>
-                </div>
-            </div>
-
-            <div class="flex items-center p-1.5 lg:p-1 xl:p-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-100 dark:border-cyan-800">
-                <div class="w-10 h-10 lg:w-7 lg:h-7 xl:w-9 xl:h-9 flex-shrink-0 rounded-lg flex items-center justify-center text-cyan-600 dark:text-cyan-300">
-                    <i class="fa-solid fa-wind text-lg lg:text-xs xl:text-base"></i>
-                </div>
-                <div class="flex items-center gap-2 lg:gap-1 xl:gap-2 min-w-0 flex-1 ml-2 lg:ml-1.5 xl:ml-2">
-                    <span id="ecoCO2" class="text-sm lg:text-[10px] xl:text-sm font-bold text-gray-800 dark:text-gray-100">0 Kg</span>
-                    <span class="text-xs lg:text-[9px] xl:text-xs text-cyan-700 dark:text-cyan-400 font-medium">CO2</span>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
-
-        <div class="w-full lg:w-[30%] h-full bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
-            <h3 class="flex-none text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex justify-between items-start">
+        {{-- Activity Log --}}
+        <div class="w-full lg:w-[30%] h-[350px] lg:h-full bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-lg border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+            <h3 class="flex-none text-sm lg:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex justify-between items-start">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-newspaper text-gray-500"></i>
                     <span>Activity Log</span>
                 </div>
                 <div x-data="{ tooltipVisible: false }" class="relative">
-                    <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-md cursor-pointer mt-1"></i>
-                    <div x-show="tooltipVisible"
-                        x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0 translate-y-2"
-                        x-transition:enter-end="opacity-100 translate-y-0"
-                        x-transition:leave="transition ease-in duration-150"
-                        x-transition:leave-start="opacity-100 translate-y-0"
-                        x-transition:leave-end="opacity-0 translate-y-2"
-                        style="display: none;"
-                        class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
+                    <i @mouseenter="tooltipVisible = true" @mouseleave="tooltipVisible = false" class="fa-solid fa-circle-info text-gray-400 dark:text-gray-500 text-sm lg:text-md cursor-pointer mt-1"></i>
+                    <div x-show="tooltipVisible" style="display: none;" class="absolute z-30 w-64 p-3 text-xs font-normal text-white bg-gray-900 dark:bg-black rounded-lg shadow-lg top-full right-0 mt-2">
                         <div class="absolute w-3 h-3 bg-gray-900 dark:bg-black transform rotate-45 -top-1.5 right-2"></div>
                         <p class="text-gray-200 dark:text-gray-300">Displays recent user activities in the system, such as uploads, approvals, and shares, based on the current filters.</p>
                     </div>
                 </div>
             </h3>
-            <div id="activityLogContainer" class="flex-1 overflow-y-auto pr-2 custom-scrollbar min-h-0 divide-y divide-gray-200 dark:divide-gray-700"></div>
+            <div id="activityLogContainer" class="flex-1 overflow-y-auto pr-1 lg:pr-2 custom-scrollbar min-h-0 divide-y divide-gray-200 dark:divide-gray-700"></div>
         </div>
     </div>
 </div>
@@ -534,7 +511,7 @@
                 const params = this.getFilterParams();
                 const response = await fetch(`{{ route('api.get-save-env') }}?${params.toString()}`);
                 if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
-                
+
                 const data = await response.json();
 
                 const getVal = (val) => {
@@ -590,12 +567,12 @@
                 if (elTreePercent && elProgressCircle) {
                     const treeProgress = Math.min(treeVal, 1); // Cap at 1 tree (100%)
                     const percentage = treeProgress * 100;
-                    
+
                     elTreePercent.innerHTML = `${percentage.toFixed(1)}%<br>towards 1 Tree`;
 
                     const circumference = 264;
                     const offset = circumference * (1 - treeProgress);
-                    
+
                     elProgressCircle.style.transition = 'stroke-dashoffset 1.5s ease-out';
                     requestAnimationFrame(() => {
                         elProgressCircle.setAttribute('stroke-dashoffset', offset);
@@ -1255,16 +1232,16 @@
             let metaDetails = '';
             if (log.meta && log.activity_code === 'UPLOAD') {
                 const details = [log.meta.customer_code, log.meta.model_name, log.meta.part_no, log.meta.doctype_group, log.meta.part_group_code].filter(Boolean);
-                if (details.length) metaDetails = `<p class="mt-1 text-[12px] text-gray-600 dark:text-gray-400 font-mono">${details.join(' - ')}</p>`;
+                if (details.length) metaDetails = `<p class="mt-0.5 lg:mt-1 text-[10px] lg:text-[12px] text-gray-600 dark:text-gray-400 font-mono">${details.join(' - ')}</p>`;
             }
 
-            return `<div class="log-item py-2 px-1 flex space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-all duration-500 ease-out opacity-0 translate-y-4" data-id="${log.id}">
-                <div class="flex-shrink-0 pt-1"><i class="fa-solid ${logInfo.icon} ${logInfo.color} w-5 text-center"></i></div>
+            return `<div class="log-item py-1.5 lg:py-2 px-1 flex space-x-2 lg:space-x-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-all duration-500 ease-out opacity-0 translate-y-4" data-id="${log.id}">
+                <div class="flex-shrink-0 pt-1"><i class="fa-solid ${logInfo.icon} ${logInfo.color} w-4 lg:w-5 text-center text-xs lg:text-base"></i></div>
                 <div class="flex-1 min-w-0">
                     <div class="flex justify-between items-start">
-                        <p class="text-sm text-gray-800 dark:text-gray-200">${message}</p>
+                        <p class="text-xs lg:text-sm text-gray-800 dark:text-gray-200">${message}</p>
                     </div>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">${dateStr}</p>
+                    <p class="text-[10px] lg:text-xs text-gray-500 dark:text-gray-400 mt-0.5">${dateStr}</p>
                     ${metaDetails}
                 </div>
             </div>`;
@@ -1424,7 +1401,7 @@
             const createPill = (type, item, stateKey) => {
                 const span = document.createElement('span');
 
-                span.className = 'filter-pill mr-2 inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium';
+                span.className = 'filter-pill mr-2 inline-flex items-center px-2 lg:px-3 py-0.5 lg:py-1 rounded-full bg-blue-100 text-blue-800 text-xs lg:text-sm font-medium';
 
                 span.innerHTML = `<span class="font-normal mr-1">${type}:</span><span>${item.text}</span><button type="button" class="filter-pill-remove ml-2 hover:text-blue-600 focus:outline-none" data-id="${item.id}"><i class="fa-solid fa-times fa-xs"></i></button>`;
 
@@ -1528,20 +1505,10 @@
                 toggleBtn.addEventListener('click', () => {
                     const $card = $('#filterCard');
                     const $icon = $(toggleBtn).find('i');
-                    const wrapper = document.getElementById('dashboardWrapper');
                     const isOpening = $card.is(':hidden');
-
-                    if (isOpening) {
-                        wrapper.classList.remove('h-[calc(100vh-70px)]', 'overflow-hidden');
-                        wrapper.classList.add('min-h-[calc(100vh-70px)]', 'h-auto', 'pb-4');
-                    }
 
                     $card.stop(true, true).slideToggle(300, 'swing', function() {
                         $(this).css('overflow', 'visible');
-                        if (!isOpening) {
-                            wrapper.classList.remove('min-h-[calc(100vh-70px)]', 'h-auto', 'pb-4');
-                            wrapper.classList.add('h-[calc(100vh-70px)]', 'overflow-hidden');
-                        }
                     });
 
                     if (isOpening) {
