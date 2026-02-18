@@ -29,7 +29,7 @@
             <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Upload Management</h2>
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Control and monitor your drawing submissions.</p>
         </div>
-        <a href="{{ route('drawing.upload') }}"
+        <a href="/drawing-upload"
             class="inline-flex items-center gap-2 justify-center px-6 py-3 border border-transparent text-sm font-bold rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
             <i class="fa-solid fa-plus-circle text-lg"></i>
             <span>Upload New Drawing</span>
@@ -37,6 +37,7 @@
     </div>
 
     <div class="flex flex-col lg:flex-row gap-8">
+
         {{-- Sidebar Filters --}}
         <aside class="w-full lg:w-72 flex-shrink-0 space-y-6">
             <div class="bg-white dark:bg-gray-800 p-6 rounded-md border border-gray-200 dark:border-gray-700 sticky top-24">
@@ -499,7 +500,8 @@
             const data = table.row(this).data();
             if (!data || !data.id) return;
 
-            let targetUrl = `{{ route('drawing.upload') }}`;
+            // Use relative URL to avoid issues with incorrect APP_URL or Proxy
+            let targetUrl = '/drawing-upload';
             targetUrl += '?revision_id=' + data.id;
 
             if (data.status !== 'draft') {
