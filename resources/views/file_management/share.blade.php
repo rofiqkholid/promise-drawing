@@ -531,7 +531,7 @@
                 responsive: true,
                 dom: 't<"flex items-center justify-between mt-6 px-4"<"text-xs text-gray-500"i><"flex"p>>',
                 createdRow: function(row) {
-                    $(row).addClass('hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors');
+                    $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0 text-gray-900 dark:text-gray-100');
                 }
             });
             
@@ -606,9 +606,9 @@
                     const expIcon = log.is_expired ? 'fa-triangle-exclamation' : 'fa-clock';
                     
                     const node = `
-                        <div class="relative pl-6 pb-6 border-l border-gray-100 dark:border-gray-700 last:pb-0">
-                            <div class="absolute left-0 top-1 -translate-x-1/2 w-2 h-2 rounded-full bg-blue-500 ring-4 ring-white dark:ring-gray-800"></div>
-                            <div class="flex flex-col gap-1.5">
+                        <div class="relative pl-6 pb-6 border-l border-gray-100 dark:border-gray-700 last:pb-0 group/item cursor-pointer">
+                            <div class="absolute left-0 top-1 -translate-x-1/2 w-2 h-2 rounded-full bg-blue-500 ring-4 ring-white dark:ring-gray-800 group-hover/item:scale-125 transition-transform"></div>
+                            <div class="flex flex-col gap-1.5 p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-all duration-200">
                                 <div class="flex items-center justify-between">
                                     <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tight">${log.user}</span>
                                     <span class="text-[9px] text-gray-400 font-medium" title="${log.full_time}">${log.time}</span>
@@ -695,9 +695,9 @@
                 const initials = (s.code || '??').substring(0, 2).toUpperCase();
 
                 const item = `
-                    <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm">
+                    <div class="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm cursor-pointer hover:bg-emerald-50/30 dark:hover:bg-emerald-900/10 hover:border-emerald-200 dark:hover:border-emerald-800/50 transition-all duration-200 group">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-[10px] border border-blue-100 dark:border-blue-800">
+                            <div class="w-8 h-8 rounded bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-[10px] border border-blue-100 dark:border-blue-800 group-hover:scale-110 transition-transform">
                                 ${initials}
                             </div>
                             <div>
