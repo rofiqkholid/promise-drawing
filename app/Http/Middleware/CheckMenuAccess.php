@@ -20,7 +20,9 @@ class CheckMenuAccess
         if ($allowed_menus && in_array($menuId, $allowed_menus)) {
             return $next($request);
         }
-
-        abort(403, 'ANDA TIDAK MEMILIKI HAK AKSES.');
+        
+        // Debug info included in message
+        $debugInfo = "Menu ID: $menuId . Allowed: " . json_encode($allowed_menus);
+        abort(403, 'ANDA TIDAK MEMILIKI HAK AKSES. ' . $debugInfo);
     }
 }
