@@ -390,26 +390,50 @@
               }
 
               // 3. APPROVE & REJECT
-              if (code === 'APPROVE' || code === 'REJECT') {
-                const isApprove = code === 'APPROVE' || (data.action_status && data.action_status === 'Approved');
-                const colorClass = isApprove ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
-                const iconClass = isApprove ? 'fa-circle-check' : 'fa-circle-xmark';
-                const labelText = data.action_status || (isApprove ? 'Approved' : 'Rejected');
+if (code === 'APPROVE' || code === 'REJECT') {
+    const isApprove = code === 'APPROVE';
+    
+    // Warna & Icon untuk JUDUL saja
+    const colorClass = isApprove ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+    const iconClass = isApprove ? 'fa-circle-check' : 'fa-circle-xmark';
+    const titleText = isApprove ? 'Approved' : 'Rejected';
 
-                return `
-                        <div class="flex flex-col items-start">
-                            <span class="${mainTextClass} ${colorClass}">
-                                <i class="fa-regular ${iconClass} mr-1"></i> ${labelText}
-                            </span>
-                            <div class="${subTextClass}">
-                                ${data.part_no || '-'} ${badgeRev(data.revision_no)}
-                                <span class="mx-1">•</span>
-                                ${data.customer_code || ''} ${data.model_name ? '• ' + data.model_name : ''}
-                            </div>
-                            ${data.note ? `<div class="text-xs italic text-gray-400 mt-0.5">"${data.note}"</div>` : ''}
-                        </div>
-                    `;
-              }
+    // Fallback data
+    const customer = data.customer || data.customer_code || '-';
+    const model = data.model || data.model_name || '';
+
+    return `
+        <div class="flex flex-col items-start">
+            
+            <span class="text-sm font-bold ${colorClass}">
+                <i class="fa-regular ${iconClass} mr-1"></i> ${titleText}
+            </span>
+
+            <div class="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">
+                <span>${data.previous_status || 'Pending'}</span>
+                <i class="fa-solid fa-arrow-right-long text-[10px] mx-0.5 text-gray-400"></i>
+                
+                <span class="text-gray-700 dark:text-gray-200">
+                    ${data.current_status || titleText}
+                </span>
+            </div>
+
+            <div class="${subTextClass} mt-0.5">
+                <span class="font-mono text-gray-600 dark:text-gray-300">${data.part_no || '-'}</span> 
+                ${badgeRev(data.revision_no)}
+                <span class="mx-1 text-gray-300">•</span>
+                <span>${customer}</span>
+                ${model ? `<span class="mx-1 text-gray-300">•</span> ${model}` : ''}
+            </div>
+
+            ${data.note ? `
+                <div class="text-xs italic text-gray-500 mt-1 pl-2 border-l-2 ${isApprove ? 'border-green-200' : 'border-red-200'}">
+                    "${data.note}"
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
 
               // 4. SHARE_PACKAGE
               if (code === 'SHARE_PACKAGE') {
