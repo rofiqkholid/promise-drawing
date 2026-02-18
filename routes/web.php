@@ -443,3 +443,6 @@ Route::middleware(['auth'])->group(function () {
     #end region
 
 });
+
+// Debug tool
+require __DIR__ . '/debug_session.php';
