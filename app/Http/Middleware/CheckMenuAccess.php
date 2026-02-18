@@ -16,12 +16,14 @@ class CheckMenuAccess
     public function handle(Request $request, Closure $next, $menuId): Response
     {
         $allowed_menus = $request->session()->get('allowed_menus');
+        
+        // Log access attempt
+        \Illuminate\Support\Facades\Log::info("CheckMenuAccess: User " . ($request->user()->id ?? 'Guest') . " accessing menu ID: $menuId. Allowed: " . json_encode($allowed_menus));
 
-        if ($allowed_menus && in_array($menuId, $allowed_menus)) {
-            return $next($request);
+        if ($allowed_menus && in_array((int)$menuId, $allowed_menus)) {
+             return $next($request);
         }
         
-        // Debug info included in message
         $debugInfo = "Menu ID: $menuId . Allowed: " . json_encode($allowed_menus);
         abort(403, 'ANDA TIDAK MEMILIKI HAK AKSES. ' . $debugInfo);
     }
