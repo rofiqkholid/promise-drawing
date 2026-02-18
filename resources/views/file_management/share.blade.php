@@ -137,6 +137,7 @@
     </div>
 
     <x-files.share-modal />
+    <x-files.download-zip-modal />
 
     {{-- Adjusted Access Manager Modal --}}
     <div id="shareDetailsModal"
@@ -501,10 +502,19 @@
                             return `
                                 <button 
                                     type="button" 
-                                    class="btn-share p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/40 rounded-full transition-colors"
+                                    class="btn-share inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/40 rounded-full transition-colors"
                                     data-id="${packageId}" 
                                     title="Share package">
                                     <i class="fa-solid fa-share-nodes"></i>
+                                </button>
+                                <button 
+                                    type="button" 
+                                    class="btn-download inline-flex items-center justify-center w-8 h-8 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/40 rounded-full transition-colors ml-1"
+                                    data-id="${packageId}" 
+                                    data-file-count="${row.file_count || 0}"
+                                    data-file-size="${row.total_size || 0}"
+                                    title="Download package">
+                                    <i class="fa-solid fa-download"></i>
                                 </button>
                             `;
                         }
@@ -742,8 +752,36 @@
         loadKpis();
         loadHistory();
 
+        $('#approvalTable tbody').on('click', '.btn-download', function(e) {
+            e.stopPropagation();
+            const id = $(this).data('id');
+            const fileCount = $(this).data('file-count');
+            const totalSize = parseInt($(this).data('file-size')) || 0;
+            
+            // Format size
+            let sizeStr = '0 Bytes';
+            if (totalSize > 0) {
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                const i = Math.floor(Math.log(totalSize) / Math.log(k));
+                sizeStr = parseFloat((totalSize / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            let baseUrl = `{{ route('export.prepare-zip', ['revision_id' => '__ID__']) }}`;
+            let url = baseUrl.replace('__ID__', id);
+
+            // trigger alpine event for modal
+            window.dispatchEvent(new CustomEvent('open-download-zip', {
+                detail: {
+                    url: url,
+                    count: fileCount,
+                    size: sizeStr
+                }
+            }));
+        });
+
         $('#approvalTable tbody').on('click', 'tr', function(e) {
-            if ($(e.target).closest('.btn-share, .btn-view-shares').length) return;
+            if ($(e.target).closest('.btn-share, .btn-view-shares, .btn-download').length) return;
 
             const rowData = table.row(this).data();
             if (!rowData || !rowData.hash) return;

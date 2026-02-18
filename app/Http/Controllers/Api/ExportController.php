@@ -926,7 +926,7 @@ class ExportController extends Controller
         ]);
     }
 
-    public function downloadFile($file_id)
+    public function downloadFile(Request $request, $file_id)
     {
         set_time_limit(0);
 
@@ -964,8 +964,9 @@ class ExportController extends Controller
                 ->join('customers as c', 'dp.customer_id', '=', 'c.id')
                 ->join('models as m', 'dp.model_id', '=', 'm.id')
                 ->join('products as p', 'dp.product_id', '=', 'p.id')
+                ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
                 ->where('dp.id', $revision->package_id)
-                ->select('c.code as customer', 'm.name as model', 'p.part_no')
+                ->select('c.code as customer', 'm.name as model', 'p.part_no', 'ps.name as project_status_name')
                 ->first();
 
             $stampFormat = StampFormat::where('is_active', true)->first();
@@ -977,28 +978,31 @@ class ExportController extends Controller
                     if ($tempPath !== $path) {
                         return response()->download($tempPath, $file->filename)->deleteFileAfterSend(true);
                     }
-                } catch (\Exception $e) {
-                    Log::error('Stamp burn-in failed for single download', [
-                        'file_id' => $file_id,
-                        'error' => $e->getMessage()
-                    ]);
+                } catch (\Throwable $e) {
+                    Log::error('Stamp burn-in failed for single download: ' . $e->getMessage());
                 }
             }
         }
         return response()->download($path, $file->filename);
     }
 
-    public function preparePackageZip($revision_id)
+    public function preparePackageZip(Request $request, $id)
     {
         set_time_limit(0);
+
+        $revisionId = null;
         try {
-            $decrypted_id = decrypt(str_replace('-', '=', $revision_id));
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Package not found or not approved.'], 404);
+            $revisionId = decrypt($id);
+        } catch (\Throwable $e) {
+            if (ctype_digit($id)) {
+                $revisionId = (int) $id;
+            } else {
+                return response()->json(['success' => false, 'message' => 'Invalid or expired package ID.'], 403);
+            }
         }
 
         $revision = DB::table('doc_package_revisions')
-            ->where('id', $decrypted_id)
+            ->where('id', $revisionId)
             ->where('revision_status', '=', 'approved')
             ->first();
 
@@ -1013,15 +1017,16 @@ class ExportController extends Controller
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
             ->join('products as p', 'dp.product_id', '=', 'p.id')
+            ->leftJoin('project_status as ps', 'm.status_id', '=', 'ps.id')
             ->where('dp.id', $revision->package_id)
-            ->select('c.code as customer', 'm.name as model', 'p.part_no', 'dp.part_group_id')
+            ->select('c.code as customer', 'm.name as model', 'p.part_no', 'dp.part_group_id', 'ps.name as project_status_name')
             ->first();
 
         if (!$package) {
             return response()->json(['success' => false, 'message' => 'Associated package details not found.'], 404);
         }
 
-        $files = DocPackageRevisionFile::where('revision_id', $decrypted_id)->get();
+        $files = DocPackageRevisionFile::where('revision_id', $revisionId)->get();
 
         if ($files->isEmpty()) {
             return response()->json(['success' => false, 'message' => 'No files found for this package revision.'], 404);
@@ -1139,7 +1144,7 @@ class ExportController extends Controller
             if (!$closeSuccess) {
                 Log::error('zip->close() returned false.', ['path' => $zipFilePath, 'status' => $zip->status, 'statusString' => $zip->getStatusString()]);
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Exception at zip->close(). This is likely a source file issue.', ['path' => $zipFilePath, 'error' => $e->getMessage()]);
             $closeSuccess = false;
         }
@@ -1160,7 +1165,7 @@ class ExportController extends Controller
             $errorMessage = 'No physical files were found to add to the zip package.';
             if (!empty($missingFiles)) {
                 Log::error('Zip creation failed: All files missing', [
-                    'revision_id' => $decrypted_id,
+                    'revision_id' => $revisionId,
                     'missing_count' => count($missingFiles),
                     'sample_missing' => array_slice($missingFiles, 0, 5) // Log first 5
                 ]);
@@ -1178,7 +1183,7 @@ class ExportController extends Controller
             now()->addMinutes(5),
             [
                 'file_name' => $zipFileName,
-                'rev_id'    => $revision_id
+                'rev_id'    => $revisionId
             ]
         );
 
@@ -1429,19 +1434,16 @@ class ExportController extends Controller
             $stamp->setImageFormat('png');
 
             // Gunakan warna dengan opacity untuk semua format
-            $opacity = 0.4;
+            $opacity = 0.45;
             if ($colorMode === 'red') {
-                $borderColor = new \ImagickPixel("rgba(220, 38, 38, $opacity)"); // Merah
-                $textColor   = new \ImagickPixel("rgba(185, 28, 28, $opacity)");
+                $baseColor = "rgba(220, 38, 38, $opacity)";
             } elseif ($colorMode === 'gray') {
-                // Warna Abu-abu (Gray-500 / Gray-600 style)
-                $borderColor = new \ImagickPixel("rgba(107, 114, 128, $opacity)");
-                $textColor   = new \ImagickPixel("rgba(75, 85, 99, $opacity)");
+                $baseColor = "rgba(107, 114, 128, $opacity)";
             } else {
-                // Default Blue (Blue-700 / Blue-600)
-                $borderColor = new \ImagickPixel("rgba(37, 99, 235, $opacity)");
-                $textColor   = new \ImagickPixel("rgba(29, 78, 216, $opacity)");
+                $baseColor = "rgba(37, 99, 235, $opacity)";
             }
+            $borderColor = new \ImagickPixel($baseColor);
+            $textColor   = new \ImagickPixel($baseColor);
 
             $draw->setStrokeColor($borderColor);
             $draw->setFillColor(new \ImagickPixel('transparent'));
@@ -1495,8 +1497,7 @@ class ExportController extends Controller
                 $draw->setFontSize($fontSizeCenter);
             }
 
-            $draw->setStrokeColor($textColor);
-            $draw->setStrokeWidth(0.75);
+            $draw->setStrokeWidth(0); 
             $yCenter = ($rowH * 1.5) + ($rowH * 0.2); // Adjust center baseline
             $stamp->annotateImage($draw, $x_center_canvas, $yCenter, 0, $centerText);
 
@@ -1552,7 +1553,7 @@ class ExportController extends Controller
             $dummy->destroy();
 
             return $stamp;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to create stamp image: ' . $e->getMessage());
             return null;
         }
@@ -1638,10 +1639,18 @@ class ExportController extends Controller
             $isObsolete = (bool)($revision->is_obsolete ?? 0);
 
             // --- GENERATE STAMP IMAGES ---
-            // For ExportController (Engineering view), Original stamp is blue unless obsolete
-            $stampOriginal = $this->_createStampImage('SAI-DRAWING ORIGINAL', $topLine, $bottomLine, $isObsolete ? 'gray' : $originalStampColor);
+            $copyText = 'SAI-DRAWING CONTROLLED COPY';
+            $projectStatus = strtolower($package->project_status_name ?? '');
+            if ($projectStatus === 'feasibility study') {
+                $copyText = 'SAI-DRAWING UNCONTROLLED COPY';
+            }
+
+            // For ExportController (Engineering view), Original stamp is gray
+            $originalStampColor = 'gray'; 
+            $stampOriginal = $this->_createStampImage('SAI-DRAWING ORIGINAL', $topLine, $bottomLine, $originalStampColor);
+            
             // Copy stamp is also blue unless obsolete
-            $stampCopy     = $this->_createStampImage('SAI-DRAWING CONTROLLED COPY', $topLineCopy, $bottomLineCopy, $isObsolete ? 'gray' : 'blue');
+            $stampCopy = $this->_createStampImage($copyText, $topLineCopy, $bottomLineCopy, $isObsolete ? 'gray' : 'blue');
             $stampObsolete = null;
             if ($isObsolete) {
                 $obsDateStr = $formatSaiDate($revision->obsolete_at);
@@ -1891,8 +1900,8 @@ class ExportController extends Controller
             }
 
             return $tempPath;
-        } catch (\Exception $e) {
-            Log::error('Imagick stamp burn-in failed: ' . $e->getMessage(), ['file_id' => $file->id, 'path' => $originalPath]);
+        } catch (\Throwable $e) {
+            Log::error('Imagick stamp burn-in failed: ' . $e->getMessage());
             return $originalPath;
         }
     }
@@ -1941,8 +1950,9 @@ class ExportController extends Controller
             return;
         }
 
-        // Kalau Feasibility -> hanya role tertentu yang boleh akses
-        if (!$this->userHasAnyRole($user, ['ENG'])) {
+        // Kalau Feasibility -> hanya departemen tertentu yang boleh akses (ENG, PUD, ICT)
+        $userDeptCode = DB::table('departments')->where('id', $user->id_dept)->value('code');
+        if (!in_array($userDeptCode, ['ENG', 'PUD', 'ICT'])) {
             abort(403, 'Access denied to feasibility package.');
         }
     }

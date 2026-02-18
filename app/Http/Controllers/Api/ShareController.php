@@ -210,8 +210,16 @@ class ShareController extends Controller
             ) as rn
         ");
 
+        // Subquery for file stats
+        $fileStats = DB::table('doc_package_revision_files')
+            ->select('revision_id', DB::raw('count(*) as file_count'), DB::raw('sum(file_size) as total_size'))
+            ->groupBy('revision_id');
+
         $query = DB::table('doc_package_revisions as dpr')
             ->join('doc_packages as dp', 'dpr.package_id', '=', 'dp.id')
+            ->leftJoinSub($fileStats, 'fs', function ($join) {
+                $join->on('dpr.id', '=', 'fs.revision_id');
+            })
             ->join('customers as c', 'dp.customer_id', '=', 'c.id')
             ->join('models as m', 'dp.model_id', '=', 'm.id')
             ->join('products as p', 'dp.product_id', '=', 'p.id')
@@ -274,6 +282,8 @@ class ShareController extends Controller
             'dsc.name as category',
             'pg.code_part_group as part_group',
             'p.part_no',
+            'fs.file_count',
+            'fs.total_size',
             'dpr.ecn_no',
             'dpr.revision_no as revision',
             DB::raw("
@@ -301,6 +311,8 @@ class ShareController extends Controller
             'dtg.name',
             'dsc.name',
             'p.part_no',
+            'fs.file_count',
+            'fs.total_size'
         ];
         $orderBy        = in_array($orderColumnName, $orderWhitelist, true) ? $orderColumnName : 'pa.requested_at';
         $orderDirection = in_array(strtolower($orderDir), ['asc', 'desc'], true) ? $orderDir : 'desc';
@@ -611,7 +623,8 @@ class ShareController extends Controller
 
     public function showDetail(string $id)
     {
-        // 1. Dekripsi hash -> revisionId (int)
+        $isEngineering = false;
+        // 1. Dekripsi hash -> revisionId (id)
         if (ctype_digit($id)) {
             $revisionId = (int) $id;
         } else {
@@ -772,6 +785,7 @@ class ShareController extends Controller
                         'id'             => $item->id,
                         'name'           => $item->name,
                         'url'            => $url,
+                        'download_url'   => route('file-manager.export.download-file', ['file_id' => $item->id]),
                         'icon_src'       => $iconSrc,
                         'ori_position'   => $item->ori_position,
                         'copy_position'  => $item->copy_position,

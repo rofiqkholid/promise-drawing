@@ -49,42 +49,44 @@
       <!-- ===== Meta Card ===== -->
       <div x-ref="metaCard"
         class="self-start bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <!-- Header -->
-        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 md:justify-between">
-            <h2 class="text-lg lg:text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-              <i class="fa-solid fa-share-nodes mr-2 text-blue-600"></i>
-              Share Metadata
-            </h2>
+        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+          <div class="flex flex-col gap-4">
+            <div class="flex items-center justify-between">
+              <h2 class="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center">
+                <i class="fa-solid fa-share-nodes mr-2 text-blue-600"></i>
+                Share Metadata
+              </h2>
+              
+              @php
+                $backUrl = url()->previous();
+                $backUrl = ($backUrl && $backUrl !== url()->current()) ? $backUrl : route('file-manager.share');
+              @endphp
 
-            @php
-            $backUrl = url()->previous();
-            $backUrl = ($backUrl && $backUrl !== url()->current())
-            ? $backUrl
-            : route('file-manager.share'); // fallback ke list share
-            @endphp
-
-            <div class="flex items-center gap-2">
-              {{-- tombol Share dari halaman detail --}}
-              <button
-                type="button"
-                id="btnOpenShareFromDetail"
-                data-id="{{ $detail['metadata']['revision_id'] ?? $revisionId ?? '' }}"
-                class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-blue-500 text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus:ring-offset-gray-800">
-                <i class="fa-solid fa-paper-plane"></i>
-                Share
-              </button>
-
-
-              {{-- tombol Back lama --}}
               <a href="{{ $backUrl }}"
-                class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
+                class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
                 <i class="fa-solid fa-arrow-left"></i>
                 Back
               </a>
             </div>
-          </div>
 
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                id="btnOpenShareFromDetail"
+                data-id="{{ $detail['metadata']['revision_id'] ?? $revisionId ?? '' }}"
+                class="flex-1 inline-flex items-center gap-2 justify-center px-3 py-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded shadow-sm transition-colors">
+                <i class="fa-solid fa-paper-plane"></i>
+                Share
+              </button>
+              
+              <button
+                @click="prepareZip()"
+                class="flex-1 inline-flex items-center gap-2 justify-center px-3 py-3 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded shadow-sm transition-colors">
+                <i class="fa-solid fa-box-archive"></i>
+                <span>Download All</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Body: ringkasan metadata -->
@@ -94,9 +96,9 @@
         </div>
       </div>
 
-      <x-files.file-group-list title="2D Drawings" icon="fa-drafting-compass" category="2d" />
-      <x-files.file-group-list title="3D Models" icon="fa-cubes" category="3d" />
-      <x-files.file-group-list title="ECN / Documents" icon="fa-file-lines" category="ecn" />
+      <x-files.file-group-list title="2D Drawings" icon="fa-drafting-compass" category="2d" allowDownload="true" />
+      <x-files.file-group-list title="3D Models" icon="fa-cubes" category="3d" allowDownload="true" />
+      <x-files.file-group-list title="ECN / Documents" icon="fa-file-lines" category="ecn" allowDownload="true" />
 
       <!-- ===== Activity Log (below ECN) ===== -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -311,7 +313,9 @@
     }
   </style>
 
-  @endsection
+      <!-- Download ZIP Modal Component -->
+    <x-files.download-zip-modal />
+@endsection
 
   @push('scripts')
   <script src="{{ asset('assets/js/file-viewer-alpine.js') }}"></script>
@@ -484,6 +488,7 @@
           ...viewer,
           
           openSections: ['2d'],
+          isDownloadingFile: null,
 
           init() {
                if (viewer.init) viewer.init.call(this);
@@ -514,14 +519,58 @@
            },
 
            downloadFile(file) {
-               if (!file.url) return;
+               if (!file.download_url) return;
+               
+               this.isDownloadingFile = file.name;
+
                const link = document.createElement('a');
-               link.href = file.url;
+               link.href = file.download_url;
                link.download = file.name;
                document.body.appendChild(link);
                link.click();
                document.body.removeChild(link);
+
+               // Reset loading state after a brief delay since actual download completion 
+               // is hard to detect via simple <a> tag click
+               setTimeout(() => {
+                   this.isDownloadingFile = null;
+               }, 1000);
            },
+
+            prepareZip() {
+                // Calculate stats for modal
+                let totalCount = 0;
+                let totalSizeBytes = 0;
+                
+                const filesMap = this.pkg?.files || {};
+                Object.values(filesMap).forEach(list => {
+                    if (Array.isArray(list)) {
+                        totalCount += list.length;
+                        list.forEach(f => {
+                            totalSizeBytes += parseInt(f.size || 0);
+                        });
+                    }
+                });
+                
+                // Format size for display
+                let sizeStr = '0 Bytes';
+                if (totalSizeBytes > 0) {
+                    const k = 1024;
+                    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                    const i = Math.floor(Math.log(totalSizeBytes) / Math.log(k));
+                    sizeStr = parseFloat((totalSizeBytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+                }
+
+                const id = @js($shareId);
+                let baseUrl = `{{ route('export.prepare-zip', ['revision_id' => '__ID__']) }}`;
+                let url = baseUrl.replace('__ID__', encodeURIComponent(id));
+
+                this.$dispatch('open-download-zip', {
+                    url: url,
+                    count: totalCount,
+                    size: sizeStr
+                });
+            },
 
            updateStampUrlTemplate: `{{ route('approvals.files.updateStamp', ['fileId' => '__FILE_ID__']) }}`,
            updateBlocksUrlTemplate: `{{ route('share.files.updateBlocks', ['fileId' => '__FILE_ID__']) }}`,
