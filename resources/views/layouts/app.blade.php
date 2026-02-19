@@ -16,10 +16,14 @@
 
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.tailwindcss.min.css">
+    <link rel="stylesheet" href="{{ asset('assets/css/app.css?v=2') }}">
+    
+    {{-- Tailwind CDN --}}
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -33,14 +37,62 @@
         }
     </script>
 
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.tailwindcss.min.css">
-    <link rel="stylesheet" href="{{ asset('assets/css/app.css?v=2') }}">
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
     <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
 
+    @vite(['resources/js/app.js'])
 
     @stack('style')
+
+    {{-- Three.js + Dependencies (ES Modules via CDN) --}}
+    <!-- ES Module Shims used for import maps polyfill -->
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.9.8/build/index.module.js"
+            }
+        }
+    </script>
+    
+    <script type="module">
+        // Global Loader for Three.js dependencies using Dynamic Imports
+        (async function() {
+            if (!window.THREE) {
+                try {
+                    // Import main library
+                    const THREE_MODULE = await import('three');
+                    
+                    // Create a mutable copy of the module namespace
+                    window.THREE = { ...THREE_MODULE };
+
+                    // Import addons
+                    const { OrbitControls } = await import('three/addons/controls/OrbitControls.js');
+                    const BufferGeometryUtils = await import('three/addons/utils/BufferGeometryUtils.js');
+                    const { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } = await import('three-mesh-bvh');
+
+                    // Attach addons to the mutable window.THREE object
+                    window.THREE.OrbitControls = OrbitControls;
+                    window.THREE.BufferGeometryUtils = BufferGeometryUtils;
+                    
+                    // Expose BVH library separately
+                    window.MeshBVHLib = { computeBoundsTree, disposeBoundsTree, acceleratedRaycast };
+
+                    // console.log('[App] Three.js loaded globally via CDN');
+                    window.dispatchEvent(new CustomEvent('three-ready'));
+                } catch (e) {
+                    console.error('[App] Failed to load Three.js:', e);
+                }
+            }
+        })();
+    </script>
+    {{-- OCCT Loader --}}
+    <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.22/dist/occt-import-js.js"></script>
+    
+    {{-- Force Alpine to wait slightly? No, Alpine inits when it wants. --}}
 </head>
 
 <body class="font-sans antialiased bg-gray-100 dark:bg-gray-900 transition-colors duration-300 overflow-x-hidden max-w-full">
@@ -64,6 +116,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     

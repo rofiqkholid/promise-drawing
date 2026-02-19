@@ -112,20 +112,5 @@ class AppServiceProvider extends ServiceProvider
                 'notifShare'  => $notifShare
             ]);
         });
-
-        Carbon::macro('toSaiStampFormat', function () {
-            /** @var Carbon $this */
-            $day = $this->day;
-            if (in_array($day % 100, [11, 12, 13], true)) {
-                $suffixRaw = 'th';
-            } else {
-                $last = $day % 10;
-                $suffixRaw = match ($last) {
-                    1 => 'st', 2 => 'nd', 3 => 'rd', default => 'th'
-                };
-            }
-            $superscripts = ['st' => 'ˢᵗ', 'nd' => 'ⁿᵈ', 'rd' => 'ʳᵈ', 'th' => 'ᵗʰ'];
-            return $this->format('M') . '.' . $day . $superscripts[$suffixRaw] . ' ' . $this->format('Y');
-        });
     }
 }

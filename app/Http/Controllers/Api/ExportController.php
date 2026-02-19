@@ -30,6 +30,7 @@ use ImagickPixel;
 
 class ExportController extends Controller
 {
+    use \App\Traits\HasStampFormats;
     public function kpi(Request $req)
     {
         // === PREPARE FILTERS (Avoid Code Duplication) ===
@@ -596,7 +597,7 @@ class ExportController extends Controller
         $obsoleteDateText = null;
         if ($obsoleteDate) {
             try {
-                $obsoleteDateText = $obsoleteDate->toSaiStampFormat();
+                $obsoleteDateText = $this->formatStampDate($obsoleteDate);
             } catch (\Exception $e) {
                 $obsoleteDateText = $obsoleteDate->format('M d, Y');
             }
@@ -808,7 +809,7 @@ class ExportController extends Controller
         $obsoleteDateText = null;
         if ($obsoleteDate) {
             try {
-                $obsoleteDateText = $obsoleteDate->toSaiStampFormat();
+                $obsoleteDateText = $this->formatStampDate($obsoleteDate);
             } catch (\Exception $e) {
                 $obsoleteDateText = $obsoleteDate->format('M d, Y');
             }

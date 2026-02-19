@@ -30,6 +30,7 @@ use ImagickPixel;
 
 class ReceiptController extends Controller
 {
+    use \App\Traits\HasStampFormats;
 
     public function receiptFilters(Request $request): JsonResponse
     {
@@ -893,7 +894,7 @@ class ReceiptController extends Controller
 
         $obsoleteStampInfo = [
             'date_raw'  => $obsoleteDate?->toDateString(),
-            'date_text' => $obsoleteDate ? $obsoleteDate->toSaiStampFormat() : null,
+            'date_text' => $obsoleteDate ? $this->formatStampDate($obsoleteDate) : null,
             'name' => $revision->obsolete_name ?? optional($lastApproval)->approver_name ?? '-',
             'dept' => $revision->obsolete_dept ?? optional($lastApproval)->dept_name ?? '-',
         ];

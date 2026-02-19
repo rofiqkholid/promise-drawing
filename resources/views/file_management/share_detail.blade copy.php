@@ -35,6 +35,7 @@
 <div
   class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen"
   x-data="shareDetail()"
+  x-init="init()"
   @mousemove.window="onPan($event)"
   @mouseup.window="endPan()"
   @mouseleave.window="endPan()">
@@ -52,14 +53,14 @@
           <div class="flex flex-col gap-4">
             <div class="flex items-center justify-between">
               <h2 class="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center">
-              <i class="fa-solid fa-share-nodes mr-2 text-blue-600"></i>
-              Share Metadata
-            </h2>
-
-            @php
-            $backUrl = url()->previous();
+                <i class="fa-solid fa-share-nodes mr-2 text-blue-600"></i>
+                Share Metadata
+              </h2>
+              
+              @php
+                $backUrl = url()->previous();
                 $backUrl = ($backUrl && $backUrl !== url()->current()) ? $backUrl : route('file-manager.share');
-            @endphp
+              @endphp
 
               <a href="{{ $backUrl }}"
                 class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
@@ -77,7 +78,7 @@
                 <i class="fa-solid fa-paper-plane"></i>
                 Share
               </button>
-
+              
               <button
                 @click="prepareZip()"
                 class="flex-1 inline-flex items-center gap-2 justify-center px-3 py-3 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded shadow-sm transition-colors">
@@ -314,19 +315,38 @@
 
       <!-- Download ZIP Modal Component -->
     <x-files.download-zip-modal />
-  @endsection
+@endsection
 
   @push('scripts')
-{{-- <script src="{{ asset('assets/js/file-viewer-alpine.js') }}"></script> --}}
+  <script src="{{ asset('assets/js/file-viewer-alpine.js') }}"></script>
 
-<script src="https://unpkg.com/utif@2.0.1/UTIF.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-<script>
+  <script src="https://unpkg.com/utif@2.0.1/UTIF.js"></script>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script>
     if (window['pdfjsLib']) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     }
-</script>
+  </script>
+
+
+  <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+        "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
+      }
+    }
+  </script>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
 
   <script>
     function detectTheme() {
@@ -550,7 +570,7 @@
                     count: totalCount,
                     size: sizeStr
                 });
-           },
+            },
 
            updateStampUrlTemplate: `{{ route('approvals.files.updateStamp', ['fileId' => '__FILE_ID__']) }}`,
            updateBlocksUrlTemplate: `{{ route('share.files.updateBlocks', ['fileId' => '__FILE_ID__']) }}`,

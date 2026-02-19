@@ -31,7 +31,6 @@
 
 <div class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen relative"
     x-data="exportDetail()"
-    x-init="init()"
     @mousemove.window="onPan($event)"
     @mouseup.window="endPan()"
     @mouseleave.window="endPan()">
@@ -206,8 +205,7 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('assets/js/file-viewer-alpine.js') }}"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{{-- <script src="{{ asset('assets/js/file-viewer-alpine.js') }}"></script> --}}
 <script src="https://unpkg.com/utif@2.0.1/UTIF.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
@@ -215,17 +213,6 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     }
 </script>
-<script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
-<script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-            "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
-        }
-    }
-</script>
-<script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
 
 <script>
     function detectTheme() {
@@ -496,15 +483,6 @@
                 } finally {
                     this.isDownloadingFile = null;
                 }
-            },
-
-            formatBytes(bytes, decimals = 2) {
-                if (!bytes) return '0 Bytes';
-                const k = 1024;
-                const dm = decimals < 0 ? 0 : decimals;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
             },
 
             getTotalPackageStats() {

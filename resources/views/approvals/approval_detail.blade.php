@@ -35,7 +35,6 @@
 <div
   class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen"
   x-data="approvalDetail()"
-  x-init="init()"
   @mousemove.window="onPan($event)"
   @mouseup.window="endPan()"
   @mouseleave.window="endPan()">
@@ -320,7 +319,7 @@
         <template x-if="selectedFile">
            <div class="flex-1 flex flex-col">
             @include('components.files.file-viewer', [
-                'enableMasking' => true,
+                'enableMasking' => false,
                 'showStampConfig' => true,
             ])
            </div>
@@ -547,8 +546,7 @@
 @endsection
 
 @push('scripts')
-<!-- SweetAlert -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{{-- <script src="{{ asset('assets/js/file-viewer-alpine.js') }}"></script> --}}
 
 <!-- UTIF.js untuk render TIFF (v2 classic API) -->
 <script src="https://unpkg.com/utif@2.0.1/UTIF.js"></script>
@@ -556,28 +554,10 @@
 <!-- pdf.js 2.x (lebih stabil untuk UMD) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script>
-  if (window['pdfjsLib']) {
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-  }
-</script>
-
-<!-- ES Module shims + Import Map untuk Three.js (module) -->
-<script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
-<script type="importmap">
-  {
-    "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
-      "three-mesh-bvh": "https://unpkg.com/three-mesh-bvh@0.7.6/build/index.module.js"
+    if (window['pdfjsLib']) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     }
-  }
 </script>
-
-<!-- OCCT: parser STEP/IGES (WASM) -->
-<script src="https://cdn.jsdelivr.net/npm/occt-import-js@0.0.23/dist/occt-import-js.js"></script>
-
-<script src="{{ asset('assets/js/file-viewer-alpine.js') }}"></script>
 
 <script>
   /* ========== Toast Utilities ========== */
@@ -724,6 +704,7 @@
       shareNote: '',
       shareNoteError: false,
       shareProcessing: false,
+      applyToAllProcessing: false,
       openSections: [],
 
 

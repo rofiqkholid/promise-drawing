@@ -11,6 +11,13 @@ class FilePreviewController extends Controller
 {
     public function show($id)
     {
+        // BLOCK DIRECT ACCESS: If request is "top-level" navigation (address bar / new tab)
+        // 'Sec-Fetch-Dest' header is reliable in modern browsers.
+        // 'document' means full page load. 'image', 'empty', 'iframe' are fine.
+        if (request()->header('Sec-Fetch-Dest') === 'document') {
+            abort(403, 'Direct access denied.');
+        }
+
         // Ambil record file
         $file = DocPackageRevisionFile::findOrFail($id);
 

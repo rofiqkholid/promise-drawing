@@ -69,7 +69,7 @@
                     @blur="closeDropdown()"
                     @keydown="handleKeydown($event)"
                     x-ref="searchInput">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
+                <span class="absolute left-3 inset-y-0 flex items-center text-gray-400 dark:text-gray-500">
                     <i class="fa-solid fa-magnifying-glass text-sm"></i>
                 </span>
             </div>
