@@ -17,4 +17,8 @@ build/
 node_modules/
 vendor/
 
+# Temporary files
+/public/hot
+/bootstrap/cache/*.php
+
 app/Http/Controllers/Api/FilePreviewController.php
