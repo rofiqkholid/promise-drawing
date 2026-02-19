@@ -19,6 +19,7 @@ vendor/
 
 # Temporary files
 /public/hot
-/bootstrap/cache/*.php
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
 
 app/Http/Controllers/Api/FilePreviewController.php
