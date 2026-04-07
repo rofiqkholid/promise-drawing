@@ -12,8 +12,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->redirectGuestsTo(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/dev/login'));
+        $middleware->redirectGuestsTo(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/login'));
         $middleware->trustProxies(at: '*');
+        $middleware->encryptCookies(except: [
+            'promise_auth_session'
+        ]);
         $middleware->alias([
             'auth' => \Illuminate\Auth\Middleware\Authenticate::class,
             'check.menu' => \App\Http\Middleware\CheckMenuAccess::class,

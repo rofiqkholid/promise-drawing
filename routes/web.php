@@ -44,7 +44,7 @@ Route::get('/check-session-status', function () {
 })->name('session.check');
 // Route for redirecting to Central SSO Portal
 Route::get('/login', function () {
-    return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/dev/login'));
+    return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/login'));
 })->name('login');
 
 Route::get('/', function () {
@@ -80,7 +80,7 @@ Route::post('/login', function () { return redirect()->route('login'); })->name(
 Route::post('/logout', function () { 
     Auth::logout();
     session()->invalidate();
-    return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/dev/login'));
+    return redirect(env('PORTAL_LOGIN_URL', 'https://promise.summitadyawinsa.co.id/login'));
 })->name('logout');
 
 Route::middleware(['auth'])->group(function () {

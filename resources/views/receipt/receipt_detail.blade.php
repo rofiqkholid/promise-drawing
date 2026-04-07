@@ -421,7 +421,7 @@
                 async fetchData(id) {
                     this.isLoadingRevision = true;
                     try {
-                        const res = await fetch(`/api/receipts/revision-detail/${id.toString().replace(/=/g, '-')}`); 
+                        const res = await fetch(`{{ url('/api/receipts/revision-detail') }}/${id.toString().replace(/=/g, '-')}`); 
                         const data = await res.json();
                         if (data.success) {
                             this.pkg = data.detail || { files: {}, metadata: {} }; 
@@ -451,7 +451,7 @@
                         detail: {
                             count: this.getTotalFiles(),
                             size: this.getTotalSize(),
-                            url: `/api/receipts/prepare-zip/${this.exportId.toString().replace(/=/g, '-')}`
+                            url: `{{ url('/api/receipts/prepare-zip') }}/${this.exportId.toString().replace(/=/g, '-')}`
                         }
                     }));
                 },

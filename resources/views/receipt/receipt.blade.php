@@ -518,7 +518,7 @@
                         }
 
                         return `
-                            <button onclick="window.location.href='/receipts/${row.hash || row.id}'" 
+                            <button onclick="window.location.href='{{ url('/receipts') }}/${row.hash || row.id}'" 
                                 class="w-10 h-10 flex items-center justify-center rounded-xs bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 mx-auto border border-transparent" 
                                 title="Open Package">
                                 <i class="fa-solid fa-up-right-from-square text-sm"></i>
@@ -585,7 +585,7 @@
         $('#receiptTable tbody').on('click', 'tr', function(e) {
             if ($(e.target).closest('button').length) return;
             const data = table.row(this).data();
-            if (data) window.location.href = `/receipts/${data.hash || data.id}`;
+            if (data) window.location.href = `{{ url('/receipts') }}/${data.hash || data.id}`;
         });
 
         // --- History Modal ---

@@ -574,7 +574,7 @@
                 if ($(e.target).closest('button').length || $(e.target).closest('a').length) return;
                 const data = table.row(this).data();
                 if (!data || !data.id) return;
-                window.location.href = `/file-manager.export/${encodeURIComponent(data.id)}`;
+                window.location.href = `{{ url('/file-manager.export') }}/${encodeURIComponent(data.id)}`;
             });
 
             // Fix alignment on window resize

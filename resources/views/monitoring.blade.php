@@ -450,17 +450,18 @@
                 }
             };
 
-            fetchText('/api/active-users-count', 'activeUserCount');
-            fetchText('/api/upload-count', 'uploadCount');
-            fetchText('/api/download-count', 'downloadCount');
-            fetchText('/api/doc-count', 'docCount');
+            fetchText('{{ url("/api/active-users-count") }}', 'activeUserCount');
+            fetchText('{{ url("/api/upload-count") }}', 'uploadCount');
+            fetchText('{{ url("/api/download-count") }}', 'downloadCount');
+            fetchText('{{ url("/api/doc-count") }}', 'docCount');
 
             const u = document.getElementById('usedSpace');
             const t = document.getElementById('totalSpace');
 
             if (u && t) {
                 try {
-                    const res = await fetch('/api/disk-space');
+                    const res = await fetch('{{ url("/api/disk-space") }}');
+                    if (!res.ok) throw new Error('Network error');
                     const data = await res.json();
 
                     if (data.status === 'success') {
