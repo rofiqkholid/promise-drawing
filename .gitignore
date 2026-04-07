@@ -1,0 +1,25 @@
+/node_modules
+/vendor
+/public/build
+/public/storage
+/storage/*.key
+/storage/framework/cache/data/*
+/storage/framework/views/*.php
+/storage/framework/sessions/*
+/storage/logs/*.log
+/.vite
+.env
+.env.backup
+.phpunit.result.cache
+
+dist/
+build/
+node_modules/
+vendor/
+
+# Temporary files
+/public/hot
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+
+app/Http/Controllers/Api/FilePreviewController.php

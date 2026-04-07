@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', sidebarOpen: false }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" x-bind:class="{ 'dark': darkMode }">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    <title>@yield('header-title', 'PROMISE')</title>
+
+    <link rel="icon" type="image/x-icon" href="{{ asset('assets/image/favicon.ico') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.tailwindcss.min.css">
+    <link rel="stylesheet" href="{{ asset('assets/css/app.css?v=2') }}">
+    
+    {{-- Tailwind CDN --}}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
+    <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/bundle.js"></script>
+
+    @vite(['resources/js/app.js'])
+    @stack('vite-scripts')
+
+    @stack('style')
+
+
+</head>
+
+<body class="font-sans antialiased bg-gray-100 dark:bg-gray-900 transition-colors duration-300 overflow-x-hidden max-w-full">
+    <div id="loader" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+        <div class="loader-spinner"></div>
+    </div>
+
+    <div id="main-content" class="relative min-h-screen flex">
+        @include('layouts.sidebar')
+        <div class="flex-1 flex flex-col md:pl-20 w-full">
+            @include('layouts.header')
+
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-2 pt-[70px] w-full max-w-screen">
+                @yield('content')
+            </main>
+
+        </div>
+    </div>
+    <div class="bottom-0 left-0 right-0 md:pl-20">
+        @include('layouts.footer')
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.tailwindcss.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        window.onload = function() {
+            const loader = document.getElementById('loader');
+            const content = document.getElementById('main-content');
+
+            loader.style.display = 'none';
+            content.style.visibility = 'visible';
+            content.style.opacity = '1';
+        };
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setInterval(function() {
+                fetch("{{ route('session.check') }}", {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Session expired');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (!data.active) {
+                            window.location.href = "{{ route('login') }}";
+                        }
+                    })
+                    .catch(error => {
+
+                        console.warn('Session check failed, redirecting to login...');
+                        window.location.href = "{{ route('login') }}";
+                    });
+            }, 28800000);
+        });
+    </script>
+
+    @stack('scripts')
+</body>
+
+</html>

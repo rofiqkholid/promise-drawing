@@ -1,0 +1,98 @@
+@props(['selectedFile', 'isFullscreen', 'isCreatingMask', 'isPanning', 'enableMasking', 'masks', 'imageZoom', 'pkg', 'isStampBurned', 'stampConfig', 'isEngineering', 'tifLoading', 'tifError'])
+
+{{-- TIFF VIEWER --}}
+<template x-if="isTiff(selectedFile?.name)">
+    <div x-ref="viewport2d" class="relative w-full overflow-hidden bg-black/5 rounded"
+        style="touch-action: none;"
+        :class="[isFullscreen ? 'h-full' : 'h-[70vh]', isCreatingMask ? 'cursor-crosshair' : (isPanning ? 'cursor-grabbing' : 'cursor-grab')]"
+        @mousedown.prevent="startPan($event)" @touchstart="startPan($event)" @wheel.prevent="onWheelZoom($event)">
+        <div class="w-full h-full flex items-center justify-center">
+            <div class="relative inline-block" :style="imageTransformStyle()">
+                <img x-ref="tifImg" :src="tiffDisplayUrl" alt="TIFF Preview" @load="onTiffLoad()" x-on:error="onTiffError()"
+                    class="block pointer-events-none select-none max-w-full bg-white transition-opacity duration-300"
+                    :class="[isFullscreen ? 'max-h-full' : 'max-h-[70vh]', (tifLoading || tifError) ? 'opacity-0' : 'opacity-100']" />
+
+                {{-- WHITE BLOCKS (Masking) --}}
+                <template x-if="enableMasking && !tifError">
+                        <template x-for="mask in masks" :key="mask.id">
+                        <template x-if="mask">
+                            <div x-show="mask.visible" x-cloak :style="maskStyle(mask)"
+                                class="absolute bg-white cursor-move mask-element"
+                                :data-mask-id="mask.id"
+                                :class="[{ 'z-50': mask.active, 'z-10': !mask.active }, isCreatingMask ? 'pointer-events-none' : '']"
+                                @click.stop="activateMask(mask)">
+
+                                <!-- BORDER (Active Only - Ultra Sharp) -->
+                                <div x-show="mask.active" x-cloak class="absolute inset-0 pointer-events-none" :style="{ border: (1/imageZoom) + 'px solid #2563eb' }"></div>
+
+                                <!-- RESIZE HANDLES (Z-40 - Proportional 8px) -->
+                                <template x-if="mask.active && mask.editable">
+                                    <div class="z-40">
+                                        <template x-for="type in ['nw', 'ne', 'sw', 'se', 'n', 's', 'w', 'e']">
+                                            <div class="mask-handle" :style="getHandleStyle(type, mask.rotation)"
+                                                @mousedown.stop.prevent="startMaskResize($event, mask, type)"
+                                                @touchstart.stop.prevent="startMaskResize($event, mask, type)">
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+
+                                <!-- ROTATE HANDLES (Precise Outside - Z-30) -->
+                                <template x-if="mask.active && mask.editable">
+                                    <div class="z-30">
+                                        <template x-for="pos in ['nw', 'ne', 'sw', 'se']">
+                                            <div :style="getRotateHandleStyle(pos, mask.rotation)" 
+                                                @mousedown.stop.prevent="startMaskRotate($event, mask)" 
+                                                @touchstart.stop.prevent="startMaskRotate($event, mask)">
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </template>
+                </template>
+
+                {{-- HTML STAMPS REMOVED: Relying on Canvas Burning for Security --}}
+             </div>
+         </div>
+
+        {{-- Solid Loading Overlay (TIFF) --}}
+        <div x-show="tifLoading"
+            class="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-40 rounded-lg">
+            
+            {{-- Spinner --}}
+            <div class="relative w-16 h-16 mb-6">
+                <div class="absolute inset-0 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+                <i class="fa-solid fa-file-image absolute inset-0 m-auto w-fit h-fit text-blue-500 animate-pulse text-xl"></i>
+            </div>
+
+            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">Processing TIFF</h3>
+            
+            {{-- Progress Bar --}}
+            <div class="w-64 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-2">
+                <div class="h-full bg-blue-500 rounded-full transition-all duration-300 relative overflow-hidden" 
+                        :style="`width: ${loadingProgress}%`">
+                        <div class="absolute inset-0 bg-white/30 animate-[shimmer_1s_infinite]"></div>
+                </div>
+            </div>
+            
+            <p class="text-[10px] font-mono text-gray-500 dark:text-gray-400" x-text="loadingStatus || 'Downloading...'"></p>
+        </div>
+
+        {{-- Solid Error Overlay (TIFF) --}}
+        <div x-show="tifError" x-transition.opacity
+            class="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-30 rounded-lg p-6 text-center">
+            <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-full flex items-center justify-center mb-4">
+                <i class="fa-solid fa-circle-exclamation text-xl"></i>
+            </div>
+            <h4 class="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">TIFF Loading Failed</h4>
+            <p class="text-[11px] text-gray-500 dark:text-gray-400 mb-4 max-w-[240px] leading-relaxed line-clamp-2" x-text="tifError"></p>
+            <button @click="loadFile(selectedFile, true)" 
+                class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-md text-[11px] font-bold hover:bg-gray-800 dark:hover:bg-gray-200 transition-all shadow-sm">
+                <i class="fa-solid fa-rotate-right"></i> Try Again
+            </button>
+        </div>
+    </div>
+</template>
