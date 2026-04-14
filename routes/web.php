@@ -33,6 +33,7 @@ use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AboutController;
 use App\Http\Controllers\Api\SettingProfileController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 Route::get('/infophp', function () {
     phpinfo();
@@ -64,16 +65,6 @@ Route::get('/home', function () {
     }
     return response('Welcome to Drawing App', 200);
 })->middleware('auth')->name('home');
-
-Route::get('/debug-sso', function () {
-    return [
-        'auth_check' => Auth::check(),
-        'auth_id' => Auth::id(),
-        'session_id' => session()->getId(),
-        'session_all' => session()->all(),
-        'cookie' => request()->cookie(env('SESSION_COOKIE', 'promise_auth_session')),
-    ];
-});
 
 // Local auth intercepts (Submit & Logout) redirected to Central if someone hits them directly
 Route::post('/login', function () { return redirect()->route('login'); })->name('login_post');
