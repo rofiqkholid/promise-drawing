@@ -208,6 +208,23 @@
                         <span class="ml-2">Dark Mode</span>
                     </a>
                 </div>
+                <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                    </a>
+
+                    <a href="{{ env('APP_INVENTORY_URL') }}"
+                        class="w-full flex items-center px-4 py-1.5 text-sm text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors duration-200"> <i class="fa-solid fa-boxes-stacked w-5"></i>
+                        <span class="ml-2">Inventory</span>
+                    </a>
+
+                    <a href="{{ env('APP_NPC_URL') }}"
+                        class="w-full flex items-center px-4 py-1.5 text-sm text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors duration-200"> <i class="fa-solid fa-users-gear w-5"></i>
+                        <span class="ml-2">NPC</span>
+                    </a>
+                    <a href="{{ env('APP_DASH_URL') }}"
+                        class="w-full flex items-center px-4 py-1.5 text-sm text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors duration-200"> <i class="fa-solid fa-users-gear w-5"></i>
+                        <span class="ml-2">All Dashboard</span>
+                    </a>
+                </div>
 
                 <div class="px-1 py-1">
                     <form method="GET" action="{{ route('user.update') }}">
