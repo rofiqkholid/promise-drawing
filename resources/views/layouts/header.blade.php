@@ -159,6 +159,52 @@
             </div>
         </div>
 
+        <!-- 9-Dots Apps Menu -->
+        <div x-data="{ appsDropdownOpen: false }" class="relative ml-1 sm:ml-2 flex-shrink-0">
+            <button @click="appsDropdownOpen = !appsDropdownOpen"
+                class="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none text-gray-500 dark:text-gray-400" title="Apps Menu">
+                <i class="fa-solid fa-grip text-xl"></i>
+            </button>
+
+            <div x-show="appsDropdownOpen"
+                @click.away="appsDropdownOpen = false"
+                x-transition:enter="transition ease-out duration-100"
+                x-transition:enter-start="transform opacity-0 scale-95"
+                x-transition:enter-end="transform opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-75"
+                x-transition:leave-start="transform opacity-100 scale-100"
+                x-transition:leave-end="transform opacity-0 scale-95"
+                class="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-2xl shadow-xl ring-1 ring-black ring-opacity-5 p-4 z-50 origin-top-right"
+                style="display: none;">
+                
+                <div class="grid grid-cols-3 gap-2">
+                    <a href="{{ env('APP_INVENTORY_URL') }}"
+                        class="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 group text-center">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 mb-2 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-boxes-stacked text-xl"></i>
+                        </div>
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Inventory</span>
+                    </a>
+
+                    <a href="{{ env('APP_NPC_URL') }}"
+                        class="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 group text-center">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 mb-2 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-users-gear text-xl"></i>
+                        </div>
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">NPC</span>
+                    </a>
+
+                    <a href="{{ env('APP_DASH_URL') }}"
+                        class="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 group text-center">
+                        <div class="w-12 h-12 rounded-full flex items-center justify-center bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400 mb-2 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-chart-pie text-xl"></i>
+                        </div>
+                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300 leading-tight">All Dashboard</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
         <div x-data="{ userDropdownOpen: false }" class="relative ml-1 sm:ml-2 flex-shrink-0">
 
             <button @click="userDropdownOpen = !userDropdownOpen"
@@ -208,23 +254,7 @@
                         <span class="ml-2">Dark Mode</span>
                     </a>
                 </div>
-                <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                    </a>
-
-                    <a href="{{ env('APP_INVENTORY_URL') }}"
-                        class="w-full flex items-center px-4 py-1.5 text-sm text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors duration-200"> <i class="fa-solid fa-boxes-stacked w-5"></i>
-                        <span class="ml-2">Inventory</span>
-                    </a>
-
-                    <a href="{{ env('APP_NPC_URL') }}"
-                        class="w-full flex items-center px-4 py-1.5 text-sm text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors duration-200"> <i class="fa-solid fa-users-gear w-5"></i>
-                        <span class="ml-2">NPC</span>
-                    </a>
-                    <a href="{{ env('APP_DASH_URL') }}"
-                        class="w-full flex items-center px-4 py-1.5 text-sm text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors duration-200"> <i class="fa-solid fa-users-gear w-5"></i>
-                        <span class="ml-2">All Dashboard</span>
-                    </a>
-                </div>
+                <!-- App URLs moved to 9-dots menu -->
 
                 <div class="px-1 py-1">
                     <form method="GET" action="{{ route('user.update') }}">

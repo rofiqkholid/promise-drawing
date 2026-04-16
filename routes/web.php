@@ -63,7 +63,7 @@ Route::get('/home', function () {
             return redirect()->route($firstMenu->route);
         }
     }
-    return response('Welcome to Drawing App', 200);
+    return response('You do not have access rights to any menu.', 403);
 })->middleware('auth')->name('home');
 
 // Local auth intercepts (Submit & Logout) redirected to Central if someone hits them directly
