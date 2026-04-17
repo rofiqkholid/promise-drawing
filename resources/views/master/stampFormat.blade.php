@@ -499,7 +499,7 @@
             suffixError.addClass('hidden');
 
             $.ajax({
-                url: `/master/stampFormat/${id}`,
+                url: `{{ url('/') }}/master/stampFormat/${id}`,
                 method: 'GET',
                 beforeSend: function() {
                     setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, '');
@@ -508,7 +508,7 @@
                     $('#edit_prefix').val(data.prefix);
                     $('#edit_suffix').val(data.suffix);
                     $('#edit_is_active').prop('checked', data.is_active == 1);
-                    $('#editStampFormatForm').attr('action', `/master/stampFormat/${id}`);
+                    $('#editStampFormatForm').attr('action', `{{ url('/') }}/master/stampFormat/${id}`);
                     showModal(editModal);
                 },
                 error: function(xhr) {
@@ -582,7 +582,7 @@
             const $btn = $(this);
 
             $.ajax({
-                url: `/master/stampFormat/${stampFormatIdToDelete}`,
+                url: `{{ url('/') }}/master/stampFormat/${stampFormatIdToDelete}`,
                 method: 'DELETE',
                 headers: { 'X-CSRF-TOKEN': csrfToken },
                 beforeSend: function() {

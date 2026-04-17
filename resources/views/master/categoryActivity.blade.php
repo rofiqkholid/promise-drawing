@@ -474,7 +474,7 @@
             codeError.addClass('hidden');
 
             $.ajax({
-                url: `/master/categoryActivities/${id}`,
+                url: `{{ url('/') }}/master/categoryActivities/${id}`,
                 method: 'GET',
                 beforeSend: function() {
                     setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, '');
@@ -482,7 +482,7 @@
                 success: function(data) {
                     $('#edit_name').val(data.name);
                     $('#edit_code').val(data.code);
-                    $('#editCategoryActivityForm').attr('action', `/master/categoryActivities/${id}`);
+                    $('#editCategoryActivityForm').attr('action', `{{ url('/') }}/master/categoryActivities/${id}`);
                     showModal(editModal);
                 },
                 error: function(xhr) {
@@ -553,7 +553,7 @@
             const $btn = $(this);
 
             $.ajax({
-                url: `/master/categoryActivities/${categoryActivityIdToDelete}`,
+                url: `{{ url('/') }}/master/categoryActivities/${categoryActivityIdToDelete}`,
                 method: 'DELETE',
                 headers: { 'X-CSRF-TOKEN': csrfToken },
                 beforeSend: function() {

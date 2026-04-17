@@ -600,7 +600,7 @@
             $('#edit-customer_id-error,#edit-name-error,#edit-status_id-error,#edit-planning-error').addClass('hidden').text('');
 
             $.ajax({
-                url: `/master/models/${id}`,
+                url: `{{ url('/') }}/master/models/${id}`,
                 method: 'GET',
                 beforeSend: () => {
                     setButtonLoading($(`.edit-button[data-id="${id}"]`), true, '');
@@ -611,7 +611,7 @@
                     setSelect2Value($('#edit_status_id'), data.status_id, data.status_name || data.status_id);
                     $('#edit_name').val(data.name || '');
                     $('#edit_planning').val(data.planning ?? '');
-                    $('#editModelForm').attr('action', `/master/models/${id}`);
+                    $('#editModelForm').attr('action', `{{ url('/') }}/master/models/${id}`);
                     showModal(editModal);
                 },
                 error: (xhr) => {
@@ -682,7 +682,7 @@
             const $btn = $(this);
 
             $.ajax({
-                url: `/master/models/${modelIdToDelete}`,
+                url: `{{ url('/') }}/master/models/${modelIdToDelete}`,
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken

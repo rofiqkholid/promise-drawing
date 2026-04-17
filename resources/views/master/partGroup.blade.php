@@ -786,7 +786,7 @@
         $(document).on('click', '.edit-button', function() {
             const id = $(this).data('id');
             $.ajax({
-                url: `/master/partGroups/${id}`,
+                url: `{{ url('/') }}/master/partGroups/${id}`,
                 method: 'GET',
                 beforeSend: () => {
                     setButtonLoading($(`.edit-button[data-id="${id}"]`), true, '');
@@ -795,7 +795,7 @@
                     setSelect2Value($('#edit_code_part_group'), data.code_part_group, data.code_part_group);
                     $('#edit_planning').val(data.planning);
                     $('#edit_code_part_group_desc').val(data.code_part_group_desc);
-                    $('#editPartGroupForm').attr('action', `/master/partGroups/${id}`);
+                    $('#editPartGroupForm').attr('action', `{{ url('/') }}/master/partGroups/${id}`);
 
                     setSelect2Value($('#edit_customer_id'), data.customer_id, data.customer_label);
                     $('#edit_model_id').prop('disabled', !data.customer_id);
@@ -865,7 +865,7 @@
             if (!partGroupIdToDelete) return;
             const $btn = $(this);
             $.ajax({
-                url: `/master/partGroups/${partGroupIdToDelete}`,
+                url: `{{ url('/') }}/master/partGroups/${partGroupIdToDelete}`,
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken

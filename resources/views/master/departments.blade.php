@@ -446,7 +446,7 @@
             codeError.addClass('hidden');
 
             $.ajax({
-                url: `/master/departments/${id}`,
+                url: `{{ url('/') }}/master/departments/${id}`,
                 method: 'GET',
                 beforeSend: function() {
                     setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, '');
@@ -455,7 +455,7 @@
                     $('#edit_name').val(data.name);
                     $('#edit_code').val(data.code);
                     $('#edit_is_eng').prop('checked', data.is_eng == 1);
-                    $('#editDepartmentForm').attr('action', `/master/departments/${id}`);
+                    $('#editDepartmentForm').attr('action', `{{ url('/') }}/master/departments/${id}`);
                     showModal(editModal);
                 },
                 error: function(xhr) {
@@ -528,7 +528,7 @@
             const $btn = $(this);
 
             $.ajax({
-                url: `/master/departments/${departmentIdToDelete}`,
+                url: `{{ url('/') }}/master/departments/${departmentIdToDelete}`,
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken

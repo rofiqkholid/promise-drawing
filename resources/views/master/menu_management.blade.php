@@ -615,7 +615,7 @@ $(document).ready(function () {
         resetErrors('edit');
 
         $.ajax({
-            url: `/master/menus/${id}`,
+            url: `{{ url('/') }}/master/menus/${id}`,
             method: 'GET',
             beforeSend: function() {
                 setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, '');
@@ -628,7 +628,7 @@ $(document).ready(function () {
                 $('#edit_is_active').prop('checked', !!data.is_active);
                 $('#edit_is_visible').prop('checked', !!data.is_visible);
                 populateParentDropdown($('#edit_parent_id'), data.parent_id);
-                $('#editMenuForm').attr('action', `/master/menus/${id}`);
+                $('#editMenuForm').attr('action', `{{ url('/') }}/master/menus/${id}`);
                 showModal(editModal);
             },
             error: function (xhr) {
@@ -694,7 +694,7 @@ $(document).ready(function () {
         const $btn = $(this);
 
         $.ajax({
-            url: `/master/menus/${menuIdToDelete}`,
+            url: `{{ url('/') }}/master/menus/${menuIdToDelete}`,
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': csrfToken },
             beforeSend: function() {

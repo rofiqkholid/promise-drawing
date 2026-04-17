@@ -695,13 +695,13 @@
             $('#edit-model_id-error,#edit-part_no-error,#edit-part_name-error,#edit-customer_id-error').addClass('hidden').text('');
 
             $.ajax({
-                url: `/master/products/${id}`,
+                url: `{{ url('/') }}/master/products/${id}`,
                 method: 'GET',
                 success: (data) => {
                     $('#edit_part_no').val(data.part_no);
                     $('#edit_part_name').val(data.part_name);
                     $('#edit_is_count').prop('checked', (data.is_count == 1 || data.is_count === true));
-                    $('#editProductForm').attr('action', `/master/products/${id}`);
+                    $('#editProductForm').attr('action', `{{ url('/') }}/master/products/${id}`);
 
                     setSelect2Value($('#edit_customer_id'), data.customer_id, data.customer_label || '');
                     $('#edit_model_id').prop('disabled', !data.customer_id);
@@ -813,7 +813,7 @@
             const $b = $(this);
             if (!beginBusy($b, 'Deleting...')) return;
             $.ajax({
-                url: `/master/products/${productIdToDelete}`,
+                url: `{{ url('/') }}/master/products/${productIdToDelete}`,
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken

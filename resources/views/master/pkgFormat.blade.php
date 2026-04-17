@@ -499,7 +499,7 @@
             suffixError.addClass('hidden');
 
             $.ajax({
-                url: `/master/pkgFormat/${id}`,
+                url: `{{ url('/') }}/master/pkgFormat/${id}`,
                 method: 'GET',
                 beforeSend: function() {
                     setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, '');
@@ -508,7 +508,7 @@
                     $('#edit_prefix').val(data.prefix);
                     $('#edit_suffix').val(data.suffix);
                     $('#edit_is_active').prop('checked', data.is_active == 1);
-                    $('#editPkgFormatForm').attr('action', `/master/pkgFormat/${id}`);
+                    $('#editPkgFormatForm').attr('action', `{{ url('/') }}/master/pkgFormat/${id}`);
                     showModal(editModal);
                 },
                 error: function(xhr) {
@@ -582,7 +582,7 @@
             const $btn = $(this);
 
             $.ajax({
-                url: `/master/pkgFormat/${pkgFormatIdToDelete}`,
+                url: `{{ url('/') }}/master/pkgFormat/${pkgFormatIdToDelete}`,
                 method: 'DELETE',
                 headers: { 'X-CSRF-TOKEN': csrfToken },
                 beforeSend: function() {

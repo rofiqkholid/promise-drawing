@@ -463,7 +463,7 @@
             descriptionError.addClass('hidden');
 
             $.ajax({
-                url: `/master/projectStatus/${id}`,
+                url: `{{ url('/') }}/master/projectStatus/${id}`,
                 method: 'GET',
                 beforeSend: function() {
                     setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, '');
@@ -471,7 +471,7 @@
                 success: function(data) {
                     $('#edit_name').val(data.name);
                     $('#edit_description').val(data.description);
-                    $('#editProjectStatusForm').attr('action', `/master/projectStatus/${id}`);
+                    $('#editProjectStatusForm').attr('action', `{{ url('/') }}/master/projectStatus/${id}`);
                     showModal(editModal);
                 },
                 error: function(xhr) {
@@ -542,7 +542,7 @@
             const $btn = $(this);
 
             $.ajax({
-                url: `/master/projectStatus/${projectStatusIdToDelete}`,
+                url: `{{ url('/') }}/master/projectStatus/${projectStatusIdToDelete}`,
                 method: 'DELETE',
                 headers: { 'X-CSRF-TOKEN': csrfToken },
                 beforeSend: function() {

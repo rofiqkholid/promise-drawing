@@ -457,14 +457,14 @@
             nameError.addClass('hidden');
 
             $.ajax({
-                url: `/master/docTypeGroups/${id}`,
+                url: `{{ url('/') }}/master/docTypeGroups/${id}`,
                 method: 'GET',
                 beforeSend: function() {
                     setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, '');
                 },
                 success: function(data) {
                     $('#edit_name').val(data.name);
-                    $('#editDocTypeGroupForm').attr('action', `/master/docTypeGroups/${id}`);
+                    $('#editDocTypeGroupForm').attr('action', `{{ url('/') }}/master/docTypeGroups/${id}`);
                     showModal(editModal);
                 },
                 error: function(xhr) {
@@ -534,7 +534,7 @@
             const $btn = $(this);
 
             $.ajax({
-                url: `/master/docTypeGroups/${docTypeGroupIdToDelete}`,
+                url: `{{ url('/') }}/master/docTypeGroups/${docTypeGroupIdToDelete}`,
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken

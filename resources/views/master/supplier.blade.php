@@ -666,7 +666,7 @@
             const id = $(this).data('id');
             $('#edit-name-error,#edit-code-error,#edit-email-error,#edit-phone-error,#edit-address-error,#edit-is_active-error').addClass('hidden');
             $.ajax({
-                url: `/master/suppliers/${id}`,
+                url: `{{ url('/') }}/master/suppliers/${id}`,
                 method: 'GET',
                 beforeSend: function() {
                     setButtonLoading($(`.edit-button[data-id="${id}"]`), true, '');
@@ -678,7 +678,7 @@
                     $('#edit_phone').val(data.phone);
                     $('#edit_address').val(data.address);
                     $('#edit_is_active').prop('checked', data.is_active);
-                    $('#editSupplierForm').attr('action', `/master/suppliers/${id}`);
+                    $('#editSupplierForm').attr('action', `{{ url('/') }}/master/suppliers/${id}`);
                     showModal(editModal);
                 },
                 error: function(xhr) {
@@ -749,7 +749,7 @@
             if (!supplierIdToDelete) return;
             const $btn = $(this);
             $.ajax({
-                url: `/master/suppliers/${supplierIdToDelete}`,
+                url: `{{ url('/') }}/master/suppliers/${supplierIdToDelete}`,
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken
@@ -855,7 +855,7 @@
             $('#add-ul-user_id-error').addClass('hidden');
 
             // [MODIFIED] Set form action
-            $('#addUserLinkForm').attr('action', `/master/suppliers/${currentSupplierIdForLinks}/links`);
+            $('#addUserLinkForm').attr('action', `{{ url('/') }}/master/suppliers/${currentSupplierIdForLinks}/links`);
             const $select = $('#ul_user_id');
 
             if ($select.hasClass("select2-hidden-accessible")) {
@@ -870,7 +870,7 @@
                 dropdownParent: $('#addUserLinkModal'), // Penting untuk modal
                 ajax: {
                     // [MODIFIKASI] URL ke route 'suppliers.links.available' baru
-                    url: `/master/suppliers/${currentSupplierIdForLinks}/links/available-users`,
+                    url: `{{ url('/') }}/master/suppliers/${currentSupplierIdForLinks}/links/available-users`,
                     dataType: 'json',
                     delay: 250,
                     data: function(params) {
@@ -954,7 +954,7 @@
 
             // [MODIFIED] New URL structure
             $.ajax({
-                url: `/master/suppliers/${supplierId}/users/${currentUserIdToUnlink}`,
+                url: `{{ url('/') }}/master/suppliers/${supplierId}/users/${currentUserIdToUnlink}`,
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken

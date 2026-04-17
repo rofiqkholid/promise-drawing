@@ -526,7 +526,7 @@ $(document).ready(function () {
         $('#edit-doctype_group_id-error, #edit-name-error, #edit-description-error').addClass('hidden');
 
         $.ajax({
-            url: `/master/docTypeSubCategories/${id}`,
+            url: `{{ url('/') }}/master/docTypeSubCategories/${id}`,
             method: 'GET',
             beforeSend: () => { setButtonLoading($(`.edit-button[data-id="${id}"]`), true, ''); },
             success: (data) => {
@@ -535,7 +535,7 @@ $(document).ready(function () {
                 // Pre-fill Select2 group
                 const label = data.doc_type_group_name || 'Group';
                 setSelect2Value($('#edit_doctype_group_id'), data.doctype_group_id, label);
-                $('#editDocTypeSubCategoryForm').attr('action', `/master/docTypeSubCategories/${id}`);
+                $('#editDocTypeSubCategoryForm').attr('action', `{{ url('/') }}/master/docTypeSubCategories/${id}`);
                 showModal(editModal);
             },
             error: (xhr) => { toastError('Error', xhr.responseJSON?.message || 'Failed to fetch data.'); },
@@ -589,7 +589,7 @@ $(document).ready(function () {
         if (!docTypeSubCategoryIdToDelete) return;
         const $btn = $(this);
         $.ajax({
-            url: `/master/docTypeSubCategories/${docTypeSubCategoryIdToDelete}`,
+            url: `{{ url('/') }}/master/docTypeSubCategories/${docTypeSubCategoryIdToDelete}`,
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': csrfToken },
             beforeSend: () => { setButtonLoading($btn, true, 'Deleting...'); setFormBusy($('#deleteDocTypeSubCategoryModal'), true); },
@@ -625,7 +625,7 @@ $(document).ready(function () {
         } else {
             aliasTable = $('#aliasesTable').DataTable({
                 processing: true, serverSide: true,
-                ajax: { url: `/master/docTypeSubCategories/${currentSubcategoryId}/aliases`, type: 'GET' },
+                ajax: { url: `{{ url('/') }}/master/docTypeSubCategories/${currentSubcategoryId}/aliases`, type: 'GET' },
                 columns: [
                     { data: null, searchable:false, orderable:false, render:(d,t,r,m)=> m.row + m.settings._iDisplayStart + 1 },
                     { data: 'customer.name', name: 'customer' },
@@ -681,13 +681,13 @@ $(document).ready(function () {
     $(document).on('click', '.edit-alias-button', function () {
         const aliasId = $(this).data('id');
         $.ajax({
-            url: `/master/aliases/${aliasId}`,
+            url: `{{ url('/') }}/master/aliases/${aliasId}`,
             method: 'GET',
             success: function (data) {
                 $('#edit_alias_name').val(data.name);
                 const label = data.customer_code || data.customer_name || 'Customer';
                 setSelect2ValueAlias($('#edit_alias_customer_id'), data.customer_id, label);
-                $('#editAliasForm').attr('action', `/master/aliases/${aliasId}`);
+                $('#editAliasForm').attr('action', `{{ url('/') }}/master/aliases/${aliasId}`);
                 showModal(editAliasModal);
             },
             error: function () { toastError('Error', 'Failed to fetch alias data.'); }
@@ -720,7 +720,7 @@ $(document).ready(function () {
     });
     $('#confirmDeleteAliasButton').on('click', function () {
         $.ajax({
-            url: `/master/aliases/${aliasIdToDelete}`,
+            url: `{{ url('/') }}/master/aliases/${aliasIdToDelete}`,
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': csrfToken },
             success: function (data) {

@@ -578,7 +578,7 @@
             $('#edit-name-error, #edit-code-error').addClass('hidden');
             const $btn = $(`.edit-button[data-id="${id}"]`);
             $.ajax({
-                url: `/master/fileExtensions/${id}`,
+                url: `{{ url('/') }}/master/fileExtensions/${id}`,
                 method: 'GET',
                 beforeSend: () => setButtonLoading($btn, true, ''),
                 success: (data) => {
@@ -586,7 +586,7 @@
                     $('#edit_code').val(data.code);
                     // JANGAN set value file input via js
                     $('#edit_is_viewer').prop('checked', !!data.is_viewer);
-                    $('#editFileExtensionForm').attr('action', `/master/fileExtensions/${id}`);
+                    $('#editFileExtensionForm').attr('action', `{{ url('/') }}/master/fileExtensions/${id}`);
                     $('input[name="categories[]"]').prop('checked', false);
                     if (Array.isArray(data.categories)) {
                         data.categories.forEach((c) => $(`input[name="categories[]"][value="${c}"]`).prop('checked', true));
@@ -652,7 +652,7 @@
             if (!fileExtensionIdToDelete) return;
             const $btn = $(this);
             $.ajax({
-                url: `/master/fileExtensions/${fileExtensionIdToDelete}`,
+                url: `{{ url('/') }}/master/fileExtensions/${fileExtensionIdToDelete}`,
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken

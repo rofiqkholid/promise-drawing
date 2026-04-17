@@ -573,7 +573,7 @@
             isActiveError.addClass('hidden');
 
             $.ajax({
-                url: `/master/customers/${id}`,
+                url: `{{ url('/') }}/master/customers/${id}`,
                 method: 'GET',
                 beforeSend: function() {
                     setButtonLoading($('.edit-button[data-id="' + id + '"]'), true, '');
@@ -585,7 +585,7 @@
                     $('#edit_phone').val(data.phone);
                     $('#edit_address').val(data.address);
                     $('#edit_is_active').prop('checked', data.is_active);
-                    $('#editCustomerForm').attr('action', `/master/customers/${id}`);
+                    $('#editCustomerForm').attr('action', `{{ url('/') }}/master/customers/${id}`);
                     showModal(editModal);
                 },
                 error: function(xhr) {
@@ -671,7 +671,7 @@
             const $btn = $(this);
 
             $.ajax({
-                url: `/master/customers/${customerIdToDelete}`,
+                url: `{{ url('/') }}/master/customers/${customerIdToDelete}`,
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': csrfToken
