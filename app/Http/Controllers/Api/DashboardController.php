@@ -534,34 +534,57 @@ class DashboardController extends Controller
     public function getPhaseStatus(Request $request)
     {
         $query = DB::connection('sqlsrv')
-            ->table('UploadActual')
-            ->select(
-                'customer_name',
-                'project_status',
-                DB::raw('COUNT(*) as total')
-            );
+            ->table('doc_packages as dp')
+            ->join('products as p_origin', 'dp.product_id', '=', 'p_origin.id')
+            ->join('products as p', function ($join) {
+                $join->on('p_origin.group_id', '=', 'p.group_id')
+                    ->orWhere(function ($query) {
+                        $query->whereNull('p_origin.group_id')
+                            ->whereColumn('p.id', 'p_origin.id');
+                    });
+            })
+            ->join('customers as c', 'dp.customer_id', '=', 'c.id')
+            ->join('models as m', 'dp.model_id', '=', 'm.id')
+            ->join('doctype_subcategories as ds', 'dp.doctype_subcategory_id', '=', 'ds.id')
+            ->join('part_groups as pg', 'dp.part_group_id', '=', 'pg.id')
+            ->join('doc_package_revisions as dpr', 'dpr.id', '=', 'dp.current_revision_id')
+            ->join('project_status as ps', 'm.status_id', '=', 'ps.id')
+            ->where('dp.is_delete', 0)
+            ->where('p.is_count', 1)
+            ->where('p.is_delete', 0)
+            ->where('dpr.is_finish', 1)
+            ->where('dpr.is_obsolete', 0)
+            ->where('ds.name', 'Go Mfg')
+            ->whereNotNull('dp.current_revision_id')
+            ->whereIn('ps.name', ['Feasibility Study', 'Project', 'Regular']);
 
         if ($request->filled('date_end')) {
-            $query->whereDate('created_at', '<=', $request->date_end);
+            $query->whereDate('dp.created_at', '<=', $request->date_end);
         }
 
         if ($request->filled('project_status') && $request->project_status !== 'ALL') {
-            $query->where('project_status', $request->project_status);
+            $query->where('ps.name', $request->project_status);
         }
 
         if ($request->filled('customer')) {
-            $query->whereIn('customer_name', $request->customer);
+            $query->whereIn('c.code', $request->customer);
         }
 
         if ($request->filled('model')) {
-            $query->whereIn('model_name', $request->model);
+            $query->whereIn('m.name', $request->model);
         }
 
         if ($request->filled('part_group')) {
-            $query->whereIn('part_group', $request->part_group);
+            $query->whereIn('pg.code_part_group', $request->part_group);
         }
 
-        $query->groupBy('customer_name', 'project_status');
+        $query->select(
+            'c.code as customer_name',
+            'ps.name as project_status',
+            DB::raw('COUNT(dp.id) as total')
+        );
+
+        $query->groupBy('c.code', 'ps.name');
 
         $results = $query->get();
 
