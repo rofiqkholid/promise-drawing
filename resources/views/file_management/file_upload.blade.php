@@ -29,7 +29,7 @@
                 <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Upload Management</h2>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Control and monitor your drawing submissions.</p>
             </div>
-            <a href="/drawing-upload"
+            <a href="{{ url('/') }}/drawing-upload"
                 class="inline-flex items-center gap-3 justify-center px-3 py-1 border border-transparent text-sm font-semibold rounded-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
                 <i class="fa-solid fa-plus-circle text-lg"></i>
                 <span>Upload New Drawing</span>
@@ -507,7 +507,7 @@
             if (!data || !data.id) return;
 
             // Use relative URL to avoid issues with incorrect APP_URL or Proxy
-            let targetUrl = '/drawing-upload';
+            let targetUrl = `{{ url('/') }}/drawing-upload`;
             targetUrl += '?revision_id=' + data.id;
 
             if (data.status !== 'draft') {

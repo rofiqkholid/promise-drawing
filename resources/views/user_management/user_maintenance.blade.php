@@ -626,7 +626,7 @@
       }).then((result) => {
         if (!result.isConfirmed) return;
         $.ajax({
-          url: `/master/userMaintenance/${id}`,
+          url: `{{ url('/') }}/master/userMaintenance/${id}`,
           method: 'DELETE',
           headers: {
             'X-CSRF-TOKEN': csrfToken

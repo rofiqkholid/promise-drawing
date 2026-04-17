@@ -509,7 +509,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: `/partGroups/master/${id}`,
+                        url: `{{ url('/') }}/partGroups/master/${id}`,
                         method: 'DELETE',
                         headers: { 'X-CSRF-TOKEN': csrfToken },
                         beforeSend: () => $btn.prop('disabled', true),

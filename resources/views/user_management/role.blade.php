@@ -262,9 +262,9 @@ $(function () {
         if (!beginBusy($btn, 'Loading...')) return;
         const id = $btn.data('id');
         $('#edit-role-error').addClass('hidden');
-        $.get(`/user_management/role/${id}`, data=>{
+        $.get(`{{ url('/') }}/user_management/role/${id}`, data=>{
             $('#edit_role').val(data.role_name);
-            $('#editRoleForm').attr('action', `/user_management/role/${id}`);
+            $('#editRoleForm').attr('action', `{{ url('/') }}/user_management/role/${id}`);
             showModal(editModal);
         }).fail(()=>themeToast('error','Failed to load role'))
           .always(()=>endBusy($btn));
@@ -313,7 +313,7 @@ $(function () {
         const $btn = $(this);
         if (!beginBusy($btn, 'Deleting...')) return;
         $.ajax({
-            url: `/user_management/role/${roleIdToDelete}`,
+            url: `{{ url('/') }}/user_management/role/${roleIdToDelete}`,
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept':'application/json' },
             success: res=>{
