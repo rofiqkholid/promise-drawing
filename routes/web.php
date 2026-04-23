@@ -66,7 +66,6 @@ Route::get('/home', function () {
     return response('You do not have access rights to any menu.', 403);
 })->middleware('auth')->name('home');
 
-// Local auth intercepts (Submit & Logout) redirected to Central if someone hits them directly
 Route::post('/login', function () { return redirect()->route('login'); })->name('login_post');
 Route::post('/logout', function () { 
     Auth::logout();
