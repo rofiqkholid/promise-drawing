@@ -1,3 +1,4 @@
-!*.gitignore
-!bootstrap/*.php
-!bootstrap/app.php
+# Hapus tanda ! dan hapus prefix bootstrap/
+*.gitignore
+*.php
+app.php
