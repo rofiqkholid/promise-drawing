@@ -6,74 +6,89 @@
 
 <div id="dashboardWrapper" class="flex flex-col gap-2 w-full h-auto overflow-y-auto lg:h-[calc(100vh-70px)] lg:overflow-hidden custom-scrollbar pb-20 lg:pb-0">
 
-    <div class="flex-none grid grid-cols-2 lg:grid-cols-5 gap-2">
-        <div class="relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="flex items-center">
-                <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-500 dark:text-blue-400 rounded-xs p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
-                    <i class="fa-solid fa-file-lines fa-lg lg:fa-xl"></i>
+    <div class="flex-none flex flex-col lg:flex-row gap-2">
+        <div class="w-full lg:w-[70%] grid grid-cols-2 md:grid-cols-4 lg:flex lg:flex-row gap-2">
+            <button type="button" id="toggleFilterBtn" class="lg:flex-none aspect-square flex flex-col items-center justify-center bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm cursor-pointer group">
+                <div class="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-xs flex items-center justify-center w-full h-full group-hover:bg-blue-100 group-hover:text-blue-500 transition-colors">
+                    <i class="fa-solid fa-filter fa-lg lg:fa-xl"></i>
                 </div>
-                <div>
-                    <h3 class="text-gray-500 dark:text-gray-400 text-xs lg:text-base font-medium">Total Files</h3>
-                    <p id="docCount" class="text-base lg:text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
+            </button>
+
+            <div class="lg:flex-1 relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="flex items-center">
+                    <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-500 dark:text-blue-400 rounded-xs p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
+                        <i class="fa-solid fa-file-lines fa-lg lg:fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-gray-500 dark:text-gray-400 text-xs lg:text-base font-medium">Total Files</h3>
+                        <p id="docCount" class="text-base lg:text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:flex-1 relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="flex items-center">
+                    <div class="bg-green-100 dark:bg-green-900/50 text-green-500 dark:text-green-400 rounded-xs p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
+                        <i class="fa-solid fa-cloud-arrow-up fa-lg lg:fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-gray-500 dark:text-gray-400 text-xs lg:text-base font-medium">Upload</h3>
+                        <p id="uploadCount" class="text-base lg:text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:flex-1 relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="flex items-center">
+                    <div class="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-500 dark:text-yellow-400 rounded-xs p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
+                        <i class="fa-solid fa-cloud-arrow-down fa-lg lg:fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-gray-500 dark:text-gray-400 text-xs lg:text-base font-medium">Download</h3>
+                        <p id="downloadCount" class="text-base lg:text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="flex items-center">
-                <div class="bg-green-100 dark:bg-green-900/50 text-green-500 dark:text-green-400 rounded-xs p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
-                    <i class="fa-solid fa-cloud-arrow-up fa-lg lg:fa-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-gray-500 dark:text-gray-400 text-xs lg:text-base font-medium">Upload</h3>
-                    <p id="uploadCount" class="text-base lg:text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="flex items-center">
-                <div class="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-500 dark:text-yellow-400 rounded-xs p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
-                    <i class="fa-solid fa-cloud-arrow-down fa-lg lg:fa-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-gray-500 dark:text-gray-400 text-xs lg:text-base font-medium">Download</h3>
-                    <p id="downloadCount" class="text-base lg:text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
+        <div class="w-full lg:w-[30%] grid grid-cols-2 lg:flex lg:flex-row gap-2">
+            <div class="lg:flex-1 relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="flex items-center">
+                    <div class="bg-red-100 dark:bg-red-900/50 text-red-500 dark:text-red-400 rounded-xs p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
+                        <i class="fa-solid fa-users fa-lg lg:fa-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-gray-500 dark:text-gray-400 text-xs lg:text-base font-medium">User Active</h3>
+                        <p id="activeUserCount" class="text-base lg:text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="flex items-center">
-                <div class="bg-red-100 dark:bg-red-900/50 text-red-500 dark:text-red-400 rounded-xs p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
-                    <i class="fa-solid fa-users fa-lg lg:fa-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-gray-500 dark:text-gray-400 text-xs lg:text-base font-medium">User Active</h3>
-                    <p id="activeUserCount" class="text-base lg:text-xl font-bold text-gray-800 dark:text-gray-100">0</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-span-2 lg:col-span-1 relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="flex items-center">
-                <div class="bg-purple-100 dark:bg-purple-900/50 text-purple-500 dark:text-purple-400 rounded-xs p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
-                    <i class="fa-solid fa-hard-drive fa-lg lg:fa-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-gray-500 dark:text-gray-400 text-xs lg:text-base font-medium">Server Storage</h3>
-                    <p class="text-sm lg:text-md font-bold text-gray-800 dark:text-gray-100">
-                        <span id="usedSpace">...</span> / <span id="totalSpace">...</span>
-                    </p>
+            <div class="lg:flex-1 relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="flex items-center">
+                    <div class="bg-purple-100 dark:bg-purple-900/50 text-purple-500 dark:text-purple-400 rounded-xs p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
+                        <i class="fa-solid fa-hard-drive fa-lg lg:fa-xl"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="text-gray-500 dark:text-gray-400 text-xs lg:text-base font-medium truncate">Server Storage</h3>
+                        <p class="text-sm lg:text-md font-bold text-gray-800 dark:text-gray-100 truncate">
+                            <span id="usedSpace">...</span> / <span id="totalSpace">...</span>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="filterCard" style="display: none;" class="flex-none bg-white dark:bg-gray-800 p-2 lg:p-3 rounded-xs border border-gray-200 dark:border-gray-700 shadow-sm">
-        <h3 class="text-xs lg:text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
-            <i class="fa-solid fa-filter mr-2 text-gray-500"></i> Filter Data
-        </h3>
+    <!-- Filter Modal Overlay -->
+    <div id="filterModalOverlay" style="display: none;" class="fixed inset-0 z-[100] flex items-start justify-center bg-gray-900/50 dark:bg-gray-900/80 p-4 pt-16 lg:pt-24 overflow-y-auto">
+        <div id="filterCard" class="w-full max-w-7xl bg-white dark:bg-gray-800 p-4 lg:p-6 shadow-2xl rounded-xs relative transform transition-all duration-300 ease-out -translate-y-12 opacity-0 scale-95">
+            <button type="button" id="closeFilterBtn" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                <i class="fa-solid fa-xmark fa-xl"></i>
+            </button>
+            <h3 class="text-lg lg:text-xl font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
+                <i class="fa-solid fa-filter mr-2 text-blue-500"></i> Filter Data
+            </h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 lg:gap-3 items-start">
             <div>
                 <label class="block text-xs lg:text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5">Date Range</label>
@@ -112,6 +127,7 @@
                 </button>
             </div>
         </div>
+        </div>
     </div>
 
     <div class="flex-none h-auto lg:flex-1 lg:min-h-0 flex flex-col lg:flex-row gap-2 items-stretch">
@@ -121,9 +137,17 @@
                 <h3 class="text-sm lg:text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                     <i class="fa-solid fa-chart-simple mr-2 text-blue-500"></i> Upload Monitoring
                 </h3>
-                <button type="button" id="toggleFilterBtn" class="text-gray-500 text-xs p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700" title="Toggle Filter">
-                    <i class="fa-solid fa-filter"></i>
-                </button>
+                <div class="flex items-center gap-1">
+                    <span id="monitoringPageInfo" class="text-[10px] lg:text-xs text-gray-400 mr-1 lg:mr-2 font-medium"></span>
+                    <div class="flex items-center gap-1">
+                        <button type="button" id="monitoringPrevBtn" class="w-7 h-7 flex items-center justify-center bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 border border-gray-200 dark:border-gray-700 rounded-xs disabled:opacity-30 disabled:cursor-not-allowed transition-colors" disabled>
+                            <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                        </button>
+                        <button type="button" id="monitoringNextBtn" class="w-7 h-7 flex items-center justify-center bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 border border-gray-200 dark:border-gray-700 rounded-xs disabled:opacity-30 disabled:cursor-not-allowed transition-colors" disabled>
+                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="relative w-full flex-1 min-h-0">
                 <canvas id="monitoringChart"></canvas>
@@ -326,6 +350,7 @@
             this.trendChart = null;
             this.phaseChart = null;
             this.currentChartData = [];
+            this.monitoringPage = 0;
             this.currentTrendData = [];
         }
 
@@ -334,6 +359,7 @@
             this.initDateRange();
             this.initSelect2();
             this.attachButtonEvents();
+            this.initPaginationEvents();
 
             this.loadCards();
             this.loadMonitoringChart();
@@ -567,6 +593,30 @@
             }
         }
 
+        initPaginationEvents() {
+            const prevBtn = document.getElementById('monitoringPrevBtn');
+            const nextBtn = document.getElementById('monitoringNextBtn');
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    if (this.monitoringPage > 0) {
+                        this.monitoringPage--;
+                        this.renderChart(this.currentChartData);
+                    }
+                });
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    const totalPages = Math.ceil(this.currentChartData.length / 7);
+                    if (this.monitoringPage < totalPages - 1) {
+                        this.monitoringPage++;
+                        this.renderChart(this.currentChartData);
+                    }
+                });
+            }
+        }
+
         async loadMonitoringChart() {
             const ctx = document.getElementById('monitoringChart');
             if (!ctx) return;
@@ -579,6 +629,7 @@
                 const result = await response.json();
                 if (result.status === 'success') {
                     this.currentChartData = result.data || [];
+                    this.monitoringPage = 0;
                     this.renderChart(this.currentChartData);
                 } else {
                     this.currentChartData = [];
@@ -590,11 +641,30 @@
             }
         }
 
-        renderChart(data) {
+        renderChart(allData) {
             const ctx = document.getElementById('monitoringChart').getContext('2d');
             if (this.monitoringChart) this.monitoringChart.destroy();
 
             const isMobile = window.innerWidth < 1024;
+
+            const itemsPerPage = 7;
+            const totalPages = Math.ceil(allData.length / itemsPerPage);
+
+            const pageInfo = document.getElementById('monitoringPageInfo');
+            const prevBtn = document.getElementById('monitoringPrevBtn');
+            const nextBtn = document.getElementById('monitoringNextBtn');
+
+            if (pageInfo) {
+                pageInfo.textContent = allData.length > 0 ? `${this.monitoringPage + 1}/${totalPages}` : '';
+            }
+            if (prevBtn) {
+                prevBtn.disabled = this.monitoringPage === 0;
+            }
+            if (nextBtn) {
+                nextBtn.disabled = (this.monitoringPage + 1) >= totalPages || totalPages === 0;
+            }
+
+            const data = allData.slice(this.monitoringPage * itemsPerPage, (this.monitoringPage + 1) * itemsPerPage);
 
             // Mapping Data
             const labels = data.map(item => `${item.customer_name}-${item.model}-${item.project_status}-${item.part_group}`);
@@ -689,32 +759,6 @@
                         intersect: false
                     },
                     plugins: {
-                        zoom: {
-                            pan: {
-                                enabled: true,
-                                mode: 'x',
-                                threshold: 0,
-                            },
-                            limits: {
-                                x: {
-                                    min: 0,
-                                    max: totalDataCount - 1
-                                },
-                                y: {
-                                    min: 'original',
-                                    max: 'original'
-                                }
-                            },
-                            zoom: {
-                                wheel: {
-                                    enabled: true
-                                },
-                                pinch: {
-                                    enabled: true
-                                },
-                                mode: 'x',
-                            }
-                        },
                         legend: {
                             position: 'bottom',
                             labels: {
@@ -761,8 +805,6 @@
                     },
                     scales: {
                         x: {
-                            min: 0,
-                            max: 6,
                             ticks: {
                                 display: !isMobile,
                                 color: textColor,
@@ -1489,28 +1531,31 @@
                     }
                 });
             }
-            if (toggleBtn) {
+            const filterOverlay = document.getElementById('filterModalOverlay');
+            const closeFilterBtn = document.getElementById('closeFilterBtn');
+
+            window.closeFilterModal = () => {
+                $('#filterCard').removeClass('translate-y-0 opacity-100 scale-100').addClass('-translate-y-12 opacity-0 scale-95');
+                setTimeout(() => {
+                    $('#filterModalOverlay').fadeOut(200);
+                }, 200);
+            };
+
+            if (toggleBtn && filterOverlay) {
                 toggleBtn.addEventListener('click', () => {
-                    const $card = $('#filterCard');
-                    const $icon = $(toggleBtn).find('i');
-                    const isOpening = $card.is(':hidden');
+                    $(filterOverlay).fadeIn(200);
+                    setTimeout(() => {
+                        $('#filterCard').removeClass('-translate-y-12 opacity-0 scale-95').addClass('translate-y-0 opacity-100 scale-100');
+                    }, 10);
+                });
 
-                    $card.stop(true, true).slideToggle(300, 'swing', function() {
-                        $(this).css('overflow', 'visible');
-                    });
+                if (closeFilterBtn) {
+                    closeFilterBtn.addEventListener('click', window.closeFilterModal);
+                }
 
-                    if (isOpening) {
-                        $icon.css({
-                            'transform': 'rotate(0deg)',
-                            'transition': 'transform 0.3s ease'
-                        });
-                        toggleBtn.classList.remove('text-blue-600', 'bg-blue-50', 'dark:bg-gray-700');
-                    } else {
-                        $icon.css({
-                            'transform': 'rotate(180deg)',
-                            'transition': 'transform 0.3s ease'
-                        });
-                        toggleBtn.classList.add('text-blue-600', 'bg-blue-50', 'dark:bg-gray-700');
+                filterOverlay.addEventListener('click', (e) => {
+                    if (e.target === filterOverlay) {
+                        window.closeFilterModal();
                     }
                 });
             }
@@ -1533,6 +1578,12 @@
                 btnApply.disabled = false;
                 btnText.style.display = 'inline-block';
                 btnLoader.style.display = 'none';
+                
+                if (typeof window.closeFilterModal === 'function') {
+                    window.closeFilterModal();
+                } else {
+                    $('#filterModalOverlay').fadeOut(200);
+                }
             });
 
             document.getElementById('btnReset').addEventListener('click', () => {
