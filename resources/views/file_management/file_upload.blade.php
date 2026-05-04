@@ -7,14 +7,14 @@
     <nav class="flex px-3 sm:px-5 py-2 sm:py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300 rounded-sm" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
             <li class="inline-flex items-center">
-                <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium hover:text-blue-600 transition-colors">
-                    <i class="fa-solid fa-chart-line mr-2"></i> Monitoring
+                <a href="{{ route('monitoring') }}" class="inline-flex items-center text-xs sm:text-sm font-medium hover:text-blue-600 transition-colors">
+                    <i class="fa-solid fa-chart-line mr-1 sm:mr-2"></i> Monitoring
                 </a>
             </li>
             <li aria-current="page">
                 <div class="flex items-center">
-                    <span class="text-gray-400 mx-1">/</span>
-                    <span class="text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/20">
+                    <span class="text-gray-400 mx-0.5 sm:mx-1">/</span>
+                    <span class="text-[10px] sm:text-sm font-semibold text-blue-600 px-1.5 py-0.5 sm:px-2.5 sm:py-0.5 rounded bg-blue-50 dark:bg-blue-900/20 whitespace-nowrap">
                         Upload Management
                     </span>
                 </div>
