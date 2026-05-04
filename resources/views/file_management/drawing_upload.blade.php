@@ -23,7 +23,7 @@
                 <div class="flex items-center">
                     <span class="text-gray-400 mx-0.5 sm:mx-1">/</span>
                     <span class="text-xs sm:text-sm font-semibold text-blue-600 whitespace-nowrap">
-                        Drawing Package Details
+                        Drawing Details
                     </span>
                 </div>
             </li>
@@ -32,31 +32,31 @@
 
     <div x-data="drawingUploader" x-init="init()" class="w-full p-3 sm:p-4 lg:p-6 bg-gray-50 dark:bg-gray-900 font-sans">
 
-        <div class="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div class="mb-4 sm:mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4">
             <div>
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl"
+                <h2 class="text-lg sm:text-2xl font-bold text-gray-900 dark:text-gray-100 lg:text-3xl"
                     x-text="isCreatingNewRevision ? 'Create New Revision' : 'Drawing Package Details'">Upload New Drawing Package</h2>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Fill in the metadata and upload all related drawing files in one go.</p>
+                <p class="mt-0.5 text-[10px] sm:text-sm text-gray-500 dark:text-gray-400">Fill in the metadata and upload all related drawing files in one go.</p>
             </div>
 
             <div class="flex items-center gap-2 sm:self-center">
                 <button type="button" @click.prevent="startNewRevision"
                     x-show="savedRevisionId && isReadOnly && !isCreatingNewRevision"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-xs shadow-sm transition-all">
+                    class="inline-flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2.5 bg-green-600 hover:bg-green-700 text-white text-[10px] sm:text-sm font-bold rounded-xs shadow-sm transition-all">
                     <i class="fa-solid fa-plus-circle"></i>
                     <span>Create New Revision</span>
                 </button>
 
                 <button type="button" onclick="reviseConfirm()"
                     x-show="revisionStatus === 'pending' || revisionStatus === 'rejected'"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm font-bold rounded-xs shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
+                    class="inline-flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-[10px] sm:text-sm font-bold rounded-xs shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
                     <i class="fa-solid fa-file-pen"></i>
                     <span>Revise</span>
                 </button>
 
                 <button type="button" @click.prevent="deleteCurrentRevision"
                     x-show="draftSaved && revisionStatus === 'draft' && !isReadOnly"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm font-bold rounded-xs shadow-sm hover:bg-red-100 dark:hover:bg-red-900/50 transition-all">
+                    class="inline-flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2.5 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-[10px] sm:text-sm font-bold rounded-xs shadow-sm hover:bg-red-100 dark:hover:bg-red-900/50 transition-all">
                     <i class="fa-solid fa-trash-can"></i>
                     <span>Delete Draft</span>
                 </button>
@@ -73,16 +73,16 @@
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-12 space-y-8">
                     <div
-                        class="bg-white dark:bg-gray-800 p-6 rounded-xs shadow-sm border border-gray-200 dark:border-gray-700">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                        class="bg-white dark:bg-gray-800 p-3 sm:p-6 rounded-xs shadow-sm border border-gray-200 dark:border-gray-700">
+                        <h3 class="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
                             <i class="fa-solid fa-file-invoice mr-2 text-blue-500"></i>
                             Drawing Metadata
                         </h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">This information will determine the file storage location.</p>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <p class="text-[10px] sm:text-sm text-gray-500 dark:text-gray-400 mb-3 sm:mb-6">This information will determine the file storage location.</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
                             <div>
                                 <label for="customer"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer <span
+                                    class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">Customer <span
                                         class="text-red-500">*</span></label>
                                 <select id="customer" name="customer" class="mt-1 block w-full"
                                     :disabled="isMetadataLocked"></select>
@@ -92,7 +92,7 @@
                                 </template>
                             </div>
                             <div>
-                                <label for="model" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Model
+                                <label for="model" class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">Model
                                     <span class="text-red-500">*</span></label>
                                 <select id="model" name="model" class="mt-1 block w-full"
                                     :disabled="isMetadataLocked || !customer"></select>
@@ -102,7 +102,7 @@
                                 </template>
                             </div>
                             <div>
-                                <label for="partNo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part No <span class="text-red-500">*</span></label>
+                                <label for="partNo" class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">Part No <span class="text-red-500">*</span></label>
                                 <select id="partNo" name="partNo" class="mt-1 block w-full"
                                     :disabled="isMetadataLocked || !model"></select>
                                 <template x-if="validationErrors.partNo">
@@ -122,7 +122,7 @@
                             </div>
                             <div>
                                 <label for="docType"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Document Type <span
+                                    class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">Document Type <span
                                         class="text-red-500">*</span></label>
                                 <select id="docType" name="docType" class="mt-1 block w-full"
                                     :disabled="isMetadataLocked || !partNo"></select>
@@ -133,7 +133,7 @@
                             </div>
                             <div>
                                 <label for="category"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category <span
+                                    class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">Category <span
                                         class="text-red-500">*</span></label>
                                 <select id="category" name="category" class="mt-1 block w-full"
                                     :disabled="isMetadataLocked || !docType"></select>
@@ -144,7 +144,7 @@
                             </div>
                             <div>
                                 <label for="partGroup"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Part Group <span
+                                    class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">Part Group <span
                                         class="text-red-500">*</span></label>
                                 <select id="partGroup" name="partGroup" class="mt-1 block w-full"
                                     :disabled="isMetadataLocked || !category"></select>
@@ -157,7 +157,7 @@
                             <div class="sm:col-span-2 grid grid-cols-2 gap-6">
                                 <div>
                                     <label for="ecn_no"
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">ECN Number <span
+                                        class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">ECN Number <span
                                             class="text-red-500">*</span></label>
                                     <input type="text" x-model.debounce.500ms="ecn_no" id="ecn_no" name="ecn_no"
                                         class="mt-1 block w-full p-2 rounded-xs border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
@@ -170,7 +170,7 @@
                                 </div>
                                 <div>
                                     <label for="receipt_date"
-                                        class="block text-sm font-medium text-gray-700 dark:text-gray-300">Receipt
+                                        class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">Receipt
                                         Date<span
                                             class="text-red-500">*</span></label>
                                     <input type="date" x-model="receipt_date" id="receipt_date" name="receipt_date"
@@ -186,14 +186,14 @@
 
                             <div class="sm:col-span-2" x-show="customerHasLabels" x-transition>
                                 <label for="revision_label_id"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Revision
+                                    class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">Revision
                                     Label</label>
                                 <select id="revision_label_id" name="revision_label_id" class="mt-1 block w-full"
                                     :disabled="isReadOnly || !isMetadataFilled"></select>
                             </div>
 
                             <div class="sm:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                <label class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Finish Good Drawing
                                 </label>
                                 <div class="flex items-center mt-2"
@@ -217,7 +217,7 @@
 
                             <div class="sm:col-span-2">
                                 <label for="note"
-                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Revision Note
+                                    class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">Revision Note
                                     (optional)</label>
                                 <textarea x-model="note" id="note" name="note" rows="3"
                                     class="mt-1 block w-full p-2 rounded-xs border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
@@ -315,19 +315,19 @@
             <div id="drawing-files-section" :class="{ 'opacity-50 pointer-events-none': !isMetadataFilled || isReadOnly }"
                 class="bg-white dark:bg-gray-800 p-6 rounded-xs shadow-sm border border-gray-200 dark:border-gray-700 transition-opacity">
 
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1 flex items-center">
-                        <i class="fa-solid fa-file-arrow-up mr-3 text-blue-500 text-xl"></i>
+                <div class="mb-4 sm:mb-6">
+                    <h3 class="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1 flex items-center">
+                        <i class="fa-solid fa-file-arrow-up mr-2 sm:mr-3 text-blue-500 text-lg sm:text-xl"></i>
                         Drawing Files
                     </h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Drag & drop files into their respective categories
+                    <p class="text-[10px] sm:text-sm text-gray-500 dark:text-gray-400">Drag & drop files into their respective categories
                         below or click to browse.</p>
                 </div>
 
-                <div class="mb-8 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xs border border-gray-100 dark:border-gray-700/50">
-                    <div class="flex items-center justify-between mb-4">
-                        <label class="text-sm font-semibold text-gray-500 dark:text-gray-400">Enable File Categories</label>
-                        <span class="text-[10px] text-gray-400 dark:text-gray-500 italic">Toggle folders to upload files</span>
+                <div class="mb-6 sm:mb-8 p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xs border border-gray-100 dark:border-gray-700/50">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4">
+                        <label class="text-[10px] sm:text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1 sm:mb-0">Enable File Categories</label>
+                        <span class="text-[9px] sm:text-[10px] text-gray-400 dark:text-gray-500 italic">Toggle folders to upload files</span>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-6 sm:gap-10">
@@ -340,10 +340,10 @@
                                         x-model="enabledCategories" class="sr-only peer" :disabled="isReadOnly">
                                     <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
                                 </div>
-                                <div class="ml-3 flex items-center">
-                                    <i :class="cat.icon" class="text-xs mr-2 transition-colors"
+                                <div class="ml-2 sm:ml-3 flex items-center">
+                                    <i :class="cat.icon" class="text-[10px] sm:text-xs mr-1.5 sm:mr-2 transition-colors"
                                         :class="enabledCategories.includes(cat.id) ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'"></i>
-                                    <span class="text-sm font-semibold transition-colors"
+                                    <span class="text-[10px] sm:text-sm font-semibold transition-colors"
                                         :class="enabledCategories.includes(cat.id) ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 group-hover:text-gray-600'"
                                         x-text="cat.name"></span>
                                 </div>
@@ -361,8 +361,8 @@
 
                                 <div
                                     class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center flex-shrink-0">
-                                    <h4 class="font-semibold text-gray-800 dark:text-gray-200 flex items-center">
-                                        <i :class="cat.icon" class="mr-2 text-gray-500 dark:text-gray-400"></i>
+                                    <h4 class="font-semibold text-[11px] sm:text-base text-gray-800 dark:text-gray-200 flex items-center">
+                                        <i :class="cat.icon" class="mr-1.5 sm:mr-2 text-gray-500 dark:text-gray-400"></i>
                                         <span x-text="cat.name"></span>
                                     </h4>
                                     <span
@@ -384,7 +384,7 @@
                                         <div class="text-center">
                                             <i
                                                 class="fa-solid fa-cloud-arrow-up text-4xl text-gray-400 dark:text-gray-500"></i>
-                                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                            <p class="mt-2 text-[10px] sm:text-sm text-gray-500 dark:text-gray-400">
                                                 Drag files here or <span
                                                     class="font-semibold text-blue-600 dark:text-blue-400 cursor-pointer">browse</span>
                                             </p>
@@ -413,9 +413,9 @@
                                                     </template>
                                                 </div>
                                                 <div class="file-details flex-1 min-w-0">
-                                                    <p class="file-name text-sm text-gray-800 dark:text-gray-200 truncate"
+                                                    <p class="file-name text-[10px] sm:text-sm text-gray-800 dark:text-gray-200 truncate"
                                                         :title="fileWrapper.name" x-text="fileWrapper.name"></p>
-                                                    <p class="file-size text-xs text-gray-500 dark:text-gray-400"
+                                                    <p class="file-size text-[9px] sm:text-xs text-gray-500 dark:text-gray-400"
                                                         x-text="formatBytes(fileWrapper.size)"></p>
                                                     <div x-show="fileWrapper.status === 'uploading' || fileWrapper.status === 'retrying'"
                                                         class="progress-bar-container mt-1">
@@ -475,9 +475,9 @@
 
                                                 </div>
                                                 <div class="file-details flex-1 min-w-0">
-                                                    <p class="file-name text-sm text-gray-800 dark:text-gray-200 truncate"
+                                                    <p class="file-name text-[10px] sm:text-sm text-gray-800 dark:text-gray-200 truncate"
                                                         :title="fileWrapper.name" x-text="fileWrapper.name"></p>
-                                                    <p class="file-size text-xs text-gray-500 dark:text-gray-400"
+                                                    <p class="file-size text-[9px] sm:text-xs text-gray-500 dark:text-gray-400"
                                                         x-text="formatBytes(fileWrapper.size)"></p>
                                                     <div class="status-container mt-1 h-5 flex items-center">
                                                         <i class="fa-solid fa-check-circle text-green-500"></i>
@@ -503,16 +503,16 @@
                 </div>
             </div>
 
-            <div class="flex justify-end pt-4 gap-4" x-show="!isReadOnly" x-transition>
+            <div class="flex justify-end pt-3 sm:pt-4 gap-3 sm:gap-4" x-show="!isReadOnly" x-transition>
                 <button type="submit" id="submit-button"
                     :disabled="!isMetadataFilled || !ecn_no || isUploading || (draftSaved && !isDirty) || revisionCheck.status === 'checking'"
-                    class="inline-flex items-center gap-2 justify-center px-6 py-3 border border-transparent text-base font-medium rounded-xs shadow-sm text-white bg-blue-600 enabled:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800">
+                    class="inline-flex items-center gap-1.5 sm:gap-2 justify-center px-4 py-2 sm:px-6 sm:py-3 border border-transparent text-[10px] sm:text-base font-medium rounded-xs shadow-sm text-white bg-blue-600 enabled:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:focus:ring-offset-gray-800">
                     <i class="fa-solid" :class="{ 'fa-upload': !isUploading, 'fa-spinner fa-spin': isUploading }"></i>
                     <span x-text="isUploading ? 'Uploading...' : (draftSaved ? 'Update Draft' : 'Save to Draft')"></span>
                 </button>
 
                 <button type="button" @click="requestApproval" :disabled="!draftSaved || approvalRequested || isDirty"
-                    class="px-4 py-2 bg-yellow-500 enabled:hover:bg-yellow-600 text-white rounded-xs disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="px-3 py-1.5 sm:px-4 sm:py-2 bg-yellow-500 enabled:hover:bg-yellow-600 text-white text-[10px] sm:text-base rounded-xs disabled:opacity-50 disabled:cursor-not-allowed">
                     <span x-show="!approvalRequested"><i class="fa-solid fa-paper-plane mr-1"></i> Request Approval</span>
                     <span x-show="approvalRequested"><i class="fa-solid fa-check mr-1"></i> Requested</span>
                 </button>

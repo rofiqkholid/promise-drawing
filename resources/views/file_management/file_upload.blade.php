@@ -127,15 +127,15 @@
                         <table id="fileTable" class="w-full divide-y divide-gray-100 dark:divide-gray-700">
                             <thead class="bg-gray-50 dark:bg-gray-700/50 text-[10px] sm:text-xs uppercase text-gray-500 font-semibold">
                                 <tr>
-                                    <th class="px-2 py-2 sm:px-4 sm:py-3 w-8 sm:w-12 text-center">No</th>
-                                    <th class="px-2 py-2 sm:px-4 sm:py-3 min-w-[150px] sm:min-w-[200px]">Package Info</th>
-                                    <th class="px-2 py-2 sm:px-4 sm:py-3 w-20 sm:w-28">Revision</th>
-                                    <th class="px-2 py-2 sm:px-4 sm:py-3">ECN No</th>
-                                    <th class="px-2 py-2 sm:px-4 sm:py-3">Category</th>
-                                    <th class="px-2 py-2 sm:px-4 sm:py-3">Part Group</th>
-                                    <th class="px-2 py-2 sm:px-4 sm:py-3 w-24 sm:w-32">Uploaded At</th>
-                                    <th class="px-2 py-2 sm:px-4 sm:py-3 w-24 sm:w-28 text-center">Status</th>
-                                    <th class="px-2 py-2 sm:px-4 sm:py-3 w-20 sm:w-24 text-center">Action</th>
+                                    <th class="px-1 py-1.5 sm:px-4 sm:py-3 w-6 sm:w-12 text-center">No</th>
+                                    <th class="px-1 py-1.5 sm:px-4 sm:py-3 min-w-[100px] sm:min-w-[200px]">Package Info</th>
+                                    <th class="px-1 py-1.5 sm:px-4 sm:py-3 w-16 sm:w-28">Revision</th>
+                                    <th class="px-1 py-1.5 sm:px-4 sm:py-3">ECN No</th>
+                                    <th class="px-1 py-1.5 sm:px-4 sm:py-3">Category</th>
+                                    <th class="px-1 py-1.5 sm:px-4 sm:py-3">Part Group</th>
+                                    <th class="px-1 py-1.5 sm:px-4 sm:py-3 w-16 sm:w-32">Uploaded At</th>
+                                    <th class="px-1 py-1.5 sm:px-4 sm:py-3 w-16 sm:w-28 text-center">Status</th>
+                                    <th class="px-1 py-1.5 sm:px-4 sm:py-3 w-12 sm:w-24 text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
@@ -250,7 +250,7 @@
 
             createdRow: function(row, data, dataIndex) {
                 $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0 text-gray-900 dark:text-gray-100');
-                $('td', row).addClass('py-2 px-2 sm:py-4 sm:px-4 align-middle');
+                $('td', row).addClass('py-1.5 px-1 sm:py-4 sm:px-4 align-middle');
             },
 
             columns: [{
@@ -1117,7 +1117,7 @@
 
 @media (max-width: 768px) {
     #fileTable {
-        min-width: 1000px !important;
+        min-width: max-content !important;
     }
     .dataTables_info {
         font-size: 10px !important;
