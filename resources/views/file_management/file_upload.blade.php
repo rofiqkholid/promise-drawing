@@ -491,11 +491,17 @@
 
         // Fix alignment on window resize
         let resizeTimeout;
+        let lastWindowWidth = $(window).width();
         $(window).on('resize', function() {
             clearTimeout(resizeTimeout);
             resizeTimeout = setTimeout(function() {
-                if (table) {
-                    table.columns.adjust().draw(false);
+                let currentWidth = $(window).width();
+                // Only adjust if width changed (prevents triggering on mobile vertical scroll when address bar hides)
+                if (currentWidth !== lastWindowWidth) {
+                    lastWindowWidth = currentWidth;
+                    if (table) {
+                        table.columns.adjust();
+                    }
                 }
             }, 250);
         });
