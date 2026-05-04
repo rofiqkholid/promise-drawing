@@ -40,6 +40,13 @@
             </div>
 
             <div class="flex items-center gap-2 sm:self-center">
+                <a href="{{ url('file-manager.upload') }}"
+                    class="inline-flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-[10px] sm:text-sm font-bold rounded-xs shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
+                    title="Back to List">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back</span>
+                </a>
+
                 <button type="button" @click.prevent="startNewRevision"
                     x-show="savedRevisionId && isReadOnly && !isCreatingNewRevision"
                     class="inline-flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 sm:px-4 sm:py-2.5 bg-green-600 hover:bg-green-700 text-white text-[10px] sm:text-sm font-bold rounded-xs shadow-sm transition-all">
@@ -60,12 +67,6 @@
                     <i class="fa-solid fa-trash-can"></i>
                     <span>Delete Draft</span>
                 </button>
-
-                <a href="{{ url('file-manager.upload') }}"
-                    class="inline-flex items-center justify-center w-10 h-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 rounded-xs shadow-sm hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-400 transition-all"
-                    title="Back to List">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </a>
             </div>
         </div>
 
