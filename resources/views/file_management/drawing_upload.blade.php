@@ -8,7 +8,7 @@
         <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
             <li class="inline-flex items-center">
                 <a href="{{ route('monitoring') }}" class="inline-flex items-center text-xs sm:text-sm font-medium hover:text-blue-600 transition-colors">
-                    <i class="fa-solid fa-chart-line mr-1 sm:mr-2"></i> Monitoring
+                    Monitoring
                 </a>
             </li>
             <li aria-current="page">
@@ -22,7 +22,7 @@
             <li aria-current="page">
                 <div class="flex items-center">
                     <span class="text-gray-400 mx-0.5 sm:mx-1">/</span>
-                    <span class="text-[10px] sm:text-sm font-semibold text-blue-600 px-1.5 py-0.5 sm:px-2.5 sm:py-0.5 rounded-xs bg-blue-50 dark:bg-blue-900/20 whitespace-nowrap">
+                    <span class="text-xs sm:text-sm font-semibold text-blue-600 whitespace-nowrap">
                         Drawing Package Details
                     </span>
                 </div>
