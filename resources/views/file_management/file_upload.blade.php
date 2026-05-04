@@ -26,12 +26,12 @@
 
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Upload Management</h2>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Control and monitor your drawing submissions.</p>
+                <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 lg:text-3xl">Upload Management</h2>
+                <p class="mt-1 text-xs md:text-sm text-gray-500 dark:text-gray-400">Control and monitor your drawing submissions.</p>
             </div>
             <a href="{{ url('/') }}/drawing-upload"
-                class="inline-flex items-center gap-3 justify-center px-3 py-1 border border-transparent text-sm font-semibold rounded-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
-                <i class="fa-solid fa-plus-circle text-lg"></i>
+                class="inline-flex items-center gap-2 lg:gap-3 justify-center px-3 py-1.5 lg:py-1 border border-transparent text-xs md:text-sm font-semibold rounded-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
+                <i class="fa-solid fa-plus-circle text-base lg:text-lg"></i>
                 <span>Upload New Drawing</span>
             </a>
         </div>
@@ -40,48 +40,48 @@
 
             {{-- Sidebar Filters --}}
             <aside class="w-full lg:w-72 flex-shrink-0 space-y-3">
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-sm border border-gray-200 dark:border-gray-700 sticky top-24">
-                    <div class="flex items-center gap-3 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
-                        <i class="fa-solid fa-filter text-blue-500"></i>
-                        <h3 class="font-bold text-gray-900 dark:text-gray-100 text-sm">Quick Filters</h3>
+                <div class="bg-white dark:bg-gray-800 p-4 lg:p-6 rounded-sm border border-gray-200 dark:border-gray-700 sticky top-24">
+                    <div class="flex items-center gap-2 lg:gap-3 mb-3 lg:mb-6 border-b border-gray-100 dark:border-gray-700 pb-3 lg:pb-4">
+                        <i class="fa-solid fa-filter text-blue-500 text-sm lg:text-base"></i>
+                        <h3 class="font-bold text-gray-900 dark:text-gray-100 text-xs lg:text-sm">Quick Filters</h3>
                     </div>
 
-                    <div class="grid grid-cols-2 lg:grid-cols-1 gap-x-4 gap-y-5">
-                        <div class="col-span-2 lg:col-span-1 border-b border-gray-50 dark:border-gray-700/50 pb-2">
-                            <label class="block text-[12px] font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-2">Search</label>
+                    <div class="grid grid-cols-2 lg:grid-cols-1 gap-x-3 gap-y-3 lg:gap-x-4 lg:gap-y-5">
+                        <div class="col-span-2 lg:col-span-1 border-b border-gray-50 dark:border-gray-700/50 pb-1 lg:pb-2">
+                            <label class="block text-[10px] lg:text-[12px] font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-1 lg:mb-2">Search</label>
                             <div class="relative">
                                 <input type="text" id="custom-upload-search"
-                                    class="block w-full pl-4 pr-10 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-sm text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-gray-100"
+                                    class="block w-full pl-3 pr-8 py-1.5 lg:pl-4 lg:pr-10 lg:py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-sm text-[11px] lg:text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-gray-100"
                                     placeholder="Part No, ECN...">
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                    <i id="search-icon-static" class="fa-solid fa-magnifying-glass text-gray-400 text-[12px]"></i>
-                                    <i id="search-icon-loading" class="fa-solid fa-spinner fa-spin text-blue-500 text-[12px] opacity-0 absolute"></i>
+                                <div class="absolute inset-y-0 right-0 pr-2 lg:pr-3 flex items-center pointer-events-none">
+                                    <i id="search-icon-static" class="fa-solid fa-magnifying-glass text-gray-400 text-[10px] lg:text-[12px]"></i>
+                                    <i id="search-icon-loading" class="fa-solid fa-spinner fa-spin text-blue-500 text-[10px] lg:text-[12px] opacity-0 absolute"></i>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-span-1 lg:col-span-1">
-                            <label class="block text-[12px] font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-2">Customer</label>
+                            <label class="block text-[10px] lg:text-[12px] font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-1 lg:mb-2">Customer</label>
                             <select id="filter-customer" class="js-upload-filter w-full"></select>
                         </div>
 
                         <div class="col-span-1 lg:col-span-1">
-                            <label class="block text-[12px] font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-2">Model</label>
+                            <label class="block text-[10px] lg:text-[12px] font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-1 lg:mb-2">Model</label>
                             <select id="filter-model" class="js-upload-filter w-full"></select>
                         </div>
 
                         <div class="col-span-1 lg:col-span-1">
-                            <label class="block text-[12px] font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-2">Doc Type</label>
+                            <label class="block text-[10px] lg:text-[12px] font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-1 lg:mb-2">Doc Type</label>
                             <select id="filter-doc-type" class="js-upload-filter w-full"></select>
                         </div>
 
                         <div class="col-span-1 lg:col-span-1">
-                            <label class="block text-[12px] font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-2">Category</label>
+                            <label class="block text-[10px] lg:text-[12px] font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-1 lg:mb-2">Category</label>
                             <select id="filter-category" class="js-upload-filter w-full"></select>
                         </div>
 
-                        <div class="col-span-2 lg:col-span-1 pt-2 border-t border-gray-50 dark:border-gray-700/50 lg:border-none">
-                            <button id="btnResetUploadFilters" class="w-full py-2.5 text-xs font-semibold text-gray-500 hover:text-blue-600 transition-colors flex items-center justify-center gap-3">
+                        <div class="col-span-2 lg:col-span-1 pt-1 lg:pt-2 border-t border-gray-50 dark:border-gray-700/50 lg:border-none">
+                            <button id="btnResetUploadFilters" class="w-full py-1.5 lg:py-2.5 text-[11px] lg:text-xs font-semibold text-gray-500 hover:text-blue-600 transition-colors flex items-center justify-center gap-2 lg:gap-3">
                                 <i class="fa-solid fa-rotate-left"></i>
                                 Reset All Filters
                             </button>
@@ -91,20 +91,20 @@
             </aside>
 
             <main class="flex-1 min-w-0 space-y-3">
-                <div class="flex overflow-x-auto pb-2 lg:pb-0 gap-3 lg:grid lg:grid-cols-4 custom-scrollbar">
+                <div class="flex overflow-x-auto pb-2 lg:pb-0 gap-3 lg:grid lg:grid-cols-4">
                     @foreach([
                     ['id' => 'totalUpload', 'label' => 'Total', 'icon' => 'fa-cloud-arrow-up', 'color' => 'blue'],
                     ['id' => 'totalDraft', 'label' => 'Draft', 'icon' => 'fa-file-pen', 'color' => 'blue'],
                     ['id' => 'totalPending', 'label' => 'Pending', 'icon' => 'fa-hourglass-start', 'color' => 'yellow'],
                     ['id' => 'totalRejected','label' => 'Rejected', 'icon' => 'fa-ban', 'color' => 'red']
                     ] as $card)
-                    <div class="flex-shrink-0 w-[240px] lg:w-auto bg-white dark:bg-gray-800 p-4 rounded-sm border border-gray-200 dark:border-gray-700 flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-sm bg-{{ $card['color'] }}-100 dark:bg-{{ $card['color'] }}-900/30 flex items-center justify-center text-{{ $card['color'] }}-600 dark:text-{{ $card['color'] }}-400">
-                            <i class="fa-solid {{ $card['icon'] }}"></i>
+                    <div class="flex-shrink-0 w-[120px] md:w-[150px] lg:w-auto bg-white dark:bg-gray-800 p-2.5 lg:p-4 rounded-sm border border-gray-200 dark:border-gray-700 flex items-center gap-2.5 lg:gap-4">
+                        <div class="w-7 h-7 lg:w-10 lg:h-10 rounded-sm bg-{{ $card['color'] }}-100 dark:bg-{{ $card['color'] }}-900/30 flex items-center justify-center text-{{ $card['color'] }}-600 dark:text-{{ $card['color'] }}-400">
+                            <i class="fa-solid {{ $card['icon'] }} text-xs lg:text-base"></i>
                         </div>
                         <div>
-                            <p class="text-[12px] text-gray-500 font-semibold">{{ $card['label'] }}</p>
-                            <p id="{{ $card['id'] }}" class="text-xl font-bold text-gray-900 dark:text-gray-100">-</p>
+                            <p class="text-[10px] lg:text-[12px] text-gray-500 font-semibold">{{ $card['label'] }}</p>
+                            <p id="{{ $card['id'] }}" class="text-base lg:text-xl font-bold text-gray-900 dark:text-gray-100">-</p>
                         </div>
                     </div>
                     @endforeach
@@ -112,10 +112,10 @@
 
                 <div class="bg-white dark:bg-gray-800 rounded-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                     {{-- Status Tabs --}}
-                    <div class="px-6 border-b border-gray-100 dark:border-gray-700 flex items-center gap-10 overflow-x-auto custom-scrollbar" id="status-tabs-container">
+                    <div class="px-3 sm:px-6 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between sm:justify-start gap-2 sm:gap-10 overflow-x-auto" id="status-tabs-container">
                         @foreach(['All' => 'All Files', 'draft' => 'Draft', 'pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected'] as $val => $text)
                         <button type="button"
-                            class="status-tab relative pt-3 pb-2 text-[13px] transition-all whitespace-nowrap {{ $val === 'All' ? 'text-blue-600 active-tab' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300' }}"
+                            class="status-tab relative pt-2 pb-1.5 sm:pt-3 sm:pb-2 text-[10px] min-[380px]:text-[11px] sm:text-[13px] transition-all whitespace-nowrap {{ $val === 'All' ? 'text-blue-600 active-tab' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300' }}"
                             data-status="{{ $val }}">
                             {{ $text }}
                             <span class="absolute bottom-0 left-0 w-full border border-blue-600 bg-blue-600 tab-indicator {{ $val === 'All' ? 'opacity-100' : 'opacity-0' }} transition-opacity duration-200"></span>
@@ -123,19 +123,19 @@
                         @endforeach
                     </div>
 
-                    <div>
+                    <div class="overflow-x-auto w-full pb-2">
                         <table id="fileTable" class="w-full divide-y divide-gray-100 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500 font-semibold">
+                            <thead class="bg-gray-50 dark:bg-gray-700/50 text-[10px] sm:text-xs uppercase text-gray-500 font-semibold">
                                 <tr>
-                                    <th class="px-4 py-3 w-12 text-center">No</th>
-                                    <th class="px-4 py-3 min-w-[200px]">Package Info</th>
-                                    <th class="px-4 py-3 w-28">Revision</th>
-                                    <th class="px-4 py-3">ECN No</th>
-                                    <th class="px-4 py-3">Category</th>
-                                    <th class="px-4 py-3">Part Group</th>
-                                    <th class="px-4 py-3 w-32">Uploaded At</th>
-                                    <th class="px-4 py-3 w-28 text-center">Status</th>
-                                    <th class="px-4 py-3 w-24 text-center">Action</th>
+                                    <th class="px-2 py-2 sm:px-4 sm:py-3 w-8 sm:w-12 text-center">No</th>
+                                    <th class="px-2 py-2 sm:px-4 sm:py-3 min-w-[150px] sm:min-w-[200px]">Package Info</th>
+                                    <th class="px-2 py-2 sm:px-4 sm:py-3 w-20 sm:w-28">Revision</th>
+                                    <th class="px-2 py-2 sm:px-4 sm:py-3">ECN No</th>
+                                    <th class="px-2 py-2 sm:px-4 sm:py-3">Category</th>
+                                    <th class="px-2 py-2 sm:px-4 sm:py-3">Part Group</th>
+                                    <th class="px-2 py-2 sm:px-4 sm:py-3 w-24 sm:w-32">Uploaded At</th>
+                                    <th class="px-2 py-2 sm:px-4 sm:py-3 w-24 sm:w-28 text-center">Status</th>
+                                    <th class="px-2 py-2 sm:px-4 sm:py-3 w-20 sm:w-24 text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
@@ -250,7 +250,7 @@
 
             createdRow: function(row, data, dataIndex) {
                 $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0 text-gray-900 dark:text-gray-100');
-                $('td', row).addClass('py-4 px-4 align-middle');
+                $('td', row).addClass('py-2 px-2 sm:py-4 sm:px-4 align-middle');
             },
 
             columns: [{
@@ -281,8 +281,8 @@
 
                         return `
                             <div class="flex flex-col max-w-[350px]" title="${row.part_no} ${row.partners ? '/ ' + row.partners : ''}">
-                                <span class="text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-1">${mainText}</span>
-                                <div class="text-[11px] text-gray-600 dark:text-gray-400 mt-0.5 truncate">
+                                <span class="text-xs sm:text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-1">${mainText}</span>
+                                <div class="text-[9px] sm:text-[11px] text-gray-600 dark:text-gray-400 mt-0.5 truncate">
                                     ${subText}
                                 </div>
                             </div>
@@ -297,12 +297,12 @@
                     render: function(data, type, row) {
                         let labelBadges = '';
                         if (row.revision_label_name) {
-                            labelBadges = `<span class="px-2 py-0.5 rounded-sm text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800 mr-1 whitespace-nowrap">${row.revision_label_name}</span>`;
+                            labelBadges = `<span class="px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-sm text-[8px] sm:text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800 mr-1 whitespace-nowrap">${row.revision_label_name}</span>`;
                         }
                         return `
                             <div class="flex items-center">
                                 ${labelBadges}
-                                <span class="px-2 py-0.5 rounded-sm text-[10px] font-bold bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                                <span class="px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-sm text-[8px] sm:text-[10px] font-bold bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 whitespace-nowrap">
                                     REV ${row.revision_no}
                                 </span>
                             </div>
@@ -315,7 +315,7 @@
                     searchable: true,
                     render: function(data) {
                         const searchVal = $('#custom-upload-search').val();
-                        return data ? `<span class="font-mono text-[11px] text-gray-600 dark:text-gray-400">${highlightText(data, searchVal)}</span>` : '<span class="text-gray-200">-</span>';
+                        return data ? `<span class="font-mono text-[9px] sm:text-[11px] text-gray-600 dark:text-gray-400">${highlightText(data, searchVal)}</span>` : '<span class="text-gray-200">-</span>';
                     }
                 },
                 {
@@ -326,8 +326,8 @@
                     render: function(data, type, row) {
                         return `
                             <div class="flex flex-col">
-                                <span class="text-xs font-bold text-gray-700 dark:text-gray-300 capitalize">${row.doctype_group}</span>
-                                <span class="text-[10px] text-gray-600 dark:text-gray-400">${row.doctype_subcategory || ''}</span>
+                                <span class="text-[10px] sm:text-xs font-bold text-gray-700 dark:text-gray-300 capitalize">${row.doctype_group}</span>
+                                <span class="text-[8px] sm:text-[10px] text-gray-600 dark:text-gray-400">${row.doctype_subcategory || ''}</span>
                             </div>
                         `;
                     }
@@ -337,7 +337,7 @@
                     name: 'part_group',
                     searchable: true,
                     orderable: true,
-                    render: d => `<span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap p-1 bg-gray-50 dark:bg-gray-800 rounded-sm border border-gray-100 dark:border-gray-700">${d}</span>`
+                    render: d => `<span class="text-[9px] sm:text-[11px] font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap px-1 py-0.5 sm:p-1 bg-gray-50 dark:bg-gray-800 rounded-sm border border-gray-100 dark:border-gray-700">${d}</span>`
                 },
                 {
                     data: 'uploaded_at',
@@ -347,9 +347,9 @@
                         if (!data) return '-';
                         const d = new Date(data);
                         return `
-                            <div class="flex flex-col text-[11px] font-mono text-gray-600 dark:text-gray-400">
+                            <div class="flex flex-col text-[9px] sm:text-[11px] font-mono text-gray-600 dark:text-gray-400">
                                 <span>${d.toLocaleDateString()}</span>
-                                <span class="opacity-80 text-[10px]">${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                <span class="opacity-80 text-[8px] sm:text-[10px]">${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                             </div>
                         `;
                     }
@@ -359,7 +359,7 @@
                     name: 'status',
                     className: 'text-center',
                     render: function(data) {
-                        let base = 'px-2 py-1 text-[11px] font-black rounded-sm border ';
+                        let base = 'px-1.5 py-0.5 sm:px-2 sm:py-1 text-[9px] sm:text-[11px] font-black rounded-sm border ';
                         let colors = {
                             draft: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
                             pending: 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
@@ -377,9 +377,9 @@
                     className: 'text-center',
                     render: function(data, type, row) {
                         return `
-                        <button type="button" title="Manage Files" class="w-10 h-10 flex items-center justify-center rounded-sm bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-600 transition-all duration-200 mx-auto border border-transparent" id="btn_manage_files_${row.id}" onclick="openPackageDetails('${row.id}')">
+                        <button type="button" title="Manage Files" class="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-sm bg-blue-50 text-blue-500 hover:bg-blue-100 hover:text-blue-600 transition-all duration-200 mx-auto border border-transparent" id="btn_manage_files_${row.id}" onclick="openPackageDetails('${row.id}')">
                             <span id="svg_manage_files_${row.id}" class="flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="none">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" viewBox="0 0 24 24" fill="none">
                                     <path opacity="0.3" d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z" fill="currentColor"></path>
                                     <path opacity="0.3" d="M10.3 15.3L11 14.6L8.70002 12.3C8.30002 11.9 7.7 11.9 7.3 12.3C6.9 12.7 6.9 13.3 7.3 13.7L10.3 16.7C9.9 16.3 9.9 15.7 10.3 15.3Z" fill="currentColor"></path>
                                     <path d="M10.4 3.60001L12 6H21C21.6 6 22 6.4 22 7V19C22 19.6 21.6 20 21 20H3C2.4 20 2 19.6 2 19V4C2 3.4 2.4 3 3 3H9.20001C9.70001 3 10.2 3.20001 10.4 3.60001ZM11.7 16.7L16.7 11.7C17.1 11.3 17.1 10.7 16.7 10.3C16.3 9.89999 15.7 9.89999 15.3 10.3L11 14.6L8.70001 12.3C8.30001 11.9 7.69999 11.9 7.29999 12.3C6.89999 12.7 6.89999 13.3 7.29999 13.7L10.3 16.7C10.5 16.9 10.8 17 11 17C11.2 17 11.5 16.9 11.7 16.7Z" fill="currentColor"></path>
@@ -479,7 +479,7 @@
                 page: 'current'
             }).nodes().each(function(cell, i) {
                 const num = i + 1 + info.start;
-                cell.innerHTML = `<span class="text-[12px] font-black text-gray-500 dark:text-gray-400 tracking-tighter">${num}</span>`;
+                cell.innerHTML = `<span class="text-[10px] sm:text-[12px] font-black text-gray-500 dark:text-gray-400 tracking-tighter">${num}</span>`;
             });
 
             // Force column width recalculation to fix header-body alignment
@@ -1090,28 +1090,60 @@
 </script>
 @endpush
 
-@push('styles')
+@push('style')
+<style>
 /* Ensure DataTable doesn't break mobile layout */
 .dataTables_wrapper {
-width: 100% !important;
-max-width: 100% !important;
-overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
 }
 
 .dataTables_scrollBody {
-overflow-x: auto !important;
--webkit-overflow-scrolling: touch;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
 }
 
 #fileTable {
-min-width: 1200px !important;
-width: 100% !important;
+    min-width: 1200px !important;
+    width: 100% !important;
 }
 
 @media (max-width: 768px) {
-#fileTable {
-min-width: 1000px !important;
-}
+    #fileTable {
+        min-width: 1000px !important;
+    }
+    .dataTables_info {
+        font-size: 10px !important;
+        text-align: center !important;
+        width: 100% !important;
+        margin-bottom: 8px !important;
+    }
+    .dataTables_paginate {
+        display: flex !important;
+        justify-content: center !important;
+        width: 100% !important;
+    }
+    .dataTables_paginate .pagination {
+        flex-wrap: wrap !important;
+        gap: 2px !important;
+        justify-content: center !important;
+        margin: 0 !important;
+    }
+    .dataTables_paginate .page-link {
+        padding: 4px 8px !important;
+        font-size: 10px !important;
+        min-width: 24px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    /* Reduce padding on the pagination container wrapper */
+    .dataTables_wrapper > div.p-6 {
+        padding: 12px 8px !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+    }
 }
 </style>
 @endpush
