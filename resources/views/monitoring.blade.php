@@ -7,15 +7,15 @@
 <div id="dashboardWrapper" class="flex flex-col gap-2 w-full h-auto overflow-y-auto lg:h-[calc(100vh-70px)] lg:overflow-hidden custom-scrollbar pb-20 lg:pb-0">
 
     <div class="flex-none flex flex-col lg:flex-row gap-2">
-        <div class="w-full lg:w-[70%] grid grid-cols-2 md:grid-cols-4 lg:flex lg:flex-row gap-2">
-            <button type="button" id="toggleFilterBtn" class="lg:flex-none aspect-square flex flex-col items-center justify-center bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm cursor-pointer group">
-                <div class="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-xs flex items-center justify-center w-full h-full group-hover:bg-blue-100 group-hover:text-blue-500 transition-colors">
+        <div class="w-full lg:w-[70%] grid grid-cols-4 lg:flex lg:flex-row gap-2">
+            <button type="button" id="toggleFilterBtn" class="col-span-1 md:col-span-1 lg:aspect-square lg:flex-none flex flex-col items-center justify-center bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm cursor-pointer group">
+                <div class="bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 rounded-xs flex items-center justify-center w-full h-full group-hover:bg-blue-100 group-hover:text-blue-500 transition-colors min-h-0">
                     <i class="fa-solid fa-filter fa-lg lg:fa-xl"></i>
                 </div>
             </button>
 
-            <div class="lg:flex-1 relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="flex items-center">
+            <div class="col-span-3 md:col-span-1 lg:flex-1 relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="flex items-center h-full">
                     <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-500 dark:text-blue-400 rounded-xs p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
                         <i class="fa-solid fa-file-lines fa-lg lg:fa-xl"></i>
                     </div>
@@ -26,8 +26,8 @@
                 </div>
             </div>
 
-            <div class="lg:flex-1 relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="flex items-center">
+            <div class="col-span-2 md:col-span-1 lg:flex-1 relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="flex items-center h-full">
                     <div class="bg-green-100 dark:bg-green-900/50 text-green-500 dark:text-green-400 rounded-xs p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
                         <i class="fa-solid fa-cloud-arrow-up fa-lg lg:fa-xl"></i>
                     </div>
@@ -38,8 +38,8 @@
                 </div>
             </div>
 
-            <div class="lg:flex-1 relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="flex items-center">
+            <div class="col-span-2 md:col-span-1 lg:flex-1 relative bg-white dark:bg-gray-800 p-2 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="flex items-center h-full">
                     <div class="bg-yellow-100 dark:bg-yellow-900/50 text-yellow-500 dark:text-yellow-400 rounded-xs p-2 lg:p-3 mr-2 lg:mr-4 flex items-center justify-center h-10 w-10 lg:h-12 lg:w-12 flex-shrink-0">
                         <i class="fa-solid fa-cloud-arrow-down fa-lg lg:fa-xl"></i>
                     </div>
@@ -132,7 +132,7 @@
 
     <div class="flex-none h-auto lg:flex-1 lg:min-h-0 flex flex-col lg:flex-row gap-2 items-stretch">
 
-        <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col h-[400px] lg:h-auto">
+        <div class="w-full lg:w-[70%] bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col h-[300px] lg:h-auto">
             <div class="flex-none flex justify-between items-center mb-2">
                 <h3 class="text-sm lg:text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center">
                     <i class="fa-solid fa-chart-simple mr-2 text-blue-500"></i> Upload Monitoring
@@ -154,7 +154,7 @@
             </div>
         </div>
 
-        <div class="w-full lg:w-[30%] bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col h-[350px] lg:h-auto">
+        <div class="w-full lg:w-[30%] bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col h-[280px] lg:h-auto">
             <h3 class="flex-none text-sm lg:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2 flex justify-between items-start">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-chart-pie text-orange-500"></i>
@@ -181,7 +181,7 @@
 
     <div class="flex-none h-auto lg:h-[35vh] flex flex-col lg:flex-row gap-2 items-stretch mb-2">
 
-        <div class="w-full lg:w-[45%] bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col overflow-visible h-[350px] lg:h-full">
+        <div class="w-full lg:w-[45%] bg-white dark:bg-gray-800 p-3 lg:p-4 rounded-xs border border-gray-200 dark:border-gray-700 flex flex-col overflow-visible h-[280px] lg:h-full">
             <div class="flex-none flex justify-between items-center mb-2">
                 <h3 class="text-sm lg:text-lg font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
                     <i class="fa-solid fa-arrow-trend-up text-purple-500"></i>
@@ -352,6 +352,8 @@
             this.currentChartData = [];
             this.monitoringPage = 0;
             this.currentTrendData = [];
+            this.currentPhaseData = [];
+            this.isMobile = window.innerWidth < 1024;
         }
 
         init() {
@@ -360,6 +362,16 @@
             this.initSelect2();
             this.attachButtonEvents();
             this.initPaginationEvents();
+
+            window.addEventListener('resize', () => {
+                const currentIsMobile = window.innerWidth < 1024;
+                if (this.isMobile !== currentIsMobile) {
+                    this.isMobile = currentIsMobile;
+                    if (this.currentChartData) this.renderChart(this.currentChartData);
+                    if (this.currentTrendData) this.renderTrendChart(this.currentTrendData);
+                    if (this.currentPhaseData) this.renderPhaseChart(this.currentPhaseData);
+                }
+            });
 
             this.loadCards();
             this.loadMonitoringChart();
@@ -645,7 +657,7 @@
             const ctx = document.getElementById('monitoringChart').getContext('2d');
             if (this.monitoringChart) this.monitoringChart.destroy();
 
-            const isMobile = window.innerWidth < 1024;
+            const isMobile = this.isMobile;
 
             const itemsPerPage = 7;
             const totalPages = Math.ceil(allData.length / itemsPerPage);
@@ -764,10 +776,10 @@
                             labels: {
                                 usePointStyle: true,
                                 color: textColor,
-                                padding: 30,
-                                boxWidth: 20,
+                                padding: isMobile ? 15 : 30,
+                                boxWidth: isMobile ? 12 : 20,
                                 font: {
-                                    size: 15
+                                    size: isMobile ? 11 : 15
                                 }
                             }
                         },
@@ -796,7 +808,7 @@
                             offset: -1,
                             font: {
                                 weight: 'bold',
-                                size: 14
+                                size: isMobile ? 10 : 14
                             },
                             formatter: Math.round,
                             display: 'auto',
@@ -837,7 +849,7 @@
                             display: true,
                             position: 'left',
                             title: {
-                                display: true,
+                                display: !isMobile,
                                 text: 'Count',
                                 color: textColor,
                                 font: {
@@ -850,7 +862,7 @@
                                 color: textColor,
                                 maxTicksLimit: 3,
                                 font: {
-                                    size: 12
+                                    size: isMobile ? 10 : 12
                                 },
                                 precision: 0
                             },
@@ -866,7 +878,7 @@
                             min: 0,
                             max: 120,
                             title: {
-                                display: true,
+                                display: !isMobile,
                                 text: 'Percentage',
                                 color: textColor,
                                 font: {
@@ -881,7 +893,7 @@
                             ticks: {
                                 color: textColor,
                                 font: {
-                                    size: 12
+                                    size: isMobile ? 10 : 12
                                 },
                                 stepSize: 50,
                                 callback: function(value) {
@@ -916,6 +928,7 @@
 
         renderTrendChart(data) {
             const ctx = document.getElementById('trendChart').getContext('2d');
+            const isMobile = this.isMobile;
 
             if (this.trendChart) this.trendChart.destroy();
 
@@ -983,7 +996,7 @@
                             ticks: {
                                 color: textColor,
                                 font: {
-                                    size: 14
+                                    size: isMobile ? 10 : 14
                                 }
                             },
                             grid: {
@@ -997,7 +1010,7 @@
                                 maxTicksLimit: 3,
                                 precision: 0,
                                 font: {
-                                    size: 14
+                                    size: isMobile ? 10 : 14
                                 }
                             },
                             grid: {
@@ -1014,10 +1027,10 @@
                             labels: {
                                 usePointStyle: true,
                                 color: textColor,
-                                padding: 30,
-                                boxWidth: 20,
+                                padding: isMobile ? 15 : 30,
+                                boxWidth: isMobile ? 12 : 20,
                                 font: {
-                                    size: 15
+                                    size: isMobile ? 11 : 15
                                 }
                             }
                         },
@@ -1056,17 +1069,21 @@
                 const response = await fetch(url);
                 const result = await response.json();
                 if (result.status === 'success') {
-                    this.renderPhaseChart(result.data);
+                    this.currentPhaseData = result.data;
+                    this.renderPhaseChart(this.currentPhaseData);
                 } else {
+                    this.currentPhaseData = [];
                     this.renderPhaseChart([]);
                 }
             } catch (error) {
+                this.currentPhaseData = [];
                 this.renderPhaseChart([]);
             }
         }
 
         renderPhaseChart(data) {
             const ctx = document.getElementById('phaseStatusChart').getContext('2d');
+            const isMobile = this.isMobile;
             if (this.phaseChart) this.phaseChart.destroy();
 
             const aggregated = {};
@@ -1109,12 +1126,12 @@
                                 usePointStyle: true,
                                 pointStyle: 'rect',
                                 color: textColor,
-                                padding: 15,
+                                padding: isMobile ? 10 : 15,
                                 font: {
-                                    size: 14
+                                    size: isMobile ? 11 : 14
                                 },
-                                boxWidth: 14,
-                                boxHeight: 14,
+                                boxWidth: isMobile ? 10 : 14,
+                                boxHeight: isMobile ? 10 : 14,
                                 generateLabels: function(chart) {
                                     const data = chart.data;
                                     if (data.labels.length && data.datasets.length) {
@@ -1130,7 +1147,7 @@
                                                 hidden: !chart.getDataVisibility(i),
                                                 index: i,
                                                 fontColor: textColor,
-                                                fontSize: 14,
+                                                fontSize: isMobile ? 11 : 14,
                                                 pointStyle: 'rect'
                                             };
                                         });
@@ -1172,7 +1189,7 @@
                             color: '#fff',
                             font: {
                                 weight: 'bold',
-                                size: 14
+                                size: isMobile ? 10 : 14
                             },
                             formatter: (value, ctx) => {
                                 let total = ctx.chart._metasets[ctx.datasetIndex].total;
