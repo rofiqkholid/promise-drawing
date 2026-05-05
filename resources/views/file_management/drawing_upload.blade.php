@@ -80,7 +80,7 @@
                             Drawing Metadata
                         </h3>
                         <p class="text-[10px] sm:text-sm text-gray-500 dark:text-gray-400 mb-3 sm:mb-6">This information will determine the file storage location.</p>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+                        <div class="grid grid-cols-2 gap-3 sm:gap-6">
                             <div>
                                 <label for="customer"
                                     class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">Customer <span
@@ -155,13 +155,13 @@
                                 </template>
                             </div>
 
-                            <div class="sm:col-span-2 grid grid-cols-2 gap-6">
+                            <div class="col-span-2 grid grid-cols-2 gap-3 sm:gap-6">
                                 <div>
                                     <label for="ecn_no"
                                         class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">ECN Number <span
                                             class="text-red-500">*</span></label>
                                     <input type="text" x-model.debounce.500ms="ecn_no" id="ecn_no" name="ecn_no"
-                                        class="mt-1 block w-full p-2 rounded-xs border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                        class="mt-1 block w-full py-1.5 px-2 sm:p-2 text-xs sm:text-sm rounded-xs border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                                         :class="{ 'border-red-500 dark:border-red-400 focus:ring-red-500 focus:border-red-500': validationErrors.ecn_no }"
                                         :disabled="isReadOnly || !isMetadataFilled">
                                     <template x-if="validationErrors.ecn_no">
@@ -175,7 +175,7 @@
                                         Date<span
                                             class="text-red-500">*</span></label>
                                     <input type="date" x-model="receipt_date" id="receipt_date" name="receipt_date"
-                                        class="mt-1 block w-full p-2 rounded-xs border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                        class="mt-1 block w-full py-1.5 px-2 sm:p-2 text-xs sm:text-sm rounded-xs border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                                         :class="{ 'border-red-500 dark:border-red-400 focus:ring-red-500 focus:border-red-500': validationErrors.receipt_date }"
                                         :disabled="isReadOnly || !isMetadataFilled">
                                     <template x-if="validationErrors.receipt_date">
@@ -185,7 +185,7 @@
                                 </div>
                             </div>
 
-                            <div class="sm:col-span-2" x-show="customerHasLabels" x-transition>
+                            <div class="col-span-2" x-show="customerHasLabels" x-transition>
                                 <label for="revision_label_id"
                                     class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">Revision
                                     Label</label>
@@ -193,7 +193,7 @@
                                     :disabled="isReadOnly || !isMetadataFilled"></select>
                             </div>
 
-                            <div class="sm:col-span-2">
+                            <div class="col-span-2">
                                 <label class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Finish Good Drawing
                                 </label>
@@ -216,12 +216,12 @@
                                     the <strong>Finish Good (FG)</strong>.</p>
                             </div>
 
-                            <div class="sm:col-span-2">
+                            <div class="col-span-2">
                                 <label for="note"
                                     class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300">Revision Note
                                     (optional)</label>
                                 <textarea x-model="note" id="note" name="note" rows="3"
-                                    class="mt-1 block w-full p-2 rounded-xs border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                                    class="mt-1 block w-full py-1.5 px-2 sm:p-2 text-xs sm:text-sm rounded-xs border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                                     :disabled="isReadOnly || !isMetadataFilled"></textarea>
                                 <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">A short note that will be saved on
                                     the selected package revision.</p>

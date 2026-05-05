@@ -125,7 +125,7 @@
 
                     <div class="overflow-x-auto w-full pb-2">
                         <table id="fileTable" class="w-full divide-y divide-gray-100 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-700/50 text-[10px] sm:text-xs uppercase text-gray-500 font-semibold">
+                            <thead class="bg-gray-50 dark:bg-gray-700/50 text-[13px] sm:text-xs text-gray-500 font-semibold">
                                 <tr>
                                     <th class="px-1 py-1.5 sm:px-4 sm:py-3 w-6 sm:w-12 text-center">No</th>
                                     <th class="px-1 py-1.5 sm:px-4 sm:py-3 min-w-[100px] sm:min-w-[200px]">Package Info</th>
