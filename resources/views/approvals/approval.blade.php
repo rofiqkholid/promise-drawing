@@ -7,16 +7,16 @@
   <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
 
     <li class="inline-flex items-center">
-      <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium hover:text-blue-600">
+      <a href="{{ route('monitoring') }}" class="inline-flex items-center text-xs sm:text-sm font-medium hover:text-blue-600 transition-colors">
         Monitoring
       </a>
     </li>
 
     <li aria-current="page">
       <div class="flex items-center">
-        <span class="mx-1 text-gray-400">/</span>
+        <span class="mx-1 text-gray-400 text-xs sm:text-sm">/</span>
 
-        <span class="text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded">
+        <span class="text-xs sm:text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded-none">
           Approval
         </span>
       </div>
@@ -26,45 +26,44 @@
 <div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900" x-data="{ modalOpen: false }">
   <div class="sm:flex sm:items-center sm:justify-between">
     <div>
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Approval</h2>
-      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage Your File in Data Center</p>
+      <h2 class="text-lg sm:text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight">Approval</h2>
+      <p class="mt-0.5 sm:mt-1 text-[10px] sm:text-sm text-gray-500 dark:text-gray-400">Manage Your File in Data Center</p>
     </div>
 
     <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4
  sm:mt-0">
 
-      {{-- Card Total Document --}}
       <div
-        class="kpi-card flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm
+        class="kpi-card flex items-center p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-none shadow-sm
          cursor-pointer transition hover:shadow-md hover:ring-2 hover:ring-offset-2
          hover:ring-blue-400 dark:hover:ring-blue-500"
         data-status="All">
 
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-full">
-          <i class="fa-solid fa-box-archive fa-lg"></i>
+        <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-none">
+          <i class="fa-solid fa-box-archive text-sm"></i>
         </div>
-        <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Package</p>
-          <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+        <div class="ml-3">
+          <p class="text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 tracking-tight">Total Package</p>
+          <p class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
             <span id="cardTotal">0</span>
           </p>
         </div>
       </div>
       {{-- Card Waiting L1 --}}
       <div
-        class="kpi-card flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm
+        class="kpi-card flex items-center p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-none shadow-sm
          cursor-pointer transition hover:shadow-md hover:ring-2 hover:ring-offset-2
          hover:ring-yellow-400 dark:hover:ring-yellow-500"
         data-status="Waiting Checked">
 
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 
+        <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 
               text-yellow-600 dark:text-yellow-400 
-              bg-yellow-100 dark:bg-yellow-900/50 rounded-full">
-          <i class="fa-solid fa-hourglass-start fa-lg"></i>
+              bg-yellow-100 dark:bg-yellow-900/50 rounded-none">
+          <i class="fa-solid fa-hourglass-start text-sm"></i>
         </div>
-        <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Waiting Checked</p>
-          <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+        <div class="ml-3">
+          <p class="text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 tracking-tight">Waiting Checked</p>
+          <p class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
             <span id="cardWaitingL1">0</span>
           </p>
         </div>
@@ -72,19 +71,19 @@
 
       {{-- Card Waiting L2 --}}
       <div
-        class="kpi-card flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm
+        class="kpi-card flex items-center p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-none shadow-sm
          cursor-pointer transition hover:shadow-md hover:ring-2 hover:ring-offset-2
          hover:ring-blue-400 dark:hover:ring-blue-500"
         data-status="Waiting Approved">
 
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 
+        <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 
               text-blue-600 dark:text-blue-400 
-              bg-blue-100 dark:bg-blue-900/50 rounded-full">
-          <i class="fa-solid fa-hourglass-half fa-lg"></i>
+              bg-blue-100 dark:bg-blue-900/50 rounded-none">
+          <i class="fa-solid fa-hourglass-half text-sm"></i>
         </div>
-        <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Waiting Approved</p>
-          <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+        <div class="ml-3">
+          <p class="text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 tracking-tight">Waiting Approved</p>
+          <p class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
             <span id="cardWaitingL2">0</span>
           </p>
         </div>
@@ -92,20 +91,20 @@
 
       {{-- Card Waiting L3 --}}
       <div
-        class="kpi-card flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm
+        class="kpi-card flex items-center p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-none shadow-sm
    cursor-pointer transition hover:shadow-md hover:ring-2 hover:ring-offset-2
    hover:ring-purple-400 dark:hover:ring-purple-500"
         data-status="Waiting Legalize">
 
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 
+        <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 
         text-purple-600 dark:text-purple-400 
-        bg-purple-100 dark:bg-purple-900/50 rounded-full">
-          <i class="fa-solid fa-hourglass-end fa-lg"></i>
+        bg-purple-100 dark:bg-purple-900/50 rounded-none">
+          <i class="fa-solid fa-hourglass-end text-sm"></i>
         </div>
 
-        <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Waiting Legalize</p>
-          <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+        <div class="ml-3">
+          <p class="text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 tracking-tight">Waiting Legalize</p>
+          <p class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
             <span id="cardWaitingL3">0</span>
           </p>
         </div>
@@ -115,34 +114,34 @@
 
       {{-- Card Approved --}}
       <div
-        class="kpi-card flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm
+        class="kpi-card flex items-center p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-none shadow-sm
          cursor-pointer transition hover:shadow-md hover:ring-2 hover:ring-offset-2
          hover:ring-green-400 dark:hover:ring-green-500"
         data-status="Approved">
 
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-full">
-          <i class="fa-solid fa-circle-check fa-lg"></i>
+        <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-none">
+          <i class="fa-solid fa-circle-check text-sm"></i>
         </div>
-        <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Approved</p>
-          <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+        <div class="ml-3">
+          <p class="text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 tracking-tight">Approved</p>
+          <p class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
             <span id="cardApproved">0</span>
           </p>
         </div>
       </div>
       {{-- Card Rejected --}}
       <div
-        class="kpi-card flex items-center p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm
+        class="kpi-card flex items-center p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-none shadow-sm
          cursor-pointer transition hover:shadow-md hover:ring-2 hover:ring-offset-2
          hover:ring-red-400 dark:hover:ring-red-500"
         data-status="Rejected">
 
-        <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 text-red-500 dark:text-red-400 bg-red-100 dark:bg-red-900/50 rounded-full">
-          <i class="fa-solid fa-circle-xmark fa-lg"></i>
+        <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 text-red-500 dark:text-red-400 bg-red-100 dark:bg-red-900/50 rounded-none">
+          <i class="fa-solid fa-circle-xmark text-sm"></i>
         </div>
-        <div class="ml-4">
-          <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Rejected</p>
-          <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+        <div class="ml-3">
+          <p class="text-[10px] sm:text-xs font-bold text-gray-500 dark:text-gray-400 tracking-tight">Rejected</p>
+          <p class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
             <span id="cardRejected">0</span>
           </p>
         </div>
@@ -151,46 +150,40 @@
   </div>
 
   {{-- Filter section --}}
-  <div class="mt-8 bg-white dark:bg-gray-800 p-7 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">Filters</h3>
-      <div class="flex items-center gap-2">
+  <div class="mt-4 sm:mt-6 bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-none shadow-sm border border-gray-200 dark:border-gray-700">
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+      <h3 class="text-sm font-bold text-gray-800 dark:text-gray-200 tracking-tight hidden sm:block">Filters</h3>
+      <div class="flex items-center gap-2 w-full sm:w-auto">
         <button id="btnDownloadSummary"
           type="button"
-          class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-green-500
-     bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-200
-     hover:bg-green-100 dark:hover:bg-green-900/60">
-          {{-- normal state --}}
+          class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold rounded-none bg-emerald-600 text-white hover:bg-emerald-700 transition-all shadow-sm">
           <span class="btn-label inline-flex items-center gap-2">
             <i class="fa-solid fa-file-excel"></i>
-            <span>Download Summary</span>
+            <span class="whitespace-nowrap">Download Summary</span>
           </span>
-
-          {{-- loading state --}}
           <span class="btn-spinner hidden inline-flex items-center gap-2">
             <i class="fa-solid fa-circle-notch fa-spin"></i>
             <span>Preparing...</span>
           </span>
         </button>
 
-
         <button id="btnResetFilters"
           type="button"
-          class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600
-             bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
+          class="w-12 sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 text-xs rounded-none border border-gray-300 dark:border-gray-600
+             bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-sm" title="Reset Filters">
           <i class="fa-solid fa-rotate-left"></i>
-          Reset Filters
+          <span class="hidden sm:inline">Reset</span>
         </button>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-6">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 sm:gap-5">
       {{-- Customer --}}
       <div>
-        <label for="customer" class="text-sm font-medium text-gray-700 dark:text-gray-300">Customer</label>
-        <div class="relative mt-1">
+        <label for="customer" class="text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">Customer</label>
+        <div class="relative">
           <select id="customer"
-            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            class="js-filter appearance-none block w-full pl-3 pr-10 py-1.5 sm:py-2 text-[12px] sm:text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all">
             <option value="All" selected>All</option>
           </select>
         </div>
@@ -198,10 +191,10 @@
 
       {{-- Model --}}
       <div>
-        <label for="model" class="text-sm font-medium text-gray-700 dark:text-gray-300">Model</label>
-        <div class="relative mt-1">
+        <label for="model" class="text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">Model</label>
+        <div class="relative">
           <select id="model"
-            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            class="js-filter appearance-none block w-full pl-3 pr-10 py-1.5 sm:py-2 text-[12px] sm:text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all">
             <option value="All" selected>All</option>
           </select>
         </div>
@@ -209,10 +202,10 @@
 
       {{-- Document Type --}}
       <div>
-        <label for="document-type" class="text-sm font-medium text-gray-700 dark:text-gray-300">Document Type</label>
-        <div class="relative mt-1">
+        <label for="document-type" class="text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">Document Type</label>
+        <div class="relative">
           <select id="document-type"
-            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            class="js-filter appearance-none block w-full pl-3 pr-10 py-1.5 sm:py-2 text-[12px] sm:text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all">
             <option value="All" selected>All</option>
           </select>
         </div>
@@ -220,10 +213,10 @@
 
       {{-- Category --}}
       <div>
-        <label for="category" class="text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
-        <div class="relative mt-1">
+        <label for="category" class="text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">Category</label>
+        <div class="relative">
           <select id="category"
-            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            class="js-filter appearance-none block w-full pl-3 pr-10 py-1.5 sm:py-2 text-[12px] sm:text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all">
             <option value="All" selected>All</option>
           </select>
         </div>
@@ -231,21 +224,21 @@
 
       {{-- Revision Status (Waiting/Approved/Rejected) --}}
       <div>
-        <label for="status" class="text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-        <div class="relative mt-1">
+        <label for="status" class="text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">Status</label>
+        <div class="relative">
           <select id="status"
-            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            class="js-filter appearance-none block w-full pl-3 pr-10 py-1.5 sm:py-2 text-[12px] sm:text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all">
             <option value="All" selected>All</option>
           </select>
         </div>
       </div>
 
-      {{-- Project Status (BARU, sama konsep dengan dashboard #project_status) --}}
+      {{-- Project Status --}}
       <div>
-        <label for="project-status" class="text-sm font-medium text-gray-700 dark:text-gray-300">Project Status</label>
-        <div class="relative mt-1">
+        <label for="project-status" class="text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">Project Status</label>
+        <div class="relative">
           <select id="project-status"
-            class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            class="js-filter appearance-none block w-full pl-3 pr-10 py-1.5 sm:py-2 text-[12px] sm:text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all">
             <option value="All" selected>All</option>
           </select>
         </div>
@@ -254,32 +247,30 @@
 
   </div>
 
-  {{-- Tabel section --}}
-  <div class="mt-8 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-    
+  <div class="mt-4 sm:mt-6 bg-white dark:bg-gray-800 rounded-none border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
       <table id="approvalTable" class="w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead class="bg-gray-50 dark:bg-gray-700/50">
+        <thead class="bg-gray-50 dark:bg-gray-700/50 text-[12px] text-gray-600 dark:text-gray-400 font-bold tracking-tight">
           <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Package Data</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Receive Date</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Request Date</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Decision Date</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Action</th>
+            <th class="px-4 py-2 text-left">No</th>
+            <th class="px-4 py-2 text-left">Package Data</th>
+            <th class="px-4 py-2 text-left">Receive Date</th>
+            <th class="px-4 py-2 text-left">Request Date</th>
+            <th class="px-4 py-2 text-left">Decision Date</th>
+            <th class="px-4 py-2 text-left">Status</th>
+            <th class="px-4 py-2 text-left">Action</th>
           </tr>
         </thead>
 
-        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
-        </tbody>
-      </table>
-    
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300 text-[12px]">
+      </tbody>
+    </table>
+
   </div>
 
   {{-- Modal Share ke Dept --}}
   <div id="shareModal"
     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 dark:bg-black/60">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full mx-4">
+    <div class="bg-white dark:bg-gray-800 rounded-none shadow-xl max-w-lg w-full mx-4">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
         <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
           Share Package to Dept (Purchasing / PUD)
@@ -306,7 +297,7 @@
           </label>
           <textarea id="shareNote"
             rows="3"
-            class="mt-1 p-2 block w-full rounded-md border border-gray-300 dark:border-gray-600
+            class="mt-1 p-2 block w-full rounded-none border border-gray-300 dark:border-gray-600
                            bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
                            text-sm shadow-sm focus:ring-blue-500 focus:border-blue-500"></textarea>
           <p class="mt-1 text-xs text-gray-400 dark:text-gray-500">
@@ -320,13 +311,13 @@
 
       <div class="px-5 py-3 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2">
         <button type="button" id="btnCancelShare"
-          class="inline-flex items-center px-3 py-1.5 text-sm rounded-md border border-gray-300 dark:border-gray-600
+          class="inline-flex items-center px-3 py-1.5 text-sm rounded-none border border-gray-300 dark:border-gray-600
                        bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200
                        hover:bg-gray-50 dark:hover:bg-gray-600">
           Cancel
         </button>
         <button type="button" id="btnConfirmShare"
-          class="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-md border border-blue-600
+          class="inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-none border border-blue-600
                        bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
           disabled>
           <span class="btn-label inline-flex items-center gap-2">
@@ -829,7 +820,7 @@
               }
 
               return `
-      <span class="px-3 py-1 inline-flex text-xs font-semibold rounded-full ${cls}">
+      <span class="px-2 py-0.5 inline-flex text-[10px] font-bold rounded-none border ${cls}">
         ${data ?? ''}
       </span>
     `;
@@ -854,7 +845,7 @@
         class="btn-share px-3 py-1.5 text-xs font-medium 
                text-blue-700 dark:text-blue-300 
                bg-blue-100 dark:bg-blue-900/50 
-               rounded-md hover:bg-blue-200 dark:hover:bg-blue-900/80"
+               rounded-none hover:bg-blue-200 dark:hover:bg-blue-900/80"
         data-id="${packageId}"
         title="Share package">
         <i class="fa-solid fa-share-nodes fa-fw"></i> Share
@@ -885,7 +876,7 @@
         ],
 
         responsive: true,
-        dom: '<"flex flex-col sm:flex-row justify-between items-center gap-4 p-2 text-gray-700 dark:text-gray-300"lf>t<"flex items-center justify-between mt-4"<"text-sm text-gray-500 dark:text-gray-400"i><"flex justify-end"p>>',
+        dom: '<"w-full overflow-x-auto"t><"flex justify-center p-4 border-t border-gray-50 dark:border-gray-800" p>',
         createdRow: function(row) {
           $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700/50 cursor-pointer');
         }

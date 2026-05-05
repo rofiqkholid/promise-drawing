@@ -8,16 +8,16 @@
   <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
 
     <li class="inline-flex items-center">
-      <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium hover:text-blue-600">
+      <a href="{{ route('monitoring') }}" class="inline-flex items-center text-xs sm:text-sm font-medium hover:text-blue-600 transition-colors">
         Monitoring
       </a>
     </li>
 
     <li aria-current="page">
       <div class="flex items-center">
-        <span class="mx-1 text-gray-400">/</span>
+        <span class="mx-1 text-gray-400 text-xs sm:text-sm">/</span>
 
-        <span class="text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded">
+        <span class="text-xs sm:text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded-none">
           Activity Logs
         </span>
       </div>
@@ -27,13 +27,13 @@
 <div class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900">
   <div class="sm:flex sm:items-center sm:justify-between">
     <div>
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Activity Logs</h2>
-      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Trace and monitor all system activities.</p>
+      <h2 class="text-lg sm:text-3xl font-bold text-gray-900 dark:text-gray-100 leading-tight">Activity Logs</h2>
+      <p class="mt-0.5 sm:mt-1 text-[10px] sm:text-sm text-gray-500 dark:text-gray-400">Trace and monitor all system activities.</p>
     </div>
   </div>
 
   {{-- Filter section --}}
-  <div class="mt-8 bg-white dark:bg-gray-800 p-5 sm:p-7 rounded-xs shadow-sm border border-gray-200 dark:border-gray-700">
+  <div class="mt-4 sm:mt-6 bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-none shadow-sm border border-gray-200 dark:border-gray-700">
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
       <div class="relative w-full sm:w-80 group">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -43,7 +43,7 @@
 
         <input type="text"
           id="custom-search"
-          class="block w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-full leading-5 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 sm:text-sm transition-all shadow-sm"
+          class="block w-full pl-10 pr-10 py-1.5 sm:py-2 border border-gray-200 dark:border-gray-600 rounded-none sm:rounded-full leading-5 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-[12px] sm:text-sm transition-all"
           placeholder="Search User, Activity, etc..."
           autocomplete="off">
 
@@ -59,14 +59,14 @@
       <div class="flex items-center gap-2 w-full sm:w-auto">
         <button id="btnDownloadExcel"
           type="button"
-          class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold rounded-xs border border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all shadow-sm">
+          class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold rounded-none bg-emerald-600 text-white hover:bg-emerald-700 transition-all shadow-sm">
           <i class="fa-solid fa-file-excel"></i>
           <span class="whitespace-nowrap">Download Summary</span>
         </button>
 
         <button id="btnResetFilters"
           type="button"
-          class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-xs border border-gray-300 dark:border-gray-600
+          class="w-12 sm:w-auto inline-flex items-center justify-center gap-2 px-3 py-2 text-xs rounded-none border border-gray-300 dark:border-gray-600
              bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all shadow-sm" title="Reset Filters">
           <i class="fa-solid fa-rotate-left"></i>
           <span class="hidden sm:inline">Reset</span>
@@ -74,30 +74,30 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
-      <div>
-        <label for="date_range_input" class="text-sm font-bold text-gray-600 dark:text-gray-400 mb-2 block">Date Range</label>
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-5">
+      <div class="col-span-2 sm:col-span-1">
+        <label for="date_range_input" class="text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">Date Range</label>
         <div class="relative">
           <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <i class="fa-solid fa-calendar-days text-gray-400"></i>
           </div>
-          <input type="text" id="date_range_input" class="block w-full rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 sm:text-sm outline-none py-2 pl-10 pr-3 transition-all" placeholder="Select Date Range">
+          <input type="text" id="date_range_input" class="block w-full rounded-none sm:rounded-md border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 text-[12px] sm:text-sm outline-none py-1.5 sm:py-2 pl-10 pr-3 transition-all" placeholder="Select Date Range">
         </div>
       </div>
 
-      <div>
-        <label for="user" class="text-sm font-bold text-gray-600 dark:text-gray-400 mb-2 block">User</label>
+      <div class="col-span-1 sm:col-span-1">
+        <label for="user" class="text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">User</label>
         <div class="relative">
-          <select id="user" class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+          <select id="user" class="js-filter appearance-none block w-full pl-3 pr-10 py-1.5 sm:py-2 text-[12px] sm:text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-none sm:rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
             <option value="All" selected>All</option>
           </select>
         </div>
       </div>
 
-      <div>
-        <label for="activity_code" class="text-sm font-bold text-gray-600 dark:text-gray-400 mb-2 block">Activity Type</label>
+      <div class="col-span-1 sm:col-span-1">
+        <label for="activity_code" class="text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-1.5 block">Activity Type</label>
         <div class="relative">
-          <select id="activity_code" class="js-filter appearance-none block w-full pl-3 pr-10 py-2 text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+          <select id="activity_code" class="js-filter appearance-none block w-full pl-3 pr-10 py-1.5 sm:py-2 text-[12px] sm:text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-300 rounded-none sm:rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
             <option value="All" selected>All</option>
           </select>
         </div>
@@ -106,19 +106,19 @@
   </div>
 
   {{-- Tabel section --}}
-  <div class="mt-8 bg-white dark:bg-gray-800 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+  <div class="mt-4 sm:mt-6 bg-white dark:bg-gray-800 rounded-none border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
     <table id="activityTable" class="w-full divide-y divide-gray-200 dark:divide-gray-700">
-      <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-600 dark:text-gray-400 font-bold tracking-tight">
+      <thead class="bg-gray-50 dark:bg-gray-700/50 text-[12px] text-gray-600 dark:text-gray-400 font-bold tracking-tight">
         <tr>
-          <th class="py-3 px-4 w-8 text-center bg-gray-50 dark:bg-gray-700/50">No</th>
-          <th class="py-3 px-4 w-40">Date</th>
-          <th class="py-3 px-4 w-40">User</th>
-          <th class="py-3 px-4 w-32">Activity</th>
-          <th class="py-3 px-4 w-32">ECN</th>
-          <th class="py-3 px-4 min-w-[300px]">Description</th>
+          <th class="py-2 px-4 w-8 text-center bg-gray-50 dark:bg-gray-700/50">No</th>
+          <th class="py-2 px-4 w-32">Date</th>
+          <th class="py-2 px-4 w-32">User</th>
+          <th class="py-2 px-4 w-28">Activity</th>
+          <th class="py-2 px-4 w-24">ECN</th>
+          <th class="py-2 px-4 min-w-[250px]">Description</th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300">
+      <tbody class="divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-300 text-[12px]">
       </tbody>
     </table>
   </div>
@@ -128,6 +128,80 @@
 
 @push('scripts')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
+<style>
+  /* DataTables Info & Pagination Premium Style */
+  #activityTable td {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+    font-size: 12px !important;
+    line-height: 1.25 !important;
+  }
+
+  #activityTable th {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    font-size: 12px !important;
+    white-space: nowrap !important;
+  }
+
+  .dataTables_info {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #9ca3af !important;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+
+  .dataTables_paginate {
+    display: flex !important;
+    gap: 0 !important;
+    justify-content: center !important;
+    width: 100% !important;
+  }
+
+  .dataTables_paginate .paginate_button {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0 !important;
+    padding: 6px 14px !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    background: white !important;
+    color: #4b5563 !important;
+    transition: all 0.2s;
+  }
+
+  .dark .dataTables_paginate .paginate_button {
+    background: #1f2937 !important;
+    border-color: #374151 !important;
+    color: #9ca3af !important;
+  }
+
+  .dataTables_paginate .paginate_button:hover {
+    background: #f9fafb !important;
+    color: #2563eb !important;
+    border-color: #d1d5db !important;
+  }
+
+  .dataTables_paginate .paginate_button.current {
+    background: #2563eb !important;
+    color: white !important;
+    border-color: #2563eb !important;
+  }
+
+  .dataTables_paginate .paginate_button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .dataTables_empty {
+    padding: 40px !important;
+    font-weight: 600;
+    color: #9ca3af;
+    font-size: 13px;
+    text-align: center !important;
+  }
+</style>
 <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
 <script>
   $(function() {
@@ -258,7 +332,15 @@
         responsive: false,
         scrollX: true,
         autoWidth: true,
-        dom: 't<"flex flex-col sm:flex-row justify-between items-center p-6 border-t border-gray-50 dark:border-gray-800 gap-4" <"flex-1"i> <"flex justify-end"p>>',
+        dom: 't<"flex justify-center items-center p-4 sm:p-6 border-t border-gray-50 dark:border-gray-800" p>',
+        language: {
+          emptyTable: `
+            <div class="flex flex-col items-center justify-center py-6 text-gray-400">
+              <i class="fa-solid fa-clipboard-list text-3xl mb-3 opacity-20"></i>
+              <p class="font-bold text-sm">No activity logs found matching your criteria</p>
+            </div>
+          `
+        },
         ajax: {
           url: '{{ route("activity-logs.list") }}',
           type: 'GET',
@@ -305,7 +387,10 @@
             data: 'user_name',
             name: 'user_name',
             searchable: true,
-            defaultContent: 'System'
+            defaultContent: 'System',
+            render: function(data) {
+              return `<span class="text-[12px]">${data || 'System'}</span>`;
+            }
           },
           {
             data: 'activity_code',
@@ -325,7 +410,8 @@
                 'DELETE_PACKAGE': 'bg-red-50 border border-red-200 text-red-800 dark:bg-red-900 dark:text-red-300',
               };
               const colorClass = colors[data] || 'bg-gray-50 border border-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
-              return `<span class="inline-flex items-center px-2.5 py-2 rounded-xs text-xs font-medium ${colorClass}">${data}</span>`;
+              const labelText = data ? data.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '-';
+              return `<span class="inline-flex items-center px-2 py-0.5 rounded-none text-[10px] font-bold ${colorClass}">${labelText}</span>`;
             }
           },
           {
@@ -334,7 +420,7 @@
             orderable: true,
             searchable: true,
             render: function(data) {
-              return (data && data.ecn_no) ? `<span class="font-mono text-sm">${data.ecn_no}</span>` : '-';
+              return (data && data.ecn_no) ? `<span class="text-xs font-semibold">${data.ecn_no}</span>` : '-';
             }
           },
           {
@@ -350,8 +436,8 @@
               // --- Helper Styles ---
               const mainTextClass = "text-sm font-bold text-gray-800 dark:text-gray-200 block";
               const subTextClass = "text-xs text-gray-500 dark:text-gray-400 mt-0.5 block";
-              const badgeRev = (rev) => `<span class="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 font-mono">Rev ${rev ?? '-'}</span>`;
-              const badgeLabel = (label) => label ? `<span class="ml-1 px-1.5 py-0.5 rounded text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">${label}</span>` : '';
+              const badgeRev = (rev) => `<span class="ml-1 px-1.5 py-0.5 rounded-none text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600">Rev ${rev ?? '-'}</span>`;
+              const badgeLabel = (label) => label ? `<span class="ml-1 px-1.5 py-0.5 rounded-none text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-800">${label}</span>` : '';
 
               // 1. UPLOAD
               if (code === 'UPLOAD') {
@@ -387,19 +473,19 @@
               }
 
               // 3. APPROVE & REJECT
-if (code === 'APPROVE' || code === 'REJECT') {
-    const isApprove = code === 'APPROVE';
-    
-    // Warna & Icon untuk JUDUL saja
-    const colorClass = isApprove ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
-    const iconClass = isApprove ? 'fa-circle-check' : 'fa-circle-xmark';
-    const titleText = isApprove ? 'Approved' : 'Rejected';
+              if (code === 'APPROVE' || code === 'REJECT') {
+                const isApprove = code === 'APPROVE';
 
-    // Fallback data
-    const customer = data.customer || data.customer_code || '-';
-    const model = data.model || data.model_name || '';
+                // Warna & Icon untuk JUDUL saja
+                const colorClass = isApprove ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+                const iconClass = isApprove ? 'fa-circle-check' : 'fa-circle-xmark';
+                const titleText = isApprove ? 'Approved' : 'Rejected';
 
-    return `
+                // Fallback data
+                const customer = data.customer || data.customer_code || '-';
+                const model = data.model || data.model_name || '';
+
+                return `
         <div class="flex flex-col items-start">
             
             <span class="text-sm font-bold ${colorClass}">
@@ -416,7 +502,7 @@ if (code === 'APPROVE' || code === 'REJECT') {
             </div>
 
             <div class="${subTextClass} mt-0.5">
-                <span class="font-mono text-gray-600 dark:text-gray-300">${data.part_no || '-'}</span> 
+                <span class="text-gray-600 dark:text-gray-300 font-semibold">${data.part_no || '-'}</span> 
                 ${badgeRev(data.revision_no)}
                 <span class="mx-1 text-gray-300">•</span>
                 <span>${customer}</span>
@@ -430,7 +516,7 @@ if (code === 'APPROVE' || code === 'REJECT') {
             ` : ''}
         </div>
     `;
-}
+              }
 
               // 4. SHARE_PACKAGE
               if (code === 'SHARE_PACKAGE') {

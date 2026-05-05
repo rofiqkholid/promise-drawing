@@ -208,3 +208,71 @@ Eco Animation in Monitoring
 .animate-flow {
     animation: flowRight 2s infinite ease-in-out;
 }
+
+/* DataTables Global Density & Flat Design */
+.dataTables_wrapper table td {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    font-size: 12px !important;
+    line-height: 1.5 !important;
+}
+
+.dataTables_wrapper table th {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    font-size: 12px !important;
+}
+
+/* DataTables Pagination Global Compact Style */
+.dataTables_paginate {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 1rem !important;
+    gap: 0 !important;
+}
+
+.dataTables_paginate .paginate_button {
+    border: 1px solid #e5e7eb !important;
+    border-radius: 0 !important;
+    padding: 6px 14px !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    background: white !important;
+    color: #4b5563 !important;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+/* Mobile specific reduction */
+@media (max-width: 640px) {
+    .dataTables_paginate .paginate_button {
+        padding: 4px 10px !important;
+        font-size: 11px !important;
+    }
+}
+
+.dark .dataTables_paginate .paginate_button {
+    background: #1f2937 !important;
+    border-color: #374151 !important;
+    color: #9ca3af !important;
+}
+
+.dataTables_paginate .paginate_button:hover {
+    background: #f9fafb !important;
+    color: #2563eb !important;
+    border-color: #d1d5db !important;
+}
+
+.dataTables_paginate .paginate_button.current {
+    background: #2563eb !important;
+    color: white !important;
+    border-color: #2563eb !important;
+}
+
+.dataTables_paginate .paginate_button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

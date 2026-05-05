@@ -97,6 +97,20 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Suppress DataTables alert warnings
+            if ($.fn.dataTable) {
+                $.fn.dataTable.ext.errMode = 'none';
+            }
+
+            // Global fix for "Unknown paging action: ellipsis"
+            $(document).on('click', '.dataTables_paginate .paginate_button, .dataTables_paginate span', function(e) {
+                if ($(this).text().trim() === '...') {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
             setInterval(function() {
                 fetch("{{ route('session.check') }}", {
                         method: 'GET',

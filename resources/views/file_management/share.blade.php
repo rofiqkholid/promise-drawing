@@ -7,16 +7,16 @@
     <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
 
         <li class="inline-flex items-center">
-            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-xs font-medium hover:text-blue-600">
+            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-xs sm:text-sm font-medium hover:text-blue-600 transition-colors">
                 Monitoring
             </a>
         </li>
 
         <li aria-current="page">
             <div class="flex items-center">
-                <span class="mx-1 text-gray-400">/</span>
+                <span class="mx-1 text-gray-400 text-xs sm:text-sm">/</span>
 
-                <span class="text-xs font-semibold text-blue-600 px-2.5 py-0.5 rounded-xs">
+                <span class="text-xs sm:text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded-xs">
                     Share Packages
                 </span>
             </div>
@@ -31,8 +31,8 @@
     {{-- Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6">
         <div>
-            <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 leading-tight">Share Packages</h2>
-            <p class="text-[10px] sm:text-[12px] text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">Share and monitor package distribution.</p>
+            <h2 class="text-lg sm:text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight">Share Packages</h2>
+            <p class="text-[10px] sm:text-[13px] text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">Share and monitor package distribution.</p>
         </div>
 
         <button onclick="window.dispatchEvent(new CustomEvent('open-reshare-modal'))"
