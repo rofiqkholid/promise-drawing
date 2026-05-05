@@ -24,60 +24,7 @@
     </ol>
 </nav>
 
-<style>
-    /* Clean Select2 for Filter Bar */
-    .select2-container--default .select2-selection--single {
-        height: 38px !important;
-        border-color: #e5e7eb !important;
-        border-radius: 0 !important;
-        background-color: #f9fafb !important;
-        display: flex !important;
-        align-items: center !important;
-    }
-    .dark .select2-container--default .select2-selection--single {
-        border-color: #374151 !important;
-        background-color: #111827 !important;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-        line-height: 38px !important;
-        font-size: 13px !important;
-        padding-left: 12px !important;
-        color: #4b5563 !important;
-        font-weight: 500 !important;
-    }
-    .dark .select2-container--default .select2-selection--single .select2-selection__rendered {
-        color: #d1d5db !important;
-    }
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 38px !important;
-        right: 12px !important;
-    }
-    .select2-dropdown {
-        border-color: #e5e7eb !important;
-        border-radius: 0 !important;
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
-        z-index: 9999 !important;
-    }
-    .dark .select2-dropdown {
-        border-color: #374151 !important;
-        background-color: #1f2937 !important;
-    }
-
-    @media (max-width: 639px) {
-        .select2-container--default .select2-selection--single {
-            height: 34px !important;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            line-height: 34px !important;
-            font-size: 12px !important;
-            padding-left: 10px !important;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 34px !important;
-            right: 10px !important;
-        }
-    }
-</style>
+</nav>
 
 <div class="w-full p-3 sm:p-4 lg:p-6 bg-gray-50 dark:bg-gray-900 font-sans">
 
@@ -186,7 +133,7 @@
                             <label class="block text-[11px] sm:text-[13px] font-semibold text-gray-400 dark:text-gray-500 mb-1 sm:mb-1.5 px-0.5">Status</label>
                             <select id="status" class="js-filter w-full select2-basic"></select>
                         </div>
-                        <button id="btnResetFilters" class="h-[34px] w-[34px] sm:h-[38px] sm:w-[38px] shrink-0 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-none flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all" title="Reset Filters">
+                        <button id="btnResetFilters" class="h-8 w-8 sm:h-[38px] sm:w-[38px] shrink-0 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-none flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all" title="Reset Filters">
                             <i class="fa-solid fa-arrows-rotate text-xs sm:text-sm"></i>
                         </button>
                     </div>
