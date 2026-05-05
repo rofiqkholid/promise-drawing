@@ -45,7 +45,7 @@
 
 <div class="bg-white dark:bg-gray-800 sm:rounded-sm border-0 sm:border sm:border-gray-200 dark:border-gray-700 overflow-hidden mb-4 border-b border-gray-200 last:border-b-0 sm:last:border-b">
     <button @click="toggleSection('{{$category}}')"
-        class="w-full p-3 sm:p-4 border-b border-gray-100 sm:border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between focus:outline-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+        class="w-full p-3 sm:p-4 border-b border-gray-100 sm:border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between focus:outline-none hover:bg-blue-50/50 dark:hover:bg-gray-700 transition-colors duration-200"
         :aria-expanded="openSections.includes('{{$category}}')">
         <div class="flex flex-col gap-0.5 text-left">
             <div class="flex items-center">
