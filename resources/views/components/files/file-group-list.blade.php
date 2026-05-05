@@ -43,14 +43,14 @@
 </style>
 @endonce
 
-<div class="bg-white dark:bg-gray-800 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden mb-4">
+<div class="bg-white dark:bg-gray-800 sm:rounded-sm border-0 sm:border sm:border-gray-200 dark:border-gray-700 overflow-hidden mb-4 border-b border-gray-200 last:border-b-0 sm:last:border-b">
     <button @click="toggleSection('{{$category}}')"
-        class="w-full p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between focus:outline-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+        class="w-full p-3 sm:p-4 border-b border-gray-100 sm:border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between focus:outline-none hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
         :aria-expanded="openSections.includes('{{$category}}')">
         <div class="flex flex-col gap-0.5 text-left">
             <div class="flex items-center">
-                <i class="fa-solid {{$icon}} mr-3 w-4 text-center text-gray-500 dark:text-gray-400"></i>
-                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <i class="fa-solid {{$icon}} mr-2.5 sm:mr-3 w-4 text-center text-[11px] sm:text-sm text-gray-500 dark:text-gray-400"></i>
+                <span class="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">
                     {{ $title }}
                 </span>
             </div>
@@ -62,35 +62,35 @@
             @endif
         </div>
         <div class="flex items-center gap-2">
-            <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-xs"
+            <span class="text-[10px] sm:text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 sm:py-1 rounded-sm"
                   x-text="`${(pkg.files['{{$category}}']?.length || 0)} files`"></span>
-            <i class="fa-solid fa-chevron-down text-gray-400 dark:text-gray-500 transition-transform"
+            <i class="fa-solid fa-chevron-down text-[10px] sm:text-sm text-gray-400 dark:text-gray-500 transition-transform"
                :class="{'rotate-180': openSections.includes('{{$category}}')}"></i>
         </div>
     </button>
     
     <div x-show="openSections.includes('{{$category}}')" x-collapse>
-        <div class="p-2 max-h-72 overflow-y-auto custom-scrollbar">
+        <div class="p-1 sm:p-2 max-h-72 overflow-y-auto custom-scrollbar">
             <template x-for="file in (pkg.files['{{$category}}'] || [])" :key="file.name">
                 <div @click="selectFile(file)"
                      :class="{'bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 font-medium is-selected': selectedFile && selectedFile.name === file.name}"
-                     class="flex items-center {{ $allowDownload ? 'justify-between' : '' }} p-3 rounded-xs cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 group"
+                     class="flex items-center {{ $allowDownload ? 'justify-between' : '' }} p-2 sm:p-3 rounded-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 group"
                      role="button" tabindex="0" @keydown.enter="selectFile(file)">
 
                     <div class="flex items-center min-w-0 pr-2 flex-1 overflow-hidden">
                         <template x-if="file.icon_src">
-                            <img :src="file.icon_src" alt="" class="w-5 h-5 mr-3 object-contain" />
+                            <img :src="file.icon_src" alt="" class="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 object-contain" />
                         </template>
 
                         <template x-if="!file.icon_src">
-                            <i class="fa-solid fa-file text-gray-500 dark:text-gray-400 mr-3 transition-colors group-hover:text-blue-500"></i>
+                            <i class="fa-solid fa-file text-sm sm:text-base text-gray-500 dark:text-gray-400 mr-2 sm:mr-3 transition-colors group-hover:text-blue-500"></i>
                         </template>
                         <div class="flex flex-col min-w-0 flex-1 overflow-hidden pr-2">
                             <div class="marquee-wrapper">
-                                <span class="marquee-content text-sm text-gray-900 dark:text-gray-100 font-medium"
+                                <span class="marquee-content text-[11px] sm:text-sm text-gray-900 dark:text-gray-100 font-medium"
                                       x-text="file.name"></span>
                             </div>
-                            <div class="flex items-center mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">
+                            <div class="flex items-center mt-0.5 text-[9px] sm:text-[10px] text-gray-400 dark:text-gray-500">
                                 <span class="font-semibold" x-text="formatBytes(file.size)"></span>
                                 <span class="font-normal ml-1">(Original)</span>
                             </div>
@@ -101,9 +101,9 @@
                     @if($allowDownload)
                     <button @click.stop="downloadFile(file)"
                         :disabled="isDownloadingFile === file.name"
-                        class="flex-shrink-0 w-8 h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-xs transition-all duration-200 active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-sm transition-all duration-200 active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Download">
-                        <i class="fa-solid text-sm" :class="isDownloadingFile === file.name ? 'fa-spinner fa-spin' : 'fa-download'"></i>
+                        <i class="fa-solid text-[10px] sm:text-sm" :class="isDownloadingFile === file.name ? 'fa-spinner fa-spin' : 'fa-download'"></i>
                     </button>
                     @endif
                 </div>

@@ -3,33 +3,35 @@
 @section('header-title', 'File Manager - Download Detail')
 
 @section('content')
-<nav class="flex px-5 py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300" aria-label="Breadcrumb">
+<div class="w-full px-2 sm:px-4 lg:px-6 xl:px-4 2xl:px-6">
+    <div class="w-full">
+        <nav class="flex px-3 sm:px-5 py-2 sm:py-3 mb-3 text-gray-500 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 dark:text-gray-300 rounded-sm" aria-label="Breadcrumb">
     <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
         <li class="inline-flex items-center">
-            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium hover:text-blue-600">
+            <a href="{{ route('monitoring') }}" class="inline-flex items-center text-xs sm:text-sm font-medium hover:text-blue-600 transition-colors">
                 Monitoring
             </a>
         </li>
         <li aria-current="page">
             <div class="flex items-center">
-                <span class="mx-1 text-gray-400">/</span>
-                <a href="{{ route('file-manager.export') }}" class="text-sm font-semibold px-2.5 py-0.5 hover:text-blue-600 rounded-xs">
+                <span class="mx-1 text-gray-400 text-xs sm:text-sm">/</span>
+                <a href="{{ route('file-manager.export') }}" class="text-xs sm:text-sm font-semibold hover:text-blue-600 transition-colors">
                     Download Files
                 </a>
             </div>
         </li>
         <li aria-current="page">
             <div class="flex items-center">
-                <span class="mx-1 text-gray-400">/</span>
-                <span class="text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded-xs">
+                <span class="mx-1 text-gray-400 text-xs sm:text-sm">/</span>
+                <span class="text-xs sm:text-sm font-semibold text-blue-600">
                     Download Detail
                 </span>
             </div>
         </li>
     </ol>
-</nav>
+    </div>
 
-<div class="p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen relative"
+    <div class="w-full p-0 sm:p-4 lg:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen relative"
     x-data="exportDetail()"
     @mousemove.window="onPan($event)"
     @mouseup.window="endPan()"
@@ -60,23 +62,23 @@
 
             <!-- ===== Package Info Card ===== -->
             <div x-ref="metaCard"
-                class="bg-white dark:bg-gray-800 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                    <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 md:justify-between">
-                        <h2 class="text-lg lg:text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+                class="bg-white dark:bg-gray-800 sm:rounded-sm border-0 sm:border sm:border-gray-200 dark:border-gray-700 overflow-hidden mb-4 sm:mb-0">
+                <div class="px-3 py-3 sm:px-4 sm:py-3 border-b border-gray-100 sm:border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between gap-2 sm:gap-6">
+                        <h2 class="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center">
                             <i class="fa-solid fa-box-archive mr-2 text-blue-600"></i>
                             Package Info
                         </h2>
                         <a href="{{ route('file-manager.export') }}"
-                            class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-xs text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800">
+                            class="inline-flex items-center gap-1.5 sm:gap-2 justify-center px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800 transition-colors">
                             <i class="fa-solid fa-arrow-left"></i>
                             Back
                         </a>
                     </div>
                 </div>
 
-                <div class="px-4 py-4 space-y-3">
-                    <p class="text-sm text-gray-700 dark:text-gray-200" x-text="metaLine()"></p>
+                <div class="px-3 py-3 sm:px-4 sm:py-4 space-y-2 sm:space-y-3">
+                    <p class="text-[11px] sm:text-sm text-gray-700 dark:text-gray-200 leading-relaxed" x-text="metaLine()"></p>
 
                     <template x-if="pkg.metadata?.linked_partners?.length > 0">
                         <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
@@ -94,34 +96,34 @@
                 </div>
 
                 {{-- Revision Selector --}}
-                <div class="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
-                    <div class="space-y-2">
-                        <label class="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <div class="px-3 py-2.5 sm:px-4 sm:py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 sm:border-gray-200 dark:border-gray-700">
+                    <div class="space-y-1.5 sm:space-y-2">
+                        <label class="text-[10px] sm:text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
                             <i class="fa-solid fa-code-branch text-[10px] text-gray-400"></i>
                             Revision History
                         </label>
                         <div class="relative">
                             <select id="revision-selector" x-ref="revisionSelector" :disabled="isLoadingRevision"
-                                class="block w-full pl-3 pr-10 py-2 text-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-xs focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 transition-all">
+                                class="block w-full pl-2 sm:pl-3 pr-8 sm:pr-10 py-1.5 sm:py-2 text-[11px] sm:text-sm border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-sm focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 transition-all">
                             </select>
                         </div>
                     </div>
                 </div>
 
                 {{-- Quick Actions / Stats footer --}}
-                <div class="px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <div class="px-3 py-3 sm:px-4 sm:py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 sm:border-gray-200 dark:border-gray-700 flex flex-row items-center justify-between gap-3">
                     <div class="flex flex-col">
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Original Size</span>
+                        <div class="flex items-center gap-1 sm:gap-1.5">
+                            <span class="text-[9px] sm:text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Original Size</span>
                             <div class="group relative inline-block">
-                                <i class="fa-solid fa-circle-info text-[10px] text-gray-400 cursor-help hover:text-blue-500 transition-colors"></i>
-                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-900 text-white text-[10px] rounded-xs z-50 leading-relaxed font-normal normal-case">
+                                <i class="fa-solid fa-circle-info text-[9px] sm:text-[10px] text-gray-400 cursor-help hover:text-blue-500 transition-colors"></i>
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-900 text-white text-[10px] rounded-sm z-50 leading-relaxed font-normal normal-case">
                                     Downloaded file size may be larger due to stamp processing and format conversion.
                                     <div class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-200 mt-0.5">
+                        <div class="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-semibold text-gray-700 dark:text-gray-200 mt-0.5">
                             <span x-text="getTotalPackageStats().count + ' Files'"></span>
                             <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
                             <span x-text="formatBytes(getTotalPackageStats().size)"></span>
@@ -130,7 +132,7 @@
 
                     <button @click="downloadPackage()"
                         :disabled="isLoadingPackage"
-                        class="inline-flex items-center gap-2 justify-center px-4 py-2 border border-blue-500 text-sm font-medium rounded-xs text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed">
+                        class="inline-flex items-center gap-1.5 sm:gap-2 justify-center px-3 sm:px-4 py-2 border border-blue-500 text-[11px] sm:text-sm font-medium rounded-sm text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fa-solid" :class="isLoadingPackage ? 'fa-spinner fa-spin' : 'fa-cloud-arrow-down'"></i>
                         <span x-text="isLoadingPackage ? 'Preparing...' : 'Download All'"></span>
                     </button>
@@ -197,6 +199,8 @@
         <!-- ================= /RIGHT COLUMN ================= -->
 
     </div>
+    </div>
+</div>
 </div>
 
 <style>

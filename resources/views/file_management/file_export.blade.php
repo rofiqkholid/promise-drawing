@@ -130,7 +130,7 @@
         {{-- Tabel section --}}
         <div class="mt-8 sm:bg-white sm:dark:bg-gray-800 sm:rounded-sm border-0 sm:border sm:border-gray-200 sm:dark:border-gray-700 overflow-hidden">
             <table id="exportTable" class="w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700/50 text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 font-bold tracking-tight">
+                <thead class="bg-gray-50 dark:bg-gray-700/50 text-[12px] sm:text-xs text-gray-600 dark:text-gray-400 font-bold tracking-tight">
                     <tr>
                         <th class="px-1 sm:px-4 py-2 sm:py-3 w-8 text-center bg-gray-50 dark:bg-gray-700/50">No</th>
                         <th class="px-1 sm:px-4 py-2 sm:py-3 min-w-[200px]">Package Info</th>
