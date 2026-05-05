@@ -87,7 +87,7 @@
                                 </template>
                             </div>
                             <div class="flex items-center gap-2 mt-0.5">
-                                <span class="text-[12px] sm:text-[13px] font-semibold text-blue-600 dark:text-blue-400" x-text="packageInfo"></span>
+                                <span class="text-[12px] sm:text-[13px] font-semibold text-gray-500 dark:text-gray-400" x-text="packageInfo"></span>
                                 <template x-if="packageCategory">
                                     <div class="flex items-center gap-1.5">
                                         <span class="w-1 h-1 rounded-full bg-gray-300"></span>
@@ -123,7 +123,7 @@
                                       x-text="'Rev ' + packageRevision"></span>
                              </template>
                              <template x-if="packageEcn">
-                                <span class="text-[11px] sm:text-[13px] font-mono font-semibold text-blue-500 truncate" x-text="packageEcn"></span>
+                                <span class="text-[11px] sm:text-[13px] font-semibold text-blue-500 truncate" x-text="packageEcn"></span>
                              </template>
                         </div>
                     </div>
@@ -158,10 +158,10 @@
                                 </div>
                                 <div class="min-w-0">
                                     <p class="text-[12px] sm:text-[14px] font-semibold text-gray-800 dark:text-gray-200 leading-tight truncate max-w-[150px] sm:max-w-[180px]" x-text="supplier.text"></p>
-                                    <p class="text-[11px] sm:text-[14px] text-gray-400 font-mono mt-0.5" x-text="supplier.code"></p>
+                                    <p class="text-[11px] sm:text-[14px] text-gray-400 mt-0.5" x-text="supplier.code"></p>
                                 </div>
                             </div>
-                            <button type="button" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xs transition-colors self-center" 
+                            <button type="button" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xs transition-colors self-center" 
                                     @click="removeSupplier(supplier.id)">
                                 <i class="fa-solid fa-trash-can text-[10px]"></i>
                             </button>
@@ -306,7 +306,7 @@
                         return $(`
                             <div class="flex items-center justify-between px-2 py-1">
                                 <span class="font-medium text-sm text-gray-700 dark:text-gray-200">${data.text}</span>
-                                <span class="text-[10px] text-gray-500 font-mono bg-gray-100 dark:bg-gray-600 px-1.5 py-0.5 rounded">${data.code}</span>
+                                <span class="text-[10px] text-gray-500 bg-gray-100 dark:bg-gray-600 px-1.5 py-0.5 rounded">${data.code}</span>
                             </div>
                         `);
                     },
