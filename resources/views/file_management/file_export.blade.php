@@ -10,16 +10,15 @@
             <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
 
                 <li class="inline-flex items-center">
-                    <a href="{{ route('monitoring') }}" class="inline-flex items-center text-sm font-medium hover:text-blue-600 transition-colors">
-                        <i class="fa-solid fa-chart-line mr-2"></i> Monitoring
+                    <a href="{{ route('monitoring') }}" class="inline-flex items-center text-xs sm:text-sm font-medium hover:text-blue-600 transition-colors">
+                        Monitoring
                     </a>
                 </li>
 
                 <li aria-current="page">
                     <div class="flex items-center">
-                        <span class="text-gray-400 mx-1">/</span>
-
-                        <span class="text-sm font-semibold text-blue-600 px-2.5 py-0.5 rounded-sm bg-blue-50 dark:bg-blue-900/20">
+                        <span class="text-gray-400 mx-1 text-xs sm:text-sm">/</span>
+                        <span class="text-xs sm:text-sm font-semibold text-blue-600">
                             Download Files
                         </span>
                     </div>
@@ -37,13 +36,13 @@
             </div>
 
             {{-- KPI Cards - Horizontal Scroll on Mobile --}}
-            <div class="mt-4 flex overflow-x-auto pb-2 sm:pb-0 gap-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:mt-0 custom-scrollbar">
+            <div class="mt-4 flex overflow-x-auto pb-2 sm:pb-0 gap-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:mt-0">
                 <div class="flex-shrink-0 w-[160px] sm:w-[240px] lg:w-auto flex items-center p-2.5 sm:p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm">
                     <div class="flex-shrink-0 flex items-center justify-center h-8 w-8 sm:h-12 sm:w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-sm">
                         <i class="fa-solid fa-box-archive text-sm sm:text-lg"></i>
                     </div>
                     <div class="ml-2.5 sm:ml-4">
-                        <p class="text-[10px] sm:text-sm font-medium text-gray-600 dark:text-gray-400 tracking-tight">Total Packages</p>
+                        <p class="text-[11px] sm:text-sm font-medium text-gray-600 dark:text-gray-400 tracking-tight">Total Packages</p>
                         <p class="text-base sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                             <span id="cardTotal">0</span>
                         </p>
@@ -55,7 +54,7 @@
                         <i class="fa-solid fa-layer-group text-sm sm:text-lg"></i>
                     </div>
                     <div class="ml-2.5 sm:ml-4">
-                        <p class="text-[10px] sm:text-sm font-medium text-gray-600 dark:text-gray-400 tracking-tight">Total Revisions</p>
+                        <p class="text-[11px] sm:text-sm font-medium text-gray-600 dark:text-gray-400 tracking-tight">Total Revisions</p>
                         <p class="text-base sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                             <span id="cardTotalRevisions">0</span>
                         </p>
@@ -67,7 +66,7 @@
                         <i class="fa-solid fa-cloud-arrow-down text-sm sm:text-lg"></i>
                     </div>
                     <div class="ml-2.5 sm:ml-4">
-                        <p class="text-[10px] sm:text-sm font-medium text-gray-600 dark:text-gray-400 tracking-tight">Total Download</p>
+                        <p class="text-[11px] sm:text-sm font-medium text-gray-600 dark:text-gray-400 tracking-tight">Total Download</p>
                         <p class="text-base sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                             <span id="cardDownload">0</span>
                         </p>
@@ -110,12 +109,12 @@
             <div class="grid grid-cols-2 md:grid-cols-12 gap-3 sm:gap-4 items-end">
                 @foreach(['Customer', 'Model', 'Document Type', 'Category', 'Project Status'] as $label)
                 <div class="col-span-1 md:col-span-2">
-                    <label for="{{ Str::slug($label) }}" class="text-[9px] sm:text-[10px] font-bold text-gray-600 dark:text-gray-400 tracking-wider mb-1 sm:mb-2 block">{{ $label }}</label>
-                    <select id="{{ Str::slug($label) }}" class="js-filter appearance-none block w-full pl-2 sm:pl-3 pr-8 sm:pr-10 py-1.5 sm:py-2.5 text-[10px] sm:text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"></select>
+                    <label for="{{ Str::slug($label) }}" class="text-[11px] sm:text-[12px] font-bold text-gray-600 dark:text-gray-400 tracking-wider mb-1 sm:mb-2 block">{{ $label }}</label>
+                    <select id="{{ Str::slug($label) }}" class="js-filter appearance-none block w-full pl-2 sm:pl-3 pr-8 sm:pr-10 py-1.5 sm:py-2.5 text-[11px] sm:text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"></select>
                 </div>
                 @endforeach
 
-                <div class="col-span-2 md:col-span-2 flex items-center gap-2">
+                <div class="col-span-1 md:col-span-2 flex items-center gap-2">
                     <button id="btnResetFilters" type="button" class="w-9 sm:w-10 h-9 sm:h-[38px] inline-flex items-center justify-center rounded-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 transition-all" title="Reset Filters">
                         <i class="fa-solid fa-rotate-left text-xs"></i>
                     </button>
@@ -131,18 +130,18 @@
         {{-- Tabel section --}}
         <div class="mt-8 sm:bg-white sm:dark:bg-gray-800 sm:rounded-sm border-0 sm:border sm:border-gray-200 sm:dark:border-gray-700 overflow-hidden">
             <table id="exportTable" class="w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-600 dark:text-gray-400 font-bold tracking-tight">
+                <thead class="bg-gray-50 dark:bg-gray-700/50 text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 font-bold tracking-tight">
                     <tr>
-                        <th class="px-4 py-3 w-8 text-center bg-gray-50 dark:bg-gray-700/50">No</th>
-                        <th class="px-4 py-3 min-w-[200px]">Package Info</th>
-                        <th class="px-4 py-3 w-28">Current Rev</th>
-                        <th class="px-4 py-3">ECN</th>
-                        <th class="px-4 py-3">Category</th>
-                        <th class="px-4 py-3">Part Group</th>
-                        <th class="px-4 py-3 min-w-[150px] max-w-[200px]">Revision Note</th>
-                        <th class="px-4 py-3 w-32">Uploaded</th>
-                        <th class="px-4 py-3 w-24 text-right">Size</th>
-                        <th class="px-4 py-3 w-24 text-center">Action</th>
+                        <th class="px-1 sm:px-4 py-2 sm:py-3 w-8 text-center bg-gray-50 dark:bg-gray-700/50">No</th>
+                        <th class="px-1 sm:px-4 py-2 sm:py-3 min-w-[200px]">Package Info</th>
+                        <th class="px-1 sm:px-4 py-2 sm:py-3 w-28">Current Rev</th>
+                        <th class="px-1 sm:px-4 py-2 sm:py-3">ECN</th>
+                        <th class="px-1 sm:px-4 py-2 sm:py-3">Category</th>
+                        <th class="px-1 sm:px-4 py-2 sm:py-3">Part Group</th>
+                        <th class="px-1 sm:px-4 py-2 sm:py-3 min-w-[150px] max-w-[200px]">Revision Note</th>
+                        <th class="px-1 sm:px-4 py-2 sm:py-3 w-32">Uploaded</th>
+                        <th class="px-1 sm:px-4 py-2 sm:py-3 w-24 text-right">Size</th>
+                        <th class="px-1 sm:px-4 py-2 sm:py-3 w-24 text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
@@ -329,7 +328,7 @@
 
                 createdRow: function(row, data, dataIndex) {
                     $(row).addClass('hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-0 text-gray-900 dark:text-gray-100');
-                    $('td', row).addClass('py-2 px-4 align-middle'); // Standard padding
+                    $('td', row).addClass('py-1.5 px-1 sm:py-4 sm:px-4 align-middle');
                 },
 
                 columns: [{
@@ -363,8 +362,8 @@
 
                             return `
                     <div class="flex flex-col max-w-[350px]" title="${row.part_no} ${row.partners ? '/ ' + row.partners : ''}">
-                        <span class="text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-1">${mainText}</span>
-                        <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5 truncate">
+                        <span class="text-xs sm:text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-1">${mainText}</span>
+                        <div class="text-[9px] sm:text-[11px] text-gray-600 dark:text-gray-400 mt-0.5 truncate">
                             ${subText}
                         </div>
                     </div>
@@ -380,14 +379,13 @@
 
                             let labelBadges = '';
                             if (row.revision_label_name) {
-                                labelBadges = `<span class="px-2 py-0.5 rounded-sm text-[10px] font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800 mr-1 whitespace-nowrap">${row.revision_label_name}</span>`;
+                                labelBadges = `<span class="px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-sm text-[8px] sm:text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800 mr-1 whitespace-nowrap">${row.revision_label_name}</span>`;
                             }
-
                             return `
                     <div class="flex items-center min-w-[100px]">
                         ${labelBadges}
-                        <span class="px-2 py-0.5 rounded-sm text-[10px] font-semibold bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                            Rev ${row.revision_no}
+                        <span class="px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-sm text-[8px] sm:text-[10px] font-bold bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                            REV ${row.revision_no}
                         </span>
                     </div>
                 `;
@@ -398,7 +396,7 @@
                         name: 'ecn_no',
                         searchable: true,
                         render: function(data) {
-                            return data ? `<span class="font-mono text-xs text-gray-600 dark:text-gray-400">${data}</span>` : '<span class="text-gray-300">-</span>';
+                            return data ? `<span class="font-mono text-[9px] sm:text-[11px] text-gray-600 dark:text-gray-400">${data}</span>` : '<span class="text-gray-200">-</span>';
                         }
                     },
                     {
@@ -409,8 +407,8 @@
                         render: function(data, type, row) {
                             return `
                     <div class="flex flex-col min-w-[120px]">
-                        <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">${row.doctype_group}</span>
-                        <span class="text-xs text-gray-600 dark:text-gray-400">${row.doctype_subcategory || ''}</span>
+                        <span class="text-[10px] sm:text-xs font-bold text-gray-700 dark:text-gray-300 capitalize">${row.doctype_group}</span>
+                        <span class="text-[8px] sm:text-[10px] text-gray-600 dark:text-gray-400">${row.doctype_subcategory || ''}</span>
                     </div>
                 `;
                         }
@@ -421,7 +419,7 @@
                         name: 'part_group',
                         searchable: true,
                         orderable: true,
-                        render: d => `<span class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">${d}</span>`
+                        render: d => `<span class="text-[9px] sm:text-[11px] font-semibold text-gray-500 dark:text-gray-400 whitespace-nowrap px-1 py-0.5 sm:p-1 bg-gray-50 dark:bg-gray-800 rounded-sm border border-gray-100 dark:border-gray-700">${d}</span>`
                     },
                     {
                         data: 'note',
@@ -433,7 +431,7 @@
                             const searchVal = $('#custom-export-search').val();
                             const hlData = highlightText(data, searchVal);
                             // Matched width with HTML header
-                            return `<div class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 min-w-[150px] max-w-[200px] whitespace-normal" title="${data}">
+                            return `<div class="text-[9px] sm:text-[11px] text-gray-600 dark:text-gray-400 line-clamp-2 min-w-[150px] max-w-[200px] whitespace-normal" title="${data}">
                             ${hlData}
                         </div>`;
                         }
@@ -446,7 +444,12 @@
                             if (!data) return '-';
                             // Simple date format
                             const d = new Date(data);
-                            return `<span class="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap" title="${data}">${d.toLocaleDateString()}</span>`;
+                            return `
+                            <div class="flex flex-col text-[9px] sm:text-[11px] font-mono text-gray-600 dark:text-gray-400">
+                                <span>${d.toLocaleDateString()}</span>
+                                <span class="opacity-80 text-[8px] sm:text-[10px]">${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            </div>
+                        `;
                         }
                     },
                     {
