@@ -144,23 +144,23 @@
             class="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-gray-900 z-[150] rounded-lg">
             
             {{-- Spinner --}}
-            <div class="relative w-16 h-16 mb-6">
-                <div class="absolute inset-0 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
-                <div class="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
-                <i class="fa-solid fa-file-waveform absolute inset-0 m-auto w-fit h-fit text-blue-500 animate-pulse text-xl"></i>
+            <div class="relative w-12 h-12 sm:w-16 sm:h-16 mb-4 sm:mb-6">
+                <div class="absolute inset-0 border-[3px] sm:border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
+                <div class="absolute inset-0 border-[3px] sm:border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+                <i class="fa-solid fa-file-waveform absolute inset-0 m-auto w-fit h-fit text-blue-500 animate-pulse text-lg sm:text-xl"></i>
             </div>
 
-            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">Processing HPGL</h3>
+            <h3 class="text-xs sm:text-lg font-bold text-gray-800 dark:text-gray-100 mb-1.5 sm:mb-2">Processing HPGL</h3>
             
             {{-- Progress Bar --}}
-            <div class="w-64 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-2">
+            <div class="w-40 sm:w-64 h-1 sm:h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-2">
                 <div class="h-full bg-blue-500 rounded-full transition-all duration-300 relative overflow-hidden" 
                         :style="`width: ${loadingProgress}%`">
                         <div class="absolute inset-0 bg-white/30 animate-[shimmer_1s_infinite]"></div>
                 </div>
             </div>
             
-            <p class="text-[10px] font-mono text-gray-500 dark:text-gray-400" x-text="loadingStatus || 'Downloading...'"></p>
+            <p class="text-[9px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 tracking-wide" x-text="loadingStatus || 'Downloading...'"></p>
         </div>
 
         {{-- Solid Error Overlay (HPGL) --}}

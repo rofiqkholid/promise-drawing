@@ -82,7 +82,7 @@
 
                     <template x-if="pkg.metadata?.linked_partners?.length > 0">
                         <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Linked Partners</span>
+                            <span class="text-[10px] font-bold text-gray-400 tracking-widest block mb-2">Linked Partners</span>
                             <div class="flex flex-wrap gap-1.5">
                                 <template x-for="partner in pkg.metadata.linked_partners" :key="partner">
                                     <span class="inline-flex items-center px-2 py-1 rounded-xs text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800">
@@ -114,7 +114,7 @@
                 <div class="px-3 py-3 sm:px-4 sm:py-3 bg-gray-50 dark:bg-gray-800/50 border-t border-gray-100 sm:border-gray-200 dark:border-gray-700 flex flex-row items-center justify-between gap-3">
                     <div class="flex flex-col">
                         <div class="flex items-center gap-1 sm:gap-1.5">
-                            <span class="text-[9px] sm:text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Original Size</span>
+                            <span class="text-[9px] sm:text-[10px] font-medium text-gray-500 dark:text-gray-400 tracking-wider">Original Size</span>
                             <div class="group relative inline-block">
                                 <i class="fa-solid fa-circle-info text-[9px] sm:text-[10px] text-gray-400 cursor-help hover:text-blue-500 transition-colors"></i>
                                 <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-900 text-white text-[10px] rounded-sm z-50 leading-relaxed font-normal normal-case">
