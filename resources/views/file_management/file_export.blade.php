@@ -38,37 +38,37 @@
 
             {{-- KPI Cards - Horizontal Scroll on Mobile --}}
             <div class="mt-4 flex overflow-x-auto pb-2 sm:pb-0 gap-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:mt-0 custom-scrollbar">
-                <div class="flex-shrink-0 w-[240px] sm:w-auto flex items-center p-3 sm:p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm">
-                    <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-sm">
-                        <i class="fa-solid fa-box-archive text-base sm:text-lg"></i>
+                <div class="flex-shrink-0 w-[160px] sm:w-[240px] lg:w-auto flex items-center p-2.5 sm:p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm">
+                    <div class="flex-shrink-0 flex items-center justify-center h-8 w-8 sm:h-12 sm:w-12 text-blue-500 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 rounded-sm">
+                        <i class="fa-solid fa-box-archive text-sm sm:text-lg"></i>
                     </div>
-                    <div class="ml-3 sm:ml-4">
-                        <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Total Packages</p>
-                        <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    <div class="ml-2.5 sm:ml-4">
+                        <p class="text-[10px] sm:text-sm font-medium text-gray-600 dark:text-gray-400 tracking-tight">Total Packages</p>
+                        <p class="text-base sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                             <span id="cardTotal">0</span>
                         </p>
                     </div>
                 </div>
 
-                <div class="flex-shrink-0 w-[240px] sm:w-auto flex items-center p-3 sm:p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm">
-                    <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 text-yellow-500 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/50 rounded-sm">
-                        <i class="fa-solid fa-layer-group text-base sm:text-lg"></i>
+                <div class="flex-shrink-0 w-[160px] sm:w-[240px] lg:w-auto flex items-center p-2.5 sm:p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm">
+                    <div class="flex-shrink-0 flex items-center justify-center h-8 w-8 sm:h-12 sm:w-12 text-yellow-500 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/50 rounded-sm">
+                        <i class="fa-solid fa-layer-group text-sm sm:text-lg"></i>
                     </div>
-                    <div class="ml-3 sm:ml-4">
-                        <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Total Revisions</p>
-                        <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    <div class="ml-2.5 sm:ml-4">
+                        <p class="text-[10px] sm:text-sm font-medium text-gray-600 dark:text-gray-400 tracking-tight">Total Revisions</p>
+                        <p class="text-base sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                             <span id="cardTotalRevisions">0</span>
                         </p>
                     </div>
                 </div>
 
-                <div class="flex-shrink-0 w-[240px] sm:w-auto flex items-center p-3 sm:p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm">
-                    <div class="flex-shrink-0 flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-sm">
-                        <i class="fa-solid fa-cloud-arrow-down text-base sm:text-lg"></i>
+                <div class="flex-shrink-0 w-[160px] sm:w-[240px] lg:w-auto flex items-center p-2.5 sm:p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-sm">
+                    <div class="flex-shrink-0 flex items-center justify-center h-8 w-8 sm:h-12 sm:w-12 text-green-500 dark:text-green-400 bg-green-100 dark:bg-green-900/50 rounded-sm">
+                        <i class="fa-solid fa-cloud-arrow-down text-sm sm:text-lg"></i>
                     </div>
-                    <div class="ml-3 sm:ml-4">
-                        <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400">Total Download</p>
-                        <p class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    <div class="ml-2.5 sm:ml-4">
+                        <p class="text-[10px] sm:text-sm font-medium text-gray-600 dark:text-gray-400 tracking-tight">Total Download</p>
+                        <p class="text-base sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
                             <span id="cardDownload">0</span>
                         </p>
                     </div>
@@ -77,19 +77,19 @@
         </div>
 
         {{-- Clean & Unified Search Center --}}
-        <div class="mt-4 sm:mt-6 bg-white dark:bg-gray-800 px-4 sm:px-6 py-4 sm:py-6 rounded-sm border border-gray-200 dark:border-gray-700 transition-all duration-300">
+        <div class="mt-4 sm:mt-6 sm:bg-white sm:dark:bg-gray-800 p-0 sm:px-6 sm:py-6 sm:rounded-sm border-0 sm:border sm:border-gray-200 sm:dark:border-gray-700 transition-all duration-300">
 
             {{-- Slim Hero Search Bar --}}
             <div class="flex flex-col items-center mb-6">
                 <div class="relative w-full max-w-3xl group">
-                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                        <i id="search-icon-static" class="fa-solid fa-magnifying-glass text-blue-500 text-lg transition-all duration-300"></i>
-                        <i id="search-icon-loading" class="fa-solid fa-spinner fa-spin text-blue-500 text-lg opacity-0 transition-opacity duration-200 absolute left-5"></i>
+                    <div class="absolute inset-y-0 left-0 pl-4 sm:pl-5 flex items-center pointer-events-none">
+                        <i id="search-icon-static" class="fa-solid fa-magnifying-glass text-blue-500 text-sm sm:text-lg transition-all duration-300"></i>
+                        <i id="search-icon-loading" class="fa-solid fa-spinner fa-spin text-blue-500 text-sm sm:text-lg opacity-0 transition-opacity duration-200 absolute left-4 sm:left-5"></i>
                     </div>
 
                     <input type="text"
                         id="custom-export-search"
-                        class="block w-full pl-12 sm:pl-14 pr-16 sm:pr-20 py-3 sm:py-3.5 border border-gray-300 dark:border-gray-600 rounded-full leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-sm sm:text-base transition-all duration-300 group"
+                        class="block w-full pl-10 sm:pl-14 pr-12 sm:pr-20 py-2 sm:py-3.5 border border-gray-300 dark:border-gray-600 rounded-full leading-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 text-xs sm:text-base transition-all duration-300 group"
                         placeholder="Search drawings..."
                         autocomplete="off">
 
@@ -110,8 +110,8 @@
             <div class="grid grid-cols-2 md:grid-cols-12 gap-3 sm:gap-4 items-end">
                 @foreach(['Customer', 'Model', 'Document Type', 'Category', 'Project Status'] as $label)
                 <div class="col-span-1 md:col-span-2">
-                    <label for="{{ Str::slug($label) }}" class="text-[10px] uppercase font-bold text-gray-600 dark:text-gray-400 tracking-wider mb-2 block">{{ $label }}</label>
-                    <select id="{{ Str::slug($label) }}" class="js-filter appearance-none block w-full pl-3 pr-10 py-2.5 text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"></select>
+                    <label for="{{ Str::slug($label) }}" class="text-[9px] sm:text-[10px] font-bold text-gray-600 dark:text-gray-400 tracking-wider mb-1 sm:mb-2 block">{{ $label }}</label>
+                    <select id="{{ Str::slug($label) }}" class="js-filter appearance-none block w-full pl-2 sm:pl-3 pr-8 sm:pr-10 py-1.5 sm:py-2.5 text-[10px] sm:text-xs border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"></select>
                 </div>
                 @endforeach
 
@@ -129,7 +129,7 @@
         </div>
 
         {{-- Tabel section --}}
-        <div class="mt-8 bg-white dark:bg-gray-800 rounded-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="mt-8 sm:bg-white sm:dark:bg-gray-800 sm:rounded-sm border-0 sm:border sm:border-gray-200 sm:dark:border-gray-700 overflow-hidden">
             <table id="exportTable" class="w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-600 dark:text-gray-400 font-bold tracking-tight">
                     <tr>
