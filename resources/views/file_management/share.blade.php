@@ -49,8 +49,8 @@
         color: #d1d5db !important;
     }
     .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 36px !important;
-        right: 6px !important;
+        height: 38px !important;
+        right: 12px !important;
     }
     .select2-dropdown {
         border-color: #e5e7eb !important;
@@ -73,7 +73,8 @@
             padding-left: 10px !important;
         }
         .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 32px !important;
+            height: 34px !important;
+            right: 10px !important;
         }
     }
 </style>
