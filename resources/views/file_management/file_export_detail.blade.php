@@ -319,13 +319,13 @@
     function exportDetail() {
         // Mixin from file-viewer-alpine.js
         const viewer = fileViewerComponent({
-            pkg: @js($detail),
-            stampFormat: @js($detail['stamp_formats'] ?? []),
+            pkg: JSON.parse(atob('{!! base64_encode(json_encode($detail)) !!}')),
+            stampFormat: JSON.parse(atob('{!! base64_encode(json_encode($detail["stamp_formats"] ?? [])) !!}')),
             showStampConfig: true,
             enableMasking: true,
-            userDeptCode: @js($userDeptCode ?? null),
-            userName: @js($userName ?? null),
-            isEngineering: @js($isEngineering ?? false),
+            userDeptCode: JSON.parse(atob('{!! base64_encode(json_encode($userDeptCode ?? null)) !!}')),
+            userName: JSON.parse(atob('{!! base64_encode(json_encode($userName ?? null)) !!}')),
+            isEngineering: JSON.parse(atob('{!! base64_encode(json_encode($isEngineering ?? false)) !!}')),
             stampCopyBottomLine: 'Downloaded By {{ $userName ?? "--" }}'
         });
 
@@ -336,7 +336,7 @@
             isLoadingPackage: false, // Loading for Download All
             isDownloadingFile: null, // Track which file is being downloaded
             openSections: ['2d'],
-            isEngineering: @js($isEngineering ?? false),
+            isEngineering: JSON.parse(atob('{!! base64_encode(json_encode($isEngineering ?? false)) !!}')),
 
             init() {
                 if (viewer.init) viewer.init.call(this);
