@@ -54,44 +54,44 @@
      x-cloak
      x-show="isOpen"
      @open-share-modal.window="openModal($event.detail)"
-     class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60"
+     class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 p-4"
      style="display: none;">
 
     <div class="bg-white dark:bg-gray-800 rounded-xs w-full max-w-2xl overflow-hidden border border-gray-200 dark:border-gray-700"
          @click.outside="closeModal()">
 
         <!-- Header -->
-        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <div>
-                <h3 class="text-[18px] font-semibold text-gray-900 dark:text-gray-100">Share Package</h3>
-                <p class="text-[12px] text-gray-500 font-medium">Distribute drawings to suppliers</p>
+                <h3 class="text-base sm:text-[18px] font-bold text-gray-900 dark:text-gray-100">Share Package</h3>
+                <p class="text-[11px] sm:text-[12px] text-gray-400 font-medium">Distribute drawings to suppliers</p>
             </div>
-            <button type="button" @click="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors p-2">
-                <i class="fa-solid fa-xmark"></i>
+            <button type="button" @click="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors p-1 sm:p-2">
+                <i class="fa-solid fa-xmark text-base sm:text-lg"></i>
             </button>
         </div>
 
-        <div class="p-6 space-y-5">
+        <div class="p-4 sm:p-6 space-y-4 sm:space-y-5">
             {{-- Package Context Enhanced --}}
             <div class="bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 rounded-xs overflow-hidden">
-                <div class="p-4 border-b border-gray-100 dark:border-gray-800">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xs bg-blue-50 flex items-center justify-center text-blue-600">
-                            <i class="fa-solid fa-file-shield text-sm"></i>
+                <div class="p-3 sm:p-4 border-b border-gray-100 dark:border-gray-800">
+                    <div class="flex items-center gap-2.5 sm:gap-3">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-xs bg-blue-50 flex items-center justify-center text-blue-600">
+                            <i class="fa-solid fa-file-shield text-xs sm:text-sm"></i>
                         </div>
                         <div class="min-w-0">
                             <div class="flex items-center flex-wrap gap-x-2 gap-y-0.5">
-                                <p class="text-sm font-bold text-gray-900 dark:text-gray-100 " x-text="packageName"></p>
+                                <p class="text-[13px] sm:text-sm font-bold text-gray-900 dark:text-gray-100" x-text="packageName"></p>
                                 <template x-if="packagePartners">
-                                    <p class="text-[14px] font-bold text-gray-500 dark:text-gray-400 " x-text="'/ ' + packagePartners.replace(/,/g, ' / ')"></p>
+                                    <p class="text-[12px] sm:text-[14px] font-bold text-gray-400 dark:text-gray-500" x-text="'/ ' + packagePartners.replace(/,/g, ' / ')"></p>
                                 </template>
                             </div>
                             <div class="flex items-center gap-2 mt-0.5">
-                                <span class="text-[13px] font-semibold text-blue-600 dark:text-blue-400" x-text="packageInfo"></span>
+                                <span class="text-[12px] sm:text-[13px] font-semibold text-blue-600 dark:text-blue-400" x-text="packageInfo"></span>
                                 <template x-if="packageCategory">
                                     <div class="flex items-center gap-1.5">
                                         <span class="w-1 h-1 rounded-full bg-gray-300"></span>
-                                        <span class="text-[13px] font-semibold text-gray-400" x-text="packageCategory"></span>
+                                        <span class="text-[12px] sm:text-[13px] font-semibold text-gray-400" x-text="packageCategory"></span>
                                     </div>
                                 </template>
                             </div>
@@ -100,10 +100,10 @@
                 </div>
                 
                 <div class="grid grid-cols-2 divide-x divide-gray-100 dark:divide-gray-800 bg-white/50 dark:bg-transparent">
-                    <div class="px-4 py-3">
-                        <span class="text-[14px] font-semibold text-gray-600 dark:text-gray-300 block mb-1">Status</span>
+                    <div class="px-3 sm:px-4 py-2 sm:py-3">
+                        <span class="text-[12px] sm:text-[14px] font-semibold text-gray-500 dark:text-gray-400 block mb-0.5 sm:mb-1">Status</span>
                         <template x-if="packageStatus">
-                             <span class="inline-flex px-2 py-0.5 rounded-xs text-[14px] font-black border"
+                             <span class="inline-flex px-1.5 sm:px-2 py-0.5 rounded-xs text-[11px] sm:text-[13px] font-bold border"
                                    :class="{
                                        'bg-emerald-50 text-emerald-700 border-emerald-100': packageStatus === 'Regular',
                                        'bg-amber-50 text-amber-700 border-amber-100': packageStatus === 'Feasibility Study',
@@ -115,15 +115,15 @@
                             <span class="text-[10px] text-gray-400 font-medium">No Status</span>
                         </template>
                     </div>
-                    <div class="px-4 py-3">
-                        <span class="text-[14px] font-semibold text-gray-600 dark:text-gray-300 block mb-1">Revision / ECN</span>
-                        <div class="flex items-center gap-2">
+                    <div class="px-3 sm:px-4 py-2 sm:py-3">
+                        <span class="text-[12px] sm:text-[14px] font-semibold text-gray-500 dark:text-gray-400 block mb-0.5 sm:mb-1">Revision / ECN</span>
+                        <div class="flex items-center gap-1.5 sm:gap-2">
                              <template x-if="packageRevision">
-                                <span class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-[14px] font-semibold rounded-xs border border-gray-200 dark:border-gray-700" 
-                                      x-text="'REV ' + packageRevision"></span>
+                                <span class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-[11px] sm:text-[13px] font-semibold rounded-xs border border-gray-200 dark:border-gray-700" 
+                                      x-text="'Rev ' + packageRevision"></span>
                              </template>
                              <template x-if="packageEcn">
-                                <span class="text-[14px] font-mono font-semibold text-blue-500 truncate" x-text="packageEcn"></span>
+                                <span class="text-[11px] sm:text-[13px] font-mono font-semibold text-blue-500 truncate" x-text="packageEcn"></span>
                              </template>
                         </div>
                     </div>
@@ -133,35 +133,35 @@
             {{-- Recipient Selection --}}
             <div class="space-y-3">
                 <div>
-                    <label class="text-[14px] font-semibold text-gray-600 dark:text-gray-300 block mb-1">Add Recipients</label>
+                    <label class="text-[12px] sm:text-[14px] font-semibold text-gray-500 dark:text-gray-400 block mb-1">Add Recipients</label>
                     
                     <!-- Select2 Container -->
                     <div class="ms-style-select2" wire:ignore>
-                        <select id="supplierSelectInput" class="w-full h-10 block" multiple="multiple" style="width: 100%"></select>
+                        <select id="supplierSelectInput" class="w-full h-9 sm:h-10 block" multiple="multiple" style="width: 100%"></select>
                     </div>
                 </div>
                 
                 {{-- Selected Recipients List (Alpine Managed) --}}
                 <div class="max-h-[150px] overflow-y-auto space-y-1 no-scrollbar">
                     <template x-if="selectedSuppliers.length === 0">
-                        <div class="flex flex-col items-center justify-center py-6 border border-dashed border-gray-300 dark:border-gray-700 rounded-xs bg-gray-50 dark:bg-gray-800/50">
-                            <i class="fa-solid fa-user-group text-gray-300 mb-2"></i>
-                            <p class="text-[14px] text-gray-400 font-medium">No recipients added</p>
+                        <div class="flex flex-col items-center justify-center py-4 sm:py-6 border border-dashed border-gray-300 dark:border-gray-700 rounded-xs bg-gray-50 dark:bg-gray-800/50">
+                            <i class="fa-solid fa-user-group text-gray-300 mb-1.5 sm:mb-2 text-sm sm:text-base"></i>
+                            <p class="text-[12px] sm:text-[14px] text-gray-400 font-medium">No recipients added</p>
                         </div>
                     </template>
 
                     <template x-for="supplier in selectedSuppliers" :key="supplier.id">
-                        <div class="flex items-center justify-between p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs shadow-sm group hover:border-blue-300 dark:hover:border-blue-700 transition-all">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-xs bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 font-bold text-[10px] border border-gray-100 dark:border-gray-600"
+                        <div class="flex items-center justify-between p-1.5 sm:p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xs shadow-sm group hover:border-blue-300 dark:hover:border-blue-700 transition-all">
+                            <div class="flex items-center gap-2 sm:gap-3">
+                                <div class="w-7 h-7 sm:w-8 sm:h-8 shrink-0 rounded-xs bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 font-bold text-[9px] sm:text-[10px] border border-gray-100 dark:border-gray-600"
                                      x-text="getInitials(supplier.code)">
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="text-[14px] font-semibold text-gray-800 dark:text-gray-200 leading-tight truncate max-w-[180px]" x-text="supplier.text"></p>
-                                    <p class="text-[14px] text-gray-400 font-mono mt-0.5" x-text="supplier.code"></p>
+                                    <p class="text-[12px] sm:text-[14px] font-semibold text-gray-800 dark:text-gray-200 leading-tight truncate max-w-[150px] sm:max-w-[180px]" x-text="supplier.text"></p>
+                                    <p class="text-[11px] sm:text-[14px] text-gray-400 font-mono mt-0.5" x-text="supplier.code"></p>
                                 </div>
                             </div>
-                            <button type="button" class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xs transition-colors self-center" 
+                            <button type="button" class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xs transition-colors self-center" 
                                     @click="removeSupplier(supplier.id)">
                                 <i class="fa-solid fa-trash-can text-[10px]"></i>
                             </button>
@@ -171,18 +171,18 @@
             </div>
         </div>
 
-        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex items-center justify-end gap-3">
-            <button type="button" @click="closeModal()" class="text-[13px] font-semibold text-gray-500 hover:text-gray-700 transition-colors">
+        <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex items-center justify-end gap-3 sm:gap-4">
+            <button type="button" @click="closeModal()" class="text-[12px] sm:text-[13px] font-semibold text-gray-500 hover:text-gray-700 transition-colors">
                 Cancel
             </button>
             <button type="button" @click="submitShare()" 
                     :disabled="isSending"
-                    class="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[13px] font-semibold rounded-xs shadow-sm transition-all tracking-wide flex items-center gap-2">
+                    class="px-4 sm:px-6 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-[12px] sm:text-[13px] font-semibold rounded-xs shadow-sm transition-all tracking-wide flex items-center gap-2">
                 <template x-if="isSending">
-                    <i class="fa-solid fa-spinner fa-spin text-[13px]"></i>
+                    <i class="fa-solid fa-spinner fa-spin text-xs sm:text-[13px]"></i>
                 </template>
                 <template x-if="!isSending">
-                    <i class="fa-solid fa-paper-plane text-[13px]"></i>
+                    <i class="fa-solid fa-paper-plane text-xs sm:text-[13px]"></i>
                 </template>
                 <span x-text="isSending ? 'Sending...' : 'Notify & Share'"></span>
             </button>

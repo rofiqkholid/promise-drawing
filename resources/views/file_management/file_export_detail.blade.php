@@ -132,9 +132,9 @@
 
                     <button @click="downloadPackage()"
                         :disabled="isLoadingPackage"
-                        class="inline-flex items-center gap-1.5 sm:gap-2 justify-center px-3 sm:px-4 py-2 border border-blue-500 text-[11px] sm:text-sm font-medium rounded-sm text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i class="fa-solid" :class="isLoadingPackage ? 'fa-spinner fa-spin' : 'fa-cloud-arrow-down'"></i>
-                        <span x-text="isLoadingPackage ? 'Preparing...' : 'Download All'"></span>
+                        class="inline-flex items-center gap-1.5 sm:gap-2 justify-center px-3 sm:px-4 py-2 border border-blue-500 text-[11px] sm:text-sm font-medium rounded-sm text-white bg-blue-600 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-400 dark:focus:ring-offset-gray-800 disabled:bg-blue-500 disabled:cursor-not-allowed">
+                        <i class="fa-solid" :class="isLoadingPackage ? 'fa-circle-notch fa-spin text-white font-bold' : 'fa-cloud-arrow-down'"></i>
+                        <span x-text="isLoadingPackage ? 'Preparing...' : 'Download All'" :class="isLoadingPackage ? 'text-white' : ''"></span>
                     </button>
                 </div>
             </div>

@@ -15,7 +15,7 @@
         <div class="fixed inset-0 bg-slate-900/60 transition-opacity"></div>
 
         {{-- Modal Content --}}
-        <div class="inline-block w-full max-w-md p-8 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-slate-900 shadow-2xl rounded-lg border border-slate-100 dark:border-slate-800"
+        <div class="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-slate-900 shadow-2xl border border-slate-100 dark:border-slate-800"
             x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0 scale-95"
             x-transition:enter-end="opacity-100 scale-100"
@@ -32,19 +32,19 @@
                     <i class="fa-solid fa-cloud-arrow-down text-2xl text-blue-600 dark:text-blue-400"></i>
                 </div>
 
-                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Download All Files?</h3>
-                <p class="text-slate-500 dark:text-slate-400 text-sm mb-8 px-4 font-medium">
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1.5">Download All Files?</h3>
+                <p class="text-slate-500 dark:text-slate-400 text-[13px] mb-6 px-2 font-normal">
                     We will compress all drawings and documents into a single ZIP file for you.
                 </p>
 
-                <div class="grid grid-cols-2 gap-4 mb-8">
-                    <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
-                        <span class="block text-[12px] font-semibold text-slate-400 mb-1">Files</span>
-                        <span class="text-lg font-bold text-slate-900 dark:text-white" x-text="stats.count"></span>
+                <div class="grid grid-cols-2 gap-3 mb-6">
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
+                        <span class="block text-[11px] font-medium text-slate-500 mb-0.5">Files</span>
+                        <span class="text-base font-semibold text-slate-900 dark:text-white" x-text="stats.count"></span>
                     </div>
-                    <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
-                        <span class="block text-[12px] font-semibold text-slate-400 mb-1">Original Size</span>
-                        <span class="text-lg font-bold text-slate-900 dark:text-white" x-text="stats.size"></span>
+                    <div class="px-3 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
+                        <span class="block text-[11px] font-medium text-slate-500 mb-0.5">Original Size</span>
+                        <span class="text-base font-semibold text-slate-900 dark:text-white" x-text="stats.size"></span>
                     </div>
                 </div>
 
@@ -54,12 +54,12 @@
                     </p>
                 </div>
 
-                <div class="flex flex-col gap-3">
+                <div class="flex flex-col gap-2.5">
                     <button @click="startDownload()"
-                        class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-sm shadow-sm transition-all">
-                        <i class="fa-solid fa-check mr-2"></i> Yes, Start Preparing
+                        class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm shadow-sm transition-all">
+                        <i class="fa-solid fa-check mr-1.5"></i> Yes, Start Preparing
                     </button>
-                    <button @click="show = false" class="text-sm font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 py-2">
+                    <button @click="show = false" class="text-[13px] font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 py-1.5">
                         Cancel
                     </button>
                 </div>
@@ -124,24 +124,24 @@
                     </div>
                 </div>
 
-                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Preparing ZIP</h3>
-                <p class="text-slate-500 dark:text-slate-400 text-sm mb-6">
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1.5">Preparing ZIP</h3>
+                <p class="text-slate-500 dark:text-slate-400 text-[13px] font-normal mb-6">
                     Gathering and compressing files...
                 </p>
 
                 {{-- Mock Progress Bar --}}
-                <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 mb-2 overflow-hidden">
-                    <div class="bg-blue-600 h-full rounded-full transition-all duration-500 ease-out"
+                <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 mb-2 overflow-hidden">
+                    <div class="bg-blue-600 h-full transition-all duration-500 ease-out"
                         :style="`width: ${progress}%`"
                         x-init="$watch('step', value => value === 'preparing' ? startProgress() : stopProgress())"></div>
                 </div>
-                <div class="flex justify-between text-[10px] font-bold text-slate-400 tracking-widest mb-8">
+                <div class="flex justify-between text-[11px] font-medium text-slate-500 tracking-wide mb-8">
                     <span x-text="statusText">Packing...</span>
-                    <span x-text="`${progress}%`" class="text-blue-600">0%</span>
+                    <span x-text="`${progress}%`" class="text-blue-600 font-semibold">0%</span>
                 </div>
 
-                <button @click="cancelDownload()" class="w-full py-3 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 font-bold rounded-sm transition-all duration-200 flex items-center justify-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <button @click="cancelDownload()" class="w-full py-2.5 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 font-medium text-[13px] transition-all duration-200 flex items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>

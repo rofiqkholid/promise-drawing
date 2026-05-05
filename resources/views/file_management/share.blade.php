@@ -24,19 +24,73 @@
     </ol>
 </nav>
 
+<style>
+    /* Clean Select2 for Filter Bar */
+    .select2-container--default .select2-selection--single {
+        height: 38px !important;
+        border-color: #e5e7eb !important;
+        border-radius: 0 !important;
+        background-color: #f9fafb !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .dark .select2-container--default .select2-selection--single {
+        border-color: #374151 !important;
+        background-color: #111827 !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 38px !important;
+        font-size: 13px !important;
+        padding-left: 12px !important;
+        color: #4b5563 !important;
+        font-weight: 500 !important;
+    }
+    .dark .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #d1d5db !important;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+        right: 6px !important;
+    }
+    .select2-dropdown {
+        border-color: #e5e7eb !important;
+        border-radius: 0 !important;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+        z-index: 9999 !important;
+    }
+    .dark .select2-dropdown {
+        border-color: #374151 !important;
+        background-color: #1f2937 !important;
+    }
+
+    @media (max-width: 639px) {
+        .select2-container--default .select2-selection--single {
+            height: 34px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 34px !important;
+            font-size: 12px !important;
+            padding-left: 10px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 32px !important;
+        }
+    }
+</style>
+
 <div class="w-full p-3 sm:p-4 lg:p-6 bg-gray-50 dark:bg-gray-900 font-sans">
 
     {{-- Header --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-5 sm:mb-6">
         <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Share Packages</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Share and monitor package distribution.</p>
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight">Share Packages</h2>
+            <p class="text-[11px] sm:text-[13px] text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">Share and monitor package distribution.</p>
         </div>
 
         <button onclick="window.dispatchEvent(new CustomEvent('open-reshare-modal'))"
-            class="relative group inline-flex items-center gap-2 px-6 h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-xs transition-all focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 shrink-0">
-            <i class="fa-solid fa-bell-concierge"></i>
-            <span class="text-[13px] font-semibold">Request Monitoring</span>
+            class="relative group inline-flex items-center justify-center gap-2 px-5 sm:px-6 h-9 sm:h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-xs transition-all focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 shrink-0 w-full sm:w-auto">
+            <i class="fa-solid fa-bell-concierge text-xs sm:text-sm"></i>
+            <span class="text-[12px] sm:text-[13px] font-semibold">Request Monitoring</span>
 
             {{-- Notification Badge --}}
             <div id="reshare-badge" class="absolute -top-2 -right-2 hidden">
@@ -49,7 +103,7 @@
 
     <div class="flex flex-col lg:flex-row gap-3">
         {{-- Sidebar History (Left) --}}
-        <aside class="w-full lg:w-72 flex-shrink-0">
+        <aside class="w-full lg:w-72 flex-shrink-0 order-2 lg:order-1">
             <div class="bg-white dark:bg-gray-800 p-5 rounded-xs border border-gray-200 dark:border-gray-700 sticky top-24">
                 <div class="flex items-center justify-between mb-5 border-b border-gray-100 dark:border-gray-700 pb-3">
                     <div class="flex items-center gap-2">
@@ -72,9 +126,9 @@
         </aside>
 
         {{-- Main Content Segment (Right) --}}
-        <main class="flex-1 min-w-0 space-y-6">
+        <main class="flex-1 min-w-0 space-y-6 order-1 lg:order-2">
             {{-- KPI Row --}}
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
                 @foreach([
                 ['id' => 'totalShared', 'label' => 'Total Shared', 'icon' => 'fa-share-nodes', 'color' => 'blue', 'clickable' => false],
                 ['id' => 'totalActive', 'label' => 'Active', 'icon' => 'fa-check-circle', 'color' => 'green', 'clickable' => false],
@@ -82,19 +136,19 @@
                 ['id' => 'totalSuppliers', 'label' => 'Total Suppliers', 'icon' => 'fa-users-gear', 'color' => 'blue', 'clickable' => false]
                 ] as $card)
                 <div id="card-{{ $card['id'] }}"
-                    class="bg-white dark:bg-gray-800 p-4 rounded-xs border border-gray-200 dark:border-gray-700 flex items-center gap-4 group hover:border-{{ $card['color'] }}-100 dark:hover:border-{{ $card['color'] }}-500/30 transition-all {{ $card['clickable'] ? 'cursor-pointer hover:' : '' }}"
+                    class="bg-white dark:bg-gray-800 p-2.5 sm:p-4 rounded-xs border border-gray-200 dark:border-gray-700 flex items-center gap-2.5 sm:gap-4 group hover:border-{{ $card['color'] }}-100 dark:hover:border-{{ $card['color'] }}-500/30 transition-all {{ $card['clickable'] ? 'cursor-pointer hover:' : '' }}"
                     @if($card['clickable'])
                     @click="window.dispatchEvent(new CustomEvent('open-reshare-modal'))"
                     @endif>
-                    <div class="w-10 h-10 rounded-xs bg-{{ $card['color'] }}-100 dark:bg-{{ $card['color'] }}-900/30 flex items-center justify-center text-{{ $card['color'] }}-600 dark:text-{{ $card['color'] }}-400 group-hover:scale-110 transition-transform">
+                    <div class="w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-xs bg-{{ $card['color'] }}-100 dark:bg-{{ $card['color'] }}-900/30 flex items-center justify-center text-[11px] sm:text-base text-{{ $card['color'] }}-600 dark:text-{{ $card['color'] }}-400 group-hover:scale-110 transition-transform">
                         <i class="fa-solid {{ $card['icon'] }}"></i>
                     </div>
-                    <div>
-                        <p class="text-[13px] font-semibold text-gray-400 dark:text-gray-500">{{ $card['label'] }}</p>
+                    <div class="min-w-0">
+                        <p class="text-[9px] sm:text-[13px] font-semibold text-gray-400 dark:text-gray-500 truncate">{{ $card['label'] }}</p>
                         <div class="flex items-center gap-2">
-                            <p id="{{ $card['id'] }}" class="text-xl font-bold text-gray-900 dark:text-gray-100 leading-none mt-1">0</p>
+                            <p id="{{ $card['id'] }}" class="text-sm sm:text-xl font-bold text-gray-900 dark:text-gray-100 leading-none mt-0.5 sm:mt-1">0</p>
                             @if($card['clickable'])
-                            <i class="fa-solid fa-arrow-right text-[10px] text-blue-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
+                            <i class="fa-solid fa-arrow-right text-[9px] sm:text-[10px] text-blue-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                             @endif
                         </div>
                     </div>
@@ -103,35 +157,36 @@
             </div>
 
             {{-- Filter Bar (Inside Right Segment) --}}
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-xs border border-gray-200 dark:border-gray-700">
-                <div class="flex flex-wrap items-end gap-2 px-1">
-                    <div class="flex-1 min-w-[200px]">
-                        <label class="block text-[13px] font-semibold text-gray-400 mb-1.5 px-0.5">Search Package</label>
+            <div class="bg-white dark:bg-gray-800 p-4 sm:p-5 rounded-xs border border-gray-200 dark:border-gray-700 space-y-3 sm:space-y-4">
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-3 sm:gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-[11px] sm:text-[13px] font-semibold text-gray-400 dark:text-gray-500 mb-1 sm:mb-1.5 px-0.5">Search Package</label>
                         <div class="relative group">
+                            <i class="fa-solid fa-search absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors text-xs sm:text-sm"></i>
                             <input type="text" id="custom-share-search"
-                                class="block w-full pl-9 pr-4 py-2 bg-gray-50/50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600 rounded-xs text-xs font-semibold focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all dark:text-gray-100 group-hover:border-blue-300 dark:group-hover:border-blue-500/50 placeholder:font-normal"
+                                class="w-full pl-9 sm:pl-11 pr-4 h-9 sm:h-10 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xs text-[12px] sm:text-[13px] focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
                                 placeholder="ECN, Part No, or Model...">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i id="share-search-icon" class="fa-solid fa-magnifying-glass text-gray-400 text-[10px]"></i>
-                            </div>
                         </div>
                     </div>
 
                     @foreach([
-                    ['id' => 'customer', 'label' => 'Customer', 'w' => 'w-32'],
-                    ['id' => 'model', 'label' => 'Model', 'w' => 'w-36'],
-                    ['id' => 'document-type', 'label' => 'Doc Type', 'w' => 'w-32'],
-                    ['id' => 'status', 'label' => 'Status', 'w' => 'w-28']
+                        ['id' => 'customer', 'label' => 'Customer'],
+                        ['id' => 'model', 'label' => 'Model'],
+                        ['id' => 'document-type', 'label' => 'Doc Type'],
                     ] as $f)
-                    <div class="{{ $f['w'] }}">
-                        <label class="block text-[13px] font-semibold text-gray-400 mb-1.5 px-0.5">{{ $f['label'] }}</label>
-                        <select id="{{ $f['id'] }}" class="js-filter w-full"></select>
+                    <div class="col-span-1">
+                        <label class="block text-[11px] sm:text-[13px] font-semibold text-gray-400 dark:text-gray-500 mb-1 sm:mb-1.5 px-0.5">{{ $f['label'] }}</label>
+                        <select id="{{ $f['id'] }}" class="js-filter w-full select2-basic"></select>
                     </div>
                     @endforeach
 
-                    <div class="flex-shrink-0 mb-0.5">
-                        <button id="btnResetFilters" class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xs transition-all h-[34px] w-[34px] flex items-center justify-center border border-transparent hover:border-blue-100 dark:hover:border-blue-500/30" title="Reset Filters">
-                            <i class="fa-solid fa-rotate-left text-xs"></i>
+                    <div class="col-span-1 flex items-end gap-2">
+                        <div class="flex-1 min-w-0">
+                            <label class="block text-[11px] sm:text-[13px] font-semibold text-gray-400 dark:text-gray-500 mb-1 sm:mb-1.5 px-0.5">Status</label>
+                            <select id="status" class="js-filter w-full select2-basic"></select>
+                        </div>
+                        <button id="btnResetFilters" class="h-[34px] w-[34px] sm:h-[38px] sm:w-[38px] shrink-0 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-none flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-200 transition-all" title="Reset Filters">
+                            <i class="fa-solid fa-arrows-rotate text-xs sm:text-sm"></i>
                         </button>
                     </div>
                 </div>
@@ -141,16 +196,16 @@
             <div class="bg-white dark:bg-gray-800 rounded-xs border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div>
                     <table id="approvalTable" class="w-full divide-y divide-gray-100 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500 font-semibold text-left">
+                        <thead class="bg-gray-50 dark:bg-gray-700/50 text-[12px] text-gray-500 font-semibold text-left">
                             <tr>
-                                <th class="px-5 py-4 w-12 text-center">No</th>
-                                <th class="px-5 py-4 min-w-[120px]">Package Info</th>
-                                <th class="px-5 py-4 w-32 border-l border-gray-100/50 dark:border-gray-700/50">Rev / ECN</th>
-                                <th class="px-5 py-4 w-36 border-l border-gray-100/50 dark:border-gray-700/50">Category</th>
-                                <th class="px-5 py-4 w-24 text-center border-l border-gray-100/50 dark:border-gray-700/50">Status</th>
-                                <th class="px-5 py-4 w-46 text-center border-l border-gray-100/50 dark:border-gray-700/50">Receive At</th>
-                                <th class="px-5 py-4 w-32 border-l border-gray-100/50 dark:border-gray-700/50">Recipients</th>
-                                <th class="px-5 py-4 w-20 text-center">Actions</th>
+                                <th class="px-2 sm:px-5 py-2.5 sm:py-4 w-12 text-center">No</th>
+                                <th class="px-2 sm:px-5 py-2.5 sm:py-4 min-w-[120px]">Package Info</th>
+                                <th class="px-2 sm:px-5 py-2.5 sm:py-4 w-32 border-l border-gray-100/50 dark:border-gray-700/50">Rev / ECN</th>
+                                <th class="px-2 sm:px-5 py-2.5 sm:py-4 w-36 border-l border-gray-100/50 dark:border-gray-700/50">Category</th>
+                                <th class="px-2 sm:px-5 py-2.5 sm:py-4 w-24 text-center border-l border-gray-100/50 dark:border-gray-700/50">Status</th>
+                                <th class="px-2 sm:px-5 py-2.5 sm:py-4 w-46 text-center border-l border-gray-100/50 dark:border-gray-700/50">Receive At</th>
+                                <th class="px-2 sm:px-5 py-2.5 sm:py-4 w-32 border-l border-gray-100/50 dark:border-gray-700/50">Recipients</th>
+                                <th class="px-2 sm:px-5 py-2.5 sm:py-4 w-20 text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50 dark:divide-gray-700/50">
@@ -217,23 +272,23 @@
 
             <div class="bg-white dark:bg-gray-800 rounded-xs w-full max-w-4xl h-[650px] flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700 pointer-events-auto">
                 {{-- Header --}}
-                <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-800">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xs bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                            <i class="fa-solid fa-envelope-open-text text-lg"></i>
+                <div class="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between bg-white dark:bg-gray-800">
+                    <div class="flex items-center gap-2.5 sm:gap-3">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 shrink-0 rounded-xs bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                            <i class="fa-solid fa-envelope-open-text text-sm sm:text-lg"></i>
                         </div>
-                        <div>
-                            <h3 class="text-base font-bold text-gray-900 dark:text-gray-100 tracking-wider">Re-share Requests</h3>
-                            <p class="text-[13px] text-gray-400 font-semibold tracking-wide">Manage supplier access requests</p>
+                        <div class="min-w-0">
+                            <h3 class="text-sm sm:text-base font-bold text-gray-900 dark:text-gray-100 tracking-wider truncate">Re-share Requests</h3>
+                            <p class="text-[10px] sm:text-[13px] text-gray-400 font-semibold tracking-wide truncate">Manage supplier access requests</p>
                         </div>
                     </div>
-                    <button type="button" @click="showReshareModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-2">
-                        <i class="fa-solid fa-xmark text-lg"></i>
+                    <button type="button" @click="showReshareModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1 sm:p-2 shrink-0 ml-2">
+                        <i class="fa-solid fa-xmark text-base sm:text-lg"></i>
                     </button>
                 </div>
 
                 {{-- Tabs --}}
-                <div class="px-6 py-2 bg-gray-50/50 dark:bg-gray-900/20 border-b border-gray-100 dark:border-gray-700 flex gap-4">
+                <div class="px-1 sm:px-6 py-1 sm:py-2 bg-gray-50/50 dark:bg-gray-900/20 border-b border-gray-100 dark:border-gray-700 flex w-full">
                     <template x-for="t in [
                     {id: 'pending', label: 'Pending', icon: 'fa-clock text-[10px]'},
                     {id: 'approved', label: 'Approved', icon: 'fa-check-circle text-[10px]'},
@@ -241,10 +296,10 @@
                     {id: 'all', label: 'All History', icon: 'fa-history text-[10px]'}
                 ]">
                         <button @click="status = t.id"
-                            class="px-4 py-2 text-[13px] font-semibold flex items-center gap-2 border-b-2 transition-all"
+                            class="flex-1 py-2 text-[10px] sm:text-[13px] font-semibold flex items-center justify-center gap-1 sm:gap-2 border-b-2 transition-all px-1"
                             :class="status === t.id ? 'border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'">
                             <i class="fa-solid" :class="t.icon"></i>
-                            <span x-text="t.label"></span>
+                            <span class="truncate" x-text="t.label"></span>
                         </button>
                     </template>
                 </div>
@@ -334,9 +389,9 @@
                 </div> {{-- End Body div (line 221) --}}
 
                 {{-- Fixed Footer - Strictly Pinned --}}
-                <div class="mt-auto px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-end shrink-0">
+                <div class="mt-auto px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-end shrink-0">
                     <button type="button" @click="showReshareModal = false"
-                        class="px-8 py-2 text-[13px] font-semibold text-gray-700 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xs transition-none active:bg-gray-200">
+                        class="w-full sm:w-auto px-8 py-2.5 sm:py-2 text-[12px] sm:text-[13px] font-semibold text-gray-700 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-300 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-xs transition-none active:bg-gray-200">
                         Close Window
                     </button>
                 </div>
@@ -793,8 +848,8 @@
 
                                 return `
                                 <div class="flex flex-col" title="${row.part_no} ${row.partners ? '/ ' + row.partners : ''}">
-                                    <span class="text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-1">${mainText}</span>
-                                    <div class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                                    <span class="text-[11px] sm:text-sm font-bold text-gray-900 dark:text-gray-100 line-clamp-1">${mainText}</span>
+                                    <div class="text-[9px] sm:text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 truncate">
                                         ${subText}
                                     </div>
                                 </div>
@@ -810,11 +865,11 @@
                                 return `
                                 <div class="flex flex-col gap-1">
                                     <div class="flex items-center">
-                                        <span class="px-2 py-0.5 rounded-xs text-[10px] font-black bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 uppercase tracking-tighter">
-                                            REV ${revVal}
+                                        <span class="px-1.5 sm:px-2 py-0.5 rounded-xs text-[9px] sm:text-[10px] font-black bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 tracking-tighter">
+                                            Rev ${revVal}
                                         </span>
                                     </div>
-                                    <div class="text-[10px] text-gray-500 dark:text-gray-400 font-bold truncate">
+                                    <div class="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400 font-bold truncate">
                                         ${ecnStr}
                                     </div>
                                 </div>
@@ -827,8 +882,8 @@
                             render: function(data, type, row) {
                                 return `
                                 <div class="flex flex-col">
-                                    <span class="text-[11px] font-bold text-gray-700 dark:text-gray-300 capitalize">${row.category || row.doc_type}</span>
-                                    <span class="text-[10px] text-gray-400 dark:text-gray-500">${row.part_group || '-'}</span>
+                                    <span class="text-[10px] sm:text-[11px] font-bold text-gray-700 dark:text-gray-300 capitalize">${row.category || row.doc_type}</span>
+                                    <span class="text-[9px] sm:text-[10px] text-gray-400 dark:text-gray-500">${row.part_group || '-'}</span>
                                 </div>
                             `;
                             }
@@ -845,7 +900,7 @@
                                 if (value === 'Regular') colors = 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800';
                                 else if (value === 'Feasibility Study') colors = 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800';
 
-                                return `<span class="px-2 py-2 text-[12px] font-bold border ${colors} rounded-xs">${value}</span>`;
+                                return `<span class="px-1.5 sm:px-2 py-1 sm:py-2 text-[10px] sm:text-[12px] font-bold border ${colors} rounded-xs">${value}</span>`;
                             }
                         },
                         {
@@ -854,7 +909,7 @@
                             className: 'text-center',
                             render: function(v) {
                                 const text = fmtDate(v);
-                                return `<div class="text-[13px] text-gray-500 dark:text-gray-400 font-semibold">${text || '—'}</div>`;
+                                return `<div class="text-[11px] sm:text-[13px] text-gray-500 dark:text-gray-400 font-semibold">${text || '—'}</div>`;
                             }
                         },
                         {
@@ -867,9 +922,9 @@
                                 const json = JSON.stringify(data).replace(/"/g, '&quot;');
                                 return `
                                 <button type="button" 
-                                    class="btn-view-shares inline-flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-semibold uppercase text-white bg-blue-600 hover:bg-blue-700 rounded-xs transition-all"
+                                    class="btn-view-shares inline-flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 text-[10px] sm:text-[13px] font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xs transition-all"
                                     data-shares="${json}">
-                                    <i class="fa-solid fa-users text-[13px]"></i> ${data.length} Recipients
+                                    <i class="fa-solid fa-users text-[10px] sm:text-[13px]"></i> ${data.length} Recipients
                                 </button>
                             `;
                             }
@@ -881,22 +936,24 @@
                             className: 'text-center whitespace-nowrap',
                             render: function(packageId, type, row) {
                                 return `
-                                <button 
-                                    type="button" 
-                                    class="btn-share inline-flex items-center justify-center w-10 h-10 rounded-sm bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 border border-transparent"
-                                    data-id="${packageId}" 
-                                    title="Share package">
-                                    <i class="fa-solid fa-share-nodes"></i>
-                                </button>
-                                <button 
-                                    type="button" 
-                                    class="btn-download inline-flex items-center justify-center w-10 h-10 rounded-sm bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 transition-all duration-200 border border-transparent ml-1"
-                                    data-id="${packageId}" 
-                                    data-file-count="${row.file_count || 0}"
-                                    data-file-size="${row.total_size || 0}"
-                                    title="Download package">
-                                    <i class="fa-solid fa-download"></i>
-                                </button>
+                                <div class="flex items-center justify-center gap-1 sm:gap-0">
+                                    <button 
+                                        type="button" 
+                                        class="btn-share inline-flex items-center justify-center w-7 h-7 sm:w-10 sm:h-10 rounded-sm bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition-all duration-200 border border-transparent"
+                                        data-id="${packageId}" 
+                                        title="Share package">
+                                        <i class="fa-solid fa-share-nodes text-[10px] sm:text-sm"></i>
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        class="btn-download inline-flex items-center justify-center w-7 h-7 sm:w-10 sm:h-10 rounded-sm bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 transition-all duration-200 border border-transparent sm:ml-1"
+                                        data-id="${packageId}" 
+                                        data-file-count="${row.file_count || 0}"
+                                        data-file-size="${row.total_size || 0}"
+                                        title="Download package">
+                                        <i class="fa-solid fa-download text-[10px] sm:text-sm"></i>
+                                    </button>
+                                </div>
                             `;
                             }
                         }
@@ -1005,10 +1062,10 @@
 
                     logs.forEach(log => {
                         const expStatus = log.is_expired ?
-                            `<div class="flex items-center gap-1.5 text-rose-500 font-bold text-[10px] border border-rose-200 dark:border-rose-900/40 rounded-xs px-2 py-1 bg-rose-50 dark:bg-rose-900/20">
+                            `<div class="text-[11px] text-rose-500 font-normal italic">
                                 Expired: ${log.expired_at || '-'}
                             </div>` :
-                            `<div class="flex items-center gap-1.5 text-gray-400 font-bold text-[10px] border border-gray-200 dark:border-gray-700 rounded-xs px-2 py-1 bg-gray-50 dark:bg-gray-800/40">
+                            `<div class="text-[11px] text-gray-400 font-normal italic">
                                 Exp: ${log.expired_at || '-'}
                             </div>`;
 
@@ -1018,8 +1075,8 @@
                             
                             <div class="flex flex-col gap-2 p-0.5 rounded-xs hover:bg-gray-50/50 dark:hover:bg-gray-900/20 transition-all duration-200">
                                 <div class="flex items-center justify-between gap-2">
-                                    <span class="text-[12px] font-bold text-blue-600 dark:text-blue-400">${log.user}</span>
-                                    <span class="text-[10px] text-gray-400 font-medium" title="${log.full_time}">${log.time}</span>
+                                    <span class="text-xs sm:text-[13px] font-medium text-gray-600 dark:text-gray-300 flex items-center gap-1.5"><i class="fa-solid fa-user text-gray-400"></i> ${log.user}</span>
+                                    <span class="text-[10px] text-gray-400 font-medium shrink-0" title="${log.full_time}">${log.time}</span>
                                 </div>
                                 
                                 <div class="text-[12px] font-black text-gray-900 dark:text-gray-100 leading-tight">

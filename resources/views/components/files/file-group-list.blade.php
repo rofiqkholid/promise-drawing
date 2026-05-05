@@ -101,9 +101,9 @@
                     @if($allowDownload)
                     <button @click.stop="downloadFile(file)"
                         :disabled="isDownloadingFile === file.name"
-                        class="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-sm transition-all duration-200 active:scale-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-sm transition-all duration-200 active:scale-90 disabled:bg-blue-500 disabled:cursor-not-allowed"
                         title="Download">
-                        <i class="fa-solid text-[10px] sm:text-sm" :class="isDownloadingFile === file.name ? 'fa-spinner fa-spin' : 'fa-download'"></i>
+                        <i class="fa-solid text-[10px] sm:text-sm" :class="isDownloadingFile === file.name ? 'fa-circle-notch fa-spin text-white font-bold' : 'fa-download'"></i>
                     </button>
                     @endif
                 </div>
