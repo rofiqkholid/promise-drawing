@@ -74,7 +74,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div class="lg:col-span-12 space-y-8">
                     <div
-                        class="bg-white dark:bg-gray-800 p-3 sm:p-6 rounded-xs shadow-sm border border-gray-200 dark:border-gray-700">
+                        class="sm:bg-white sm:dark:bg-gray-800 p-0 sm:p-6 sm:rounded-xs sm:shadow-sm border-0 sm:border sm:border-gray-200 sm:dark:border-gray-700">
                         <h3 class="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
                             <i class="fa-solid fa-file-invoice mr-2 text-blue-500"></i>
                             Drawing Metadata
@@ -231,7 +231,7 @@
                     </div>
 
                     <div x-show="isReadOnly && revisionStatus"
-                        class="bg-white dark:bg-gray-800 p-6 rounded-xs shadow-sm border border-gray-200 dark:border-gray-700">
+                        class="sm:bg-white sm:dark:bg-gray-800 p-0 sm:p-6 sm:rounded-xs sm:shadow-sm border-0 sm:border sm:border-gray-200 sm:dark:border-gray-700">
                         <div class="flex items-center">
                             <i class="fa-solid fa-info-circle mr-3 text-blue-500 text-xl"></i>
                             <div>
@@ -246,7 +246,7 @@
                     </div>
 
                     <div id="revision-options" x-show="isFormReady && !isReadOnly" x-transition.opacity
-                        class="bg-white dark:bg-gray-800 p-6 rounded-xs shadow-sm border border-gray-200 dark:border-gray-700">
+                        class="sm:bg-white sm:dark:bg-gray-800 p-0 sm:p-6 sm:rounded-xs sm:shadow-sm border-0 sm:border sm:border-gray-200 sm:dark:border-gray-700">
 
                         <div class="flex items-center mb-6">
                             <i class="fa-solid fa-history mr-3 text-blue-500 text-xl"></i>
@@ -314,7 +314,7 @@
             </div>
 
             <div id="drawing-files-section" :class="{ 'opacity-50 pointer-events-none': !isMetadataFilled || isReadOnly }"
-                class="bg-white dark:bg-gray-800 p-6 rounded-xs shadow-sm border border-gray-200 dark:border-gray-700 transition-opacity">
+                class="sm:bg-white sm:dark:bg-gray-800 p-0 sm:p-6 sm:rounded-xs sm:shadow-sm border-0 sm:border sm:border-gray-200 sm:dark:border-gray-700 transition-opacity">
 
                 <div class="mb-4 sm:mb-6">
                     <h3 class="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1 flex items-center">
