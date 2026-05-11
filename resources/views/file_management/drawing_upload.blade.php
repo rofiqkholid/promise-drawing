@@ -619,7 +619,7 @@
                             }
                         }).then(() => {
                             // Use relative path to support both local and public access
-                            const baseUrl = "/drawing-upload";
+                            const baseUrl = "{{ url('drawing-upload') }}";
                             window.location.href = `${baseUrl}?revision_id=${revisionId}&read_only=false`;
                         });
                     })
@@ -1742,7 +1742,7 @@
                         toastSuccess('Requested', 'Draft set to pending for approval.');
                         if (res.revision_id) {
                             // Use relative path to support both local and public access
-                            const baseUrl = "/drawing-upload";
+                            const baseUrl = "{{ url('drawing-upload') }}";
                             window.location.href = `${baseUrl}?revision_id=${res.revision_id}&read_only=true`;
                         } else {
                             window.location.reload();
