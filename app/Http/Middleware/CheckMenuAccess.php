@@ -15,9 +15,8 @@ class CheckMenuAccess
      */
     public function handle(Request $request, Closure $next, $menuId): Response
     {
-        $allowed_menus = $request->session()->get('allowed_menus');
-
-        if ($allowed_menus && (in_array($menuId, $allowed_menus) || in_array((string)$menuId, $allowed_menus) || in_array((int)$menuId, $allowed_menus))) {
+        $user = $request->user();
+        if ($user && $user->hasMenuPermissionById($menuId, 'can_view')) {
              return $next($request);
         }
         
