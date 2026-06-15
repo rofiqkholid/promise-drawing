@@ -13,7 +13,9 @@ class MenuController extends Controller
 
     public function data(Request $request)
     {
-        $query = Menu::with('parent')->select('menus.*');
+        $query = Menu::with('parent')
+            ->where('scope_id', 'app_drawing') // Filter scope aplikasi aktif
+            ->select('menus.*');
 
         $totalRecords = $query->count();
 
@@ -73,7 +75,9 @@ class MenuController extends Controller
 
     public function getParents(Request $request)
     {
-        $query = Menu::whereNull('parent_id')->orderBy('title');
+        $query = Menu::whereNull('parent_id')
+            ->where('scope_id', 'app_drawing') // Filter scope aplikasi aktif
+            ->orderBy('title');
 
         if ($request->has('exclude')) {
             $query->where('id', '!=', $request->exclude);
@@ -81,7 +85,9 @@ class MenuController extends Controller
 
         if ($request->has('exclude')) {
             $excludedId = $request->exclude;
-            $childIds = Menu::where('parent_id', $excludedId)->pluck('id');
+            $childIds = Menu::where('parent_id', $excludedId)
+                ->where('scope_id', 'app_drawing')
+                ->pluck('id');
             if ($childIds->isNotEmpty()) {
                 $query->whereNotIn('id', $childIds);
             }
@@ -118,6 +124,7 @@ class MenuController extends Controller
             $data['level'] = $data['parent_id'] ? (Menu::find($data['parent_id'])->level + 1) : 0;
             $data['is_active'] = $request->boolean('is_active');
             $data['is_visible'] = $request->boolean('is_visible');
+            $data['scope_id'] = 'app_drawing'; // Set scope_id ke app_drawing secara otomatis
 
             Menu::create($data);
 

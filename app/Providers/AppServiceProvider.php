@@ -79,8 +79,24 @@ class AppServiceProvider extends ServiceProvider
 
             $allowedMenuIds = array_diff(array_unique(array_merge($roleMenuIds, $allowedOverrides)), $deniedOverrides);
 
+            if (!in_array(1, $allowedMenuIds) && request()->routeIs('monitoring')) {
+                if (!empty($allowedMenuIds)) {
+                    $firstMenu = Menu::whereIn('id', $allowedMenuIds)
+                        ->where('is_active', '1')
+                        ->whereNotNull('route')
+                        ->where('route', '!=', '')
+                        ->orderBy('sort_order', 'asc')
+                        ->first();
+                    if ($firstMenu && Route::has($firstMenu->route)) {
+                        redirect()->route($firstMenu->route)->send();
+                        exit;
+                    }
+                }
+            }
+
             if (!empty($allowedMenuIds)) {
                 $allDbMenus = Menu::where('is_active', '1')
+                    ->where('scope_id', 'app_drawing')
                     ->get(['id', 'title', 'route'])
                     ->keyBy('route');
 

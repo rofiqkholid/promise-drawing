@@ -44,7 +44,7 @@ class ReceiptController extends Controller
         if ($userSupplier) {
             $userRoleId = (string) $userSupplier->supplier_id;
         } else {
-            $userRole = DB::table('user_roles')->where('user_id', $userId)->first();
+            $userRole = DB::table('user_scope_roles')->where('user_id', $userId)->where('scope_id', 'app_drawing')->first();
             if (!$userRole) return response()->json(['results' => [], 'pagination' => ['more' => false]]);
             $userRoleId = (string) $userRole->role_id;
         }
@@ -181,7 +181,7 @@ class ReceiptController extends Controller
         if ($userSupplier) {
             $userRoleId = (string) $userSupplier->supplier_id;
         } else {
-            $userRole = DB::table('user_roles')->where('user_id', $userId)->first();
+            $userRole = DB::table('user_scope_roles')->where('user_id', $userId)->where('scope_id', 'app_drawing')->first();
             if (!$userRole) {
                 return response()->json([
                     'totalReceived' => 0,
@@ -259,8 +259,8 @@ class ReceiptController extends Controller
         if ($userSupplier) {
             $userRoleId = (string) $userSupplier->supplier_id;
         } else {
-            // Fallback ke user_roles jika tidak ada di user_supplier
-            $userRole = DB::table('user_roles')->where('user_id', $userId)->first();
+            // Fallback ke user_scope_roles jika tidak ada di user_supplier
+            $userRole = DB::table('user_scope_roles')->where('user_id', $userId)->where('scope_id', 'app_drawing')->first();
 
             if (!$userRole) {
                 return response()->json([
@@ -639,7 +639,7 @@ class ReceiptController extends Controller
         if ($userSupplier) {
             $userRoleId = (string) $userSupplier->supplier_id;
         } else {
-            $userRole = DB::table('user_roles')->where('user_id', $userId)->first();
+            $userRole = DB::table('user_scope_roles')->where('user_id', $userId)->where('scope_id', 'app_drawing')->first();
             if (!$userRole) return response()->json(["data" => [], "recordsTotal" => 0, "recordsFiltered" => 0]);
             $userRoleId = (string) $userRole->role_id;
         }
@@ -822,7 +822,7 @@ class ReceiptController extends Controller
         if ($userSupplier) {
             $userRoleId = (string) $userSupplier->supplier_id;
         } else {
-            $userRole = DB::table('user_roles')->where('user_id', $userId)->first();
+            $userRole = DB::table('user_scope_roles')->where('user_id', $userId)->where('scope_id', 'app_drawing')->first();
             if (!$userRole) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
             }
@@ -1008,7 +1008,7 @@ class ReceiptController extends Controller
         if ($userSupplier) {
             $supplierId = $userSupplier->supplier_id;
         } else {
-            $userRole = DB::table('user_roles')->where('user_id', $userIdInt)->first();
+            $userRole = DB::table('user_scope_roles')->where('user_id', $userIdInt)->where('scope_id', 'app_drawing')->first();
             $supplierId = $userRole ? $userRole->role_id : null;
         }
 

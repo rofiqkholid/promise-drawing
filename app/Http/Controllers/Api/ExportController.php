@@ -1934,9 +1934,10 @@ class ExportController extends Controller
             return false;
         }
 
-        return DB::table('user_roles as ur')
+        return DB::table('user_scope_roles as ur')
             ->join('roles as r', 'ur.role_id', '=', 'r.id')
             ->where('ur.user_id', $user->id)
+            ->where('ur.scope_id', 'app_drawing')
             ->whereIn('r.role_name', $roleNames) 
             ->exists();
     }

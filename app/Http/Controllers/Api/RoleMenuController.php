@@ -42,6 +42,7 @@ class RoleMenuController extends Controller
                 DB::raw('COALESCE(rm.can_delete,0)   AS can_delete'),
             ])
             ->where('menus.is_active', true)
+            ->where('menus.scope_id', 'app_drawing') // Filter scope Drawing
             // SQL Server: taruh NULL di bawah
             ->orderByRaw('CASE WHEN menus.sort_order IS NULL THEN 1 ELSE 0 END, menus.sort_order, menus.title')
             ->get();

@@ -58,9 +58,19 @@ Route::get('/', function () {
 Route::get('/home', function () {
     $allowed_menus = session('allowed_menus', []);
     if (!empty($allowed_menus)) {
-        $firstMenu = DB::table('menus')->whereIn('id', $allowed_menus)->orderBy('id', 'asc')->first();
-        if ($firstMenu && Route::has($firstMenu->route)) {
-            return redirect()->route($firstMenu->route);
+        $menus = DB::table('menus')
+            ->whereIn('id', $allowed_menus)
+            ->where('is_active', '1')
+            ->whereNotNull('route')
+            ->where('route', '!=', '')
+            ->where('route', '!=', '#')
+            ->orderBy('sort_order', 'asc')
+            ->get();
+            
+        foreach ($menus as $menu) {
+            if (Route::has($menu->route)) {
+                return redirect()->route($menu->route);
+            }
         }
     }
     return response('You do not have access rights to any menu.', 403);

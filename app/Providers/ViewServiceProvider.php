@@ -25,8 +25,10 @@ class ViewServiceProvider extends ServiceProvider
             $menus = Menu::query()
                 ->whereNull('parent_id')
                 ->where('is_active', 1)
+                ->where('scope_id', 'app_drawing') // Filter scope aplikasi aktif
                 ->with(['children' => function ($query) {
-                        $query->where('is_active', 1);
+                        $query->where('is_active', 1)
+                              ->where('scope_id', 'app_drawing'); // Filter scope child menu
                     }])
                 ->orderBy('sort_order', 'asc')
                 ->get();

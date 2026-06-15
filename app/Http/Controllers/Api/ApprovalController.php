@@ -56,9 +56,10 @@ class ApprovalController extends Controller
      */
     private function getApprovalLevel(User $user): int
     {
-        // Ambil semua role_id milik user dari tabel pivot user_roles
-        $userRoleIds = DB::table('user_roles')
+        // Ambil semua role_id milik user dari tabel pivot user_scope_roles
+        $userRoleIds = DB::table('user_scope_roles')
             ->where('user_id', $user->id)
+            ->where('scope_id', 'app_drawing')
             ->pluck('role_id')
             ->toArray();
 
@@ -1866,11 +1867,14 @@ END as status
 
         $query = User::select('users.*')
             ->distinct()
-            ->leftJoin('user_roles', 'user_roles.user_id', '=', 'users.id')
+            ->leftJoin('user_scope_roles', function($join) {
+                $join->on('user_scope_roles.user_id', '=', 'users.id')
+                     ->where('user_scope_roles.scope_id', '=', 'app_drawing');
+            })
             ->whereNotNull('users.email')
             ->where(function ($q) {
-                $q->whereNull('user_roles.role_id')
-                    ->orWhere('user_roles.role_id', '!=', 6);
+                $q->whereNull('user_scope_roles.role_id')
+                    ->orWhere('user_scope_roles.role_id', '!=', 6);
             });
 
         if ($isFeasibility) {
@@ -1879,9 +1883,10 @@ END as status
 
             $query->whereExists(function ($q2) use ($allowedRoles) {
                 $q2->select(DB::raw(1))
-                    ->from('user_roles as ur2')
+                    ->from('user_scope_roles as ur2')
                     ->join('roles as r2', 'ur2.role_id', '=', 'r2.id')
                     ->whereColumn('ur2.user_id', 'users.id')
+                    ->where('ur2.scope_id', 'app_drawing')
                     ->whereIn('r2.role_name', $allowedRoles);
             });
         }
