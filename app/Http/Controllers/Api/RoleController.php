@@ -21,8 +21,10 @@ class RoleController extends Controller
     // if user_id is sent, include selected info
     if ($request->filled('user_id')) {
         $uid = (int) $request->user_id;
-        $query->leftJoin('user_roles as ur', function($j) use ($uid){
-            $j->on('ur.role_id','=','roles.id')->where('ur.user_id',$uid);
+        $query->leftJoin('user_scope_roles as ur', function($j) use ($uid){
+            $j->on('ur.role_id','=','roles.id')
+              ->where('ur.user_id',$uid)
+              ->where('ur.scope_id','app_drawing');
         })->addSelect(DB::raw('CASE WHEN ur.user_id IS NULL THEN 0 ELSE 1 END AS selected'));
     } else {
         $query->addSelect(DB::raw('0 AS selected'));
