@@ -158,7 +158,11 @@ class UserMaintenanceController extends Controller
             ]);
 
             $ids = collect($data['role_ids'] ?? [])->map(fn($v) => (int)$v)->unique()->values()->all();
-            $user->roles()->sync($ids);
+            $syncData = [];
+            foreach ($ids as $id) {
+                $syncData[$id] = ['scope_id' => 'app_drawing'];
+            }
+            $user->roles()->sync($syncData);
 
             return response()->json(['success' => true]);
         }

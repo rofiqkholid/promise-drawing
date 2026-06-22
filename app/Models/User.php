@@ -48,7 +48,8 @@ class User extends Authenticatable
     public function roles()
     {
         return $this->belongsToMany(\App\Models\Role::class, 'user_scope_roles', 'user_id', 'role_id')
-            ->wherePivot('scope_id', 'app_drawing');
+            ->wherePivot('scope_id', 'app_drawing')
+            ->withPivotValue('scope_id', 'app_drawing');
     }
 
     public function hasMenuPermissionById($menuId, $permissionColumn = 'can_view')
