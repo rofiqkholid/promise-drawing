@@ -2,11 +2,7 @@
 /vendor
 /public/build
 /public/storage
-/storage/*.key
-/storage/framework/cache/data/*
-/storage/framework/views/*.php
-/storage/framework/sessions/*
-/storage/logs/*.log
+/storage/
 /.vite
 .env
 .env.backup
