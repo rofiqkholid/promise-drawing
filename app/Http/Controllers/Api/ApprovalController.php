@@ -65,7 +65,8 @@ class ApprovalController extends Controller
 
         // Level 4: ICT (Superuser / Master Key)
         // Bisa bypass L1 & L2, serta bertindak sebagai back-up L3
-        if (in_array(Role::ICT, $userRoleIds)) {
+        // Note: Menambahkan pengecekan role ID 16 (Admin) karena di database ICT = Admin
+        if (in_array(Role::ICT, $userRoleIds) || in_array(16, $userRoleIds)) {
             return 4;
         }
 
@@ -942,22 +943,36 @@ END as status
 
             // --- 1. UPDATE STATUS APPROVAL (LEVEL 1, 2, 3, & 4) ---
 
-            // JIKA ICT (LEVEL 4) - BYPASS MODE (BACK-UP)
+            // JIKA ICT (LEVEL 4) - BERTAHAP (MAJU SATU LANGKAH)
             if ($level === 4) {
-                DB::table('package_approvals')->where('id', $approval->id)->update([
-                    'lvl1' => 1,
-                    'lvl1_decided_by' => $approval->lvl1_decided_by ?? $user->id,
-                    'lvl2' => 1,
-                    'lvl2_decided_by' => $approval->lvl2_decided_by ?? $user->id,
-                    'lvl3' => 1, // Mengisi lvl3 agar KPI L3 terhitung selesai
-                    'lvl3_decided_by' => $user->id,
-                    'decision' => 'approved',
-                    'decided_by' => $user->id,
-                    'decided_at' => Carbon::now(),
-                    'updated_at' => Carbon::now(),
-                ]);
-                $logNote = 'Revision approved via ICT Bypass (System Back-up)';
-                $logLevel = 'ICT / Level 4 (Bypass)';
+                if ((int) $approval->lvl1 !== 1) {
+                    DB::table('package_approvals')->where('id', $approval->id)->update([
+                        'lvl1' => 1,
+                        'lvl1_decided_by' => $user->id,
+                        'updated_at' => Carbon::now(),
+                    ]);
+                    DB::commit();
+                    return response()->json(['message' => 'Checked (by ICT). Waiting for Approved.']);
+                } else if ((int) $approval->lvl2 !== 1) {
+                    DB::table('package_approvals')->where('id', $approval->id)->update([
+                        'lvl2' => 1,
+                        'lvl2_decided_by' => $user->id,
+                        'updated_at' => Carbon::now(),
+                    ]);
+                    DB::commit();
+                    return response()->json(['message' => 'Approved (by ICT). Waiting for Legalize.']);
+                } else {
+                    DB::table('package_approvals')->where('id', $approval->id)->update([
+                        'lvl3' => 1,
+                        'lvl3_decided_by' => $user->id,
+                        'decision' => 'approved',
+                        'decided_by' => $user->id,
+                        'decided_at' => Carbon::now(),
+                        'updated_at' => Carbon::now(),
+                    ]);
+                    $logNote = 'Legalized (by ICT)';
+                    $logLevel = 'ICT / Level 4 (Bypass)';
+                }
             }
             // JIKA LEVEL 1
             else if ($level === 1 && !$approval->lvl1) {
@@ -1459,11 +1474,25 @@ END as status
                 $updateData['lvl2'] = 0;
                 $updateData['lvl2_decided_by'] = null;
                 $statusTujuan = 'Waiting Approved';
-            } elseif ($level === 3 || $level === 4) {
-                // L3 atau L4 (ICT) meriset tahap final, dokumen kembali menunggu L3
+            } elseif ($level === 3) {
                 $updateData['lvl3'] = 0;
                 $updateData['lvl3_decided_by'] = null;
                 $statusTujuan = 'Waiting Legalize';
+            } elseif ($level === 4) {
+                // ICT (L4) bisa rollback bertahap (Mundur satu langkah dari status saat ini)
+                if ((int)$approval->lvl3 === 1 || in_array(strtolower($revision->revision_status), ['approved', 'rejected'])) {
+                    $updateData['lvl3'] = 0;
+                    $updateData['lvl3_decided_by'] = null;
+                    $statusTujuan = 'Waiting Legalize';
+                } elseif ((int)$approval->lvl2 === 1) {
+                    $updateData['lvl2'] = 0;
+                    $updateData['lvl2_decided_by'] = null;
+                    $statusTujuan = 'Waiting Approved';
+                } elseif ((int)$approval->lvl1 === 1) {
+                    $updateData['lvl1'] = 0;
+                    $updateData['lvl1_decided_by'] = null;
+                    $statusTujuan = 'Waiting Checked';
+                }
             }
 
             DB::table('package_approvals')->where('revision_id', $revisionId)->update($updateData);

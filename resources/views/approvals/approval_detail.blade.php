@@ -97,9 +97,9 @@
 
         <!-- Footer (Approve / Reject / Rollback / Share) -->
         <!-- Footer (Approve / Reject / Rollback / Share) -->
-        <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center gap-2">
+        <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex flex-wrap items-center justify-between gap-3">
           <!-- Badge is_finish -->
-          <div class="mr-auto">
+          <div>
             <span
               class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xs text-xs font-medium"
               :class="isFinished()
@@ -114,37 +114,38 @@
             </span>
           </div>
 
-          <!-- Waiting: Reject + Approve -->
-          <template x-if="canAct()">
-            <div class="flex gap-2">
-              <button @click="rejectPackage()"
-                class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-xs hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm">
-                <i class="fa-solid fa-circle-xmark mr-2"></i> Reject
+          <!-- Buttons Container -->
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Waiting: Reject + Approve -->
+            <template x-if="canAct()">
+              <div class="flex gap-2">
+                <button @click="rejectPackage()"
+                  class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-xs hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm">
+                  <i class="fa-solid fa-circle-xmark mr-2"></i> Reject
+                </button>
+                <button @click="approvePackage()"
+                  class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-xs hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm">
+                  <i class="fa-solid fa-circle-check mr-2"></i> Approve
+                </button>
+              </div>
+            </template>
+
+            <!-- Rollback -->
+            <template x-if="canRollback()">
+              <button @click="rollbackPackage()"
+                class="inline-flex items-center px-3 py-1.5 bg-amber-600 text-white rounded-xs hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 text-sm">
+                <i class="fa-solid fa-rotate-left mr-2"></i> Rollback
               </button>
-              <button @click="approvePackage()"
-                class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-xs hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm">
-                <i class="fa-solid fa-circle-check mr-2"></i> Approve
+            </template>
+
+            <!-- Share -->
+            <template x-if="canShare()">
+              <button @click="openShareModal()"
+                class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-xs hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm">
+                <i class="fa-solid fa-share-nodes mr-2"></i> Share
               </button>
-            </div>
-          </template>
-
-          <!-- Approved: Rollback + Share -->
-          <!-- Rollback -->
-<template x-if="canRollback()">
-  <button @click="rollbackPackage()"
-    class="inline-flex items-center px-3 py-1.5 bg-amber-600 text-white rounded-xs">
-    <i class="fa-solid fa-rotate-left mr-2"></i> Rollback
-  </button>
-</template>
-
-<!-- Share -->
-<template x-if="canShare()">
-  <button @click="openShareModal()"
-    class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-xs">
-    <i class="fa-solid fa-share-nodes mr-2"></i> Share
-  </button>
-</template>
-
+            </template>
+          </div>
         </div>
 
       </div>
@@ -925,8 +926,10 @@
     // L2 bisa tarik jika sedang nunggu L3
     if (s === 'waiting legalize' && this.approvalLevel === 2) return true;
     
-    // Khusus Level 4 (ICT): Bisa rollback dokumen yang sudah Approved atau Rejected
-    if (this.approvalLevel === 4 && (s === 'approved' || s === 'rejected')) return true;
+    // Khusus Level 4 (ICT): Bisa rollback dari tahap mana saja (kecuali sudah paling awal yaitu Waiting Checked)
+    if (this.approvalLevel === 4) {
+        if (s !== 'waiting checked') return true;
+    }
 
     // Tambahan: L3 hanya bisa rollback dokumen yang baru saja dia selesaikan
     if (this.approvalLevel === 3 && (s === 'approved' || s === 'rejected')) return true;
@@ -1024,15 +1027,14 @@
 
 
         
-          if (this.approvalLevel === 4) {
-    this.pkg.status = 'Approved'; // Bypass langsung jadi Approved
-} else if (this.approvalLevel === 1) {
-    this.pkg.status = 'Waiting approved';
-} else if (this.approvalLevel === 2) {
-    this.pkg.status = 'Waiting legalize';
-} else if (this.approvalLevel === 3) {
-    this.pkg.status = 'Approved';
-}
+          let currentStatus = (this.pkg.status || '').toLowerCase();
+          if (currentStatus === 'waiting checked') {
+              this.pkg.status = 'Waiting approved';
+          } else if (currentStatus === 'waiting approved') {
+              this.pkg.status = 'Waiting legalize';
+          } else if (currentStatus === 'waiting legalize') {
+              this.pkg.status = 'Approved';
+          }
 
           // activity log
           this.addPkgActivity(
@@ -1121,13 +1123,14 @@
           }
 
          // Perbarui status visual setelah rollback
-if (this.approvalLevel === 1) {
-    this.pkg.status = 'Waiting checked';
-} else if (this.approvalLevel === 2) {
-    this.pkg.status = 'Waiting approved';
-} else if (this.approvalLevel === 3 || this.approvalLevel === 4) {
-    this.pkg.status = 'Waiting legalize'; // Kembali ke meja Level 3
-}
+          let currentStatus = (this.pkg.status || '').toLowerCase();
+          if (currentStatus === 'approved' || currentStatus === 'rejected') {
+              this.pkg.status = 'Waiting legalize';
+          } else if (currentStatus === 'waiting legalize') {
+              this.pkg.status = 'Waiting approved';
+          } else if (currentStatus === 'waiting approved') {
+              this.pkg.status = 'Waiting checked';
+          }
 
           this.addPkgActivity('rollbacked', '{{ auth()->user()->name ?? "Reviewer" }}', 'Status set to Waiting');
           this.showRollbackModal = false;
