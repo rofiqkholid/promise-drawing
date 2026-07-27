@@ -65,8 +65,8 @@ class ApprovalController extends Controller
 
         // Level 4: ICT (Superuser / Master Key)
         // Bisa bypass L1 & L2, serta bertindak sebagai back-up L3
-        // Note: Role ID 16 (Admin) dan Role ID 7 (ENG) dianggap setara dengan ICT
-        if (in_array(Role::ICT, $userRoleIds) || in_array(16, $userRoleIds) || in_array(7, $userRoleIds)) {
+        // Note: Role ID 16 (Admin) dan Role ID 31 (ENG Leader) dianggap setara dengan ICT
+        if (in_array(Role::ICT, $userRoleIds) || in_array(16, $userRoleIds) || in_array(31, $userRoleIds)) {
             return 4;
         }
 
