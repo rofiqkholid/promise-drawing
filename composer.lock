@@ -1727,7 +1727,6 @@
             "time": "2025-09-19T13:47:56+00:00"
         },
         {
-            "name": "laravel/reverb",
             "version": "v1.8.0",
             "source": {
                 "type": "git",
@@ -1767,10 +1766,7 @@
             "type": "library",
             "extra": {
                 "laravel": {
-                    "providers": [
-                        "Laravel\\Reverb\\ApplicationManagerServiceProvider",
-                        "Laravel\\Reverb\\ReverbServiceProvider"
-                    ]
+                   
                 }
             },
             "autoload": {

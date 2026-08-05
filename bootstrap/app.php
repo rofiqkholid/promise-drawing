@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\SyncAllowedMenus::class,
         ]);
-        $middleware->redirectGuestsTo(env('PORTAL_LOGIN_URL', 'http://localhost:8080/login'));
+        $middleware->redirectGuestsTo(fn () => config('services.portal_login_url'));
         $middleware->trustProxies(at: '*');
         $middleware->encryptCookies(except: [
             'promise_auth_session'
