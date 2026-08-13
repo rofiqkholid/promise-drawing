@@ -94,6 +94,21 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            if (!in_array(3, $allowedMenuIds) && request()->routeIs('file-manager.upload')) {
+                if (!empty($allowedMenuIds)) {
+                    $firstMenu = Menu::whereIn('id', $allowedMenuIds)
+                        ->where('is_active', '1')
+                        ->whereNotNull('route')
+                        ->where('route', '!=', '')
+                        ->orderBy('sort_order', 'asc')
+                        ->first();
+                    if ($firstMenu && Route::has($firstMenu->route)) {
+                        redirect()->route($firstMenu->route)->send();
+                        exit;
+                    }
+                }
+            }
+
             if (!empty($allowedMenuIds)) {
                 $allDbMenus = Menu::where('is_active', '1')
                     ->where('scope_id', 'app_drawing')

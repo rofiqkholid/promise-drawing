@@ -58,6 +58,11 @@ Route::get('/', function () {
 Route::get('/home', function () {
     $allowed_menus = session('allowed_menus', []);
     if (!empty($allowed_menus)) {
+        // Prioritize directing to monitoring if user has permission
+        if (in_array(1, $allowed_menus) && Route::has('monitoring')) {
+            return redirect()->route('monitoring');
+        }
+
         $menus = DB::table('menus')
             ->whereIn('id', $allowed_menus)
             ->where('is_active', '1')
